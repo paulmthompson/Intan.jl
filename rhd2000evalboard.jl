@@ -82,6 +82,10 @@ PortD2Ddr = 15
 
 sampleRate=30000
 
+SAMPLES_PER_DATA_BLOCK = 60
+
+numDataStreams=0
+
 function open_board()
 
     for i=1:MAX_NUM_DATA_STREAMS
@@ -737,5 +741,77 @@ function run()
     ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInSpiStart, 0)
 end
 
+function isRunning()
+    
+    ccall((:okFrontPanel_UpdateWireOuts,mylib),Cint,(Ptr{Void},),x)
+    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutSpiRunning)
+
+    if ((value & 0x01) == 0)
+        return false
+    else
+        return true
+    end
+         
 end
 
+function flush()
+    while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
+        ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,USB_BUFFER_SIZE,usbBuffer)
+    end
+    while (numWordsInFifo() > 0)
+        ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,(2 * numWordsInFifo()),usbBuffer)
+    end
+end
+
+function numWordsInFifo()
+    ccall((:okFrontPanel_UpdateWireOuts,mylib),Cint,(Ptr{Void},),x)
+
+    temp1 = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutNumWordsMsb)
+
+    temp2 = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutNumWordsLsb)
+
+    return ((temp1 << 16) + temp2)
+    
+end
+
+function readDataBlocks(numBlocks, dataQueue)
+    
+    numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
+
+    if (numWordsInFifo() < numWordsToRead)
+        return false
+    end
+
+    numBytesToRead = 2 * numWordsToRead
+
+    if (numBytesToRead > USB_BUFFER_SIZE)
+        println("USB buffer size exceeded")
+        return false
+    end
+
+    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,numBytesToRead,usbBuffer)
+
+    for i=0:(numBlocks-1)
+        # make data block from fillfromusbbuffer
+        # add block to queue
+
+    end
+   
+end
+
+function calculateDataBlockSizeInWords(numDataStreams)
+    return (SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2))
+    #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
+
+end
+
+function fillFromUsbBuffer()
+
+end
+
+function queueToFile()
+
+end
+
+
+end
