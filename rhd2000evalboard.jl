@@ -10,6 +10,7 @@ USB_BUFFER_SIZE = 2400000
 RHYTHM_BOARD_ID = 500
 MAX_NUM_DATA_STREAMS = 8
 FIFO_CAPACITY_WORDS = 67108864
+SAMPLES_PER_DATA_BLOCK = 60
 
 WireInResetRun = 0x00
 WireInMaxTimeStepLsb = 0x01
@@ -80,24 +81,22 @@ PortC2Ddr = 13
 PortD1Ddr = 14
 PortD2Ddr = 15
 
-sampleRate=30000
+global sampleRate=30000
 
-SAMPLES_PER_DATA_BLOCK = 60
+global numDataStreams=0
 
-numDataStreams=0
+global dataStreamEnabled=zeros(Int,1,8)
 
-dataStreamEnabled=zeros(Int,1,8)
+global x=Ptr{Void}
 
 function open_board()
 
+    global x
+    
     for i=1:MAX_NUM_DATA_STREAMS
         dataStreamEnabled[i]=0
     end
-
-    result=dlopen(mylib)
-    
-    println(result)
-    
+  
     #make device
     x=ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
     println("Constructed")
@@ -113,7 +112,7 @@ function open_board()
     println("Serial number is ", serialnumber)
     
     #Open by serial 
-    ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Array{Uint8,1}),x,serialnumber)
+    ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),x,serialnumber)
 
     #configure on-board PLL
     ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),x)
@@ -124,9 +123,14 @@ end
 
 function uploadFpgaBitfile();  
 
-    #upload configuration file
-    ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},String),x,myfile)
+    global x
 
+    #upload configuration file
+    errorcode=ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},Ptr{Uint8}),x,myfile)
+
+    #error checking goes here
+    println(errorcode)
+    
     #Check if FrontPanel Support is enabled
     ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),x)
 
@@ -141,6 +145,8 @@ end
 
 function initialize_board()
 
+    global x
+    
     resetBoard()
     setSampleRate(30000)
     selectAuxCommandBank("PortA","AuxCmd1", 0)
@@ -245,11 +251,11 @@ end
 
 function resetBoard()
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun,0x01,0x01)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun,0x00,0x01)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-
+    SetWireInValue(WireInResetRun, 0x01, 0x01)
+    UpdateWireIns()
+    SetWireInValue(WireInResetRun,0x00,0x01)
+    UpdateWireIns()
+    
 end
 
 function setSampleRate(newSampleRate)
@@ -315,10 +321,11 @@ function setSampleRate(newSampleRate)
     end
    
     #Reprogram clock synthesizer
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDataFreqPll,(256 * M + D))    
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int,Int),x,TrigInDcmProg,0)
-    
+
+    SetWireInValue(WireInDataFreqPll,(256 * M + D))
+    UpdateWireIns()  
+    ActivateTriggerIn(TrigInDcmProg,0)
+   
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
     while (isDataClockLocked() == false)
     end
@@ -332,8 +339,8 @@ end
 
 function isDcmProgDone()
 
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutDataClkLocked)
+    UpdateWireOuts()
+    value=GetWireOutValue(WireOutDataClkLocked)
 
     #not sure how to change this return
     return ((value & 0x0002) > 1)
@@ -342,11 +349,11 @@ end
 
 function isDataClockLocked()
 
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutDataClkLocked)
-
+    UpdateWireOuts()
+    value=GetWireOutValue(WireOutDataClkLocked)
+    
     #not sure how to change this return
-    return ((value & 0x0001) > 1)
+    return ((value & 0x0001) > 0)
 
 end
 
@@ -356,24 +363,24 @@ function selectAuxCommandBank(port, commandslot, bank)
 
 
     if port=="PortA"
-        bitShift==0
+        bitShift=0
     elseif port=="PortB"
-        bitShift==4
+        bitShift=4
     elseif port=="PortC"
-        bitShift==8
+        bitShift=8
     elseif port=="PortD"
-        bitShift==12
+        bitShift=12
     end
 
     if commandslot=="AuxCmd1"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdBank1,(bank<<bitShift),(0x000f<<bitShift))  
+        SetWireInValue(WireInAuxCmdBank1,(bank<<bitShift),(0x000f<<bitShift))
     elseif commandslot=="AuxCmd2"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdBank2,(bank<<bitShift),(0x000f<<bitShift)) 
+        SetWireInValue(WireInAuxCmdBank2,(bank<<bitShift),(0x000f<<bitShift))
     elseif commandslot=="AuxCmd3"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift)) 
+        SetWireInValue(WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift))
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
 
 end
 
@@ -381,28 +388,28 @@ function selectAuxCommandLength(commandslot,loopIndex,endIndex)
     #Error checking goes here
 
     if commandslot=="AuxCmd1"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLoop1,loopIndex)
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLength1,endIndex)
+        SetWireInValue(WireInAuxCmdLoop1,loopIndex)
+        SetWireInValue(WireInAuxCmdLength1,endIndex)
     elseif commandslot=="AuxCmd2"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLoop2,loopIndex)
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLength2,endIndex)
+        SetWireInValue(WireInAuxCmdLoop2,loopIndex)
+        SetWireInValue(WireInAuxCmdLength2,endIndex)
     elseif commandslot=="AuxCmd3"
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLoop3,loopIndex)
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInAuxCmdLength3,endIndex)
+        SetWireInValue(WireInAuxCmdLoop3,loopIndex)
+        SetWireInValue(WireInAuxCmdLength3,endIndex)
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
     
 end
 
 function setContinuousRunMode(continuousMode)
     if continuousMode
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun,0x02,0x02)
+        SetWireInValue(WireInResetRun,0x02,0x02)
     else
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun,0x00,0x02)
+        SetWireInValue(WireInResetRun,0x00,0x02)
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
 
 end
 
@@ -411,10 +418,9 @@ function setMaxTimeStep(maxTimeStep)
     maxTimeStepLsb = maxTimeStep & 0x000fff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMaxTimeStepLsb,maxTimeStepLsb)
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMaxTimeStepMsb,maxTimeStepMsb >> 16)
-
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInMaxTimeStepLsb,maxTimeStepLsb)
+    SetWireInValue(WireInMaxTimeStepMsb,maxTimeStepMsb >> 16)
+    UpdateWireIns()
     
 end
 
@@ -438,7 +444,7 @@ function setCableLengthMeters(port, lengthInMeters)
 
     timeDelay = (distance / cableVelocity) + xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime
 
-    delay = Int(floor(((timeDelay / tStep) + 1.0) +0.5))
+    delay = convert(Int,floor(((timeDelay / tStep) + 1.0) +0.5))
 
     if delay <1
         delay=1
@@ -468,17 +474,17 @@ function setCableDelay(port, delay)
         bitShift=12
     end
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMisoDelay,delay << bitShift, 0x000f << bitShift)
+    SetWireInValue(WireInMisoDelay,delay << bitShift, 0x000f << bitShift)
+    UpdateWireIns()
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
     
 end
 
 function setDspSettle(enabled)
-    
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun,(enabled ? 0x04 : 0x00), 0x04)
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+
+    SetWireInValue(WireInResetRun,(enabled ? 0x04 : 0x00),0x04)
+    UpdateWireIns()
 
 end
 
@@ -512,9 +518,8 @@ function setDataSource(stream, dataSource)
         bitShift=12
     end
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,endPoint, dataSource << bitShift, 0x000f << bitShift)
-
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(endPoint,dataSource << bitShift, 0x000f << bitShift)
+    UpdateWireIns()
 
 end
 
@@ -524,15 +529,15 @@ function enableDataStream(stream, enabled)
 
     if enabled
         if dataStreamEnabled[stream+1] == 0
-            ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDataStreamEn, 0x0001 << stream, 0x0001 << stream)
-            ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+            SetWireInValue(WireInDataStreamEn,0x0001 << stream, 0x0001 << stream)
+            UpdateWireIns()
             dataStreamEnabled[stream+1] = 1;
             numDataStreams=numDataStreams+1;
         end
     else
         if dataStreamEnabled[stream+1] == 1
-            ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDataStreamEn, 0x0000 << stream, 0x0001 << stream)
-            ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+            SetWireInValue(WireInDataStreamEn,0x0000 << stream, 0x0001 << stream)
+            UpdateWireIns()
             dataStreamEnabled[stream+1] = 0;
             numDataStream=numDataStreams-1;
         end
@@ -545,24 +550,24 @@ function enableDac(dacChannel, enabled)
     #error checking goes here
 
     if dacChannel == 0
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource1, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource1,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 1
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource2, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource2,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 2
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource3, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource3,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 3
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource4, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource4,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 4
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource5, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource5,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 5
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource6, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource6,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 6
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource7, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource7,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 7
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource8, (enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(WireInDacSource8,(enabled ? 0x0200 : 0x0000), 0x0200)
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
 
 end
 
@@ -570,24 +575,24 @@ function selectDacDataStream(dacChannel, stream)
     #error checking goes here
 
     if dacChannel == 0
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource1, stream << 5, 0x01e0)
+        SetWireInValue(WireInDacSource1, stream << 5, 0x01e0)
     elseif dacChannel == 1
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource2, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource2, stream << 5, 0x01e0)
     elseif dacChannel == 2
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource3, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource3, stream << 5, 0x01e0)
     elseif dacChannel == 3
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource4, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource4, stream << 5, 0x01e0)
     elseif dacChannel == 4
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource5, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource5, stream << 5, 0x01e0)
     elseif dacChannel == 5
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource6, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource6, stream << 5, 0x01e0)
     elseif dacChannel == 6
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource7, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource7, stream << 5, 0x01e0)
     elseif dacChannel == 7
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource8, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource8, stream << 5, 0x01e0)
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
         
 end
 
@@ -595,57 +600,55 @@ function selectDacDataChannel(dacChannel, dataChannel)
     #error checking goes here
 
     if dacChannel == 0
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource1, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource1,dataChanel << 0, 0x001f)
     elseif dacChannel == 1
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource2, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource2,dataChanel << 0, 0x001f)
     elseif dacChannel == 2
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource3, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource3,dataChanel << 0, 0x001f)
     elseif dacChannel == 3
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource4, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource4,dataChanel << 0, 0x001f)
     elseif dacChannel == 4
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource5, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource5,dataChanel << 0, 0x001f)
     elseif dacChannel == 5
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource6, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource6,dataChanel << 0, 0x001f)
     elseif dacChannel == 6
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource7, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource7,dataChanel << 0, 0x001f)
     elseif dacChannel == 7
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacSource8, dataChannel << 0, 0x001f)
+        SetWireInValue(WireInDacSource8,dataChanel << 0, 0x001f)
     end
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    UpdateWireIns()
     
 end
 
 function setDacManual(value)
     #error checking goes here
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInDacManual, value)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInDacManual,value)
+    UpdateWireIns()
     
 end
 
 function setDacGain(gain)
     #error checking goes here
-    
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun, gain << 13, 0xe000)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInResetRun,gain << 13, 0xe000)
+    UpdateWireIns()
     
 end
 
 function setAudioNoiseSuppress(noiseSuppress)
     #error checking goes here
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun, noiseSuppress << 6, 0x1fc0)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInResetRun, noiseSuppress << 6, 0x1fc0)
+    UpdateWireIns()
 
 end
 
 function setTtlMode(mode)
     #error checking goes here
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInResetRun, mode << 3, 0x0008)
-
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInResetRun, mode << 3, 0x0008)
+    UpdateWireIns()
 
 end
 
@@ -655,24 +658,22 @@ function setDacThreshold(dacChannel, threshold, trigPolarity)
     #error checking goes here
 
     #Set threshold level
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse,threshold)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInDacThresh, dacChannel)
+    SetWireInValue(WireInMultiUse,threshold)
+    UpdateWireIns()
+    ActivateTriggerIn(TrigInDacThresh, dacChannel)
 
     #Set threshold polarity
-
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, (trigPolarity ? 1 :0))
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInDacThresh, dacChannel+8)
-
+    SetWireInValue(WireInMultiUse, (trigPolarity ? 1 : 0))
+    UpdateWireIns()
+    ActivateTriggerIn(TrigInDacThresh, dacChannel+8)
 
 end
 
 function enableExternalFastSettle(enable)
-    
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, enable ? 1 : 0)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtFastSettle,0)
+
+    SetWireInValue(WireInMultiUse, (enable ? 1 : 0))
+    UpdateWireIns()
+    ActivateTriggerIn(TrigInExtFastSettle,0)
 
 end
 
@@ -680,50 +681,50 @@ function setExternalFastSettleChannel(channel)
 
     #error checking goes here
 
-        ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, channel)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
-    ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtFastSettle,1)
-    
+    SetWireInValue(WireInMultiUse,channel)
+    UpdateWireIns()
+    ActivateTriggerIn(TrigInExtFastSettle,1)
+  
 end
 
 function enableExternalDigOut(port, enable)
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, enable ? 1 : 0)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInMultiUse, (enable ? 1 : 0))
+    UpdateWireIns()
 
     if port=="PortA"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,0)
+        ActivateTriggerIn(TrigInExtDigOut,0)
     elseif port=="PortB"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,1)
+        ActivateTriggerIn(TrigInExtDigOut,1)
     elseif port=="PortC"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,2)
+        ActivateTriggerIn(TrigInExtDigOut,2)
     elseif port=="PortD"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,3)
+        ActivateTriggerIn(TrigInExtDigOut,3)
     end
      
 end
 
 function setExternalDigOutChannel(port, channel)
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, channel)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInMultiUse,channel)
+    UpdateWireIns()
 
     if port=="PortA"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,4)
+        ActivateTriggerIn(TrigExtDigOut,4)
     elseif port=="PortB"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,5)
+        ActivateTriggerIn(TrigInExtDigOut,5)
     elseif port=="PortC"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,6)
+        ActivateTriggerIn(TrigInExtDigOut,6)
     elseif port=="PortD"
-        ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInExtDigOut,7)
+        ActivateTriggerIn(TrigInExtDigOut,7)
     end
 
 end
 
 function getTtlIn(ttlInArray)
 
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
-    ttlIn=ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutTtlIn)
+    UpdateWireOuts()
+    ttlIn=GetWireOutValue(WireOutTtlIn)
     for i=1:16
         ttlInArray[i] = 0
         if (ttlIN & (1 << (i-1))) > 0
@@ -741,19 +742,19 @@ function setLedDisplay(ledArray)
         end
     end
 
-    ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInLedDisplay, ledOut)
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
+    SetWireInValue(WireInLedDisplay,ledOut)
+    UpdateWireIns()
 
 end
 
 function run()
-    ccall((:okFrontPanel_ActivateTriggerIn, mylib), Cint,(Ptr{Void},Int,Int),x,TrigInSpiStart, 0)
+    ActivateTriggerIn(TrigInSpiStart,0)
 end
 
 function isRunning()
-    
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Cint,(Ptr{Void},),x)
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutSpiRunning)
+
+    UpdateWireOuts()
+    value=GetWireOutValue(WireOutSpiRunning)
 
     if ((value & 0x01) == 0)
         return false
@@ -822,5 +823,58 @@ function queueToFile()
 
 end
 
+function SetWireInValue(ep, val, mask = 0xffffffff)
+
+    global x
+    
+    er = ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,ep, val, mask)
+
+    return er
+end
+
+function UpdateWireIns()
+
+    global x
+
+    er=ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),x)
+
+end
+
+function UpdateWireOuts()
+
+    global x
+
+    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
+
+end
+
+
+function ActivateTriggerIn(epAddr,bit)
+
+    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int,Int),x,epAddr,bit)
+
+    return er
+
+end
+
+function GetWireOutValue(epAddr)
+
+    global x
+
+    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,epAddr)
+
+    return value
+
+end
+
+function ReadFromPipeOut(epAddr, length, data)
+
+    global x
+
+    value=ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,Ptr{Uint8}),x,epAddr,USB_BUFFER_SIZE,data)
+
+    return value
+
+end
 
 end
