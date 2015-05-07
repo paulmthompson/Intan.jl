@@ -3,7 +3,7 @@ module rhd2000evalboard
 
 export open_board, uploadFpgaBitfile, initialize_board
 
-const mylib="/home/nicolelislab/toolbox/DataAcq/libokFrontPanel.so"
+const mylib="/home/nicolelislab/neural-analysis-toolbox/DataAcq/libokFrontPanel.so"
 const myfile="/home/nicolelislab/neural-analysis-toolbox/DataAcq/API/main.bit"
 
 USB_BUFFER_SIZE = 2400000
@@ -86,12 +86,18 @@ SAMPLES_PER_DATA_BLOCK = 60
 
 numDataStreams=0
 
+dataStreamEnabled=zeros(Int,1,8)
+
 function open_board()
 
     for i=1:MAX_NUM_DATA_STREAMS
         dataStreamEnabled[i]=0
     end
-     
+
+    result=dlopen(mylib)
+    
+    println(result)
+    
     #make device
     x=ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
     println("Constructed")
@@ -100,11 +106,14 @@ function open_board()
     println("Found " ,nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
-    serialnumber=ccall((:okFrontPanel_GetDeviceListSerial,mylib), Void, (Ptr{Void}, Int, String), x, 0,"")
+    serial=Array(Uint8,11)
+    ccall((:okFrontPanel_GetDeviceListSerial,mylib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), x, 0,serial)
+    serial[end]=0
+    serialnumber=bytestring(pointer(serial))
     println("Serial number is ", serialnumber)
     
     #Open by serial 
-    ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},String),x,serialnumber)
+    ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Array{Uint8,1}),x,serialnumber)
 
     #configure on-board PLL
     ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),x)
@@ -694,7 +703,7 @@ function enableExternalDigOut(port, enable)
      
 end
 
-function setExternalDigOutChannel(port channel)
+function setExternalDigOutChannel(port, channel)
 
     ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,WireInMultiUse, channel)
     ccall((:okFrontPanel_UpdateWireIns,mylib),Cint,(Ptr{Void},),x)
