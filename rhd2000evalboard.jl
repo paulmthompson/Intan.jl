@@ -1,7 +1,9 @@
 
 module rhd2000evalboard
 
-export open_board, uploadFpgaBitfile, initialize_board
+export open_board, uploadFpgaBitfile, initialize_board, setDataSource, setSampleRate, setCableLengthFeet, setLedDisplay, 
+
+#Constant parameters
 
 const mylib="/home/nicolelislab/neural-analysis-toolbox/DataAcq/libokFrontPanel.so"
 const myfile="/home/nicolelislab/neural-analysis-toolbox/DataAcq/API/main.bit"
@@ -81,43 +83,46 @@ PortC2Ddr = 13
 PortD1Ddr = 14
 PortD2Ddr = 15
 
+#Variables that get modified
+
 global sampleRate=30000
 
 global numDataStreams=0
 
-global dataStreamEnabled=zeros(Int,1,8)
+global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS)
 
 global x=Ptr{Void}
 
 function open_board()
 
     global x
-    
-    for i=1:MAX_NUM_DATA_STREAMS
-        dataStreamEnabled[i]=0
-    end
-  
-    #make device
+      
+    #make device handle
     x=ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
     println("Constructed")
 
+    println("Scanning USB for Opal Kelly devices...")
     nDevices=ccall((:okFrontPanel_GetDeviceCount,mylib), Int, (Ptr{Void},), x) 
-    println("Found " ,nDevices, " Opal Kelly device(s)")
+    println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
     serial=Array(Uint8,11)
     ccall((:okFrontPanel_GetDeviceListSerial,mylib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), x, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))
-    println("Serial number is ", serialnumber)
+    println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
-    ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),x,serialnumber)
-
+    if (ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),x,serialnumber)!=0)
+        x=Ptr{Void}
+        println("Device could not be opened. Is one connected?")
+        return -2;
+    end
+    
     #configure on-board PLL
     ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),x)
 
-    return x
+    return 1
 
 end
 
@@ -129,18 +134,25 @@ function uploadFpgaBitfile();
     errorcode=ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},Ptr{Uint8}),x,myfile)
 
     #error checking goes here
-    println(errorcode)
+    if errorcode==0
+        println("FPGA configuration loaded.")
+    else
+        println("FPGA configuration failed.")
+    end
+    
     
     #Check if FrontPanel Support is enabled
     ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),x)
 
-    #Update Wireouts
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
+    UpdateWireOuts()
+    boardId = GetWireOutValue(WireOutBoardId)
+    boardVersion = GetWireOutValue(WireOutBoardVersion)
+    if (boardId != RHYTHM_BOARD_ID)
+        println("FPGA configuration does not support Rythm. Incorrect board ID: ", boardId)
+    else
+        println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion).
+    end
     
-    #Get BoardID
-
-    #Get Board Version
-
 end
 
 function initialize_board()
@@ -260,6 +272,8 @@ end
 
 function setSampleRate(newSampleRate)
 
+    global sampleRate
+
     if newSampleRate==1000
         M=7
         D=125
@@ -333,6 +347,9 @@ function setSampleRate(newSampleRate)
 end
 
 function getSampleRate()
+
+    global sampleRate
+    
     return sampleRate
 end
 
@@ -342,7 +359,6 @@ function isDcmProgDone()
     UpdateWireOuts()
     value=GetWireOutValue(WireOutDataClkLocked)
 
-    #not sure how to change this return
     return ((value & 0x0002) > 1)
 
 end
@@ -352,7 +368,6 @@ function isDataClockLocked()
     UpdateWireOuts()
     value=GetWireOutValue(WireOutDataClkLocked)
     
-    #not sure how to change this return
     return ((value & 0x0001) > 0)
 
 end
@@ -385,6 +400,7 @@ function selectAuxCommandBank(port, commandslot, bank)
 end
 
 function selectAuxCommandLength(commandslot,loopIndex,endIndex)
+    
     #Error checking goes here
 
     if commandslot=="AuxCmd1"
@@ -403,6 +419,7 @@ function selectAuxCommandLength(commandslot,loopIndex,endIndex)
 end
 
 function setContinuousRunMode(continuousMode)
+    
     if continuousMode
         SetWireInValue(WireInResetRun,0x02,0x02)
     else
@@ -454,6 +471,7 @@ function setCableLengthMeters(port, lengthInMeters)
 end
 
 function setCableDelay(port, delay)
+    
     #error checking goes here
 
     if delay<0
@@ -476,12 +494,10 @@ function setCableDelay(port, delay)
 
     SetWireInValue(WireInMisoDelay,delay << bitShift, 0x000f << bitShift)
     UpdateWireIns()
-
     
 end
 
 function setDspSettle(enabled)
-
 
     SetWireInValue(WireInResetRun,(enabled ? 0x04 : 0x00),0x04)
     UpdateWireIns()
@@ -525,6 +541,9 @@ end
 
 function enableDataStream(stream, enabled)
 
+    global dataStreamEnabled
+    global numDataStreams
+    
     #error checking goes here
 
     if enabled
@@ -652,7 +671,6 @@ function setTtlMode(mode)
 
 end
 
-
 function setDacThreshold(dacChannel, threshold, trigPolarity)
 
     #error checking goes here
@@ -774,12 +792,11 @@ function flush()
 end
 
 function numWordsInFifo()
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Cint,(Ptr{Void},),x)
 
-    temp1 = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutNumWordsMsb)
-
-    temp2 = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,WireOutNumWordsLsb)
-
+    UpdateWireOuts()
+    temp1 = GetWireOutValue(WireOutNumWordsMsb)
+    temp2 = GetWireOutValue(WireOutNumWordsLsb)
+    
     return ((temp1 << 16) + temp2)
     
 end
@@ -810,6 +827,7 @@ function readDataBlocks(numBlocks, dataQueue)
 end
 
 function calculateDataBlockSizeInWords(numDataStreams)
+    
     return (SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2))
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
@@ -823,11 +841,16 @@ function queueToFile()
 
 end
 
+
+
+#Library Wrapper Functions
+
+
 function SetWireInValue(ep, val, mask = 0xffffffff)
 
     global x
     
-    er = ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,ep, val, mask)
+    er=ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,ep, val, mask)
 
     return er
 end
@@ -836,7 +859,7 @@ function UpdateWireIns()
 
     global x
 
-    er=ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),x)
+    ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),x)
 
 end
 
@@ -851,6 +874,8 @@ end
 
 function ActivateTriggerIn(epAddr,bit)
 
+    global x
+    
     er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int,Int),x,epAddr,bit)
 
     return er
