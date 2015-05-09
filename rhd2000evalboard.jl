@@ -1,7 +1,7 @@
 
 module rhd2000evalboard
 
-export open_board, uploadFpgaBitfile, initialize_board, setDataSource, setSampleRate, setCableLengthFeet, setLedDisplay, 
+export open_board, uploadFpgaBitfile, initialize_board, setDataSource, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush
 
 #Constant parameters
 
@@ -89,9 +89,18 @@ global sampleRate=30000
 
 global numDataStreams=0
 
-global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS)
+global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS+1)
 
 global x=Ptr{Void}
+
+global usbBuffer=Array(Uint8, USB_BUFFER_SIZE)
+
+timeStamp=Array(UInt32,SAMPLES_PER_DATA_BLOCK)
+amplifierData=Array(Int,numDataStreams,32,SAMPLES_PER_DATA_BLOCK)
+auxiliaryData=Array(Int,numDataStreams,3,SAMPLES_PER_DATA_BLOCK)
+boardAdcData=Array(Int,8,SAMPLES_PER_DATA_BLOCK)
+ttlIn=Array(Int,SAMPLES_PER_DATA_BLOCK)
+ttlOut=Array(Int,SAMPLES_PER_DATA_BLOCK)
 
 function open_board()
 
@@ -116,7 +125,7 @@ function open_board()
     if (ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),x,serialnumber)!=0)
         x=Ptr{Void}
         println("Device could not be opened. Is one connected?")
-        return -2;
+        return -2
     end
     
     #configure on-board PLL
@@ -126,7 +135,7 @@ function open_board()
 
 end
 
-function uploadFpgaBitfile();  
+function uploadFpgaBitfile()
 
     global x
 
@@ -145,12 +154,13 @@ function uploadFpgaBitfile();
     ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),x)
 
     UpdateWireOuts()
+    
     boardId = GetWireOutValue(WireOutBoardId)
     boardVersion = GetWireOutValue(WireOutBoardVersion)
     if (boardId != RHYTHM_BOARD_ID)
         println("FPGA configuration does not support Rythm. Incorrect board ID: ", boardId)
     else
-        println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion).
+        println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion)
     end
     
 end
@@ -161,7 +171,7 @@ function initialize_board()
     
     resetBoard()
     setSampleRate(30000)
-    selectAuxCommandBank("PortA","AuxCmd1", 0)
+    selectAuxCommandBank("PortA", "AuxCmd1", 0)
     selectAuxCommandBank("PortB", "AuxCmd1", 0)
     selectAuxCommandBank("PortC", "AuxCmd1", 0)
     selectAuxCommandBank("PortD", "AuxCmd1", 0)
@@ -186,7 +196,7 @@ function initialize_board()
     setCableLengthFeet("PortC", 3.0)
     setCableLengthFeet("PortD", 3.0)
 
-    setDspSettle(false);
+    setDspSettle(false)
 
     setDataSource(0, PortA1)
     setDataSource(1, PortB1)
@@ -199,7 +209,6 @@ function initialize_board()
 
     #remember that julia indexes with 1's instead of 0's to start an array
     enableDataStream(0, true)
-
     for i=1:MAX_NUM_DATA_STREAMS
         enableDataStream(i,false)
     end
@@ -265,7 +274,7 @@ function resetBoard()
 
     SetWireInValue(WireInResetRun, 0x01, 0x01)
     UpdateWireIns()
-    SetWireInValue(WireInResetRun,0x00,0x01)
+    SetWireInValue(WireInResetRun, 0x00, 0x01)
     UpdateWireIns()
     
 end
@@ -492,14 +501,14 @@ function setCableDelay(port, delay)
         bitShift=12
     end
 
-    SetWireInValue(WireInMisoDelay,delay << bitShift, 0x000f << bitShift)
+    SetWireInValue(WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
     UpdateWireIns()
     
 end
 
 function setDspSettle(enabled)
 
-    SetWireInValue(WireInResetRun,(enabled ? 0x04 : 0x00),0x04)
+    SetWireInValue(WireInResetRun, (enabled ? 0x04 : 0x00), 0x04)
     UpdateWireIns()
 
 end
@@ -594,7 +603,7 @@ function selectDacDataStream(dacChannel, stream)
     #error checking goes here
 
     if dacChannel == 0
-        SetWireInValue(WireInDacSource1, stream << 5, 0x01e0)
+         SetWireInValue(WireInDacSource1, stream << 5, 0x01e0)
     elseif dacChannel == 1
          SetWireInValue(WireInDacSource2, stream << 5, 0x01e0)
     elseif dacChannel == 2
@@ -619,21 +628,21 @@ function selectDacDataChannel(dacChannel, dataChannel)
     #error checking goes here
 
     if dacChannel == 0
-        SetWireInValue(WireInDacSource1,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource1,dataChannel << 0, 0x001f)
     elseif dacChannel == 1
-        SetWireInValue(WireInDacSource2,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource2,dataChannel << 0, 0x001f)
     elseif dacChannel == 2
-        SetWireInValue(WireInDacSource3,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource3,dataChannel << 0, 0x001f)
     elseif dacChannel == 3
-        SetWireInValue(WireInDacSource4,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource4,dataChannel << 0, 0x001f)
     elseif dacChannel == 4
-        SetWireInValue(WireInDacSource5,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource5,dataChannel << 0, 0x001f)
     elseif dacChannel == 5
-        SetWireInValue(WireInDacSource6,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource6,dataChannel << 0, 0x001f)
     elseif dacChannel == 6
-        SetWireInValue(WireInDacSource7,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource7,dataChannel << 0, 0x001f)
     elseif dacChannel == 7
-        SetWireInValue(WireInDacSource8,dataChanel << 0, 0x001f)
+        SetWireInValue(WireInDacSource8,dataChannel << 0, 0x001f)
     end
 
     UpdateWireIns()
@@ -670,6 +679,14 @@ function setTtlMode(mode)
     UpdateWireIns()
 
 end
+
+function clearTtlOut()
+
+    SetWireInValue(WireInTtlOut, 0x0000)
+    UpdateWireIns()
+
+end
+
 
 function setDacThreshold(dacChannel, threshold, trigPolarity)
 
@@ -728,7 +745,7 @@ function setExternalDigOutChannel(port, channel)
     UpdateWireIns()
 
     if port=="PortA"
-        ActivateTriggerIn(TrigExtDigOut,4)
+        ActivateTriggerIn(TrigInExtDigOut,4)
     elseif port=="PortB"
         ActivateTriggerIn(TrigInExtDigOut,5)
     elseif port=="PortC"
@@ -745,7 +762,7 @@ function getTtlIn(ttlInArray)
     ttlIn=GetWireOutValue(WireOutTtlIn)
     for i=1:16
         ttlInArray[i] = 0
-        if (ttlIN & (1 << (i-1))) > 0
+        if (ttlIn & (1 << (i-1))) > 0
             ttlInArray[i] = 1
         end
     end
@@ -756,9 +773,11 @@ function setLedDisplay(ledArray)
     ledOut=0
     for i=1:8
         if ledArray[i]>0
-            ledOut +=1 << i
+            ledOut +=1 << (i-1)
         end
     end
+
+    println(ledOut)
 
     SetWireInValue(WireInLedDisplay,ledOut)
     UpdateWireIns()
@@ -783,11 +802,15 @@ function isRunning()
 end
 
 function flush()
+
+    global usbBuffer
+    
     while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
-        ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,USB_BUFFER_SIZE,usbBuffer)
+        ReadFromPipeOut(PipeOutData, USB_BUFFER_SIZE, usbBuffer)
     end
+    
     while (numWordsInFifo() > 0)
-        ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,(2 * numWordsInFifo()),usbBuffer)
+        ReadFromPipeOut(PipeOutData, (2 * numWordsInFifo()), usbBuffer)
     end
 end
 
@@ -802,6 +825,8 @@ function numWordsInFifo()
 end
 
 function readDataBlocks(numBlocks, dataQueue)
+
+    global usbBuffer
     
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
 
@@ -816,10 +841,10 @@ function readDataBlocks(numBlocks, dataQueue)
         return false
     end
 
-    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,String),x,PipeOutData,numBytesToRead,usbBuffer)
+    ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer)
 
     for i=0:(numBlocks-1)
-        # make data block from fillfromusbbuffer
+        # make data block from fillFromUsbBuffer
         # add block to queue
 
     end
@@ -833,14 +858,76 @@ function calculateDataBlockSizeInWords(numDataStreams)
 
 end
 
-function fillFromUsbBuffer()
+function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
 
+    index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
+
+    for t=1:SAMPLES_PER_DATA_BLOCK
+        #error checking goes here
+
+        index+=8
+
+        timeStamp[t]=convertUsbTimeStamp(usbBuffer, index)
+
+        index+=4
+
+        #Read auxiliary results
+        for channel=1:4
+            for stream=1:numDataStreams
+                auxiliaryData[stream,channel,t] = convertUsbWord(usbBuffer,index)
+                index+=2
+            end
+        end
+
+        #Read amplifier channels
+        for channel=1:32
+            for stream=1:numDataStreams
+                amplifierData[stream,channel,t] = convertUsbWord(usbBuffer,index)
+                index+=2
+            end
+        end
+
+
+        #Skip 36th filler word in each data stream
+        index+=2 * numDataStreams
+
+        #Read from AD5662 ADCs
+        for i=1:8
+            boardAdcData[i,t] = convertUsbWord(usbBuffer,index)
+            index+=2
+        end
+
+        #Read TTL input and output values
+        ttlIn[t] = convertUsbWord(usbBuffer, index)
+        index+=2
+
+        ttlOut[t] = convertUsbWord(usbBuffer, index)
+
+    end
+    
 end
 
 function queueToFile()
 
 end
 
+function convertUsbTimeStamp(usbBuffer, index)
+    x1 = usbBuffer[index+1]
+    x2 = usbBuffer[index+2]
+    x3 = usbBuffer[index+3]
+    x4 = usbBuffer[index+4]
+
+    return (x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)
+end
+
+function convertUsbWord(usbBuffer, index)
+
+    x1=convert(UInt32, usbBuffer[index])
+    x2=convert(UInt32, usbBuffer[index+1])
+
+    return convert(Int, ((x2<<8) | (x1<<0))
+
+end
 
 
 #Library Wrapper Functions
@@ -896,10 +983,10 @@ function ReadFromPipeOut(epAddr, length, data)
 
     global x
 
-    value=ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,Ptr{Uint8}),x,epAddr,USB_BUFFER_SIZE,data)
+    value=ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,Ptr{Uint8}),x,epAddr,length,data)
 
     return value
-
+   
 end
 
 end
