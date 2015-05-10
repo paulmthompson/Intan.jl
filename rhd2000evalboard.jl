@@ -1,7 +1,7 @@
 
 module rhd2000evalboard
 
-export open_board, uploadFpgaBitfile, initialize_board, setDataSource, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream
 
 #Constant parameters
 
@@ -94,13 +94,6 @@ global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS+1)
 global x=Ptr{Void}
 
 global usbBuffer=Array(Uint8, USB_BUFFER_SIZE)
-
-timeStamp=Array(UInt32,SAMPLES_PER_DATA_BLOCK)
-amplifierData=Array(Int,numDataStreams,32,SAMPLES_PER_DATA_BLOCK)
-auxiliaryData=Array(Int,numDataStreams,3,SAMPLES_PER_DATA_BLOCK)
-boardAdcData=Array(Int,8,SAMPLES_PER_DATA_BLOCK)
-ttlIn=Array(Int,SAMPLES_PER_DATA_BLOCK)
-ttlOut=Array(Int,SAMPLES_PER_DATA_BLOCK)
 
 function open_board()
 
@@ -860,6 +853,13 @@ end
 
 function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
 
+    timeStamp=Array(Uint32,SAMPLES_PER_DATA_BLOCK)
+    amplifierData=Array(Int,numDataStreams,32,SAMPLES_PER_DATA_BLOCK)
+    auxiliaryData=Array(Int,numDataStreams,3,SAMPLES_PER_DATA_BLOCK)
+    boardAdcData=Array(Int,8,SAMPLES_PER_DATA_BLOCK)
+    ttlIn=Array(Int,SAMPLES_PER_DATA_BLOCK)
+    ttlOut=Array(Int,SAMPLES_PER_DATA_BLOCK)
+   
     index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
 
     for t=1:SAMPLES_PER_DATA_BLOCK
@@ -904,6 +904,8 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         ttlOut[t] = convertUsbWord(usbBuffer, index)
 
     end
+
+    return [timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut]
     
 end
 
@@ -926,7 +928,7 @@ function convertUsbWord(usbBuffer, index)
     x1=convert(UInt32, usbBuffer[index])
     x2=convert(UInt32, usbBuffer[index+1])
 
-    return convert(Int, ((x2<<8) | (x1<<0))
+    return convert(Int, ((x2<<8) | (x1<<0)))
 
 end
 
