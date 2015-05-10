@@ -912,6 +912,7 @@ function queueToFile()
 end
 
 function convertUsbTimeStamp(usbBuffer, index)
+    
     x1 = usbBuffer[index+1]
     x2 = usbBuffer[index+2]
     x3 = usbBuffer[index+3]
