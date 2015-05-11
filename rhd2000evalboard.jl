@@ -817,10 +817,10 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks, dataQueue)
+function readDataBlocks(numBlocks, time, electrode)
 
     global usbBuffer
-    
+       
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
 
     if (numWordsInFifo() < numWordsToRead)
@@ -839,6 +839,12 @@ function readDataBlocks(numBlocks, dataQueue)
     for i=0:(numBlocks-1)
         # make data block from fillFromUsbBuffer
         # add block to queue
+        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams)
+     
+        append(time, dataBlock[1])
+        for j=1:(32*numDataStreams)
+            append(electrode[i],dataBlock[2][:,sub2ind([2,32],j)])
+        end
 
     end
    
@@ -853,12 +859,12 @@ end
 
 function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
 
-    timeStamp=Array(Uint32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int,numDataStreams,32,SAMPLES_PER_DATA_BLOCK)
-    auxiliaryData=Array(Int,numDataStreams,3,SAMPLES_PER_DATA_BLOCK)
-    boardAdcData=Array(Int,8,SAMPLES_PER_DATA_BLOCK)
-    ttlIn=Array(Int,SAMPLES_PER_DATA_BLOCK)
-    ttlOut=Array(Int,SAMPLES_PER_DATA_BLOCK)
+    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
+    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
+    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
+    boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
+    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
+    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
    
     index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
 
@@ -867,14 +873,14 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
 
         index+=8
 
-        timeStamp[t]=convertUsbTimeStamp(usbBuffer, index)
+        timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer, index))
 
         index+=4
 
         #Read auxiliary results
         for channel=1:4
             for stream=1:numDataStreams
-                auxiliaryData[stream,channel,t] = convertUsbWord(usbBuffer,index)
+                auxiliaryData[t,stream,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
             end
         end
@@ -882,18 +888,17 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         #Read amplifier channels
         for channel=1:32
             for stream=1:numDataStreams
-                amplifierData[stream,channel,t] = convertUsbWord(usbBuffer,index)
+                amplifierData[t,stream,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
             end
         end
-
 
         #Skip 36th filler word in each data stream
         index+=2 * numDataStreams
 
         #Read from AD5662 ADCs
         for i=1:8
-            boardAdcData[i,t] = convertUsbWord(usbBuffer,index)
+            boardAdcData[t,i] = convertUsbWord(usbBuffer,index)
             index+=2
         end
 
@@ -904,12 +909,20 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         ttlOut[t] = convertUsbWord(usbBuffer, index)
 
     end
-
-    return [timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut]
+ 
+    return (timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut)
     
 end
 
-function queueToFile()
+function queueToFile(time, electrode, saveOut)
+ 
+    jldopen("test.jld", "w") do file
+        write(file, "time", time)  # alternatively, say "@write file A"
+    end
+
+    time=Array(Int32,1)
+
+    return time
 
 end
 
@@ -928,7 +941,7 @@ function convertUsbWord(usbBuffer, index)
     x1=convert(UInt32, usbBuffer[index])
     x2=convert(UInt32, usbBuffer[index+1])
 
-    return convert(Int, ((x2<<8) | (x1<<0)))
+    return convert(Int32, ((x2<<8) | (x1<<0)))
 
 end
 
