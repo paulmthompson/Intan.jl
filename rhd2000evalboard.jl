@@ -923,7 +923,7 @@ end
 
 function queueToFile(time, electrode, saveOut)
  
-    jldopen("test.jld", "w") do file
+    jldopen(saveOut, "w") do file
         write(file, "time", time)  # alternatively, say "@write file A"
     end
 
