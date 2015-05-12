@@ -1,7 +1,9 @@
 
 module rhd2000evalboard
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream
+using HDF5, JLD
+
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile
 
 #Constant parameters
 
@@ -841,12 +843,14 @@ function readDataBlocks(numBlocks, time, electrode)
         # add block to queue
         dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams)
      
-        append(time, dataBlock[1])
+        append!(time, dataBlock[1])
         for j=1:(32*numDataStreams)
-            append(electrode[i],dataBlock[2][:,sub2ind([2,32],j)])
+            append!(electrode[j],dataBlock[2][:,sub2ind([2,32],j)])
         end
 
     end
+
+    return true
    
 end
 
@@ -859,26 +863,26 @@ end
 
 function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
 
-    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
+    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
     auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
     boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
-    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
-    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK,1)
+    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
    
     index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
 
     for t=1:SAMPLES_PER_DATA_BLOCK
+        
         #error checking goes here
 
+        
         index+=8
-
         timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer, index))
-
         index+=4
 
         #Read auxiliary results
-        for channel=1:4
+        for channel=1:3
             for stream=1:numDataStreams
                 auxiliaryData[t,stream,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
@@ -894,7 +898,7 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         end
 
         #Skip 36th filler word in each data stream
-        index+=2 * numDataStreams
+        index += 2 * numDataStreams
 
         #Read from AD5662 ADCs
         for i=1:8
@@ -903,12 +907,15 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         end
 
         #Read TTL input and output values
-        ttlIn[t] = convertUsbWord(usbBuffer, index)
+        ttlIn[t] = convertUsbWord(usbBuffer, index)        
         index+=2
 
         ttlOut[t] = convertUsbWord(usbBuffer, index)
+        index+=2
 
     end
+
+    println("hi")
  
     return (timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut)
     
@@ -928,18 +935,18 @@ end
 
 function convertUsbTimeStamp(usbBuffer, index)
     
-    x1 = usbBuffer[index+1]
-    x2 = usbBuffer[index+2]
-    x3 = usbBuffer[index+3]
-    x4 = usbBuffer[index+4]
+    x1 = convert(Uint32,usbBuffer[index+1])
+    x2 = convert(Uint32,usbBuffer[index+2])
+    x3 = convert(Uint32,usbBuffer[index+3])
+    x4 = convert(Uint32,usbBuffer[index+4])
 
-    return (x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)
+    return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
 end
 
 function convertUsbWord(usbBuffer, index)
 
-    x1=convert(UInt32, usbBuffer[index])
-    x2=convert(UInt32, usbBuffer[index+1])
+    x1=convert(Uint32, usbBuffer[index])
+    x2=convert(Uint32, usbBuffer[index+1])
 
     return convert(Int32, ((x2<<8) | (x1<<0)))
 
