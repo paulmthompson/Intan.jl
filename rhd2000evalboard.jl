@@ -1,9 +1,9 @@
 
 module rhd2000evalboard
 
-using HDF5, JLD
+using HDF5
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource
 
 #Constant parameters
 
@@ -283,7 +283,7 @@ function setSampleRate(newSampleRate)
         D=125
     elseif newSampleRate==1250
         M=7
-        D=125
+        D=100
     elseif newSampleRate==1500
         M=21
         D=250
@@ -340,7 +340,7 @@ function setSampleRate(newSampleRate)
    
     #Reprogram clock synthesizer
 
-    SetWireInValue(WireInDataFreqPll,(256 * M + D))
+    SetWireInValue(WireInDataFreqPll,(256 * convert(Culong,M) + convert(Culong,D)))
     UpdateWireIns()  
     ActivateTriggerIn(TrigInDcmProg,0)
    
@@ -435,12 +435,14 @@ function setContinuousRunMode(continuousMode)
 end
 
 function setMaxTimeStep(maxTimeStep)
+
+    maxTimeStep=convert(Uint32, maxTimeStep)
     
     maxTimeStepLsb = maxTimeStep & 0x000fff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
 
     SetWireInValue(WireInMaxTimeStepLsb,maxTimeStepLsb)
-    SetWireInValue(WireInMaxTimeStepMsb,maxTimeStepMsb >> 16)
+    SetWireInValue(WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
     UpdateWireIns()
     
 end
@@ -496,6 +498,8 @@ function setCableDelay(port, delay)
         bitShift=12
     end
 
+    bitShift=convert(Int32, bitShift)
+    
     SetWireInValue(WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
     UpdateWireIns()
     
@@ -538,6 +542,7 @@ function setDataSource(stream, dataSource)
         bitShift=12
     end
 
+    bitShift=convert(Int32,bitShift)
     SetWireInValue(endPoint,dataSource << bitShift, 0x000f << bitShift)
     UpdateWireIns()
 
@@ -550,6 +555,7 @@ function enableDataStream(stream, enabled)
     
     #error checking goes here
 
+    stream=convert(Int32,stream)
     if enabled
         if dataStreamEnabled[stream+1] == 0
             SetWireInValue(WireInDataStreamEn,0x0001 << stream, 0x0001 << stream)
@@ -597,6 +603,7 @@ end
 function selectDacDataStream(dacChannel, stream)
     #error checking goes here
 
+    
     if dacChannel == 0
          SetWireInValue(WireInDacSource1, stream << 5, 0x01e0)
     elseif dacChannel == 1
@@ -654,6 +661,8 @@ end
 
 function setDacGain(gain)
     #error checking goes here
+
+    
     SetWireInValue(WireInResetRun,gain << 13, 0xe000)
     UpdateWireIns()
     
@@ -812,10 +821,13 @@ end
 function numWordsInFifo()
 
     UpdateWireOuts()
-    temp1 = GetWireOutValue(WireOutNumWordsMsb)
-    temp2 = GetWireOutValue(WireOutNumWordsLsb)
+    temp1=(GetWireOutValue(WireOutNumWordsMsb)<<16)
+    temp2=GetWireOutValue(WireOutNumWordsLsb)
+    myreturn=temp1+temp2
+    println(temp1,", ", temp2)
     
-    return ((temp1 << 16) + temp2)
+    myreturn=convert(Uint32,myreturn)
+    return myreturn
     
 end
 
@@ -855,8 +867,10 @@ function readDataBlocks(numBlocks, time, electrode)
 end
 
 function calculateDataBlockSizeInWords(numDataStreams)
-    
-    return (SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2))
+
+    numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2)
+                           
+    return convert(Uint32, numWords)
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
 end
@@ -914,22 +928,32 @@ function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
         index+=2
 
     end
-
-    println("hi")
  
     return (timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut)
     
 end
 
 function queueToFile(time, electrode, saveOut)
- 
-    jldopen(saveOut, "w") do file
-        write(file, "time", time)  # alternatively, say "@write file A"
+
+    time=time[3:end] #get rid of initial zeros
+    electrode=[i => electrode[i][3:end] for i = 1:(2*32)]
+
+    h5open(saveOut,"r+") do fid
+        d=d_open(fid, "time")
+        set_dims!(d,(length(d)+length(time),))
+        d[(length(d[:])-length(time)+1):end]=time
+        for i=1:64
+            e=d_open(fid, string(i))
+            set_dims!(e,(length(e)+length(time),))
+            e[(length(e[:])-length(time)+1):end]=electrode[i]
+        end
+        
     end
 
-    time=Array(Int32,1)
+    time=zeros(Int32,2)
+    electrode=[i => zeros(Int32,2) for i = 1:(2*32)]
 
-    return time
+    return (time, electrode)
 
 end
 
@@ -986,7 +1010,7 @@ function ActivateTriggerIn(epAddr,bit)
 
     global x
     
-    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int,Int),x,epAddr,bit)
+    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int32,Int32),x,epAddr,bit)
 
     return er
 
@@ -996,7 +1020,7 @@ function GetWireOutValue(epAddr)
 
     global x
 
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int),x,epAddr)
+    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int32),x,epAddr)
 
     return value
 
