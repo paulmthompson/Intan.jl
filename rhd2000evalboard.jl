@@ -76,6 +76,8 @@ PortC1 = 4
 PortC2 = 5
 PortD1 = 6
 PortD2 = 7
+
+#For 64 channel amps
 PortA1Ddr = 8
 PortA2Ddr = 9
 PortB1Ddr = 10
@@ -438,7 +440,7 @@ function setMaxTimeStep(maxTimeStep)
 
     maxTimeStep=convert(Uint32, maxTimeStep)
     
-    maxTimeStepLsb = maxTimeStep & 0x000fff
+    maxTimeStepLsb = maxTimeStep & 0x0000ffff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
 
     SetWireInValue(WireInMaxTimeStepLsb,maxTimeStepLsb)
@@ -467,7 +469,7 @@ function setCableLengthMeters(port, lengthInMeters)
 
     timeDelay = (distance / cableVelocity) + xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime
 
-    delay = convert(Int,floor(((timeDelay / tStep) + 1.0) +0.5))
+    delay = convert(Int32,floor(((timeDelay / tStep) + 1.0) +0.5))
 
     if delay <1
         delay=1
@@ -789,6 +791,7 @@ function setLedDisplay(ledArray)
 end
 
 function run()
+    
     ActivateTriggerIn(TrigInSpiStart,0)
 end
 
@@ -821,7 +824,7 @@ end
 function numWordsInFifo()
 
     UpdateWireOuts()
-    temp1=(GetWireOutValue(WireOutNumWordsMsb)<<16)
+    temp1=GetWireOutValue(WireOutNumWordsMsb)<<16
     temp2=GetWireOutValue(WireOutNumWordsLsb)
     myreturn=temp1+temp2
     println(temp1,", ", temp2)
