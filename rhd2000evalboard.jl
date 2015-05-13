@@ -1010,6 +1010,8 @@ end
 
 function ReadFromPipeOut(epAddr::Uint8, length::Clong, data::Array{Uint8,1})
 
+    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ref{
+
     ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
     return data
