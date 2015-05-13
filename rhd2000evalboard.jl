@@ -68,6 +68,7 @@ WireOutBoardVersion = 0x3f
 
 PipeOutData = 0xa0
 
+#For 32 channel amps
 PortA1 = 0
 PortA2 = 1
 PortB1 = 2
@@ -87,6 +88,16 @@ PortC2Ddr = 13
 PortD1Ddr = 14
 PortD2Ddr = 15
 
+#Arrays to be iteratively filled
+timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
+auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
+boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
+ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+
+usbBuffer=Array(Uint8, USB_BUFFER_SIZE)
+
 #Variables that get modified
 
 global sampleRate=30000
@@ -96,8 +107,6 @@ global numDataStreams=0
 global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS+1)
 
 global x=Ptr{Void}
-
-global usbBuffer=Array(Uint8, USB_BUFFER_SIZE)
 
 function open_board()
 
@@ -471,7 +480,7 @@ function setCableLengthMeters(port, lengthInMeters)
 
     delay = convert(Int32,floor(((timeDelay / tStep) + 1.0) +0.5))
 
-    if delay <1
+    if delay < 1
         delay=1
     end
 
@@ -810,8 +819,6 @@ end
 
 function flush()
 
-    global usbBuffer
-    
     while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(PipeOutData, USB_BUFFER_SIZE, usbBuffer)
     end
@@ -827,7 +834,6 @@ function numWordsInFifo()
     temp1=GetWireOutValue(WireOutNumWordsMsb)<<16
     temp2=GetWireOutValue(WireOutNumWordsLsb)
     myreturn=temp1+temp2
-    println(temp1,", ", temp2)
     
     myreturn=convert(Uint32,myreturn)
     return myreturn
@@ -835,8 +841,6 @@ function numWordsInFifo()
 end
 
 function readDataBlocks(numBlocks, time, electrode)
-
-    global usbBuffer
        
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
 
@@ -851,7 +855,8 @@ function readDataBlocks(numBlocks, time, electrode)
         return false
     end
 
-    ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer)
+    #this is where usbBuffer is filled from Fifo
+    usbBuffer=ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer)[2]
 
     for i=0:(numBlocks-1)
         # make data block from fillFromUsbBuffer
@@ -879,14 +884,7 @@ function calculateDataBlockSizeInWords(numDataStreams)
 end
 
 function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
-
-    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
-    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
-    boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
-    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-   
+ 
     index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
 
     for t=1:SAMPLES_PER_DATA_BLOCK
@@ -961,7 +959,8 @@ function queueToFile(time, electrode, saveOut)
 end
 
 function convertUsbTimeStamp(usbBuffer, index)
-    
+
+    #Remember that Julia starts with index=1 and not zero
     x1 = convert(Uint32,usbBuffer[index+1])
     x2 = convert(Uint32,usbBuffer[index+2])
     x3 = convert(Uint32,usbBuffer[index+3])
@@ -972,11 +971,11 @@ end
 
 function convertUsbWord(usbBuffer, index)
 
-    x1=convert(Uint32, usbBuffer[index])
-    x2=convert(Uint32, usbBuffer[index+1])
+    #Remember that Julia starts with index=1 and not zero
+    x1=convert(Uint32, usbBuffer[index+1])
+    x2=convert(Uint32, usbBuffer[index+2])
 
     return convert(Int32, ((x2<<8) | (x1<<0)))
-
 end
 
 
@@ -1035,7 +1034,7 @@ function ReadFromPipeOut(epAddr, length, data)
 
     value=ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,Ptr{Uint8}),x,epAddr,length,data)
 
-    return value
+    return (value,data)
    
 end
 
