@@ -10,93 +10,87 @@ export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableL
 const mylib="/home/nicolelislab/neural-analysis-toolbox/DataAcq/libokFrontPanel.so"
 const myfile="/home/nicolelislab/neural-analysis-toolbox/DataAcq/API/main.bit"
 
-USB_BUFFER_SIZE = 2400000
-RHYTHM_BOARD_ID = 500
-MAX_NUM_DATA_STREAMS = 8
-FIFO_CAPACITY_WORDS = 67108864
-SAMPLES_PER_DATA_BLOCK = 60
+const USB_BUFFER_SIZE = 2400000
+const RHYTHM_BOARD_ID = 500
+const MAX_NUM_DATA_STREAMS = 8
+const FIFO_CAPACITY_WORDS = 67108864
+const SAMPLES_PER_DATA_BLOCK = 60
 
-WireInResetRun = 0x00
-WireInMaxTimeStepLsb = 0x01
-WireInMaxTimeStepMsb = 0x02
-WireInDataFreqPll = 0x03
-WireInMisoDelay = 0x04
-WireInCmdRamAddr = 0x05
-WireInCmdRamBank = 0x06
-WireInCmdRamData = 0x07
-WireInAuxCmdBank1 = 0x08
-WireInAuxCmdBank2 = 0x09
-WireInAuxCmdBank3 = 0x0a
-WireInAuxCmdLength1 = 0x0b
-WireInAuxCmdLength2 = 0x0c
-WireInAuxCmdLength3 = 0x0d
-WireInAuxCmdLoop1 = 0x0e
-WireInAuxCmdLoop2 = 0x0f
-WireInAuxCmdLoop3 = 0x10
-WireInLedDisplay = 0x11
-WireInDataStreamSel1234 = 0x12
-WireInDataStreamSel5678 = 0x13
-WireInDataStreamEn = 0x14
-WireInTtlOut = 0x15
-WireInDacSource1 = 0x16
-WireInDacSource2 = 0x17
-WireInDacSource3 = 0x18
-WireInDacSource4 = 0x19
-WireInDacSource5 = 0x1a
-WireInDacSource6 = 0x1b
-WireInDacSource7 = 0x1c
-WireInDacSource8 = 0x1d
-WireInDacManual = 0x1e
-WireInMultiUse = 0x1f
+const WireInResetRun = 0x00
+const WireInMaxTimeStepLsb = 0x01
+const WireInMaxTimeStepMsb = 0x02
+const WireInDataFreqPll = 0x03
+const WireInMisoDelay = 0x04
+const WireInCmdRamAddr = 0x05
+const WireInCmdRamBank = 0x06
+const WireInCmdRamData = 0x07
+const WireInAuxCmdBank1 = 0x08
+const WireInAuxCmdBank2 = 0x09
+const WireInAuxCmdBank3 = 0x0a
+const WireInAuxCmdLength1 = 0x0b
+const WireInAuxCmdLength2 = 0x0c
+const WireInAuxCmdLength3 = 0x0d
+const WireInAuxCmdLoop1 = 0x0e
+const WireInAuxCmdLoop2 = 0x0f
+const WireInAuxCmdLoop3 = 0x10
+const WireInLedDisplay = 0x11
+const WireInDataStreamSel1234 = 0x12
+const WireInDataStreamSel5678 = 0x13
+const WireInDataStreamEn = 0x14
+const WireInTtlOut = 0x15
+const WireInDacSource1 = 0x16
+const WireInDacSource2 = 0x17
+const WireInDacSource3 = 0x18
+const WireInDacSource4 = 0x19
+const WireInDacSource5 = 0x1a
+const WireInDacSource6 = 0x1b
+const WireInDacSource7 = 0x1c
+const WireInDacSource8 = 0x1d
+const WireInDacManual = 0x1e
+const WireInMultiUse = 0x1f
 
-TrigInDcmProg = 0x40
-TrigInSpiStart = 0x41
-TrigInRamWrite = 0x42
-TrigInDacThresh = 0x43
-TrigInDacHpf = 0x44
-TrigInExtFastSettle = 0x45
-TrigInExtDigOut = 0x46
+const TrigInDcmProg = 0x40
+const TrigInSpiStart = 0x41
+const TrigInRamWrite = 0x42
+const TrigInDacThresh = 0x43
+const TrigInDacHpf = 0x44
+const TrigInExtFastSettle = 0x45
+const TrigInExtDigOut = 0x46
 
-WireOutNumWordsLsb = 0x20
-WireOutNumWordsMsb = 0x21
-WireOutSpiRunning = 0x22
-WireOutTtlIn = 0x23
-WireOutDataClkLocked = 0x24
-WireOutBoardMode = 0x25
-WireOutBoardId = 0x3e
-WireOutBoardVersion = 0x3f
+const WireOutNumWordsLsb = 0x20
+const WireOutNumWordsMsb = 0x21
+const WireOutSpiRunning = 0x22
+const WireOutTtlIn = 0x23
+const WireOutDataClkLocked = 0x24
+const WireOutBoardMode = 0x25
+const WireOutBoardId = 0x3e
+const WireOutBoardVersion = 0x3f
 
-PipeOutData = 0xa0
+const PipeOutData = 0xa0
 
 #For 32 channel amps
-PortA1 = 0
-PortA2 = 1
-PortB1 = 2
-PortB2 = 3
-PortC1 = 4
-PortC2 = 5
-PortD1 = 6
-PortD2 = 7
+const PortA1 = 0
+const PortA2 = 1
+const PortB1 = 2
+const PortB2 = 3
+const PortC1 = 4
+const PortC2 = 5
+const PortD1 = 6
+const PortD2 = 7
 
 #For 64 channel amps
-PortA1Ddr = 8
-PortA2Ddr = 9
-PortB1Ddr = 10
-PortB2Ddr = 11
-PortC1Ddr = 12
-PortC2Ddr = 13
-PortD1Ddr = 14
-PortD2Ddr = 15
+const PortA1Ddr = 8
+const PortA2Ddr = 9
+const PortB1Ddr = 10
+const PortB2Ddr = 11
+const PortC1Ddr = 12
+const PortC2Ddr = 13
+const PortD1Ddr = 14
+const PortD2Ddr = 15
 
 #Arrays to be iteratively filled
-timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
-auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
-boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
-ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
 
-usbBuffer=Array(Uint8, USB_BUFFER_SIZE)
+usbBuffer=zeros(Uint8, USB_BUFFER_SIZE)
 
 #Variables that get modified
 
@@ -106,36 +100,29 @@ global numDataStreams=0
 
 global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS+1)
 
-global x=Ptr{Void}
+const y = ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
 
 function open_board()
 
-    global x
-      
-    #make device handle
-    x=ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
-    println("Constructed")
-
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall((:okFrontPanel_GetDeviceCount,mylib), Int, (Ptr{Void},), x) 
+    nDevices=ccall((:okFrontPanel_GetDeviceCount,mylib), Int, (Ptr{Void},), y) 
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
     serial=Array(Uint8,11)
-    ccall((:okFrontPanel_GetDeviceListSerial,mylib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), x, 0,serial)
+    ccall((:okFrontPanel_GetDeviceListSerial,mylib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), y, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
-    if (ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),x,serialnumber)!=0)
-        x=Ptr{Void}
+    if (ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),y,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
     
     #configure on-board PLL
-    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),x)
+    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),y)
 
     return 1
 
@@ -143,10 +130,8 @@ end
 
 function uploadFpgaBitfile()
 
-    global x
-
     #upload configuration file
-    errorcode=ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},Ptr{Uint8}),x,myfile)
+    errorcode=ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},Ptr{Uint8}),y,myfile)
 
     #error checking goes here
     if errorcode==0
@@ -157,7 +142,7 @@ function uploadFpgaBitfile()
     
     
     #Check if FrontPanel Support is enabled
-    ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),x)
+    ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),y)
 
     UpdateWireOuts()
     
@@ -172,9 +157,7 @@ function uploadFpgaBitfile()
 end
 
 function initialize_board()
-
-    global x
-    
+  
     resetBoard()
     setSampleRate(30000)
     selectAuxCommandBank("PortA", "AuxCmd1", 0)
@@ -831,17 +814,15 @@ end
 function numWordsInFifo()
 
     UpdateWireOuts()
-    temp1=GetWireOutValue(WireOutNumWordsMsb)<<16
-    temp2=GetWireOutValue(WireOutNumWordsLsb)
-    myreturn=temp1+temp2
     
-    myreturn=convert(Uint32,myreturn)
-    return myreturn
+    return convert(Uint32,GetWireOutValue(WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb))
     
 end
 
-function readDataBlocks(numBlocks, time, electrode)
-       
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}})
+
+    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
+    
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
 
     if (numWordsInFifo() < numWordsToRead)
@@ -856,14 +837,16 @@ function readDataBlocks(numBlocks, time, electrode)
     end
 
     #this is where usbBuffer is filled from Fifo
-    usbBuffer=ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer)[2]
+    usbBuffer=ReadFromPipeOut(PipeOutData, convert(Clong, numBytesToRead), usbBuffer)
 
     for i=0:(numBlocks-1)
         # make data block from fillFromUsbBuffer
         # add block to queue
         dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams)
-     
+
+        #Add time to 
         append!(time, dataBlock[1])
+        
         for j=1:(32*numDataStreams)
             append!(electrode[j],dataBlock[2][:,sub2ind([2,32],j)])
         end
@@ -874,7 +857,7 @@ function readDataBlocks(numBlocks, time, electrode)
    
 end
 
-function calculateDataBlockSizeInWords(numDataStreams)
+function calculateDataBlockSizeInWords(numDataStreams::Int64)
 
     numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2)
                            
@@ -883,14 +866,20 @@ function calculateDataBlockSizeInWords(numDataStreams)
 
 end
 
-function fillFromUsbBuffer(usbBuffer, blockIndex, numDataStreams)
- 
+function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, numDataStreams::Int64)
+    
     index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
 
+    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
+    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
+    boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
+    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+    
     for t=1:SAMPLES_PER_DATA_BLOCK
         
         #error checking goes here
-
         
         index+=8
         timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer, index))
@@ -958,7 +947,7 @@ function queueToFile(time, electrode, saveOut)
 
 end
 
-function convertUsbTimeStamp(usbBuffer, index)
+function convertUsbTimeStamp(usbBuffer::Array{Uint8,1}, index::Int64)
 
     #Remember that Julia starts with index=1 and not zero
     x1 = convert(Uint32,usbBuffer[index+1])
@@ -969,13 +958,14 @@ function convertUsbTimeStamp(usbBuffer, index)
     return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
 end
 
-function convertUsbWord(usbBuffer, index)
+function convertUsbWord(usbBuffer::Array{Uint8,1}, index::Int64)
 
     #Remember that Julia starts with index=1 and not zero
     x1=convert(Uint32, usbBuffer[index+1])
     x2=convert(Uint32, usbBuffer[index+2])
 
     return convert(Int32, ((x2<<8) | (x1<<0)))
+    
 end
 
 
@@ -983,36 +973,28 @@ end
 
 
 function SetWireInValue(ep, val, mask = 0xffffffff)
-
-    global x
     
-    er=ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),x,ep, val, mask)
+    er=ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),y,ep, val, mask)
 
     return er
 end
 
 function UpdateWireIns()
 
-    global x
-
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),x)
+    ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),y)
 
 end
 
 function UpdateWireOuts()
 
-    global x
-
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),x)
+    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),y)
 
 end
 
 
 function ActivateTriggerIn(epAddr,bit)
-
-    global x
     
-    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int32,Int32),x,epAddr,bit)
+    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int32,Int32),y,epAddr,bit)
 
     return er
 
@@ -1020,21 +1002,17 @@ end
 
 function GetWireOutValue(epAddr)
 
-    global x
-
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int32),x,epAddr)
+    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int32),y,epAddr)
 
     return value
 
 end
 
-function ReadFromPipeOut(epAddr, length, data)
+function ReadFromPipeOut(epAddr::Uint8, length::Clong, data::Array{Uint8,1})
 
-    global x
+    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
-    value=ccall((:okFrontPanel_ReadFromPipeOut,mylib),Culong,(Ptr{Void},Int,Culong,Ptr{Uint8}),x,epAddr,length,data)
-
-    return (value,data)
+    return data
    
 end
 
