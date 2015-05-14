@@ -90,8 +90,6 @@ const PortD2Ddr = 15
 
 #Arrays to be iteratively filled
 
-usbBuffer=zeros(Uint8, USB_BUFFER_SIZE)
-
 #Variables that get modified
 
 global sampleRate=30000
@@ -441,11 +439,11 @@ function setMaxTimeStep(maxTimeStep)
     
 end
 
-function setCableLengthFeet(port, lengthInFeet)
+function setCableLengthFeet(port, lengthInFeet::Float64)
     setCableLengthMeters(port, .3048 * lengthInFeet)
 end
 
-function setCableLengthMeters(port, lengthInMeters)
+function setCableLengthMeters(port, lengthInMeters::Float64)
 
     speedOfLight = 299792458.0
     xilinxLvdsOutputDelay=1.9e-9
@@ -802,6 +800,8 @@ end
 
 function flush()
 
+    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
+    
     while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(PipeOutData, USB_BUFFER_SIZE, usbBuffer)
     end
@@ -861,7 +861,8 @@ function calculateDataBlockSizeInWords(numDataStreams::Int64)
 
     numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2)
                            
-    return convert(Uint32, numWords)
+    # return convert(Uint32, numWords)
+    return numWords
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
 end
@@ -992,7 +993,7 @@ function UpdateWireOuts()
 end
 
 
-function ActivateTriggerIn(epAddr,bit)
+function ActivateTriggerIn(epAddr::Uint8,bit::Int)
     
     er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int32,Int32),y,epAddr,bit)
 
@@ -1000,7 +1001,7 @@ function ActivateTriggerIn(epAddr,bit)
 
 end
 
-function GetWireOutValue(epAddr)
+function GetWireOutValue(epAddr::Uint8)
 
     value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int32),y,epAddr)
 
@@ -1010,9 +1011,9 @@ end
 
 function ReadFromPipeOut(epAddr::Uint8, length::Clong, data::Array{Uint8,1})
 
-    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ref{
+    #ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ref{Array{Uint8,1}),y,epAddr,length,data)
 
-    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
+   ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
     return data
    
