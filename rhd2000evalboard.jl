@@ -540,7 +540,7 @@ function setDataSource(stream, dataSource)
 
 end
 
-function enableDataStream(stream, enabled)
+function enableDataStream(stream::Int, enabled::Bool)
 
     global dataStreamEnabled
     global numDataStreams
@@ -566,7 +566,7 @@ function enableDataStream(stream, enabled)
                 
 end
 
-function enableDac(dacChannel, enabled)
+function enableDac(dacChannel::Int, enabled::Bool)
 
     #error checking goes here
 
@@ -618,7 +618,7 @@ function selectDacDataStream(dacChannel, stream)
         
 end
 
-function selectDacDataChannel(dacChannel, dataChannel)
+function selectDacDataChannel(dacChannel::Int, dataChannel)
     #error checking goes here
 
     if dacChannel == 0
@@ -769,7 +769,7 @@ function setLedDisplay(ledArray)
     ledOut=0
     for i=1:8
         if ledArray[i]>0
-            ledOut +=1 << (i-1)
+            ledOut += 1 << (i-1)
         end
     end
 
@@ -823,7 +823,7 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{In
 
     usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
     
-    numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams)
+    numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
 
     if (numWordsInFifo() < numWordsToRead)
         return false
@@ -842,7 +842,7 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{In
     for i=0:(numBlocks-1)
         # make data block from fillFromUsbBuffer
         # add block to queue
-        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams)
+        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64)
 
         #Add time to 
         append!(time, dataBlock[1])
@@ -857,23 +857,24 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{In
    
 end
 
-function calculateDataBlockSizeInWords(numDataStreams::Int64)
+function calculateDataBlockSizeInWords(nDataStreams::Int64)
 
-    numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(numDataStreams*36)+8+2)
+    numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(nDataStreams*36)+8+2)
                            
     # return convert(Uint32, numWords)
+
     return numWords
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
 end
 
-function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, numDataStreams::Int64)
+function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataStreams::Int64)
     
-    index = blockIndex * 2 * calculateDataBlockSizeInWords(numDataStreams)
+    index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,32)
-    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,numDataStreams,3)
+    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,32)
+    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,3)
     boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
     ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
@@ -888,7 +889,7 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, numData
 
         #Read auxiliary results
         for channel=1:3
-            for stream=1:numDataStreams
+            for stream=1:nDataStreams
                 auxiliaryData[t,stream,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
             end
@@ -896,14 +897,14 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, numData
 
         #Read amplifier channels
         for channel=1:32
-            for stream=1:numDataStreams
+            for stream=1:nDataStreams
                 amplifierData[t,stream,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
             end
         end
 
         #Skip 36th filler word in each data stream
-        index += 2 * numDataStreams
+        index += 2 * nDataStreams
 
         #Read from AD5662 ADCs
         for i=1:8
@@ -924,7 +925,7 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, numData
     
 end
 
-function queueToFile(time, electrode, saveOut)
+function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}, saveOut)
 
     time=time[3:end] #get rid of initial zeros
     electrode=[i => electrode[i][3:end] for i = 1:(2*32)]
@@ -968,7 +969,6 @@ function convertUsbWord(usbBuffer::Array{Uint8,1}, index::Int64)
     return convert(Int32, ((x2<<8) | (x1<<0)))
     
 end
-
 
 #Library Wrapper Functions
 
