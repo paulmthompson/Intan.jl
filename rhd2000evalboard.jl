@@ -814,8 +814,9 @@ end
 function numWordsInFifo()
 
     UpdateWireOuts()
-    
-    return convert(Uint32,GetWireOutValue(WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb))
+
+    #Rhythm makes this a Uint32 (not sure that it matters)
+    return GetWireOutValue(WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb)
     
 end
 
