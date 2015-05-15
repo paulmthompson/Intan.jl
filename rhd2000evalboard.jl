@@ -96,7 +96,7 @@ global sampleRate=30000
 
 global numDataStreams=0
 
-global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS+1)
+global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS)
 
 const y = ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
 
@@ -196,7 +196,7 @@ function initialize_board()
 
     #remember that julia indexes with 1's instead of 0's to start an array
     enableDataStream(0, true)
-    for i=1:MAX_NUM_DATA_STREAMS
+    for i=1:(MAX_NUM_DATA_STREAMS-1)
         enableDataStream(i,false)
     end
 
@@ -535,7 +535,7 @@ function setDataSource(stream, dataSource)
     end
 
     bitShift=convert(Int32,bitShift)
-    SetWireInValue(endPoint,dataSource << bitShift, 0x000f << bitShift)
+    SetWireInValue(endPoint,(dataSource << bitShift), (0x000f << bitShift))
     UpdateWireIns()
 
 end
