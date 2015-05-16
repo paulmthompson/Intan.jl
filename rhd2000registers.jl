@@ -1,10 +1,12 @@
 module rhd2000registers
 
+export CreateRHD2000Registers, createCommandListRegisterConfig, setDspCutoffFreq, setLowerBandwidth, setUpperBandwidth
+
 type register
     sampleRate::Cdouble
 
     #Register 0 variables
-    adcReference::Int32
+    adcReferenceBw::Int32
     ampFastSettle::Int32
     ampVrefEnable::Int32
     adcComparatorBias::Int32
@@ -67,7 +69,7 @@ end
 
 function CreateRHD2000Registers(sampleRate)   
 
-    r=register()
+    r=register(zeros(Int32,40)...,zeros(Int32,1))
     
     defineSampleRate(sampleRate,r)
     
@@ -96,17 +98,17 @@ function CreateRHD2000Registers(sampleRate)
 
     r=enableDsp(true,r)
 
-    setDspCutoffFreq(1.0) #finish me
+    r=setDspCutoffFreq(1.0,r)
 
     r.zcheckDacPower=1
 
     r.zcheckLoad=0
 
-    r=setZcheckScale(ZcheckCs100fF,r)
+    r=setZcheckScale("ZcheckCs100fF",r)
 
     r.zcheckConnAll=0
 
-    r=setZcheckPolarity(ZcheckPositiveInput,r)
+    r=setZcheckPolarity("ZcheckPositiveInput",r)
 
     r=enableZcheck(false,r)
 
@@ -119,10 +121,13 @@ function CreateRHD2000Registers(sampleRate)
     r.adcAux2En=1
     r.adcAux3En=1
 
-    r=setUpperBandwidth(10000.0)
-    r=setLowerBandwidth(1.0)
+    #not sure what these actually do
+    r=setUpperBandwidth(10000.0,r)
+    r=setLowerBandwidth(1.0,r)
 
     r=powerUpAllAmps(r)
+
+    return r
 
 end
 
@@ -135,25 +140,25 @@ function defineSampleRate(newSampleRate,r)
     if r.sampleRate<3334.0
         r.muxBias=40
         r.adcBufferBias=32
-    elseif sampleRate<4001.0
+    elseif r.sampleRate<4001.0
         r.muxBias=40
         r.adcBufferBias=16
-    elseif sampleRate<5001.0
+    elseif r.sampleRate<5001.0
         r.muxBias=40
         r.adcBufferBias=8
-    elseif sampleRate<6251.0
+    elseif r.sampleRate<6251.0
         r.muxBias=32
         r.adcBufferBias=8
-    elseif sampleRate<8001.0
+    elseif r.sampleRate<8001.0
         r.muxBias=26
         r.adcBufferBias=8
-    elseif sampleRate<10001.0
+    elseif r.sampleRate<10001.0
         r.muxBias=18
         r.adcBufferBias=4
-    elseif sampleRate<12501.0
+    elseif r.sampleRate<12501.0
         r.muxBias=16
         r.adcBufferBias=3
-    elseif sampleRate<15001.0
+    elseif r.sampleRate<15001.0
         r.muxBias=7
         r.adcBufferBias=3
     else
@@ -207,7 +212,7 @@ function setDspCutoffFreq(newDspCutoffFreq, r)
     logFCutoff=zeros(Float64,16)
 
     for n=2:16
-        x=pow(2.0, (n-1))
+        x= 2.0 ^ (n-1)
         fCutoff[n]= r.sampleRate * log(x / (x - 1.0)) / * (2*pi)
         logFCutoff[n] = log10(fCutoff[n])
     end
@@ -342,31 +347,31 @@ function setLowerBandwidth(lowerBandwidth, r)
 
     rLTarget = rLFromLowerBandwidth(lowerBandwidth)
 
-    rLDac1 = 0
-    rLDac2 = 0
-    rLDac3 = 0
+    r.rLDac1 = 0
+    r.rLDac2 = 0
+    r.rLDac3 = 0
     rLActual = RLBase
 
     if lowerBandwidth < 0.15
         rLActual += RLDac3Unit
-        rLDac3+=1
+        r.rLDac3+=1
     end
 
     for i=1:RLDac2Steps
         if rLActual < rLTarget - (RLDac2Unit - RLDac1Unit/2)
             rLActual += RLDac2Unit
-            rLDac2+=1
+            r.rLDac2+=1
         end
     end
 
     for i=1:RLDac1Steps
-        if rLActual < rLTarget - (RLDacqUnit /2)
-            rLActual += RLDacqUnit
-            rLDac1+=1
+        if rLActual < rLTarget - (RLDac1Unit /2)
+            rLActual += RLDac1Unit
+            r.rLDac1+=1
         end
     end
 
-    r.actualLowerBandwidth=lowerBandwidthFromRL(rLActual)
+    actualLowerBandwidth=lowerBandwidthFromRL(rLActual)
 
     return r
 
@@ -392,68 +397,68 @@ function setUpperBandwidth(upperBandwidth, r)
 
     rH1Target = rH1FromUpperBandwidth(upperBandwidth)
 
-    rH1Dac1 = 0
-    rH1Dac2 = 0
+    r.rH1Dac1 = 0
+    r.rH1Dac2 = 0
     rH1Actual = RH1Base
 
-    for i:1:RH1Dac2Steps
+    for i=1:RH1Dac2Steps
 
         if rH1Actual < rH1Target - (RH1Dac2Unit - RH1Dac1Unit/2)
             rH1Actual += RH1Dac2Unit
-            rH1Dac2+=1
+            r.rH1Dac2+=1
         end
         
     end
 
-    for 1:RH1Dac1Steps
+    for i=1:RH1Dac1Steps
 
         if rH1Actual < rH1Target - (RH1Dac1Unit/2)
             rH1Actual += RH1Dac1Unit
-            rH1Dac1+=1
+            r.rH1Dac1+=1
         end
     end
 
     rH2Target= rH2FromUpperBandwidth(upperBandwidth)
 
-    rH2Dac1=0
-    rH2Dac2=0
+    r.rH2Dac1=0
+    r.rH2Dac2=0
     rH2Actual = RH2Base
 
-    for i:1:RH2Dac2Steps
+    for i=1:RH2Dac2Steps
 
         if rH2Actual < rH2Target - (RH2Dac2Unit - RH2Dac1Unit/2)
             rH2Actual += RH2Dac2Unit
-            rH2Dac2+=1
+            r.rH2Dac2+=1
         end
         
     end
 
-    for 1:RH2Dac1Steps
+    for i=1:RH2Dac1Steps
 
         if rH2Actual < rH2Target - (RH2Dac1Unit/2)
             rH2Actual += RH2Dac1Unit
-            rH2Dac1+=1
+            r.rH2Dac1+=1
         end
     end
 
     actualUpperBandwidth1 = upperBandwidthFromRH1(rH1Actual)
     actualUpperBandwidth2 = upperBandwidthFromRH2(rH2Actual)
 
-    r.actualUpperBandwidth = sqrt(actualUpperBandwidth1 * actualUpperBandwidth2)
+    actualUpperBandwidth = sqrt(actualUpperBandwidth1 * actualUpperBandwidth2)
 
     return r
        
 end
 
-function rLFromLowerBandWidth(lowerBandwidth)
+function rLFromLowerBandwidth(lowerBandwidth)
 
     log10f = log10(lowerBandwidth)
 
     if (lowerBandwidth < 4.0) 
-       return 1.0061 * pow(10.0, (4.9391 - 1.2088 * log10f + 0.5698 * log10f * log10f + 0.1442 * log10f * log10f * log10f))
+       return 1.0061 * 10.0 ^ (4.9391 - 1.2088 * log10f + 0.5698 * log10f * log10f + 0.1442 * log10f * log10f * log10f)
     
     else 
-        return 1.0061 * pow(10.0, (4.7351 - 0.5916 * log10f + 0.08482 * log10f * log10f))
+        return 1.0061 * 10.0 ^ (4.7351 - 0.5916 * log10f + 0.08482 * log10f * log10f)
     end
    
 end
@@ -462,7 +467,7 @@ function rH1FromUpperBandwidth(upperBandwidth)
 
     log10f = log10(upperBandwidth)
 
-    return 0.9730 * pow(10.0, (8.0968 - 1.1892 * log10f + 0.04767 * log10f * log10f))
+    return 0.9730 * 10.0 ^ (8.0968 - 1.1892 * log10f + 0.04767 * log10f * log10f)
     
 end
 
@@ -470,7 +475,7 @@ function rH2FromUpperBandwidth(upperBandwidth)
 
     log10f = log10(upperBandwidth)
 
-    return 1.0191 * pow(10.0, (8.1009 - 1.0821 * log10f + 0.03383 * log10f * log10f))
+    return 1.0191 * 10.0 ^ (8.1009 - 1.0821 * log10f + 0.03383 * log10f * log10f)
 
 end
 
@@ -480,7 +485,7 @@ function upperBandwidthFromRH1(rH1)
     b = -1.1892
     c = 8.0968 - log10(rH1/0.9730)
 
-    return pow(10.0, ((-b - sqrt(b * b - 4 * a * c))/(2 * a)))
+    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 
 end
 
@@ -490,7 +495,7 @@ function upperBandwidthFromRH2(rH2)
     b = -1.0821
     c = 8.1009 - log10(rH2/1.0191)
 
-    return pow(10.0, ((-b - sqrt(b * b - 4 * a * c))/(2 * a)))
+    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 
 end
 
@@ -510,11 +515,11 @@ function lowerBandwidthFromRL(rL)
         c = 4.9873 - log10(rL/1.0061)
     end
      
-    return pow(10.0, ((-b - sqrt(b * b - 4 * a * c))/(2 * a)));
+    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 
 end
 
-function createRhD2000Command(commandType, arg1=0, arg2=0)
+function createRhd2000Command(commandType, arg1=0, arg2=0)
 
     if commandType=="Rhd2000CommandCalibrate"
         return 0x5500
