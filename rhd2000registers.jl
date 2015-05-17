@@ -71,49 +71,43 @@ function CreateRHD2000Registers(sampleRate)
 
     r=register(zeros(Int32,40)...,zeros(Int32,1))
     
-    defineSampleRate(sampleRate,r)
-    
+    r=defineSampleRate(sampleRate,r)
+
+    #Register 0 variables
     r.adcReferenceBw = 3
-
     r=setFastSettle(false,r)
-
     r.ampVrefEnable=1
-
     r.adcComparatorBias=3
-
     r.adcComparatorSelect=2
 
+    #Register 1 variables
     r.vddSenseEnable=1
 
+    #Register 3 variables
     r.tempS1=0
     r.tempS2=0
     r.tempEn=0
     r=setDigOutHiZ(r)
 
+    #Register 4 variables
     r.weakMiso=1
-
     r.twosComp=0
-
     r.absMode=0
-
     r=enableDsp(true,r)
-
     r=setDspCutoffFreq(1.0,r)
 
+    #Register 5 variables
     r.zcheckDacPower=1
-
     r.zcheckLoad=0
-
-    r=setZcheckScale("ZcheckCs100fF",r)
-
+    r=setZcheckScale("ZcheckCs100fF", r)
     r.zcheckConnAll=0
-
     r=setZcheckPolarity("ZcheckPositiveInput",r)
-
     r=enableZcheck(false,r)
 
+    #Register 7 variable
     r=setZcheckChannel(0,r)
 
+    #Register 8-13 variables
     r.offChipRH1=0
     r.offChipRH2=0
     r.offChipRL=0
@@ -121,10 +115,11 @@ function CreateRHD2000Registers(sampleRate)
     r.adcAux2En=1
     r.adcAux3En=1
 
-    #not sure what these actually do
+    #these set RHdac and RLdac variables
     r=setUpperBandwidth(10000.0,r)
     r=setLowerBandwidth(1.0,r)
 
+    
     r=powerUpAllAmps(r)
 
     return r
@@ -206,27 +201,30 @@ function setDigOutHiZ(r)
 end
 
 function setDspCutoffFreq(newDspCutoffFreq, r)
-  
+
+    #Definitely can replace almost all of this with a find
+    
     logNewDspCutoffFreq = log10(newDspCutoffFreq)
+    
     fCutoff=zeros(Float64,16)
     logFCutoff=zeros(Float64,16)
 
     for n=2:16
         x= 2.0 ^ (n-1)
-        fCutoff[n]= r.sampleRate * log(x / (x - 1.0)) / * (2*pi)
+        fCutoff[n]= r.sampleRate * log(x / (x - 1.0)) / (2*pi)
         logFCutoff[n] = log10(fCutoff[n])
     end
 
     if newDspCutoffFreq > fCutoff[2]
-        r.dspCutoffFreq = 2
+        r.dspCutoffFreq = 1
     elseif newDspCutoffFreq < fCutoff[16]
-        r.dspCutoffFreq = 16
+        r.dspCutoffFreq = 15
     else
         minLogDiff = 10000000.0
         for n=2:16
             if (abs(logNewDspCutoffFreq - logFCutoff[n]) < minLogDiff)
                 minLogDiff = abs(logNewDspCutoffFreq - logFCutoff[n]);
-                r.dspCutoffFreq = n;
+                r.dspCutoffFreq = (n-1);
             end
         end
     end
@@ -311,7 +309,9 @@ function setZcheckPolarity(polarity, r)
 end
 
 function setZcheckChannel(channel, r)
+    
     r.zcheckSelect=channel
+    
     return r
 end
 
@@ -358,14 +358,14 @@ function setLowerBandwidth(lowerBandwidth, r)
     end
 
     for i=1:RLDac2Steps
-        if rLActual < rLTarget - (RLDac2Unit - RLDac1Unit/2)
+        if rLActual < (rLTarget - (RLDac2Unit - RLDac1Unit/2))
             rLActual += RLDac2Unit
             r.rLDac2+=1
         end
     end
 
     for i=1:RLDac1Steps
-        if rLActual < rLTarget - (RLDac1Unit /2)
+        if rLActual < (rLTarget - (RLDac1Unit /2))
             rLActual += RLDac1Unit
             r.rLDac1+=1
         end
@@ -403,7 +403,7 @@ function setUpperBandwidth(upperBandwidth, r)
 
     for i=1:RH1Dac2Steps
 
-        if rH1Actual < rH1Target - (RH1Dac2Unit - RH1Dac1Unit/2)
+        if rH1Actual < (rH1Target - (RH1Dac2Unit - RH1Dac1Unit/2))
             rH1Actual += RH1Dac2Unit
             r.rH1Dac2+=1
         end
@@ -412,7 +412,7 @@ function setUpperBandwidth(upperBandwidth, r)
 
     for i=1:RH1Dac1Steps
 
-        if rH1Actual < rH1Target - (RH1Dac1Unit/2)
+        if rH1Actual < (rH1Target - (RH1Dac1Unit/2))
             rH1Actual += RH1Dac1Unit
             r.rH1Dac1+=1
         end
@@ -426,7 +426,7 @@ function setUpperBandwidth(upperBandwidth, r)
 
     for i=1:RH2Dac2Steps
 
-        if rH2Actual < rH2Target - (RH2Dac2Unit - RH2Dac1Unit/2)
+        if rH2Actual < (rH2Target - (RH2Dac2Unit - RH2Dac1Unit/2))
             rH2Actual += RH2Dac2Unit
             r.rH2Dac2+=1
         end
@@ -435,7 +435,7 @@ function setUpperBandwidth(upperBandwidth, r)
 
     for i=1:RH2Dac1Steps
 
-        if rH2Actual < rH2Target - (RH2Dac1Unit/2)
+        if rH2Actual < (rH2Target - (RH2Dac1Unit/2))
             rH2Actual += RH2Dac1Unit
             r.rH2Dac1+=1
         end
@@ -689,15 +689,15 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
     end
     
     #Program amplifier 31-63 power up/down registers in case RHD2164 is connected
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite",18,getRegisterValue(18,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite",19,getRegisterValue(19,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite",20,getRegisterValue(20,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite",21,getRegisterValue(21,r)))
+    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 18, getRegisterValue(18,r)))
+    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 19, getRegisterValue(19,r)))
+    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 20, getRegisterValue(20,r)))
+    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 21, getRegisterValue(21,r)))
     
     #End with a dummy command
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead",63))
 
-
+return commandList
 
 end
 

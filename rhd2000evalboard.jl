@@ -375,7 +375,7 @@ function uploadCommandList(commandList, auxCommandSlot, bank)
     for i=1:length(commandList)
 
         SetWireInValue(WireInCmdRamData, commandList[i])
-        SetWireInValue(WireInCmdRamAddr, i)
+        SetWireInValue(WireInCmdRamAddr, i-1)
         SetWireInValue(WireInCmdRamBank, bank)
         UpdateWireIns()
         if auxCommandSlot == "AuxCmd1"
