@@ -3,7 +3,7 @@ module rhd2000evalboard
 
 using HDF5
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList
 
 #Constant parameters
 
@@ -366,6 +366,28 @@ function isDataClockLocked()
     
     return ((value & 0x0001) > 0)
 
+end
+
+function uploadCommandList(commandList, auxCommandSlot, bank)
+
+    #error checking goes here
+
+    for i=1:length(commandList)
+
+        SetWireInValue(WireInCmdRamData, commandList[i])
+        SetWireInValue(WireInCmdRamAddr, i)
+        SetWireInValue(WireInCmdRamBank, bank)
+        UpdateWireIns()
+        if auxCommandSlot == "AuxCmd1"
+            ActivateTriggerIn(TrigInRamWrite,0)
+        elseif auxCommandSlot == "AuxCmd2"
+            ActivateTriggerIn(TrigInRamWrite,1)
+        elseif auxCommandSlot == "AuxCmd3"
+            ActivateTriggerIn(TrigInRamWrite,2)
+        end
+        
+    end
+    
 end
 
 function selectAuxCommandBank(port, commandslot, bank)
@@ -1010,9 +1032,7 @@ function GetWireOutValue(epAddr::Uint8)
 
 end
 
-function ReadFromPipeOut(epAddr::Uint8, length::Clong, data::Array{Uint8,1})
-
-    #ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ref{Array{Uint8,1}),y,epAddr,length,data)
+function ReadFromPipeOut(epAddr::Uint8, length, data::Array{Uint8,1})
 
    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 

@@ -609,6 +609,7 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
 
     #Start with a few dummy commands in case chip is still powering up
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead", 63))
+    splice!(commandList,1) #remove first dummy command
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead", 63))
 
     #Program RAM registers
