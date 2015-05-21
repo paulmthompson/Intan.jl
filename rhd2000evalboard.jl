@@ -7,14 +7,15 @@ export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableL
 
 #Constant parameters
 
-const mylib="/home/nicolelislab/neural-analysis-toolbox/DataAcq/libokFrontPanel.so"
-const myfile="/home/nicolelislab/neural-analysis-toolbox/DataAcq/API/main.bit"
+#CHANGE ME
+const mylib="/home/nicolelislab/Intan.jl/libokFrontPanel.so"
+const myfile="/home/nicolelislab/Intan.jl/DataAcq/main.bit"
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
 const MAX_NUM_DATA_STREAMS = 8
 const FIFO_CAPACITY_WORDS = 67108864
-const SAMPLES_PER_DATA_BLOCK = 60
+const SAMPLES_PER_DATA_BLOCK = 600
 
 const WireInResetRun = 0x00
 const WireInMaxTimeStepLsb = 0x01
@@ -87,8 +88,6 @@ const PortC1Ddr = 12
 const PortC2Ddr = 13
 const PortD1Ddr = 14
 const PortD2Ddr = 15
-
-#Arrays to be iteratively filled
 
 #Variables that get modified
 
