@@ -201,8 +201,6 @@ function setDigOutHiZ(r)
 end
 
 function setDspCutoffFreq(newDspCutoffFreq, r)
-
-    #Definitely can replace almost all of this with a find
     
     logNewDspCutoffFreq = log10(newDspCutoffFreq)
     
@@ -217,17 +215,13 @@ function setDspCutoffFreq(newDspCutoffFreq, r)
 
     if newDspCutoffFreq > fCutoff[2]
         r.dspCutoffFreq = 1
-    elseif newDspCutoffFreq < fCutoff[16]
-        r.dspCutoffFreq = 15
     else
-        minLogDiff = 10000000.0
-        for n=2:16
-            if (abs(logNewDspCutoffFreq - logFCutoff[n]) < minLogDiff)
-                minLogDiff = abs(logNewDspCutoffFreq - logFCutoff[n]);
-                r.dspCutoffFreq = (n-1);
-            end
-        end
-    end
+        temp=zeros(Float64,15)
+        for i=1:15
+            temp[i]=abs(logNewDspCutoffFreq - logFCutoff[i+1])
+        end 
+        r.dspCutoffFreq=findmin(temp)[2]
+    end   
     
     return r
    
