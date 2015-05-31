@@ -1,11 +1,10 @@
-Intan RHD2000 Evaluation Board Interface
-========================================
+# Intan RHD2000 Evaluation Board Interface
 
 These modules are a Julia port of the Rhythm acquisition software that comes with Intan Technologies 
 RHD2000-Series Amplifier Evaluation System for neural signal acquisition. 
 
-Files of Interest
-=================
+# Files of Interest
+
 The "Load_intan" IJulia notebook finds the Intan evaluation board, initializes it, calibrates the amplifiers,
 and controls acquisition. This functions the same as the "main.cpp" file in the Rhythm API that comes with Intan.
 
@@ -14,13 +13,11 @@ This module is a combination of the datablock and evalboard classes in the origi
 
 The "rhd2000registers" module generates the commands to be send from the eval board to the amplifiers.
 
-Required Modules
-================
+# Required Modules
 
 * HDF5 - https://github.com/timholy/HDF5.jl
 
-How To Use
-==========
+# How To Use
 
 * Change the paths in the rhd2000evalboard.jl for the appropriate location of the Intan driver library, and the bit file. I did all of this on GNU/Linux, so there might be some problems if you need something other than a .so file.
 * This code anticipates that you are using one RHD2164 64 channel amplifier connected to port A. Every additional 32 channels needs a new data stream defined, and 2 data streams can fit on one port. More instruction to come (I don't have another 64 channel amp to adequately test more streams right now).
@@ -34,19 +31,17 @@ http://www.intantech.com/files/Intan_RHD2000_USB_FPGA_interface.pdf
 
 The biggest change is probably the data structure was changed from a user defined class to a dictionary with keys for each variable, which is then saved as a HDF5 file. I thought this would be easier to work with, but I might be totally wrong.
 
-Current Functionality
-=====================
+# Current Functionality
+
 * Able to find eval board
 * Initializes board and lets you do cool thing like turn on and off ports/LEDs/streams etc
 * Able to acquire data in real time and save to HDF5 file
 
-To Do
-=====
-* Clean up random testing slop in notebook and unnecessary exported functions
+# To Do
+
 * Test with primate to see if real data is coming in through amplifiers
-* Change module to work with amps other than 64 channels
-* The ccall that reads data from the Intan to the usb Buffer seems slow to me (~.001 seconds for a SAMPLES_PER_DATA_BLOCK size of 60). At 20000 samples per second, this wouldn't be fast enough to run in real time.  Fortunately, the speed of this doesn't scale linearly with the block size, so that making the block size larger (so you do it less and read more data) fixes the problem. I'm not sure why I can't use the original block size of 60 however and think something must be wrong.
-* Add spike sorting during acquisition loop, and save time stamps instead of 20000 samples/s of voltage. Will most likely convert algorithms from an open source matlab toolkit like Wave_clus, klustakwik, or OSort.
+* The ccall that reads data from the Intan to the usb Buffer seems slow to me (~.001 seconds for a SAMPLES_PER_DATA_BLOCK size of 60). At 20000 samples per second, this wouldn't be fast enough to run in real time.  Fortunately, the speed of this doesn't scale linearly with the block size, so that making the block size larger (so you do it less and read more data) fixes the problem. I think the problem is that I'm allocated the array in Julia, and then filling it with a ccall, which probably operates in row-major order. Will change Julia array and test.
+* Add spike sorting. Started a package for future integration: https://github.com/paulmthompson/SpikeSorting.jl  Algorithms will be based on Osort (http://www.urut.ch/new/serendipity/index.php?/pages/osort.html) initially.
 * Add DAQ functionality
 * Add GUI elements, for both UI and experimental design (cursor on a screen controlled by a joystick etc). I'm happy to stay away from these for as long as possible, and I'm still very unsure of what avenue to take. I'm most familiar with Qt for graphics stuff, but most of my motivation for this project is to have a setup in one, easy to use language. Having a Julia to Pyside to Qt workflow, while it may work great, would be something I'd like to avoid if possible because it would just have so many moving parts. I'm not super familiar with notebook files, and I have been really impressed since my move to Julia. I have seen some pretty amazing modules like Interact that might do everything I need in a browser, but I'm really not sure because I'm so new. I imagine this may have pretty inconsistent speeds, but since the Intan does all of the timestamping with an onboard clock, that may not be as much of a problem as it would be with other setups.
 * Figure out how to incorporate into julia Pkg system one day
