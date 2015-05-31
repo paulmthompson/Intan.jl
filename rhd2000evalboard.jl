@@ -265,7 +265,7 @@ function resetBoard()
     
 end
 
-function setSampleRate(newSampleRate)
+function setSampleRate(newSampleRate::Int64)
 
     global sampleRate
 
@@ -841,9 +841,9 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}})
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}, ss="METHOD_NOSORT")
 
-    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
+    usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Since this is speed sensitive, need the best option)
     
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
 
@@ -864,15 +864,26 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{In
     for i=0:(numBlocks-1)
         # make data block from fillFromUsbBuffer
         # add block to queue
-        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64)
-
-        #Add time to 
-        append!(time, dataBlock[1])
         
-        for j=1:(32*numDataStreams)
-            append!(electrode[j],dataBlock[2][:,sub2ind([2,32],j)])
-        end
+        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64)
+        
+        #Add time to dataBlock
+        append!(time, dataBlock[1])
 
+        #if we are spike sorting, we should send electrode array to spike sorting so we write time stamps here rather than voltage trace. sound good?
+
+        if ss="METHOD_SORT"
+
+            
+            
+        elseif ss="METHOD_NOSORT"
+        
+            for j=1:(32*numDataStreams)
+                append!(electrode[j],dataBlock[2][:,sub2ind([2,32],j)])
+            end
+
+        end
+        
     end
 
     return true
@@ -891,12 +902,14 @@ function calculateDataBlockSizeInWords(nDataStreams::Int64)
 end
 
 function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataStreams::Int64)
+
+    #Need to add extra input so only read and return what is needed
     
     index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,32)
-    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,3)
+    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,32) #can make this 2d
+    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,3) #can make this 2d
     boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
     ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
@@ -950,22 +963,23 @@ end
 function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}, saveOut)
 
     time=time[3:end] #get rid of initial zeros
-    electrode=[i => electrode[i][3:end] for i = 1:(2*32)]
+    electrode=[i => electrode[i][3:end] for i = 1:length(electrode)]
 
     h5open(saveOut,"r+") do fid
         d=d_open(fid, "time")
         set_dims!(d,(length(d)+length(time),))
         d[(length(d[:])-length(time)+1):end]=time
-        for i=1:64
+        for i=1:length(electrode)
+            #if sorting was  used, length of each electrode array is not necessarily the same
             e=d_open(fid, string(i))
-            set_dims!(e,(length(e)+length(time),))
-            e[(length(e[:])-length(time)+1):end]=electrode[i]
+            set_dims!(e,(length(e)+length(electrode[i]),))
+            e[(length(e[:])-length(electrode[i])+1):end]=electrode[i]
         end
         
     end
 
     time=zeros(Int32,2)
-    electrode=[i => zeros(Int32,2) for i = 1:(2*32)]
+    electrode=[i => zeros(Int32,2) for i = 1:length(electrode)]
 
     return (time, electrode)
 
@@ -1033,6 +1047,7 @@ end
 
 function ReadFromPipeOut(epAddr::Uint8, length, data::Array{Uint8,1})
 
+    #Here I am giving an array that Julia creates in column major order (data) and having it filled by C, which operates in row major order. Could this be causing a big slow down?
    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
     return data
