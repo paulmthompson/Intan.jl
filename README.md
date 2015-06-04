@@ -16,6 +16,7 @@ The "rhd2000registers" module generates the commands to be send from the eval bo
 # Required Modules
 
 * HDF5 - https://github.com/timholy/HDF5.jl
+* SpikeSorting - https://github.com/paulmthompson/SpikeSorting.jl
 
 # How To Use
 
@@ -34,19 +35,32 @@ The biggest change is probably the data structure was changed from a user define
 # Current Functionality
 
 * Able to find eval board
-* Initializes board and lets you do cool thing like turn on and off ports/LEDs/streams etc
+* Initializes board and lets you do cool things like turn on and off ports/LEDs/streams etc
 * Able to acquire data in real time and save to HDF5 file
 
 # To Do
 
-* Test with primate to see if real data is coming in through amplifiers
-* The ccall that reads data from the Intan to the usb Buffer seems slow to me (~.001 seconds for a SAMPLES_PER_DATA_BLOCK size of 60). At 20000 samples per second, this wouldn't be fast enough to run in real time.  Fortunately, the speed of this doesn't scale linearly with the block size, so that making the block size larger (so you do it less and read more data) fixes the problem. I think the problem is that I'm allocated the array in Julia, and then filling it with a ccall, which probably operates in row-major order. Will change Julia array and test.
-* Add spike sorting. Started a package for future integration: https://github.com/paulmthompson/SpikeSorting.jl  Algorithms will be based on Osort (http://www.urut.ch/new/serendipity/index.php?/pages/osort.html) initially.
-* Add DAQ functionality
-* Add GUI elements, for both UI and experimental design (cursor on a screen controlled by a joystick etc). I'm happy to stay away from these for as long as possible, and I'm still very unsure of what avenue to take. I'm most familiar with Qt for graphics stuff, but most of my motivation for this project is to have a setup in one, easy to use language. Having a Julia to Pyside to Qt workflow, while it may work great, would be something I'd like to avoid if possible because it would just have so many moving parts. I'm not super familiar with notebook files, and I have been really impressed since my move to Julia. I have seen some pretty amazing modules like Interact that might do everything I need in a browser, but I'm really not sure because I'm so new. I imagine this may have pretty inconsistent speeds, but since the Intan does all of the timestamping with an onboard clock, that may not be as much of a problem as it would be with other setups.
-* Figure out how to incorporate into julia Pkg system one day
+## General
+
+* Figure out how to incorporate into julia Pkg system
 * Since I pretty much stuck to the form of the C++ code, there are a lot of areas where the syntax and methods can be made a lot simpler by taking advantage of some of Julia's built in functions. For instance, many of the functions in the registers module could probably be 2 lines instead of 20.
-* Find the many bugs and mistakes I have most certainly made in existing code. I'm a new Julia convert, so I'm also almost certainly not fully taking advantage of its speed in many places.
+* The ccall that reads data from the Intan to the usb Buffer seems slow to me (~.001 seconds for a SAMPLES_PER_DATA_BLOCK size of 60). At 20000 samples per second, this wouldn't be fast enough to run in real time.  Fortunately, the speed of this doesn't scale linearly with the block size, so that making the block size larger (so you do it less and read more data) fixes the problem. Maybe the problem is that I'm allocated the array in Julia, and then filling it with a ccall, which probably operates in row-major order, but some tests don't seem to confirm this. Not really sure what to do about this.
+
+## Spike Sorting
+* I've been working on an unsupervised spike sorting routine based on many of the OSort algorithms. Right now it looks like Julia will allow this to run for many channels with enough speed to keep up with the data the Intan is throwing at it. Right now it is integrated, but need some bug fixes and additional testing. Also the spike sorting algorithm is completely bare bones and needs some more bells and whistles (as well as supervised control).
+
+## DAQ
+* I get the values from the intan but don't do anything with them. Arguments need to be added to indicate which DAQs are needed for an experiment, and functions need to be adjusted to write these to disk in real time like the electrode and time vectors.
+
+## UI
+* Add GUI elements, for both UI and experimental design (cursor on a screen controlled by a joystick etc). I've started looking at PyCall and MatplotLib for this, and it looks like they are pretty easy to use and fast enough. Still far from decided though.
+
+## Parallel Processing
+* Haven't done anything yet with parallel processing. Briefly looking at Julia makes it seem like it shouldn't be too hard to do, and with the Intan taking care of the time stamps and such I don't have to worry as much about how fast each thread is moving relative to the other. Probably will first start starting with Spike sorting.
 
 
+
+
+## Validation
+* Test with primate to see if real data is coming in through amplifiers
 
