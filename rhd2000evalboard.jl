@@ -1,7 +1,7 @@
 
 module rhd2000evalboard
 
-using HDF5
+using HDF5, SortSpikes
 
 export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList
 
@@ -841,9 +841,9 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}, ss="METHOD_NOSORT")
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int64,1}}, neuronnum::Dict{Int64,Array{Int64,1}},clus::Dict{Int64,Cluster},s::Dict{Int64,SpikeDetection},ss="METHOD_NOSORT")
 
-    usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Since this is speed sensitive, need the best option)
+    usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Could make it an input?)
     
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
 
@@ -862,25 +862,30 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{In
     usbBuffer=ReadFromPipeOut(PipeOutData, convert(Clong, numBytesToRead), usbBuffer)
 
     for i=0:(numBlocks-1)
-        # make data block from fillFromUsbBuffer
-        # add block to queue
         
+        # make data block from fillFromUsbBuffer
+        # add block to queue       
         dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64)
         
-        #Add time to dataBlock
+        #Add time from dataBlock
         append!(time, dataBlock[1])
 
-        #if we are spike sorting, we should send electrode array to spike sorting so we write time stamps here rather than voltage trace. sound good?
+        if ss=="METHOD_SORT"
 
-        if ss="METHOD_SORT"
-
-            
-            
-        elseif ss="METHOD_NOSORT"
+            #This will get back the time stamps for each electrode
+            #Still need to worry about mergers across blocks
+            onlineSort(dataBlock[1][1,end],dataBlock[2],clus,s,electrode,neuronnum)
+               
+        elseif ss=="METHOD_NOSORT"
         
             for j=1:(32*numDataStreams)
-                append!(electrode[j],dataBlock[2][:,sub2ind([2,32],j)])
+                append!(electrode[j],dataBlock[2][:,j])
             end
+
+        elseif ss=="METHOD_SORTCAL"
+
+            #Won't actually return anything, but will get SpikeDetection and Cluster types ready for susequent data collection
+            onlineCal(dataBlock[2],clus,s)
 
         end
         
@@ -908,11 +913,11 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
     index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,32) #can make this 2d
-    auxiliaryData=Array(Int32,SAMPLES_PER_DATA_BLOCK,nDataStreams,3) #can make this 2d
-    boardAdcData=Array(Int32,SAMPLES_PER_DATA_BLOCK,8)
-    ttlIn=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    ttlOut=Array(Int32,SAMPLES_PER_DATA_BLOCK)
+    amplifierData=Array(Int64,SAMPLES_PER_DATA_BLOCK,nDataStreams*32) 
+    auxiliaryData=Array(Int64,SAMPLES_PER_DATA_BLOCK,nDataStreams*3)
+    boardAdcData=Array(Int64,SAMPLES_PER_DATA_BLOCK,8)
+    ttlIn=Array(Int64,SAMPLES_PER_DATA_BLOCK)
+    ttlOut=Array(Int64,SAMPLES_PER_DATA_BLOCK)
     
     for t=1:SAMPLES_PER_DATA_BLOCK
         
@@ -923,19 +928,15 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
         index+=4
 
         #Read auxiliary results
-        for channel=1:3
-            for stream=1:nDataStreams
-                auxiliaryData[t,stream,channel] = convertUsbWord(usbBuffer,index)
+        for channel=1:(3*nDataStreams)
+                auxiliaryData[t,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
-            end
         end
 
         #Read amplifier channels
-        for channel=1:32
-            for stream=1:nDataStreams
-                amplifierData[t,stream,channel] = convertUsbWord(usbBuffer,index)
+        for channel=1:(32*nDataStreams)
+                amplifierData[t,channel] = convertUsbWord(usbBuffer,index)
                 index+=2
-            end
         end
 
         #Skip 36th filler word in each data stream
@@ -960,7 +961,7 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
     
 end
 
-function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}, saveOut)
+function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int64,1}}, neuronnum::Dict{Int64,Array{Int64,1}}, saveOut)
 
     time=time[3:end] #get rid of initial zeros
     electrode=[i => electrode[i][3:end] for i = 1:length(electrode)]
@@ -974,12 +975,16 @@ function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int32,1}}
             e=d_open(fid, string(i))
             set_dims!(e,(length(e)+length(electrode[i]),))
             e[(length(e[:])-length(electrode[i])+1):end]=electrode[i]
+            e=d_open(fid, string("n",i))
+            set_dims!(e,(length(e)+length(neuronnum[i]),))
+            e[(length(e[:])-length(neuronnum[i])+1):end]=neuronnum[i]
         end
         
     end
 
+    #Can get rid of these I think since the arrays are mutable. need to check
     time=zeros(Int32,2)
-    electrode=[i => zeros(Int32,2) for i = 1:length(electrode)]
+    electrode=[i => zeros(Int64,2) for i = 1:length(electrode)]
 
     return (time, electrode)
 
@@ -1002,7 +1007,8 @@ function convertUsbWord(usbBuffer::Array{Uint8,1}, index::Int64)
     x1=convert(Uint32, usbBuffer[index+1])
     x2=convert(Uint32, usbBuffer[index+2])
 
-    return convert(Int32, ((x2<<8) | (x1<<0)))
+    #The original C++ Rhythm API uses Int32, but Julia hasn't been playing nice with making sure that Int32s are type stable through calculations.
+    return convert(Int64, ((x2<<8) | (x1<<0)))
     
 end
 
