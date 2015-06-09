@@ -841,7 +841,7 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Dict{Int64,Array{Int64,1}}, neuronnum::Dict{Int64,Array{Int64,1}},clus::Dict{Int64,Cluster},s::Dict{Int64,SpikeDetection},ss="METHOD_NOSORT")
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Array{Any,1}, neuronnum::Array{Any,1},clus::Array{Any,1},s::Array{Any,1},ss="METHOD_NOSORT")
 
     usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Could make it an input?)
     
@@ -961,10 +961,11 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
     
 end
 
-function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int64,1}}, neuronnum::Dict{Int64,Array{Int64,1}}, saveOut)
+function queueToFile(time::Array{Int32,1}, electrode::Array{Any,1}, neuronnum::Array{Any,1}, saveOut)
 
     time=time[3:end] #get rid of initial zeros
-    electrode=[i => electrode[i][3:end] for i = 1:length(electrode)]
+    electrode=Any[electrode[i][3:end] for i = 1:length(electrode)]
+    neuronnum=Any[neuronnum[i][3:end] for i = 1:length(electrode)]
 
     h5open(saveOut,"r+") do fid
         d=d_open(fid, "time")
@@ -982,12 +983,10 @@ function queueToFile(time::Array{Int32,1}, electrode::Dict{Int64,Array{Int64,1}}
         
     end
 
-    #Can get rid of these I think since the arrays are mutable. need to check
     time=zeros(Int32,2)
-    electrode=[i => zeros(Int64,2) for i = 1:length(electrode)]
-
-    return (time, electrode)
-
+    electrode=Any[zeros(Int64,2) for i = 1:length(electrode)]
+    neuronnum=Any[zeros(Int64,2) for i = 1:length(electrode)]
+    
 end
 
 function convertUsbTimeStamp(usbBuffer::Array{Uint8,1}, index::Int64)
