@@ -3,7 +3,7 @@ module rhd2000evalboard
 
 using HDF5, SortSpikes
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, readFromPipeOut
 
 #Constant parameters
 
@@ -841,7 +841,7 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Array{Any,1}, neuronnum::Array{Any,1},clus::Array{Any,1},s::Array{Any,1},ss="METHOD_NOSORT")
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}},ss="METHOD_NOSORT")
 
     usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Could make it an input?)
     
@@ -865,27 +865,21 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Array{A
         
         # make data block from fillFromUsbBuffer
         # add block to queue       
-        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64)
+        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64,s)
         
         #Add time from dataBlock
         append!(time, dataBlock[1])
 
         if ss=="METHOD_SORT"
 
-            #This will get back the time stamps for each electrode
-            #Still need to worry about mergers across blocks
-            onlineSort(dataBlock[1][1,end],dataBlock[2],clus,s,electrode,neuronnum)
-               
+            #parallel
+            map!(onlineSort,s)
+                      
         elseif ss=="METHOD_NOSORT"
         
-            for j=1:(32*numDataStreams)
-                append!(electrode[j],dataBlock[2][:,j])
-            end
-
         elseif ss=="METHOD_SORTCAL"
-
-            #Won't actually return anything, but will get SpikeDetection and Cluster types ready for susequent data collection
-            onlineCal(dataBlock[2],clus,s)
+            
+            map!(onlineCal,s)
 
         end
         
@@ -894,6 +888,7 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, electrode::Array{A
     return true
    
 end
+
 
 function calculateDataBlockSizeInWords(nDataStreams::Int64)
 
@@ -906,11 +901,13 @@ function calculateDataBlockSizeInWords(nDataStreams::Int64)
 
 end
 
-function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataStreams::Int64)
+function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataStreams::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
 
     #Need to add extra input so only read and return what is needed
     
-    index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)
+    #Remember that Julia starts with index=1 and not zero
+    #This is really a constant after the experiment starts. probably shouldn't recalculate this everytime
+    index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)+1
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     amplifierData=Array(Int64,SAMPLES_PER_DATA_BLOCK,nDataStreams*32) 
@@ -934,9 +931,12 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
         end
 
         #Read amplifier channels
+        #start for first channel = 8+4+nDataStreams*3*2
+        #loop index = (4+2+(nDataStreams*36)+8+2)
+        #if usbBuffer is shared array, maybe different processors could read data from usbBuffer in parallel
         for channel=1:(32*nDataStreams)
-                amplifierData[t,channel] = convertUsbWord(usbBuffer,index)
-                index+=2
+            amplifierData[t,channel] = convertUsbWord(usbBuffer,index)
+            index+=2
         end
 
         #Skip 36th filler word in each data stream
@@ -956,7 +956,8 @@ function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataSt
         index+=2
 
     end
- 
+
+    
     return (timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut)
     
 end
@@ -991,20 +992,18 @@ end
 
 function convertUsbTimeStamp(usbBuffer::Array{Uint8,1}, index::Int64)
 
-    #Remember that Julia starts with index=1 and not zero
-    x1 = convert(Uint32,usbBuffer[index+1])
-    x2 = convert(Uint32,usbBuffer[index+2])
-    x3 = convert(Uint32,usbBuffer[index+3])
-    x4 = convert(Uint32,usbBuffer[index+4])
+    x1 = convert(Uint32,usbBuffer[index])
+    x2 = convert(Uint32,usbBuffer[index+1])
+    x3 = convert(Uint32,usbBuffer[index+2])
+    x4 = convert(Uint32,usbBuffer[index+3])
 
     return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
 end
 
 function convertUsbWord(usbBuffer::Array{Uint8,1}, index::Int64)
 
-    #Remember that Julia starts with index=1 and not zero
-    x1=convert(Uint32, usbBuffer[index+1])
-    x2=convert(Uint32, usbBuffer[index+2])
+    x1=convert(Uint32, usbBuffer[index])
+    x2=convert(Uint32, usbBuffer[index+1])
 
     #The original C++ Rhythm API uses Int32, but Julia hasn't been playing nice with making sure that Int32s are type stable through calculations.
     return convert(Int64, ((x2<<8) | (x1<<0)))
