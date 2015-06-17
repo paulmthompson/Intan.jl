@@ -1,15 +1,15 @@
 
 module rhd2000evalboard
 
-using HDF5, SortSpikes
+using HDF5, SortSpikes, DistributedArrays, ExtractSpikes
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, run, isRunning, numWordsInFifo,flush, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, readFromPipeOut
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, ReadFromPipeOut
 
 #Constant parameters
 
 #CHANGE ME
 const mylib="/home/nicolelislab/Intan.jl/libokFrontPanel.so"
-const myfile="/home/nicolelislab/Intan.jl/DataAcq/main.bit"
+const myfile="/home/nicolelislab/Intan.jl/main.bit"
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
@@ -801,7 +801,7 @@ function setLedDisplay(ledArray)
 
 end
 
-function run()
+function runBoard()
     
     ActivateTriggerIn(TrigInSpiStart,0)
 end
@@ -819,9 +819,10 @@ function isRunning()
          
 end
 
-function flush()
+function flushBoard()
 
     usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
+    usbBuffer = convert(SharedArray{Uint8,1},usbBuffer)
     
     while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(PipeOutData, USB_BUFFER_SIZE, usbBuffer)
@@ -844,7 +845,9 @@ end
 function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}},ss="METHOD_NOSORT")
 
     usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Could make it an input?)
-    
+    usbBuffer=convert(SharedArray{Uint8,1},usbBuffer)
+
+    #Lets stop recalculating this
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
 
     if (numWordsInFifo() < numWordsToRead)
@@ -868,7 +871,7 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting,
         dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64,s)
         
         #Add time from dataBlock
-        append!(time, dataBlock[1])
+        append!(time, dataBlock)
 
         if ss=="METHOD_SORT"
 
@@ -901,96 +904,74 @@ function calculateDataBlockSizeInWords(nDataStreams::Int64)
 
 end
 
-function fillFromUsbBuffer(usbBuffer::Array{Uint8,1}, blockIndex::Int64, nDataStreams::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
+function fillFromUsbBuffer(usbBuffer::SharedArray{Uint8,1}, blockIndex::Int64, nDataStreams::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
 
     #Need to add extra input so only read and return what is needed
     
     #Remember that Julia starts with index=1 and not zero
     #This is really a constant after the experiment starts. probably shouldn't recalculate this everytime
-    index = blockIndex * 2 * calculateDataBlockSizeInWords(nDataStreams)+1
+    #every word is two bytes
+    numBytesPerBlock=convert(Int,2 * calculateDataBlockSizeInWords(nDataStreams) / SAMPLES_PER_DATA_BLOCK)
+    index = blockIndex * numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-    amplifierData=Array(Int64,SAMPLES_PER_DATA_BLOCK,nDataStreams*32) 
-    auxiliaryData=Array(Int64,SAMPLES_PER_DATA_BLOCK,nDataStreams*3)
-    boardAdcData=Array(Int64,SAMPLES_PER_DATA_BLOCK,8)
-    ttlIn=Array(Int64,SAMPLES_PER_DATA_BLOCK)
-    ttlOut=Array(Int64,SAMPLES_PER_DATA_BLOCK)
-    
+
+    index+=8
     for t=1:SAMPLES_PER_DATA_BLOCK
-        
-        #error checking goes here
-        
-        index+=8
-        timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer, index))
-        index+=4
-
-        #Read auxiliary results
-        for channel=1:(3*nDataStreams)
-                auxiliaryData[t,channel] = convertUsbWord(usbBuffer,index)
-                index+=2
-        end
-
-        #Read amplifier channels
-        #start for first channel = 8+4+nDataStreams*3*2
-        #loop index = (4+2+(nDataStreams*36)+8+2)
-        #if usbBuffer is shared array, maybe different processors could read data from usbBuffer in parallel
-        for channel=1:(32*nDataStreams)
-            amplifierData[t,channel] = convertUsbWord(usbBuffer,index)
-            index+=2
-        end
-
-        #Skip 36th filler word in each data stream
-        index += 2 * nDataStreams
-
-        #Read from AD5662 ADCs
-        for i=1:8
-            boardAdcData[t,i] = convertUsbWord(usbBuffer,index)
-            index+=2
-        end
-
-        #Read TTL input and output values
-        ttlIn[t] = convertUsbWord(usbBuffer, index)        
-        index+=2
-
-        ttlOut[t] = convertUsbWord(usbBuffer, index)
-        index+=2
-
+        timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer,index))
+        index+=numBytesPerBlock
     end
 
+    # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
+    start=10+6*nDataStreams
     
-    return (timeStamp, amplifierData, auxiliaryData, boardAdcData, ttlIn, ttlOut)
+    @sync @parallel for i=1:nDataStreams*32
+        ind=1
+        for j=start+i+i:numBytesPerBlock:numBytesPerBlock*SAMPLES_PER_DATA_BLOCK
+            s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
+            ind+=1
+        end
+    end
+        
+    return timeStamp
     
 end
 
-function queueToFile(time::Array{Int32,1}, electrode::Array{Any,1}, neuronnum::Array{Any,1}, saveOut)
+function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, saveOut)
 
+    #don't need initial zeros anymore since its preallocated
+    #need to fill only new data in preallocated array
+    
     time=time[3:end] #get rid of initial zeros
-    electrode=Any[electrode[i][3:end] for i = 1:length(electrode)]
-    neuronnum=Any[neuronnum[i][3:end] for i = 1:length(electrode)]
 
     h5open(saveOut,"r+") do fid
         d=d_open(fid, "time")
         set_dims!(d,(length(d)+length(time),))
         d[(length(d[:])-length(time)+1):end]=time
-        for i=1:length(electrode)
+        
+        @sync @parallel for i=1:length(s)
             #if sorting was  used, length of each electrode array is not necessarily the same
             e=d_open(fid, string(i))
-            set_dims!(e,(length(e)+length(electrode[i]),))
-            e[(length(e[:])-length(electrode[i])+1):end]=electrode[i]
+            set_dims!(e,(length(e)+s[i].numSpikes,))
+            e[(length(e[:])-s[i].numSpikes+1):end]=s[i].electrode[1:s[i].numSpikes]
             e=d_open(fid, string("n",i))
-            set_dims!(e,(length(e)+length(neuronnum[i]),))
-            e[(length(e[:])-length(neuronnum[i])+1):end]=neuronnum[i]
+            set_dims!(e,(length(e)+s[i].numSpikes,))
+            e[(length(e[:])-s[i].numSpikes+1):end]=s[i].neuronnum[1:s[i].numSpikes]
         end
         
     end
 
     time=zeros(Int32,2)
-    electrode=Any[zeros(Int64,2) for i = 1:length(electrode)]
-    neuronnum=Any[zeros(Int64,2) for i = 1:length(electrode)]
+    @sync @parallel for i=1:length(s)
+        s[i].electrode=zeros(Int,length(s[i].electrode))
+        s[i].neuronnum=zeros(Int,length(s[i].neuronnum))
+        s[i].numSpikes=2
+    end
+    
     
 end
 
-function convertUsbTimeStamp(usbBuffer::Array{Uint8,1}, index::Int64)
+function convertUsbTimeStamp(usbBuffer::SharedArray{Uint8,1}, index::Int64)
 
     x1 = convert(Uint32,usbBuffer[index])
     x2 = convert(Uint32,usbBuffer[index+1])
@@ -1000,7 +981,7 @@ function convertUsbTimeStamp(usbBuffer::Array{Uint8,1}, index::Int64)
     return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
 end
 
-function convertUsbWord(usbBuffer::Array{Uint8,1}, index::Int64)
+function convertUsbWord(usbBuffer::SharedArray{Uint8,1}, index::Int64)
 
     x1=convert(Uint32, usbBuffer[index])
     x2=convert(Uint32, usbBuffer[index+1])
@@ -1049,9 +1030,9 @@ function GetWireOutValue(epAddr::Uint8)
 
 end
 
-function ReadFromPipeOut(epAddr::Uint8, length, data::Array{Uint8,1})
+function ReadFromPipeOut(epAddr::Uint8, length, data::SharedArray{Uint8,1})
 
-    #Here I am giving an array that Julia creates in column major order (data) and having it filled by C, which operates in row major order. Could this be causing a big slow down?
+   #CCall can fill Shared Arrays!
    ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
     return data
