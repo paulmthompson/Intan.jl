@@ -3,7 +3,7 @@ module rhd2000evalboard
 
 using HDF5, SortSpikes, DistributedArrays, ExtractSpikes
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, ReadFromPipeOut
+export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, ReadFromPipeOut, fillFromUsbBuffer
 
 #Constant parameters
 
@@ -842,10 +842,7 @@ function numWordsInFifo()
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}},ss="METHOD_NOSORT")
-
-    usbBuffer = Array(Uint8,USB_BUFFER_SIZE) #need to allocate this somewhere so it doesn't rehappen everytime (not sure if global variable is only option for this. Could make it an input?)
-    usbBuffer=convert(SharedArray{Uint8,1},usbBuffer)
+function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}},usbBuffer::SharedArray{Uint8,1}, ss="METHOD_NOSORT")
 
     #Lets stop recalculating this
     numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
@@ -915,7 +912,7 @@ function fillFromUsbBuffer(usbBuffer::SharedArray{Uint8,1}, blockIndex::Int64, n
     index = blockIndex * numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
-
+    
     index+=8
     for t=1:SAMPLES_PER_DATA_BLOCK
         timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer,index))
@@ -925,11 +922,14 @@ function fillFromUsbBuffer(usbBuffer::SharedArray{Uint8,1}, blockIndex::Int64, n
     # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
     start=10+6*nDataStreams
     
-    @sync @parallel for i=1:nDataStreams*32
-        ind=1
-        for j=start+i+i:numBytesPerBlock:numBytesPerBlock*SAMPLES_PER_DATA_BLOCK
-            s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
-            ind+=1
+    @parallel for i=1:nDataStreams*32
+        ind=start+i+i
+        b=0
+        for j=1:SAMPLES_PER_DATA_BLOCK
+            #s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
+            b=(convert(Uint32,usbBuffer[ind+1]) << 8) | (convert(Uint32,usbBuffer[ind]) << 0)
+            s[i].rawSignal[j]=convert(Int64,b)
+            ind+=numBytesPerBlock
         end
     end
         
@@ -963,8 +963,8 @@ function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1
 
     time=zeros(Int32,2)
     @sync @parallel for i=1:length(s)
-        s[i].electrode=zeros(Int,length(s[i].electrode))
-        s[i].neuronnum=zeros(Int,length(s[i].neuronnum))
+        s[i].electrode[:]=zeros(Int,length(s[i].electrode))
+        s[i].neuronnum[:]=zeros(Int,length(s[i].neuronnum))
         s[i].numSpikes=2
     end
     
