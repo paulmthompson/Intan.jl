@@ -1,9 +1,4 @@
 
-module rhd2000evalboard
-
-using HDF5, SortSpikes, DistributedArrays, ExtractSpikes
-
-export RHD2000, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, fillFromUsbBuffer
 
 #Constant parameters
 

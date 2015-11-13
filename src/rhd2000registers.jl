@@ -1,6 +1,3 @@
-module rhd2000registers
-
-export CreateRHD2000Registers, createCommandListRegisterConfig, setDspCutoffFreq, setLowerBandwidth, setUpperBandwidth
 
 type register
     sampleRate::Cdouble
