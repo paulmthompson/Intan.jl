@@ -3,13 +3,39 @@ module rhd2000evalboard
 
 using HDF5, SortSpikes, DistributedArrays, ExtractSpikes
 
-export open_board, uploadFpgaBitfile, initialize_board, setSampleRate, setCableLengthFeet, setLedDisplay, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, ReadFromPipeOut, fillFromUsbBuffer
+export RHD2000, setMaxTimeStep, setContinuousRunMode, runBoard, isRunning, numWordsInFifo,flushBoard, enableDataStream, readDataBlocks, queueToFile, setDataSource, selectAuxCommandLength, selectAuxCommandBank, uploadCommandList, fillFromUsbBuffer
 
 #Constant parameters
 
-#CHANGE ME
-const mylib="/home/nicolelislab/Intan.jl/libokFrontPanel.so"
-const myfile="/home/nicolelislab/Intan.jl/main.bit"
+type RHD2000
+    lib::ASCIIString
+    bit::ASCIIString
+    sampleRate::Int64
+    numDataStreams::Int64
+    dataStreamEnabled::Array{Int64,2}
+    usbBuffer::Array{Uint8,1}
+    numWords::Int64
+    numBytesPerBlock
+end
+
+function RHD2000(lib::ASCIIString,bit::ASCIIString)
+    mylib="/home/nicolelislab/Intan.jl/libokFrontPanel.so"
+    myfile="/home/nicolelislab/Intan.jl/main.bit"
+
+    sampleRate=30000
+    numDataStreams=0
+
+    dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
+
+    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
+    usbBuffer = convert(SharedArray{Uint8,1},usbBuffer)
+
+    numWords = 0
+
+    numBytesPerBlock = 0
+    
+    RHD2000(lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock)
+end
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
@@ -89,46 +115,72 @@ const PortC2Ddr = 13
 const PortD1Ddr = 14
 const PortD2Ddr = 15
 
-#Variables that get modified
-
-global sampleRate=30000
-
-global numDataStreams=0
-
-global dataStreamEnabled=zeros(Int,1,MAX_NUM_DATA_STREAMS)
-
 const y = ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
 
-function open_board()
+function init_board(lib::ASCIIString,bit::ASCIIString,)
+
+    rhd=RHD2000(lib,bit);
+    
+    #Opal Kelly XEM6010 board
+    open_board(rhd)
+
+    # Load Rhythm FPGA configuration bitfile (provided by Intan Technologies).
+    uploadFpgaBitfile(rhd);
+
+    #Initialize board
+    initialize_board(rhd)
+
+    #For 64 channel need two data streams, and data will come in 
+    #on the rising AND falling edges of SCLK
+    enableDataStream(rhd,1, true)
+    setDataSource(rhd,0, 0) #port A MISO1
+    setDataSource(rhd,1, 8) #port A MISO1 DDR
+
+    #Select per-channel amplifier sampling rate
+    setSampleRate(rhd,20000)
+
+    #Now that we have set our sampling rate, we can set the MISO sampling delay
+    #which is dependent on the sample rate. We use a 6.0 foot cable
+    setCableLengthFeet(rhd,"PortA", 6.0)
+
+    # Let's turn one LED on to indicate that the program is running.
+    ledArray=[1,1,0,0,0,0,0,0]
+    setLedDisplay(rhd,ledArray)
+
+    nothing
+    
+end
+
+function open_board(rhd::RHD2000)
 
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall((:okFrontPanel_GetDeviceCount,mylib), Int, (Ptr{Void},), y) 
+    nDevices=ccall((:okFrontPanel_GetDeviceCount,rhd.lib), Int, (Ptr{Void},), y) 
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
     serial=Array(Uint8,11)
-    ccall((:okFrontPanel_GetDeviceListSerial,mylib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), y, 0,serial)
+    ccall((:okFrontPanel_GetDeviceListSerial,rhd.lib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), y, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
-    if (ccall((:okFrontPanel_OpenBySerial, mylib), Cint, (Ptr{Void},Ptr{Uint8}),y,serialnumber)!=0)
+    if (ccall((:okFrontPanel_OpenBySerial, rhd.lib), Cint, (Ptr{Void},Ptr{Uint8}),y,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
     
     #configure on-board PLL
-    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,mylib), Cint, (Ptr{Void},),y)
+    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,rhd.lib), Cint, (Ptr{Void},),y)
 
     return 1
 
 end
 
-function uploadFpgaBitfile()
+function uploadFpgaBitfile(rhd::RHD2000)
 
     #upload configuration file
-    errorcode=ccall((:okFrontPanel_ConfigureFPGA,mylib),Cint,(Ptr{Void},Ptr{Uint8}),y,myfile)
+    errorcode=ccall((:okFrontPanel_ConfigureFPGA,rhd.lib),Cint,(Ptr{Void},Ptr{Uint8}),y,rhd.file)
 
     #error checking goes here
     if errorcode==0
@@ -139,12 +191,12 @@ function uploadFpgaBitfile()
     
     
     #Check if FrontPanel Support is enabled
-    ccall((:okFrontPanel_IsFrontPanelEnabled,mylib),Bool,(Ptr{Void},),y)
+    ccall((:okFrontPanel_IsFrontPanelEnabled,rhd.lib),Bool,(Ptr{Void},),y)
 
-    UpdateWireOuts()
+    UpdateWireOuts(rhd)
     
-    boardId = GetWireOutValue(WireOutBoardId)
-    boardVersion = GetWireOutValue(WireOutBoardVersion)
+    boardId = GetWireOutValue(rhd,WireOutBoardId)
+    boardVersion = GetWireOutValue(rhd,WireOutBoardVersion)
     if (boardId != RHYTHM_BOARD_ID)
         println("FPGA configuration does not support Rythm. Incorrect board ID: ", boardId)
     else
@@ -153,121 +205,119 @@ function uploadFpgaBitfile()
     
 end
 
-function initialize_board()
+function initialize_board(rhd::RHD2000)
   
-    resetBoard()
-    setSampleRate(30000)
-    selectAuxCommandBank("PortA", "AuxCmd1", 0)
-    selectAuxCommandBank("PortB", "AuxCmd1", 0)
-    selectAuxCommandBank("PortC", "AuxCmd1", 0)
-    selectAuxCommandBank("PortD", "AuxCmd1", 0)
-    selectAuxCommandBank("PortA", "AuxCmd2", 0)
-    selectAuxCommandBank("PortB", "AuxCmd2", 0)
-    selectAuxCommandBank("PortC", "AuxCmd2", 0)
-    selectAuxCommandBank("PortD", "AuxCmd2", 0)
-    selectAuxCommandBank("PortA", "AuxCmd3", 0)
-    selectAuxCommandBank("PortB", "AuxCmd3", 0)
-    selectAuxCommandBank("PortC", "AuxCmd3", 0)
-    selectAuxCommandBank("PortD", "AuxCmd3", 0)
-    selectAuxCommandLength("AuxCmd1", 0, 0)
-    selectAuxCommandLength("AuxCmd2", 0, 0)
-    selectAuxCommandLength("AuxCmd3", 0, 0)
+    resetBoard(rhd)
+    setSampleRate(rhd,30000)
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd1", 0)
+    selectAuxCommandBank(rhd,"PortB", "AuxCmd1", 0)
+    selectAuxCommandBank(rhd,"PortC", "AuxCmd1", 0)
+    selectAuxCommandBank(rhd,"PortD", "AuxCmd1", 0)
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd2", 0)
+    selectAuxCommandBank(rhd,"PortB", "AuxCmd2", 0)
+    selectAuxCommandBank(rhd,"PortC", "AuxCmd2", 0)
+    selectAuxCommandBank(rhd,"PortD", "AuxCmd2", 0)
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)
+    selectAuxCommandBank(rhd,"PortB", "AuxCmd3", 0)
+    selectAuxCommandBank(rhd,"PortC", "AuxCmd3", 0)
+    selectAuxCommandBank(rhd,"PortD", "AuxCmd3", 0)
+    selectAuxCommandLength(rhd,"AuxCmd1", 0, 0)
+    selectAuxCommandLength(rhd,"AuxCmd2", 0, 0)
+    selectAuxCommandLength(rhd,"AuxCmd3", 0, 0)
 
-    setContinuousRunMode(true)
+    setContinuousRunMode(rhd,true)
     
-    setMaxTimeStep(4294967295) #4294967395 == (2^32 - 1)
+    setMaxTimeStep(rhd,4294967295) #4294967395 == (2^32 - 1)
 
-    setCableLengthFeet("PortA", 3.0)  # assume 3 ft cables
-    setCableLengthFeet("PortB", 3.0)
-    setCableLengthFeet("PortC", 3.0)
-    setCableLengthFeet("PortD", 3.0)
+    setCableLengthFeet(rhd,"PortA", 3.0)  # assume 3 ft cables
+    setCableLengthFeet(rhd,"PortB", 3.0)
+    setCableLengthFeet(rhd,"PortC", 3.0)
+    setCableLengthFeet(rhd,"PortD", 3.0)
 
-    setDspSettle(false)
+    setDspSettle(rhd,false)
 
-    setDataSource(0, PortA1)
-    setDataSource(1, PortB1)
-    setDataSource(2, PortC1)
-    setDataSource(3, PortD1)
-    setDataSource(4, PortA2)
-    setDataSource(5, PortB2)
-    setDataSource(6, PortC2)
-    setDataSource(7, PortD2)
+    setDataSource(rhd,0, PortA1)
+    setDataSource(rhd,1, PortB1)
+    setDataSource(rhd,2, PortC1)
+    setDataSource(rhd,3, PortD1)
+    setDataSource(rhd,4, PortA2)
+    setDataSource(rhd,5, PortB2)
+    setDataSource(rhd,6, PortC2)
+    setDataSource(rhd,7, PortD2)
 
     #remember that julia indexes with 1's instead of 0's to start an array
-    enableDataStream(0, true)
+    enableDataStream(rhd,0, true)
     for i=1:(MAX_NUM_DATA_STREAMS-1)
-        enableDataStream(i,false)
+        enableDataStream(rhd,i,false)
     end
 
-    clearTtlOut()
+    clearTtlOut(rhd)
 
-    enableDac(0, false)
-    enableDac(1, false)
-    enableDac(2, false)
-    enableDac(3, false)
-    enableDac(4, false)
-    enableDac(5, false)
-    enableDac(6, false)
-    enableDac(7, false)
-    selectDacDataStream(0, 0)
-    selectDacDataStream(1, 0)
-    selectDacDataStream(2, 0)
-    selectDacDataStream(3, 0)
-    selectDacDataStream(4, 0)
-    selectDacDataStream(5, 0)
-    selectDacDataStream(6, 0)
-    selectDacDataStream(7, 0)
-    selectDacDataChannel(0, 0)
-    selectDacDataChannel(1, 0)
-    selectDacDataChannel(2, 0)
-    selectDacDataChannel(3, 0)
-    selectDacDataChannel(4, 0)
-    selectDacDataChannel(5, 0)
-    selectDacDataChannel(6, 0)
-    selectDacDataChannel(7, 0)
+    enableDac(rhd,0, false)
+    enableDac(rhd,1, false)
+    enableDac(rhd,2, false)
+    enableDac(rhd,3, false)
+    enableDac(rhd,4, false)
+    enableDac(rhd,5, false)
+    enableDac(rhd,6, false)
+    enableDac(rhd,7, false)
+    selectDacDataStream(rhd,0, 0)
+    selectDacDataStream(rhd,1, 0)
+    selectDacDataStream(rhd,2, 0)
+    selectDacDataStream(rhd,3, 0)
+    selectDacDataStream(rhd,4, 0)
+    selectDacDataStream(rhd,5, 0)
+    selectDacDataStream(rhd,6, 0)
+    selectDacDataStream(rhd,7, 0)
+    selectDacDataChannel(rhd,0, 0)
+    selectDacDataChannel(rhd,1, 0)
+    selectDacDataChannel(rhd,2, 0)
+    selectDacDataChannel(rhd,3, 0)
+    selectDacDataChannel(rhd,4, 0)
+    selectDacDataChannel(rhd,5, 0)
+    selectDacDataChannel(rhd,6, 0)
+    selectDacDataChannel(rhd,7, 0)
 
-    setDacManual(32768)    # midrange value = 0 V
+    setDacManual(rhd,32768)    # midrange value = 0 V
 
-    setDacGain(0)
-    setAudioNoiseSuppress(0)
+    setDacGain(rhd,0)
+    setAudioNoiseSuppress(rhd,0)
 
-    setTtlMode(1)   # Digital outputs 0-7 are DAC comparators; 8-15 under manual control
+    setTtlMode(rhd,1)   # Digital outputs 0-7 are DAC comparators; 8-15 under manual control
 
-    setDacThreshold(0, 32768, true)
-    setDacThreshold(1, 32768, true)
-    setDacThreshold(2, 32768, true)
-    setDacThreshold(3, 32768, true)
-    setDacThreshold(4, 32768, true)
-    setDacThreshold(5, 32768, true)
-    setDacThreshold(6, 32768, true)
-    setDacThreshold(7, 32768, true)
+    setDacThreshold(rhd,0, 32768, true)
+    setDacThreshold(rhd,1, 32768, true)
+    setDacThreshold(rhd,2, 32768, true)
+    setDacThreshold(rhd,3, 32768, true)
+    setDacThreshold(rhd,4, 32768, true)
+    setDacThreshold(rhd,5, 32768, true)
+    setDacThreshold(rhd,6, 32768, true)
+    setDacThreshold(rhd,7, 32768, true)
 
-    enableExternalFastSettle(false)
-    setExternalFastSettleChannel(0)
+    enableExternalFastSettle(rhd,false)
+    setExternalFastSettleChannel(rhd,0)
 
-    enableExternalDigOut("PortA", false)
-    enableExternalDigOut("PortB", false)
-    enableExternalDigOut("PortC", false)
-    enableExternalDigOut("PortD", false)
-    setExternalDigOutChannel("PortA", 0)
-    setExternalDigOutChannel("PortB", 0)
-    setExternalDigOutChannel("PortC", 0)
-    setExternalDigOutChannel("PortD", 0)
+    enableExternalDigOut(rhd,"PortA", false)
+    enableExternalDigOut(rhd,"PortB", false)
+    enableExternalDigOut(rhd,"PortC", false)
+    enableExternalDigOut(rhd,"PortD", false)
+    setExternalDigOutChannel(rhd,"PortA", 0)
+    setExternalDigOutChannel(rhd,"PortB", 0)
+    setExternalDigOutChannel(rhd,"PortC", 0)
+    setExternalDigOutChannel(rhd,"PortD", 0)
        
 end
 
 function resetBoard()
 
-    SetWireInValue(WireInResetRun, 0x01, 0x01)
-    UpdateWireIns()
-    SetWireInValue(WireInResetRun, 0x00, 0x01)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInResetRun, 0x01, 0x01)
+    UpdateWireIns(rhd)
+    SetWireInValue(rhd,WireInResetRun, 0x00, 0x01)
+    UpdateWireIns(rhd)
     
 end
 
-function setSampleRate(newSampleRate::Int64)
-
-    global sampleRate
+function setSampleRate(rhd::RHD2000,newSampleRate::Int64)
 
     if newSampleRate==1000
         M=7
@@ -323,73 +373,65 @@ function setSampleRate(newSampleRate::Int64)
     else
     end
   
-    sampleRate=newSampleRate
+    rhd.sampleRate=newSampleRate
 
     #Wait for DcmProgDone==1 before reprogramming clock synthesizer
-    while (isDcmProgDone()==false)   
+    while (isDcmProgDone(rhd)==false)   
     end
    
     #Reprogram clock synthesizer
 
-    SetWireInValue(WireInDataFreqPll,(256 * convert(Culong,M) + convert(Culong,D)))
-    UpdateWireIns()  
-    ActivateTriggerIn(TrigInDcmProg,0)
+    SetWireInValue(rhd,WireInDataFreqPll,(256 * convert(Culong,M) + convert(Culong,D)))
+    UpdateWireIns(rhd)  
+    ActivateTriggerIn(rhd,TrigInDcmProg,0)
    
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
-    while (isDataClockLocked() == false)
+    while (isDataClockLocked(rhd) == false)
     end
                  
 end
 
-function getSampleRate()
+function isDcmProgDone(rhd::RHD2000)
 
-    global sampleRate
-    
-    return sampleRate
-end
-
-
-function isDcmProgDone()
-
-    UpdateWireOuts()
-    value=GetWireOutValue(WireOutDataClkLocked)
+    UpdateWireOuts(rhd)
+    value=GetWireOutValue(rhd,WireOutDataClkLocked)
 
     return ((value & 0x0002) > 1)
 
 end
 
-function isDataClockLocked()
+function isDataClockLocked(rhd::RHD2000)
 
-    UpdateWireOuts()
-    value=GetWireOutValue(WireOutDataClkLocked)
+    UpdateWireOuts(rhd)
+    value=GetWireOutValue(rhd,WireOutDataClkLocked)
     
     return ((value & 0x0001) > 0)
 
 end
 
-function uploadCommandList(commandList, auxCommandSlot, bank)
+function uploadCommandList(rhd::RHD2000,commandList, auxCommandSlot, bank)
 
     #error checking goes here
 
     for i=1:length(commandList)
 
-        SetWireInValue(WireInCmdRamData, commandList[i])
-        SetWireInValue(WireInCmdRamAddr, i-1)
-        SetWireInValue(WireInCmdRamBank, bank)
-        UpdateWireIns()
+        SetWireInValue(rhd,WireInCmdRamData, commandList[i])
+        SetWireInValue(rhd,WireInCmdRamAddr, i-1)
+        SetWireInValue(rhd,WireInCmdRamBank, bank)
+        UpdateWireIns(rhd)
         if auxCommandSlot == "AuxCmd1"
-            ActivateTriggerIn(TrigInRamWrite,0)
+            ActivateTriggerIn(rhd,TrigInRamWrite,0)
         elseif auxCommandSlot == "AuxCmd2"
-            ActivateTriggerIn(TrigInRamWrite,1)
+            ActivateTriggerIn(rhd,TrigInRamWrite,1)
         elseif auxCommandSlot == "AuxCmd3"
-            ActivateTriggerIn(TrigInRamWrite,2)
+            ActivateTriggerIn(rhd,TrigInRamWrite,2)
         end
         
     end
     
 end
 
-function selectAuxCommandBank(port, commandslot, bank)
+function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
 
     #Error checking goes here
 
@@ -405,66 +447,66 @@ function selectAuxCommandBank(port, commandslot, bank)
     end
 
     if commandslot=="AuxCmd1"
-        SetWireInValue(WireInAuxCmdBank1,(bank<<bitShift),(0x000f<<bitShift))
+        SetWireInValue(rhd,WireInAuxCmdBank1,(bank<<bitShift),(0x000f<<bitShift))
     elseif commandslot=="AuxCmd2"
-        SetWireInValue(WireInAuxCmdBank2,(bank<<bitShift),(0x000f<<bitShift))
+        SetWireInValue(rhd,WireInAuxCmdBank2,(bank<<bitShift),(0x000f<<bitShift))
     elseif commandslot=="AuxCmd3"
-        SetWireInValue(WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift))
+        SetWireInValue(rhd,WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift))
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
 
 end
 
-function selectAuxCommandLength(commandslot,loopIndex,endIndex)
+function selectAuxCommandLength(rhd::RHD2000,commandslot,loopIndex,endIndex)
     
     #Error checking goes here
 
     if commandslot=="AuxCmd1"
-        SetWireInValue(WireInAuxCmdLoop1,loopIndex)
-        SetWireInValue(WireInAuxCmdLength1,endIndex)
+        SetWireInValue(rhd,WireInAuxCmdLoop1,loopIndex)
+        SetWireInValue(rhd,WireInAuxCmdLength1,endIndex)
     elseif commandslot=="AuxCmd2"
-        SetWireInValue(WireInAuxCmdLoop2,loopIndex)
-        SetWireInValue(WireInAuxCmdLength2,endIndex)
+        SetWireInValue(rhd,WireInAuxCmdLoop2,loopIndex)
+        SetWireInValue(rhd,WireInAuxCmdLength2,endIndex)
     elseif commandslot=="AuxCmd3"
-        SetWireInValue(WireInAuxCmdLoop3,loopIndex)
-        SetWireInValue(WireInAuxCmdLength3,endIndex)
+        SetWireInValue(rhd,WireInAuxCmdLoop3,loopIndex)
+        SetWireInValue(rhd,WireInAuxCmdLength3,endIndex)
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
     
 end
 
-function setContinuousRunMode(continuousMode)
+function setContinuousRunMode(rhd::RHD2000,continuousMode)
     
     if continuousMode
-        SetWireInValue(WireInResetRun,0x02,0x02)
+        SetWireInValue(rhd,WireInResetRun,0x02,0x02)
     else
-        SetWireInValue(WireInResetRun,0x00,0x02)
+        SetWireInValue(rhd,WireInResetRun,0x00,0x02)
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
 
 end
 
-function setMaxTimeStep(maxTimeStep)
+function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
 
     maxTimeStep=convert(Uint32, maxTimeStep)
     
     maxTimeStepLsb = maxTimeStep & 0x0000ffff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
 
-    SetWireInValue(WireInMaxTimeStepLsb,maxTimeStepLsb)
-    SetWireInValue(WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInMaxTimeStepLsb,maxTimeStepLsb)
+    SetWireInValue(rhd,WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
+    UpdateWireIns(rhd)
     
 end
 
-function setCableLengthFeet(port, lengthInFeet::Float64)
-    setCableLengthMeters(port, .3048 * lengthInFeet)
+function setCableLengthFeet(rhd::RHD2000,port, lengthInFeet::Float64)
+    setCableLengthMeters(rhd,port, .3048 * lengthInFeet)
 end
 
-function setCableLengthMeters(port, lengthInMeters::Float64)
+function setCableLengthMeters(rhd::RHD2000,port, lengthInMeters::Float64)
 
     speedOfLight = 299792458.0
     xilinxLvdsOutputDelay=1.9e-9
@@ -472,7 +514,7 @@ function setCableLengthMeters(port, lengthInMeters::Float64)
     rhd2000Delay=9.0e-9
     misoSettleTime=6.7e-9
 
-    tStep=1.0 / (2800.0 * getSampleRate())
+    tStep=1.0 / (2800.0 * rhd.sampleRate)
 
     cableVelocity=.555 * speedOfLight
 
@@ -486,10 +528,10 @@ function setCableLengthMeters(port, lengthInMeters::Float64)
         delay=1
     end
 
-    setCableDelay(port, delay)
+    setCableDelay(rhd,port, delay)
 end
 
-function setCableDelay(port, delay)
+function setCableDelay(rhd::RHD2000,port, delay)
     
     #error checking goes here
 
@@ -513,19 +555,19 @@ function setCableDelay(port, delay)
 
     bitShift=convert(Int32, bitShift)
     
-    SetWireInValue(WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
+    UpdateWireIns(rhd)
     
 end
 
-function setDspSettle(enabled)
+function setDspSettle(rhd::RHD2000,enabled)
 
-    SetWireInValue(WireInResetRun, (enabled ? 0x04 : 0x00), 0x04)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInResetRun, (enabled ? 0x04 : 0x00), 0x04)
+    UpdateWireIns(rhd)
 
 end
 
-function setDataSource(stream, dataSource)
+function setDataSource(rhd::RHD2000,stream, dataSource)
 
     #error checking goes here
 
@@ -556,236 +598,247 @@ function setDataSource(stream, dataSource)
     end
 
     bitShift=convert(Int32,bitShift)
-    SetWireInValue(endPoint,(dataSource << bitShift), (0x000f << bitShift))
-    UpdateWireIns()
+    SetWireInValue(rhd,endPoint,(dataSource << bitShift), (0x000f << bitShift))
+    UpdateWireIns(rhd)
 
 end
 
-function enableDataStream(stream::Int, enabled::Bool)
-
-    global dataStreamEnabled
-    global numDataStreams
+function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
     
     #error checking goes here
 
     stream=convert(Int32,stream)
     if enabled
-        if dataStreamEnabled[stream+1] == 0
-            SetWireInValue(WireInDataStreamEn,0x0001 << stream, 0x0001 << stream)
-            UpdateWireIns()
-            dataStreamEnabled[stream+1] = 1;
-            numDataStreams=numDataStreams+1;
+        if rhd.dataStreamEnabled[stream+1] == 0
+            SetWireInValue(rhd,WireInDataStreamEn,0x0001 << stream, 0x0001 << stream)
+            UpdateWireIns(rhd)
+            rhd.dataStreamEnabled[stream+1] = 1;
+            rhd.numDataStreams=rhd/numDataStreams+1;
         end
     else
-        if dataStreamEnabled[stream+1] == 1
-            SetWireInValue(WireInDataStreamEn,0x0000 << stream, 0x0001 << stream)
-            UpdateWireIns()
-            dataStreamEnabled[stream+1] = 0;
-            numDataStream=numDataStreams-1;
+        if rhd.dataStreamEnabled[stream+1] == 1
+            SetWireInValue(rhd,WireInDataStreamEn,0x0000 << stream, 0x0001 << stream)
+            UpdateWireIns(rhd)
+            rhd.dataStreamEnabled[stream+1] = 0;
+            rhd.numDataStream=rhd.numDataStreams-1;
         end
     end
                 
 end
 
-function enableDac(dacChannel::Int, enabled::Bool)
+function enableDac(rhd::RHD2000,dacChannel::Int, enabled::Bool)
 
     #error checking goes here
 
     if dacChannel == 0
-        SetWireInValue(WireInDacSource1,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource1,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 1
-        SetWireInValue(WireInDacSource2,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource2,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 2
-        SetWireInValue(WireInDacSource3,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource3,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 3
-        SetWireInValue(WireInDacSource4,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource4,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 4
-        SetWireInValue(WireInDacSource5,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource5,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 5
-        SetWireInValue(WireInDacSource6,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource6,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 6
-        SetWireInValue(WireInDacSource7,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource7,(enabled ? 0x0200 : 0x0000), 0x0200)
     elseif dacChannel == 7
-        SetWireInValue(WireInDacSource8,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource8,(enabled ? 0x0200 : 0x0000), 0x0200)
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
 
 end
 
-function selectDacDataStream(dacChannel, stream)
+function selectDacDataStream(rhd::RHD2000,dacChannel, stream)
     #error checking goes here
 
     
     if dacChannel == 0
-         SetWireInValue(WireInDacSource1, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource1, stream << 5, 0x01e0)
     elseif dacChannel == 1
-         SetWireInValue(WireInDacSource2, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource2, stream << 5, 0x01e0)
     elseif dacChannel == 2
-         SetWireInValue(WireInDacSource3, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource3, stream << 5, 0x01e0)
     elseif dacChannel == 3
-         SetWireInValue(WireInDacSource4, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource4, stream << 5, 0x01e0)
     elseif dacChannel == 4
-         SetWireInValue(WireInDacSource5, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource5, stream << 5, 0x01e0)
     elseif dacChannel == 5
-         SetWireInValue(WireInDacSource6, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource6, stream << 5, 0x01e0)
     elseif dacChannel == 6
-         SetWireInValue(WireInDacSource7, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource7, stream << 5, 0x01e0)
     elseif dacChannel == 7
-         SetWireInValue(WireInDacSource8, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource8, stream << 5, 0x01e0)
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
         
 end
 
-function selectDacDataChannel(dacChannel::Int, dataChannel)
+function selectDacDataChannel(rhd::RHD2000,dacChannel::Int, dataChannel)
     #error checking goes here
 
     if dacChannel == 0
-        SetWireInValue(WireInDacSource1,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource1,dataChannel << 0, 0x001f)
     elseif dacChannel == 1
-        SetWireInValue(WireInDacSource2,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource2,dataChannel << 0, 0x001f)
     elseif dacChannel == 2
-        SetWireInValue(WireInDacSource3,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource3,dataChannel << 0, 0x001f)
     elseif dacChannel == 3
-        SetWireInValue(WireInDacSource4,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource4,dataChannel << 0, 0x001f)
     elseif dacChannel == 4
-        SetWireInValue(WireInDacSource5,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource5,dataChannel << 0, 0x001f)
     elseif dacChannel == 5
-        SetWireInValue(WireInDacSource6,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource6,dataChannel << 0, 0x001f)
     elseif dacChannel == 6
-        SetWireInValue(WireInDacSource7,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource7,dataChannel << 0, 0x001f)
     elseif dacChannel == 7
-        SetWireInValue(WireInDacSource8,dataChannel << 0, 0x001f)
+        SetWireInValue(rhd,WireInDacSource8,dataChannel << 0, 0x001f)
     end
 
-    UpdateWireIns()
+    UpdateWireIns(rhd)
     
 end
 
-function setDacManual(value)
+function setDacManual(rhd::RHD2000,value)
     #error checking goes here
 
-    SetWireInValue(WireInDacManual,value)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInDacManual,value)
+    UpdateWireIns(rhd)
     
 end
 
-function setDacGain(gain)
+function setDacGain(rhd::RHD2000,gain)
     #error checking goes here
 
     
-    SetWireInValue(WireInResetRun,gain << 13, 0xe000)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInResetRun,gain << 13, 0xe000)
+    UpdateWireIns(rhd)
     
 end
 
-function setAudioNoiseSuppress(noiseSuppress)
+function setAudioNoiseSuppress(rhd::RHD2000,noiseSuppress)
     #error checking goes here
 
-    SetWireInValue(WireInResetRun, noiseSuppress << 6, 0x1fc0)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInResetRun, noiseSuppress << 6, 0x1fc0)
+    UpdateWireIns(rhd)
 
 end
 
-function setTtlMode(mode)
+function setTtlMode(rhd::RHD2000,mode)
     #error checking goes here
 
-    SetWireInValue(WireInResetRun, mode << 3, 0x0008)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInResetRun, mode << 3, 0x0008)
+    UpdateWireIns(rhd)
+
+    nothing
 
 end
 
-function clearTtlOut()
+function clearTtlOut(rhd::RHD2000)
 
-    SetWireInValue(WireInTtlOut, 0x0000)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInTtlOut, 0x0000)
+    UpdateWireIns(rhd)
 
+    nothing
+    
 end
 
 
-function setDacThreshold(dacChannel, threshold, trigPolarity)
+function setDacThreshold(rhd::RHD2000,dacChannel, threshold, trigPolarity)
 
     #error checking goes here
 
     #Set threshold level
-    SetWireInValue(WireInMultiUse,threshold)
-    UpdateWireIns()
-    ActivateTriggerIn(TrigInDacThresh, dacChannel)
+    SetWireInValue(rhd,WireInMultiUse,threshold)
+    UpdateWireIns(rhd)
+    ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel)
 
     #Set threshold polarity
-    SetWireInValue(WireInMultiUse, (trigPolarity ? 1 : 0))
-    UpdateWireIns()
-    ActivateTriggerIn(TrigInDacThresh, dacChannel+8)
+    SetWireInValue(rhd,WireInMultiUse, (trigPolarity ? 1 : 0))
+    UpdateWireIns(rhd)
+    ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel+8)
 
+    nothing
+    
 end
 
-function enableExternalFastSettle(enable)
+function enableExternalFastSettle(rhd::RHD2000,enable)
 
-    SetWireInValue(WireInMultiUse, (enable ? 1 : 0))
-    UpdateWireIns()
-    ActivateTriggerIn(TrigInExtFastSettle,0)
+    SetWireInValue(rhd,WireInMultiUse, (enable ? 1 : 0))
+    UpdateWireIns(rhd)
+    ActivateTriggerIn(rhd,TrigInExtFastSettle,0)
 
+    nothing
+    
 end
 
-function setExternalFastSettleChannel(channel)
+function setExternalFastSettleChannel(rhd::RHD2000,channel)
 
     #error checking goes here
 
-    SetWireInValue(WireInMultiUse,channel)
-    UpdateWireIns()
-    ActivateTriggerIn(TrigInExtFastSettle,1)
-  
+    SetWireInValue(rhd,WireInMultiUse,channel)
+    UpdateWireIns(rhd)
+    ActivateTriggerIn(rhd,TrigInExtFastSettle,1)
+
+    nothing
+    
 end
 
-function enableExternalDigOut(port, enable)
+function enableExternalDigOut(rhd::RHD2000,port, enable)
 
-    SetWireInValue(WireInMultiUse, (enable ? 1 : 0))
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInMultiUse, (enable ? 1 : 0))
+    UpdateWireIns(rhd)
 
     if port=="PortA"
-        ActivateTriggerIn(TrigInExtDigOut,0)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,0)
     elseif port=="PortB"
-        ActivateTriggerIn(TrigInExtDigOut,1)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,1)
     elseif port=="PortC"
-        ActivateTriggerIn(TrigInExtDigOut,2)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,2)
     elseif port=="PortD"
-        ActivateTriggerIn(TrigInExtDigOut,3)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,3)
     end
-     
+
+    nothing
+    
 end
 
-function setExternalDigOutChannel(port, channel)
+function setExternalDigOutChannel(rhd::RHD2000,port, channel)
 
-    SetWireInValue(WireInMultiUse,channel)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInMultiUse,channel)
+    UpdateWireIns(rhd)
 
     if port=="PortA"
-        ActivateTriggerIn(TrigInExtDigOut,4)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,4)
     elseif port=="PortB"
-        ActivateTriggerIn(TrigInExtDigOut,5)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,5)
     elseif port=="PortC"
-        ActivateTriggerIn(TrigInExtDigOut,6)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,6)
     elseif port=="PortD"
-        ActivateTriggerIn(TrigInExtDigOut,7)
+        ActivateTriggerIn(rhd,TrigInExtDigOut,7)
     end
 
 end
 
-function getTtlIn(ttlInArray)
+function getTtlIn(rhd::RHD2000,ttlInArray)
 
-    UpdateWireOuts()
-    ttlIn=GetWireOutValue(WireOutTtlIn)
+    UpdateWireOuts(rhd)
+    ttlIn=GetWireOutValue(rhd,WireOutTtlIn)
     for i=1:16
         ttlInArray[i] = 0
         if (ttlIn & (1 << (i-1))) > 0
             ttlInArray[i] = 1
         end
     end
+
+    ttlInArray
 end
 
-function setLedDisplay(ledArray)
+function setLedDisplay(rhd::RHD2000,ledArray)
 
     ledOut=0
     for i=1:8
@@ -796,20 +849,25 @@ function setLedDisplay(ledArray)
 
     println(ledOut)
 
-    SetWireInValue(WireInLedDisplay,ledOut)
-    UpdateWireIns()
+    SetWireInValue(rhd,WireInLedDisplay,ledOut)
+    UpdateWireIns(rhd)
 
-end
-
-function runBoard()
+    nothing
     
-    ActivateTriggerIn(TrigInSpiStart,0)
 end
 
-function isRunning()
+function runBoard(rhd::RHD2000)
+    
+    ActivateTriggerIn(rhd,TrigInSpiStart,0)
 
-    UpdateWireOuts()
-    value=GetWireOutValue(WireOutSpiRunning)
+    nothing
+    
+end
+
+function isRunning(rhd::RHD2000)
+
+    UpdateWireOuts(rhd)
+    value=GetWireOutValue(rhd,WireOutSpiRunning)
 
     if ((value & 0x01) == 0)
         return false
@@ -819,39 +877,35 @@ function isRunning()
          
 end
 
-function flushBoard()
+function flushBoard(rhd::RHD2000)
 
-    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
-    usbBuffer = convert(SharedArray{Uint8,1},usbBuffer)
-    
-    while (numWordsInFifo() >= (USB_BUFFER_SIZE/2))
-        ReadFromPipeOut(PipeOutData, USB_BUFFER_SIZE, usbBuffer)
+    while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
+        ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
     end
     
-    while (numWordsInFifo() > 0)
-        ReadFromPipeOut(PipeOutData, (2 * numWordsInFifo()), usbBuffer)
+    while (numWordsInFifo(rhd) > 0)
+        ReadFromPipeOut(rhd,PipeOutData, (2 * numWordsInFifo(rhd)), rhd.usbBuffer)
     end
+
+    nothing
 end
 
-function numWordsInFifo()
+function numWordsInFifo(rhd::RHD2000)
 
-    UpdateWireOuts()
+    UpdateWireOuts(rhd)
 
     #Rhythm makes this a Uint32 (not sure that it matters)
-    return GetWireOutValue(WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb)
+    return GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb)
     
 end
 
-function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}},usbBuffer::SharedArray{Uint8,1}, ss="METHOD_NOSORT")
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, ss="METHOD_NOSORT")
 
-    #Lets stop recalculating this
-    numWordsToRead = numBlocks * calculateDataBlockSizeInWords(numDataStreams::Int64)
-
-    if (numWordsInFifo() < numWordsToRead)
+    if (numWordsInFifo(rhd) < rhd.numWords)
         return false
     end
 
-    numBytesToRead = 2 * numWordsToRead
+    numBytesToRead = 2 * rhd.numWords
 
     if (numBytesToRead > USB_BUFFER_SIZE)
         println("USB buffer size exceeded")
@@ -859,13 +913,13 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting,
     end
 
     #this is where usbBuffer is filled from Fifo
-    usbBuffer=ReadFromPipeOut(PipeOutData, convert(Clong, numBytesToRead), usbBuffer)
+    ReadFromPipeOut(rhd,PipeOutData, convert(Clong, numBytesToRead), rhd.usbBuffer)
 
     for i=0:(numBlocks-1)
         
         # make data block from fillFromUsbBuffer
         # add block to queue       
-        dataBlock=fillFromUsbBuffer(usbBuffer,i,numDataStreams::Int64,s)
+        dataBlock=fillFromUsbBuffer(rhd,i,s)
         
         #Add time from dataBlock
         append!(time, dataBlock)
@@ -890,46 +944,49 @@ function readDataBlocks(numBlocks::Int, time::Array{Int32,1}, s::DArray{Sorting,
 end
 
 
-function calculateDataBlockSizeInWords(nDataStreams::Int64)
+function calculateDataBlockSizeInWords(rhd::RHD2000)
 
-    numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(nDataStreams*36)+8+2)
+    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.nDataStreams*36)+8+2)
                            
     # return convert(Uint32, numWords)
 
-    return numWords
+    nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
 end
 
-function fillFromUsbBuffer(usbBuffer::SharedArray{Uint8,1}, blockIndex::Int64, nDataStreams::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
+function calculateDataBlockSizeinBytes(rhd::RHD2000)
 
-    #Need to add extra input so only read and return what is needed
+    rhd.numBytesPerBlock=convert(Int64,2 * rhd.numWords / SAMPLES_PER_DATA_BLOCK)
+
+    nothing
     
-    #Remember that Julia starts with index=1 and not zero
-    #This is really a constant after the experiment starts. probably shouldn't recalculate this everytime
-    #every word is two bytes
-    numBytesPerBlock=convert(Int,2 * calculateDataBlockSizeInWords(nDataStreams) / SAMPLES_PER_DATA_BLOCK)
-    index = blockIndex * numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
+end
+
+
+function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
+    
+    index = blockIndex * rhd.numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     
     index+=8
     for t=1:SAMPLES_PER_DATA_BLOCK
-        timeStamp[t]=convert(Int32,convertUsbTimeStamp(usbBuffer,index))
-        index+=numBytesPerBlock
+        timeStamp[t]=convert(Int32,convertUsbTimeStamp(rhd.usbBuffer,index))
+        index+=rhd.numBytesPerBlock
     end
 
     # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
-    start=10+6*nDataStreams
+    start=10+6*rhd.numDataStreams
     
-    @parallel for i=1:nDataStreams*32
+    @parallel for i=1:rhd.numDataStreams*32
         ind=start+i+i
         b=0
         for j=1:SAMPLES_PER_DATA_BLOCK
             #s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
-            b=(convert(Uint32,usbBuffer[ind+1]) << 8) | (convert(Uint32,usbBuffer[ind]) << 0)
+            b=(convert(Uint32,rhd.usbBuffer[ind+1]) << 8) | (convert(Uint32,rhd.usbBuffer[ind]) << 0)
             s[i].rawSignal[j]=convert(Int64,b)
-            ind+=numBytesPerBlock
+            ind+=rhd.numBytesPerBlock
         end
     end
         
@@ -994,37 +1051,41 @@ end
 #Library Wrapper Functions
 
 
-function SetWireInValue(ep, val, mask = 0xffffffff)
+function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
     
-    er=ccall((:okFrontPanel_SetWireInValue,mylib),Cint,(Ptr{Void},Int,Culong,Culong),y,ep, val, mask)
+    er=ccall((:okFrontPanel_SetWireInValue,rhd.lib),Cint,(Ptr{Void},Int,Culong,Culong),y,ep, val, mask)
 
     return er
 end
 
-function UpdateWireIns()
+function UpdateWireIns(rhd::RHD2000)
 
-    ccall((:okFrontPanel_UpdateWireIns,mylib),Void,(Ptr{Void},),y)
+    ccall((:okFrontPanel_UpdateWireIns,rhd.lib),Void,(Ptr{Void},),y)
 
-end
-
-function UpdateWireOuts()
-
-    ccall((:okFrontPanel_UpdateWireOuts,mylib),Void,(Ptr{Void},),y)
+    nothing
 
 end
 
+function UpdateWireOuts(rhd::RHD2000)
 
-function ActivateTriggerIn(epAddr::Uint8,bit::Int)
+    ccall((:okFrontPanel_UpdateWireOuts,rhd.lib),Void,(Ptr{Void},),y)
+
+    nothing
+
+end
+
+
+function ActivateTriggerIn(rhd::RHD2000,epAddr::Uint8,bit::Int)
     
-    er=ccall((:okFrontPanel_ActivateTriggerIn,mylib),Cint,(Ptr{Void},Int32,Int32),y,epAddr,bit)
+    er=ccall((:okFrontPanel_ActivateTriggerIn,rhd.lib),Cint,(Ptr{Void},Int32,Int32),y,epAddr,bit)
 
     return er
 
 end
 
-function GetWireOutValue(epAddr::Uint8)
+function GetWireOutValue(rhd::RHD2000,epAddr::Uint8)
 
-    value = ccall((:okFrontPanel_GetWireOutValue,mylib),Culong,(Ptr{Void},Int32),y,epAddr)
+    value = ccall((:okFrontPanel_GetWireOutValue,rhd.lib),Culong,(Ptr{Void},Int32),y,epAddr)
 
     return value
 
@@ -1032,8 +1093,8 @@ end
 
 function ReadFromPipeOut(epAddr::Uint8, length, data::SharedArray{Uint8,1})
 
-   #CCall can fill Shared Arrays!
-   ccall((:okFrontPanel_ReadFromPipeOut,mylib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
+    #CCall can fill Shared Arrays!
+    ccall((:okFrontPanel_ReadFromPipeOut,rhd.lib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
 
     return data
    
