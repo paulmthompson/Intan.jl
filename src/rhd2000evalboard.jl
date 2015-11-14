@@ -3,14 +3,65 @@
 abstract Amp
 
 type RHD2164 <: Amp
-    port::ASCIIString
+    port::Array{Int64,1}
+end
+
+function RHD2164(port::ASCIIString)
+    if port=="PortA1"
+        ports=[PortA1,PortA1Ddr]
+    elseif port=="PortA2"
+        ports=[PortA2,PortA2Ddr]
+    elseif port=="PortB1"
+        ports=[PortB1,PortB1Ddr]
+    elseif port=="PortB2"
+        ports=[PortB2,PortB2Ddr]
+    elseif port=="PortC1"
+        ports=[PortC1,PortC1Ddr]
+    elseif port=="PortC2"
+        ports=[PortC2,PortC2Ddr]
+    elseif port=="PortD1"
+        ports=[PortD1,PortD1Ddr]
+    elseif port=="PortD2"
+        ports=[PortD2,PortD2Ddr]
+    else
+        ports=[0,0]
+    end
+
+    RHD2164(ports)
+    
 end
 
 type RHD2132 <: Amp
-    port::ASCIIString
+    port::Array{Int64,1}
 end
 
+function RHD2132(port::ASCIIString)
+    if port=="PortA1"
+        ports=[PortA1]
+    elseif port=="PortA2"
+        ports=[PortA2]
+    elseif port=="PortB1"
+        ports=[PortB1]
+    elseif port=="PortB2"
+        ports=[PortB2]
+    elseif port=="PortC1"
+        ports=[PortC1]
+    elseif port=="PortC2"
+        ports=[PortC2]
+    elseif port=="PortD1"
+        ports=[PortD1]
+    elseif port=="PortD2"
+        ports=[PortD2]
+    else
+        ports=[0]
+    end
+
+    RHD2132(ports)
+end
+
+
 type RHD2000{T<:Amp}
+    board::Ptr{Void}
     lib::ASCIIString
     bit::ASCIIString
     sampleRate::Int64
@@ -22,9 +73,9 @@ type RHD2000{T<:Amp}
     amps::Array{T,1}
 end
 
-function RHD2000(sampleRate; lib="../lib/libokFrontPanel.so",bit="../lib/main.bit")
+function RHD2000{T<:Amp}(amps::Array{T<:Amp,1},lib::ASCIIString,bit::ASCIIString)
 
-    sampleRate=30000
+    sampleRate=30000 #default
     numDataStreams=0
 
     dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
@@ -35,16 +86,15 @@ function RHD2000(sampleRate; lib="../lib/libokFrontPanel.so",bit="../lib/main.bi
     numWords = 0
 
     numBytesPerBlock = 0
+
+    board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())  
     
-    RHD2000(lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock)
+    RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock)
 end
 
-const SAMPLES_PER_DATA_BLOCK = 600
-const y = ccall((:okFrontPanel_Construct, mylib), Ptr{Void}, ())
+function init_board{T<:Amp}(amps::Array{T,1},sr::Int64;lib="../lib/libokFrontPanel.so",bit="../lib/main.bit")
 
-function init_board(lib::ASCIIString,bit::ASCIIString,)
-
-    rhd=RHD2000(lib,bit);
+    rhd=RHD2000(amps,lib,bit);
     
     #Opal Kelly XEM6010 board
     open_board(rhd)
@@ -58,52 +108,53 @@ function init_board(lib::ASCIIString,bit::ASCIIString,)
     #For 64 channel need two data streams, and data will come in 
     #on the rising AND falling edges of SCLK
 
+    stream=0
     for i=1:length(rhd.amps)
 
-        if typeof(rhd.amps
+        for j in rhd.amps.ports
+            enableDataStream(rhd,stream,true)
+            setDataSource(rhd,stream,j)
+            stream+=1
+        end
         
     end
 
-    enableDataStream(rhd,1, true)
-    setDataSource(rhd,0, 0) #port A MISO1
-    setDataSource(rhd,1, 8) #port A MISO1 DDR
-
     #Select per-channel amplifier sampling rate
-    setSampleRate(rhd,20000)
+    setSampleRate(rhd,sr)
 
     #Now that we have set our sampling rate, we can set the MISO sampling delay
     #which is dependent on the sample rate. We use a 6.0 foot cable
     setCableLengthFeet(rhd,"PortA", 6.0)
 
     # Let's turn one LED on to indicate that the program is running.
-    ledArray=[1,1,0,0,0,0,0,0]
+    ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(rhd,ledArray)
 
-    nothing
+    rhd
     
 end
 
 function open_board(rhd::RHD2000)
 
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall((:okFrontPanel_GetDeviceCount,rhd.lib), Int, (Ptr{Void},), y) 
+    nDevices=ccall((:okFrontPanel_GetDeviceCount,rhd.lib), Int, (Ptr{Void},), rhd.board) 
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
     serial=Array(Uint8,11)
-    ccall((:okFrontPanel_GetDeviceListSerial,rhd.lib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), y, 0,serial)
+    ccall((:okFrontPanel_GetDeviceListSerial,rhd.lib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), rhd.board, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
-    if (ccall((:okFrontPanel_OpenBySerial, rhd.lib), Cint, (Ptr{Void},Ptr{Uint8}),y,serialnumber)!=0)
+    if (ccall((:okFrontPanel_OpenBySerial, rhd.lib), Cint, (Ptr{Void},Ptr{Uint8}),rhd.board,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
     
     #configure on-board PLL
-    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,rhd.lib), Cint, (Ptr{Void},),y)
+    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,rhd.lib), Cint, (Ptr{Void},),rhd.board)
 
     return 1
 
@@ -112,7 +163,7 @@ end
 function uploadFpgaBitfile(rhd::RHD2000)
 
     #upload configuration file
-    errorcode=ccall((:okFrontPanel_ConfigureFPGA,rhd.lib),Cint,(Ptr{Void},Ptr{Uint8}),y,rhd.file)
+    errorcode=ccall((:okFrontPanel_ConfigureFPGA,rhd.lib),Cint,(Ptr{Void},Ptr{Uint8}),rhd.board,rhd.file)
 
     #error checking goes here
     if errorcode==0
@@ -123,7 +174,7 @@ function uploadFpgaBitfile(rhd::RHD2000)
     
     
     #Check if FrontPanel Support is enabled
-    ccall((:okFrontPanel_IsFrontPanelEnabled,rhd.lib),Bool,(Ptr{Void},),y)
+    ccall((:okFrontPanel_IsFrontPanelEnabled,rhd.lib),Bool,(Ptr{Void},),rhd.board)
 
     UpdateWireOuts(rhd)
     
@@ -134,6 +185,8 @@ function uploadFpgaBitfile(rhd::RHD2000)
     else
         println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion)
     end
+
+    nothing
     
 end
 
@@ -416,6 +469,8 @@ function selectAuxCommandLength(rhd::RHD2000,commandslot,loopIndex,endIndex)
     end
 
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
@@ -429,6 +484,8 @@ function setContinuousRunMode(rhd::RHD2000,continuousMode)
 
     UpdateWireIns(rhd)
 
+    nothing
+
 end
 
 function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
@@ -441,11 +498,15 @@ function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
     SetWireInValue(rhd,WireInMaxTimeStepLsb,maxTimeStepLsb)
     SetWireInValue(rhd,WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
 function setCableLengthFeet(rhd::RHD2000,port, lengthInFeet::Float64)
     setCableLengthMeters(rhd,port, .3048 * lengthInFeet)
+
+    nothing
 end
 
 function setCableLengthMeters(rhd::RHD2000,port, lengthInMeters::Float64)
@@ -471,6 +532,8 @@ function setCableLengthMeters(rhd::RHD2000,port, lengthInMeters::Float64)
     end
 
     setCableDelay(rhd,port, delay)
+
+    nothing
 end
 
 function setCableDelay(rhd::RHD2000,port, delay)
@@ -499,6 +562,8 @@ function setCableDelay(rhd::RHD2000,port, delay)
     
     SetWireInValue(rhd,WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
@@ -507,6 +572,7 @@ function setDspSettle(rhd::RHD2000,enabled)
     SetWireInValue(rhd,WireInResetRun, (enabled ? 0x04 : 0x00), 0x04)
     UpdateWireIns(rhd)
 
+    nothing
 end
 
 function setDataSource(rhd::RHD2000,stream, dataSource)
@@ -543,6 +609,7 @@ function setDataSource(rhd::RHD2000,stream, dataSource)
     SetWireInValue(rhd,endPoint,(dataSource << bitShift), (0x000f << bitShift))
     UpdateWireIns(rhd)
 
+    nothing
 end
 
 function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
@@ -555,7 +622,7 @@ function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
             SetWireInValue(rhd,WireInDataStreamEn,0x0001 << stream, 0x0001 << stream)
             UpdateWireIns(rhd)
             rhd.dataStreamEnabled[stream+1] = 1;
-            rhd.numDataStreams=rhd/numDataStreams+1;
+            rhd.numDataStreams=rhd.numDataStreams+1;
         end
     else
         if rhd.dataStreamEnabled[stream+1] == 1
@@ -565,6 +632,8 @@ function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
             rhd.numDataStream=rhd.numDataStreams-1;
         end
     end
+
+    nothing
                 
 end
 
@@ -592,6 +661,8 @@ function enableDac(rhd::RHD2000,dacChannel::Int, enabled::Bool)
 
     UpdateWireIns(rhd)
 
+    nothing
+
 end
 
 function selectDacDataStream(rhd::RHD2000,dacChannel, stream)
@@ -617,6 +688,8 @@ function selectDacDataStream(rhd::RHD2000,dacChannel, stream)
     end
 
     UpdateWireIns(rhd)
+
+    nothing
         
 end
 
@@ -642,6 +715,8 @@ function selectDacDataChannel(rhd::RHD2000,dacChannel::Int, dataChannel)
     end
 
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
@@ -650,6 +725,8 @@ function setDacManual(rhd::RHD2000,value)
 
     SetWireInValue(rhd,WireInDacManual,value)
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
@@ -659,6 +736,8 @@ function setDacGain(rhd::RHD2000,gain)
     
     SetWireInValue(rhd,WireInResetRun,gain << 13, 0xe000)
     UpdateWireIns(rhd)
+
+    nothing
     
 end
 
@@ -667,6 +746,8 @@ function setAudioNoiseSuppress(rhd::RHD2000,noiseSuppress)
 
     SetWireInValue(rhd,WireInResetRun, noiseSuppress << 6, 0x1fc0)
     UpdateWireIns(rhd)
+
+    nothing
 
 end
 
@@ -764,6 +845,8 @@ function setExternalDigOutChannel(rhd::RHD2000,port, channel)
         ActivateTriggerIn(rhd,TrigInExtDigOut,7)
     end
 
+    nothing
+    
 end
 
 function getTtlIn(rhd::RHD2000,ttlInArray)
@@ -967,6 +1050,7 @@ function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1
         s[i].numSpikes=2
     end
     
+    nothing
     
 end
 
@@ -995,14 +1079,14 @@ end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
     
-    er=ccall((:okFrontPanel_SetWireInValue,rhd.lib),Cint,(Ptr{Void},Int,Culong,Culong),y,ep, val, mask)
+    er=ccall((:okFrontPanel_SetWireInValue,rhd.lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
 
     return er
 end
 
 function UpdateWireIns(rhd::RHD2000)
 
-    ccall((:okFrontPanel_UpdateWireIns,rhd.lib),Void,(Ptr{Void},),y)
+    ccall((:okFrontPanel_UpdateWireIns,rhd.lib),Void,(Ptr{Void},),rhd.board)
 
     nothing
 
@@ -1010,7 +1094,7 @@ end
 
 function UpdateWireOuts(rhd::RHD2000)
 
-    ccall((:okFrontPanel_UpdateWireOuts,rhd.lib),Void,(Ptr{Void},),y)
+    ccall((:okFrontPanel_UpdateWireOuts,rhd.lib),Void,(Ptr{Void},),rhd.board)
 
     nothing
 
@@ -1019,7 +1103,7 @@ end
 
 function ActivateTriggerIn(rhd::RHD2000,epAddr::Uint8,bit::Int)
     
-    er=ccall((:okFrontPanel_ActivateTriggerIn,rhd.lib),Cint,(Ptr{Void},Int32,Int32),y,epAddr,bit)
+    er=ccall((:okFrontPanel_ActivateTriggerIn,rhd.lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
 
     return er
 
@@ -1027,7 +1111,7 @@ end
 
 function GetWireOutValue(rhd::RHD2000,epAddr::Uint8)
 
-    value = ccall((:okFrontPanel_GetWireOutValue,rhd.lib),Culong,(Ptr{Void},Int32),y,epAddr)
+    value = ccall((:okFrontPanel_GetWireOutValue,rhd.lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 
     return value
 
@@ -1036,10 +1120,8 @@ end
 function ReadFromPipeOut(epAddr::Uint8, length, data::SharedArray{Uint8,1})
 
     #CCall can fill Shared Arrays!
-    ccall((:okFrontPanel_ReadFromPipeOut,rhd.lib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),y,epAddr,length,data)
+    ccall((:okFrontPanel_ReadFromPipeOut,rhd.lib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),rhd.board,epAddr,length,data)
 
     return data
    
-end
-
 end
