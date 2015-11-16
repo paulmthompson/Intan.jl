@@ -67,10 +67,11 @@ type RHD2000{T<:Amp}
     sampleRate::Int64
     numDataStreams::Int64
     dataStreamEnabled::Array{Int64,2}
-    usbBuffer::Array{Uint8,1}
+    usbBuffer::SharedArray{Uint8,1}
     numWords::Int64
     numBytesPerBlock::Int64
     amps::Array{T,1}
+    v::SharedArray{Float64,2}
 end
 
 function RHD2000{T<:Amp}(amps::Array{T<:Amp,1},lib::ASCIIString,bit::ASCIIString)
@@ -89,7 +90,7 @@ function RHD2000{T<:Amp}(amps::Array{T<:Amp,1},lib::ASCIIString,bit::ASCIIString
 
     board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())  
     
-    RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock)
+    RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,SharedArray(Float64,0,0))
 end
 
 function init_board{T<:Amp}(amps::Array{T,1},sr::Int64;lib="../lib/libokFrontPanel.so",bit="../lib/main.bit")
@@ -118,6 +119,8 @@ function init_board{T<:Amp}(amps::Array{T,1},sr::Int64;lib="../lib/libokFrontPan
         end
         
     end
+
+    rhd.v=SharedArray(Float64,SAMPLES_PER_DATA_BLOCK,rhd.numDataStreams*32)
 
     #Select per-channel amplifier sampling rate
     setSampleRate(rhd,sr)
@@ -988,7 +991,6 @@ function calculateDataBlockSizeinBytes(rhd::RHD2000)
     
 end
 
-
 function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
     
     index = blockIndex * rhd.numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
@@ -1004,13 +1006,13 @@ function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1
     # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
     start=10+6*rhd.numDataStreams
     
-    @parallel for i=1:rhd.numDataStreams*32
+    for i=1:rhd.numDataStreams*32
         ind=start+i+i
         b=0
         for j=1:SAMPLES_PER_DATA_BLOCK
             #s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
             b=(convert(Uint32,rhd.usbBuffer[ind+1]) << 8) | (convert(Uint32,rhd.usbBuffer[ind]) << 0)
-            s[i].rawSignal[j]=convert(Int64,b)
+            rhd.v[j,i]=convert(Int64,b)
             ind+=rhd.numBytesPerBlock
         end
     end
@@ -1021,9 +1023,6 @@ end
 
 function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, saveOut)
 
-    #don't need initial zeros anymore since its preallocated
-    #need to fill only new data in preallocated array
-    
     time=time[3:end] #get rid of initial zeros
 
     h5open(saveOut,"r+") do fid
