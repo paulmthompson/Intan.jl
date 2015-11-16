@@ -133,6 +133,34 @@ function init_board{T<:Amp}(amps::Array{T,1},sr::Int64;lib="../lib/libokFrontPan
     ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(rhd,ledArray)
 
+
+    #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
+    r=CreateRHD2000Registers(Float64(sr))
+
+    #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
+    uploadCommandList(commandList, "AuxCmd3", 0)
+
+    #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
+    uploadCommandList(commandList, "AuxCmd3", 1)
+
+    selectAuxCommandLength("AuxCmd3", 0, length(commandList) - 1)
+
+    #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
+    selectAuxCommandBank("PortA", "AuxCmd3", 1);
+
+    setMaxTimeStep(SAMPLES_PER_DATA_BLOCK)
+    setContinuousRunMode(false)
+    runBoard()
+
+    while (isRunning())
+    end
+
+    flushBoard()
+
+    selectAuxCommandBank("PortA", "AuxCmd3", 0)
+
     rhd
     
 end
