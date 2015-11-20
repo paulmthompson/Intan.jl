@@ -691,7 +691,3 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
 return commandList
 
 end
-
-
-    
-end

@@ -60,42 +60,67 @@ function RHD2132(port::ASCIIString)
 end
 
 
-type RHD2000{T<:Amp}
+type RHD2000{T<:Amp,V}
     board::Ptr{Void}
     lib::ASCIIString
     bit::ASCIIString
     sampleRate::Int64
     numDataStreams::Int64
     dataStreamEnabled::Array{Int64,2}
-    usbBuffer::SharedArray{Uint8,1}
+    usbBuffer::Array{UInt8,1}
     numWords::Int64
     numBytesPerBlock::Int64
     amps::Array{T,1}
-    v::SharedArray{Float64,2}
+    v::AbstractArray{Int64,2}
+    s::AbstractArray{V,1}
 end
 
-function RHD2000{T<:Amp}(amps::Array{T<:Amp,1},lib::ASCIIString,bit::ASCIIString)
+default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
+
+function RHD2000{T<:Amp,V}(amps::Array{T,1},lib::ASCIIString,bit::ASCIIString,sort::ASCIIString,params::Array{Algorithm,1})
+
+    numchannels=0
+
+    for i=1:length(amps)
+        if typeof(amps[i])==RHD2164
+            numchannels+=64
+        elseif typeof(amps[i])==2132
+            numchannels+=32
+        end
+    end
 
     sampleRate=30000 #default
     numDataStreams=0
 
     dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
 
-    usbBuffer = Array(Uint8,USB_BUFFER_SIZE)
-    usbBuffer = convert(SharedArray{Uint8,1},usbBuffer)
+    usbBuffer = zeros(UInt8,USB_BUFFER_SIZE)
 
     numWords = 0
 
     numBytesPerBlock = 0
 
-    board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())  
-    
-    RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,SharedArray(Float64,0,0))
+    board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
+
+    if sort=="single"
+        v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
+        s=multi_channel(params...,numchannel,false)
+        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+    elseif sort=="parallel"
+        v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
+        s=multi_channel(params...,numchannel,true)
+        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+    else
+        v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
+        s=falses(numchannel)
+        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+    end
+
 end
 
-function init_board{T<:Amp}(amps::Array{T,1},sr::Int64;lib="../lib/libokFrontPanel.so",bit="../lib/main.bit")
+function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", lib="../lib/libokFrontPanel.so", bit="../lib/main.bit", params=default_sort)
 
-    rhd=RHD2000(amps,lib,bit);
+    rhd=RHD2000(amps,lib,bit,sort,params);
     
     #Opal Kelly XEM6010 board
     open_board(rhd)

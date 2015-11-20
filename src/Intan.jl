@@ -1,7 +1,7 @@
 
 module Intan
 
-using HDF5, DistributedArrays, SortSpikes
+using HDF5, DistributedArrays, SpikeSorting
 
 export RHD2000, RHD2164, RHD2132, init_board
 
