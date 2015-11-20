@@ -188,6 +188,24 @@ function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", params=
     
 end
 
+#=
+function run!(rhd::RHD2000,calsamples::Int64)
+
+    setMaxTimeStep(calsamples)
+    setContinuousRunMode(false)
+    mytime=zeros(Int32,2)
+
+    usbDataRead=true
+
+    runBoard()
+
+    usbDataRead = readDataBlocks(1,mytime,"firstrun")
+
+    count=SAMPLES_PER_DATA_BLOCK
+    
+end
+=#
+
 function open_board(rhd::RHD2000)
 
     println("Scanning USB for Opal Kelly devices...")
@@ -978,7 +996,7 @@ function numWordsInFifo(rhd::RHD2000)
     
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64, time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, ss="METHOD_NOSORT")
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64,time::Array{Int32,1},ss="sort")
 
     if (numWordsInFifo(rhd) < rhd.numWords)
         return false
@@ -1003,16 +1021,17 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64, time::Array{Int32,1}, s::
         #Add time from dataBlock
         append!(time, dataBlock)
 
-        if ss=="METHOD_SORT"
+        if ss=="firstrun"
 
-            #parallel
-            map!(onlineSort,s)
+            cal!(rhd.s,rhd.v,true)
                       
-        elseif ss=="METHOD_NOSORT"
+        elseif ss=="cal"
+
+            cal!(rhd.s,rhd.v)
         
-        elseif ss=="METHOD_SORTCAL"
+        elseif ss=="sort"
             
-            map!(onlineCal,s)
+            onlinesort!(rhd.s,rhd.v)
 
         end
         
@@ -1061,7 +1080,6 @@ function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1
         ind=start+i+i
         b=0
         for j=1:SAMPLES_PER_DATA_BLOCK
-            #s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
             b=(convert(UInt32,rhd.usbBuffer[ind+1]) << 8) | (convert(UInt32,rhd.usbBuffer[ind]) << 0)
             rhd.v[j,i]=convert(Int64,b)
             ind+=rhd.numBytesPerBlock
