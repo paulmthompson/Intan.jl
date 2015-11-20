@@ -62,8 +62,6 @@ end
 
 type RHD2000{T<:Amp,V}
     board::Ptr{Void}
-    lib::ASCIIString
-    bit::ASCIIString
     sampleRate::Int64
     numDataStreams::Int64
     dataStreamEnabled::Array{Int64,2}
@@ -77,7 +75,7 @@ end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
 
-function RHD2000{T<:Amp,V}(amps::Array{T,1},lib::ASCIIString,bit::ASCIIString,sort::ASCIIString,params::Array{Algorithm,1})
+function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params::Array{Algorithm,1})
 
     numchannels=0
 
@@ -104,23 +102,23 @@ function RHD2000{T<:Amp,V}(amps::Array{T,1},lib::ASCIIString,bit::ASCIIString,so
 
     if sort=="single"
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=multi_channel(params...,numchannel,false)
-        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        s=create_multi(params...,numchannels,false)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
-        s=multi_channel(params...,numchannel,true)
-        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        s=create_multi(params...,numchannels,true)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
     else
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=falses(numchannel)
-        RHD2000(board,lib,bit,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        s=falses(numchannels)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
     end
 
 end
 
-function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", lib="../lib/libokFrontPanel.so", bit="../lib/main.bit", params=default_sort)
+function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", params=default_sort)
 
-    rhd=RHD2000(amps,lib,bit,sort,params);
+    rhd=RHD2000(amps,sort,params);
     
     #Opal Kelly XEM6010 board
     open_board(rhd)
@@ -193,24 +191,24 @@ end
 function open_board(rhd::RHD2000)
 
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall((:okFrontPanel_GetDeviceCount,rhd.lib), Int, (Ptr{Void},), rhd.board) 
+    nDevices=ccall((:okFrontPanel_GetDeviceCount,lib), Int, (Ptr{Void},), rhd.board) 
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
     serial=Array(Uint8,11)
-    ccall((:okFrontPanel_GetDeviceListSerial,rhd.lib), Int32, (Ptr{Void}, Int, Ptr{Uint8}), rhd.board, 0,serial)
+    ccall((:okFrontPanel_GetDeviceListSerial,lib), Int32, (Ptr{Void}, Int, Ptr{UInt8}), rhd.board, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
-    if (ccall((:okFrontPanel_OpenBySerial, rhd.lib), Cint, (Ptr{Void},Ptr{Uint8}),rhd.board,serialnumber)!=0)
+    if (ccall((:okFrontPanel_OpenBySerial, lib), Cint, (Ptr{Void},Ptr{UInt8}),rhd.board,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
     
     #configure on-board PLL
-    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,rhd.lib), Cint, (Ptr{Void},),rhd.board)
+    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,lib), Cint, (Ptr{Void},),rhd.board)
 
     return 1
 
@@ -219,7 +217,7 @@ end
 function uploadFpgaBitfile(rhd::RHD2000)
 
     #upload configuration file
-    errorcode=ccall((:okFrontPanel_ConfigureFPGA,rhd.lib),Cint,(Ptr{Void},Ptr{Uint8}),rhd.board,rhd.file)
+    errorcode=ccall((:okFrontPanel_ConfigureFPGA,lib),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
 
     #error checking goes here
     if errorcode==0
@@ -230,7 +228,7 @@ function uploadFpgaBitfile(rhd::RHD2000)
     
     
     #Check if FrontPanel Support is enabled
-    ccall((:okFrontPanel_IsFrontPanelEnabled,rhd.lib),Bool,(Ptr{Void},),rhd.board)
+    ccall((:okFrontPanel_IsFrontPanelEnabled,lib),Bool,(Ptr{Void},),rhd.board)
 
     UpdateWireOuts(rhd)
     
@@ -351,7 +349,7 @@ function initialize_board(rhd::RHD2000)
        
 end
 
-function resetBoard()
+function resetBoard(rhd::RHD2000)
 
     SetWireInValue(rhd,WireInResetRun, 0x01, 0x01)
     UpdateWireIns(rhd)
@@ -1064,7 +1062,7 @@ function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1
         b=0
         for j=1:SAMPLES_PER_DATA_BLOCK
             #s[i].rawSignal[ind]=convertUsbWord(usbBuffer,j)
-            b=(convert(Uint32,rhd.usbBuffer[ind+1]) << 8) | (convert(Uint32,rhd.usbBuffer[ind]) << 0)
+            b=(convert(UInt32,rhd.usbBuffer[ind+1]) << 8) | (convert(UInt32,rhd.usbBuffer[ind]) << 0)
             rhd.v[j,i]=convert(Int64,b)
             ind+=rhd.numBytesPerBlock
         end
@@ -1106,20 +1104,20 @@ function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1
     
 end
 
-function convertUsbTimeStamp(usbBuffer::SharedArray{Uint8,1}, index::Int64)
+function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = convert(Uint32,usbBuffer[index])
-    x2 = convert(Uint32,usbBuffer[index+1])
-    x3 = convert(Uint32,usbBuffer[index+2])
-    x4 = convert(Uint32,usbBuffer[index+3])
+    x1 = convert(UInt32,usbBuffer[index])
+    x2 = convert(UInt32,usbBuffer[index+1])
+    x3 = convert(UInt32,usbBuffer[index+2])
+    x4 = convert(UInt32,usbBuffer[index+3])
 
     return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
 end
 
-function convertUsbWord(usbBuffer::SharedArray{Uint8,1}, index::Int64)
+function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1=convert(Uint32, usbBuffer[index])
-    x2=convert(Uint32, usbBuffer[index+1])
+    x1=convert(UInt32, usbBuffer[index])
+    x2=convert(UInt32, usbBuffer[index+1])
 
     #The original C++ Rhythm API uses Int32, but Julia hasn't been playing nice with making sure that Int32s are type stable through calculations.
     return convert(Int64, ((x2<<8) | (x1<<0)))
@@ -1131,14 +1129,14 @@ end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
     
-    er=ccall((:okFrontPanel_SetWireInValue,rhd.lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
+    er=ccall((:okFrontPanel_SetWireInValue,lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
 
     return er
 end
 
 function UpdateWireIns(rhd::RHD2000)
 
-    ccall((:okFrontPanel_UpdateWireIns,rhd.lib),Void,(Ptr{Void},),rhd.board)
+    ccall((:okFrontPanel_UpdateWireIns,lib),Void,(Ptr{Void},),rhd.board)
 
     nothing
 
@@ -1146,33 +1144,33 @@ end
 
 function UpdateWireOuts(rhd::RHD2000)
 
-    ccall((:okFrontPanel_UpdateWireOuts,rhd.lib),Void,(Ptr{Void},),rhd.board)
+    ccall((:okFrontPanel_UpdateWireOuts,lib),Void,(Ptr{Void},),rhd.board)
 
     nothing
 
 end
 
 
-function ActivateTriggerIn(rhd::RHD2000,epAddr::Uint8,bit::Int)
+function ActivateTriggerIn(rhd::RHD2000,epAddr::UInt8,bit::Int)
     
-    er=ccall((:okFrontPanel_ActivateTriggerIn,rhd.lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
+    er=ccall((:okFrontPanel_ActivateTriggerIn,lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
 
     return er
 
 end
 
-function GetWireOutValue(rhd::RHD2000,epAddr::Uint8)
+function GetWireOutValue(rhd::RHD2000,epAddr::UInt8)
 
-    value = ccall((:okFrontPanel_GetWireOutValue,rhd.lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
+    value = ccall((:okFrontPanel_GetWireOutValue,lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 
     return value
 
 end
 
-function ReadFromPipeOut(epAddr::Uint8, length, data::SharedArray{Uint8,1})
+function ReadFromPipeOut(epAddr::UInt8, length, data::AbstractArray{UInt8,1})
 
     #CCall can fill Shared Arrays!
-    ccall((:okFrontPanel_ReadFromPipeOut,rhd.lib),Clong,(Ptr{Void},Int32,Clong,Ptr{Uint8}),rhd.board,epAddr,length,data)
+    ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
 
     return data
    

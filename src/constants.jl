@@ -4,6 +4,9 @@ Constants
 
 #Constant parameters
 
+const lib = "/home/paul/Intan.jl/lib/libokFrontPanel.so"
+const bit= "/home/paul/Intan.jl/lib/main.bit"
+
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
 const MAX_NUM_DATA_STREAMS = 8
