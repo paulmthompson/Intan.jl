@@ -17,6 +17,10 @@ http://intantech.com/products_RHD2000_Rhythm.html
 
 Opal Kelly provides the Rhythm interface as open source C++ and verilog code. This project seeks to be a Julia alternative to allow for easier integration of spike sorting and closed loop control in the Julia language. 
 
+Although you don't have to use spike sorting, the module assumes that you have the SpikeSorting.jl module on your computer:
+
+https://github.com/paulmthompson/SpikeSorting.jl
+
 *******************
 Initializing Board
 *******************
