@@ -1,9 +1,20 @@
 
+type Gui_Handles
+    win::Gtk.GtkWindowLeaf
+    run::Gtk.GtkToggleButtonLeaf
+    cal::Gtk.GtkCheckButtonLeaf
+    slider::Gtk.GtkScaleLeaf
+    adj::Gtk.GtkAdjustmentLeaf
+    slider2::Gtk.GtkScaleLeaf
+    adj2::Gtk.GtkAdjustmentLeaf
+    c::Gtk.GtkCanvasLeaf
+    c2::Gtk.GtkCanvasLeaf
+end
 
 function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     
     #Button to run Intan
-    button = @ToggleButton("Start")
+    button = @ToggleButton("Run")
 
     #Calibration
     cal = @CheckButton("Calibrate")
@@ -19,8 +30,10 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     
     #One channel can be magnified for easier inspection
     c2=@Canvas(800,800) #Single channel to focus on
+    c2_slider=@Scale(false, 1:16)
+    adj2 = @Adjustment(c2_slider)
+    setproperty!(adj2,:value,1)
 
-    
     #Arrangement of stuff on GUI
     grid = @Grid()
     grid[1,1]=button
@@ -28,6 +41,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     grid[3,2]=c
     grid[3,3]=c_slider
     grid[2,2]=c2
+    grid[2,3]=c2_slider
     win = @Window(grid, "Intan.jl GUI")
     showall(win)
 
@@ -35,32 +49,56 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     #Callback function definitions
 
     #Drawing
-    function draw_cb(widgetptr::Ptr,user_data::Tuple{Gtk.GtkCanvas,AbstractArray{Int64,2},AbstractArray{Spike,2},AbstractArray{Int64,1}})
+    function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,AbstractArray{Int64,2},AbstractArray{Spike,2},AbstractArray{Int64,1}})
 
-        #unpack tuple
-        can, num, myspikes, mycounts = user_data
+        widget = convert(ToggleButton, widgetptr) 
+
+        @async if getproperty(widget,:active,Bool)==true
+
+            #unpack tuple
+            han, num, myspikes, mycounts = user_data
+
+            #get context
+            ctx = getgc(han.c)
+
+            while getproperty(widget,:active,Bool)==true
+
+                #plot spikes
+                 
+                count=16*getproperty(han.adj,:value,Int64)
+                
+                if count>0
+               
+                    count-=15
+                    
+                    for i=0:200:600
+                        for j=0:200:600
     
-        #get context
-        ctx = getgc(can)
-        count=1
-        
-        for i=0:200:600
-            for j=0:200:600
+                            draw_spike(num,i,j,count,ctx,myspikes,mycounts)
+                            count+=1
+                        end
+                    end
     
-                draw_spike(num,i,j,count,ctx,myspikes,mycounts)
-                count+=1
+                stroke(ctx);
+                reveal(han.c);
+                
+                end
+
+                sleep(.0001)
+
             end
+
         end
-    
-        stroke(ctx);
-        reveal(can);
         
         nothing
     end
+
+    #create type with handles for everything
+    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2)
     
     #Connect Callbacks to objects on GUI
-    signal_connect(draw_cb, button, "clicked",Void,(),false,(c,mynums,spikes,ns))
+    signal_connect(run_cb, button, "clicked",Void,(),false,(handles,mynums,spikes,ns))
     
-    return win,c
+    return handles
     
 end
