@@ -14,7 +14,7 @@ end
 function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     
     #Button to run Intan
-    button = @ToggleButton("Run")
+    button = @ToggleButton("Run") 
 
     #Calibration
     cal = @CheckButton("Calibrate")
@@ -22,6 +22,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
 
     #16 channels at a time can be visualized on the right side
     c=@Canvas(800,800) #16 channels
+    
     
     #Which 16 channels can be selected with a slider
     c_slider = @Scale(false, 0:(div(length(ns)-1,16)+1))
@@ -31,6 +32,8 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     #One channel can be magnified for easier inspection
     c2=@Canvas(800,800) #Single channel to focus on
     c2_slider=@Scale(false, 1:16)
+    
+    
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
 
@@ -45,37 +48,48 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     win = @Window(grid, "Intan.jl GUI")
     showall(win)
 
-
+    
+    
     #Callback function definitions
 
     #Drawing
     function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,AbstractArray{Int64,2},AbstractArray{Spike,2},AbstractArray{Int64,1}})
 
         widget = convert(ToggleButton, widgetptr) 
-
+        
         @async if getproperty(widget,:active,Bool)==true
-
+        
             #unpack tuple
             han, num, myspikes, mycounts = user_data
-
+            
             #get context
             ctx = getgc(han.c)
-
+            
+            s_old=1
+            s_new=1
+            
             while getproperty(widget,:active,Bool)==true
-
+                  
+                
+                
+                
                 #plot spikes
                  
-                count=16*getproperty(han.adj,:value,Int64)
+                s_new=getproperty(han.adj,:value,Int64)
                 
-                if count>0
-               
-                    count-=15
+                if s_new != s_old
+                    clear_c(han.c)
+                end
+                
+                s_old=s_new
+                
+                if s_old>0
                     
+                    k=16*s_old-15
                     for i=0:200:600
                         for j=0:200:600
-    
-                            draw_spike(num,i,j,count,ctx,myspikes,mycounts)
-                            count+=1
+                            draw_spike(num,i,j,k,ctx,myspikes,mycounts)
+                            k+=1
                         end
                     end
     
@@ -83,22 +97,24 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
                 reveal(han.c);
                 
                 end
-
-                sleep(.0001)
-
+                
+                sleep(1.0)
+            
             end
-
+            
         end
         
         nothing
     end
-
-    #create type with handles for everything
+    
+    #Create type with handles to everything
     handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2)
     
     #Connect Callbacks to objects on GUI
-    signal_connect(run_cb, button, "clicked",Void,(),false,(handles,mynums,spikes,ns))
     
+    #Run button starts main loop
+    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,mynums,spikes,ns))   
+          
     return handles
     
 end

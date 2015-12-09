@@ -28,3 +28,17 @@ end
 #=
 Single maximized channel plotting
 =#
+
+#=
+Reset Canvas
+=#
+
+function clear_c(myc::Gtk.GtkCanvas)
+        
+    ctx = getgc(myc)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    rectangle(ctx, 0,0,800,800)
+    paint(ctx)
+        
+    nothing
+end
