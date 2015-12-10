@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
   Getting_Started.rst
+  GUI.rst
   TypesMethods.rst
   
 
