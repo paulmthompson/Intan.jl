@@ -23,7 +23,13 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     #16 channels at a time can be visualized on the right side
     c=@Canvas(800,800) #16 channels
     
-    
+    @guarded draw(c) do widget
+    ctx = getgc(c)
+    set_source_rgb(ctx,1,1,1)
+    paint(ctx)
+    end
+    show(c)
+       
     #Which 16 channels can be selected with a slider
     c_slider = @Scale(false, 0:(div(length(ns)-1,16)+1))
     adj = @Adjustment(c_slider)
@@ -33,6 +39,12 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     c2=@Canvas(800,800) #Single channel to focus on
     c2_slider=@Scale(false, 1:16)
     
+    @guarded draw(c2) do widget
+    ctx = getgc(c2)
+    set_source_rgb(ctx,1,1,1)
+    paint(ctx)
+    end
+    show(c2)
     
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
@@ -64,30 +76,40 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
             
             #get context
             ctx = getgc(han.c)
+            ctx2 = getgc(han.c2)
             
-            s_old=1
-            s_new=1
+            #c
+            c_old=1
+            c_new=1
+            
+            #c2
+            c2_old=1
+            c2_new=1
             
             while getproperty(widget,:active,Bool)==true
-                  
-                
-                
-                
+
                 #plot spikes
                  
-                s_new=getproperty(han.adj,:value,Int64)
+                c_new=getproperty(han.adj,:value,Int64)
+                c2_new=getproperty(han.adj2, :value, Int64)
                 
-                if s_new != s_old
+                if c_new != c_old
                     clear_c(han.c)
+                    clear_c(han.c2)
                 end
                 
-                s_old=s_new
+                if c2_new != c2_old
+                    clear_c(han.c2)
+                end
                 
-                if s_old>0
+                c_old=c_new
+                c2_old=c2_new
+                
+                if c_old>0
                     
-                    k=16*s_old-15
-                    for i=0:200:600
-                        for j=0:200:600
+                    k=16*c_old-15
+                    for i=50:200:650
+                        for j=50:200:650
                             draw_spike(num,i,j,k,ctx,myspikes,mycounts)
                             k+=1
                         end
@@ -95,10 +117,20 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     
                 stroke(ctx);
                 reveal(han.c);
-                
+                    
+                    if c2_old>0
+                        
+                        k=16*c_old-16+c2_old
+                        
+                        draw_spike(num,k,ctx2,myspikes,mycounts)
+                        
+                        stroke(ctx2);
+                        reveal(han.c2);
+                        
+                    end
                 end
-                
-                sleep(1.0)
+                    
+                sleep(0.2)
             
             end
             
@@ -118,3 +150,4 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     return handles
     
 end
+
