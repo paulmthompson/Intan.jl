@@ -51,12 +51,17 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
 
     #Arrangement of stuff on GUI
     grid = @Grid()
-    grid[1,1]=button
-    grid[2,1]=cal
-    grid[3,2]=c
-    grid[3,3]=c_slider
-    grid[2,2]=c2
-    grid[2,3]=c2_slider
+    hbox = @ButtonBox(:h)
+    grid[1,1]=hbox
+    push!(hbox,button)
+    push!(hbox,cal)
+    grid[2,2]=c
+    grid[2,3]=c_slider
+    grid[1,2]=c2
+    grid[1,3]=c2_slider
+    setproperty!(grid, :column_homogeneous, true) 
+    setproperty!(grid, :column_spacing, 15) 
+    setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
     showall(win)
 

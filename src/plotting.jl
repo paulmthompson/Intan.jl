@@ -33,10 +33,10 @@ function draw_spike(data::AbstractArray{Int64,2},spike_num::Int64,ctx::Cairo.Cai
 
     for i=1:ns[spike_num]
     
-        @inbounds move_to(ctx,1,data[spikes[i,spike_num].inds[1],spike_num]);
+        @inbounds move_to(ctx,51,data[spikes[i,spike_num].inds[1],spike_num]);
             
         #draw line
-        count=13
+        count=63
         @inbounds for k=spikes[i,spike_num].inds[2]:spikes[i,spike_num].inds[end] 
             @inbounds line_to(ctx,count,data[k,spike_num]);
             set_line_width(ctx,0.5);
