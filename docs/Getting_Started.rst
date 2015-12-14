@@ -21,6 +21,13 @@ Although you don't have to use spike sorting, the module assumes that you have t
 
 https://github.com/paulmthompson/SpikeSorting.jl
 
+*********
+Workflow
+*********
+
+
+
+
 *******************
 Initializing Board
 *******************

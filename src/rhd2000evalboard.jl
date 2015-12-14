@@ -71,6 +71,9 @@ type RHD2000{T<:Amp,V}
     amps::Array{T,1}
     v::AbstractArray{Int64,2}
     s::AbstractArray{V,1}
+    time::Array{Int32,1}
+    buf::AbstractArray{Spike,2}
+    nums::AbstractArray{Int64,1}
 end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
@@ -98,20 +101,25 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params::Array{Algori
 
     numBytesPerBlock = 0
 
+    mytime=zeros(Int32,10000)
+
     board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
 
     if sort=="single"
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=create_multi(params...,numchannels,false)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        (buf,nums)=output_buffer(numchannels)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         s=create_multi(params...,numchannels,true)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        (buf,nums)=output_buffer(numchannels,true)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
     else
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=falses(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s)
+        (buf,nums)=output_buffer(numchannels)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
     end
 
 end
@@ -996,7 +1004,7 @@ function numWordsInFifo(rhd::RHD2000)
     
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64,time::Array{Int32,1},ss="sort")
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss="s")
 
     if (numWordsInFifo(rhd) < rhd.numWords)
         return false
@@ -1016,22 +1024,19 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,time::Array{Int32,1},ss="s
         
         # make data block from fillFromUsbBuffer
         # add block to queue       
-        dataBlock=fillFromUsbBuffer(rhd,i,s)
-        
-        #Add time from dataBlock
-        append!(time, dataBlock)
+        fillFromUsbBuffer!(rhd,i)
 
-        if ss=="firstrun"
+        if ss=="f"
 
-            cal!(rhd.s,rhd.v,true)
+            cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,true)
                       
-        elseif ss=="cal"
+        elseif ss=="c"
 
-            cal!(rhd.s,rhd.v)
+            cal!(rhd.s,rhd.v,rhd.buf,rhd.nums)
         
-        elseif ss=="sort"
+        elseif ss=="s"
             
-            onlinesort!(rhd.s,rhd.v)
+            onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
 
         end
         
@@ -1061,15 +1066,15 @@ function calculateDataBlockSizeinBytes(rhd::RHD2000)
     
 end
 
-function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1, Array{Sorting,1}})
+function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     
     index = blockIndex * rhd.numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
 
     timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     
     index+=8
-    for t=1:SAMPLES_PER_DATA_BLOCK
-        timeStamp[t]=convert(Int32,convertUsbTimeStamp(rhd.usbBuffer,index))
+    for t=(1+blockIndex*SAMPLES_PER_DATA_BLOCK):(SAMPLES_PER_DATA_BLOCK+SAMPLES_PER_DATA_BLOCK*block_index)
+        rhd.time[t]=convert(Int32,convertUsbTimeStamp(rhd.usbBuffer,index))
         index+=rhd.numBytesPerBlock
     end
 
@@ -1086,7 +1091,7 @@ function fillFromUsbBuffer(rhd::RHD2000, blockIndex::Int64, s::DArray{Sorting, 1
         end
     end
         
-    return timeStamp
+    nothing
     
 end
 
