@@ -60,7 +60,7 @@ function RHD2132(port::ASCIIString)
 end
 
 
-type RHD2000{T<:Amp,V}
+type RHD2000{T<:Amp,V<:Sorting}
     board::Ptr{Void}
     sampleRate::Int64
     numDataStreams::Int64
@@ -117,7 +117,7 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
         RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
     else
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=falses(numchannels)
+        s=create_multi(params...,numchannels,false)
         (buf,nums)=output_buffer(numchannels)
         RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
     end

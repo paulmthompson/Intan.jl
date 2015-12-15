@@ -11,13 +11,7 @@ type Gui_Handles
     c2::Gtk.GtkCanvasLeaf
 end
 
-function makegui(rhd::RHD2000)
-
-    handles = makegui(rhd.v,rhd.buf,rhd.nums)
-
-end
-
-function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
+function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     
     #Button to run Intan
     button = @ToggleButton("Run") 
@@ -37,7 +31,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     show(c)
        
     #Which 16 channels can be selected with a slider
-    c_slider = @Scale(false, 0:(div(length(ns)-1,16)+1))
+    c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
     adj = @Adjustment(c_slider)
     setproperty!(adj,:value,1)
     
@@ -76,14 +70,14 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     #Callback function definitions
 
     #Drawing
-    function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,AbstractArray{Int64,2},AbstractArray{Spike,2},AbstractArray{Int64,1}})
+    function run_cb{T<:Amp,V<:Sorting}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000{T,V}})
 
         widget = convert(ToggleButton, widgetptr) 
         
         @async if getproperty(widget,:active,Bool)==true
         
             #unpack tuple
-            han, num, myspikes, mycounts = user_data
+            han, rhd = user_data
             
             #get context
             ctx = getgc(han.c)
@@ -121,7 +115,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
                     k=16*c_old-15
                     for i=50:200:650
                         for j=50:200:650
-                            draw_spike(num,i,j,k,ctx,myspikes,mycounts)
+                            draw_spike(rhd,i,j,k,ctx)
                             k+=1
                         end
                     end
@@ -133,7 +127,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
                         
                         k=16*c_old-16+c2_old
                         
-                        draw_spike(num,k,ctx2,myspikes,mycounts)
+                        draw_spike(rhd,k,ctx2)
                         
                         stroke(ctx2);
                         reveal(han.c2);
@@ -156,7 +150,7 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
-    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,mynums,spikes,ns))   
+    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))   
           
     return handles
     
