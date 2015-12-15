@@ -14,8 +14,8 @@ type Gui_Handles
     spike::Int64 #currently selected spike out of total
     num::Int64 #currently selected spike out of 16
     num16::Int64 #currently selected 16 channels
-    #scale::Array{Int64,1}
-    #offset::Array{Int64,1}
+    scale::Array{Int64,1}
+    offset::Array{Float64,1}
 end
 
 function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
@@ -113,7 +113,7 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
                     
                     if han.num>0
                         
-                        draw_spike(rhd,han.spike,ctx2)
+                        draw_spike(rhd,han.spike,ctx2,han.scale[han.spike],han.offset[han.spike])
                         
                         stroke(ctx2);
                         reveal(han.c2);
@@ -130,17 +130,20 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
         nothing
     end
 
-    #=
-    function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
 
-        #Get currently selected spike
+    function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-        #Get currently selected 
+        han, rhd = user_data
 
+        han.scale[han.spike]=getproperty(han.adj3,:value,Int64)
+
+        han.offset[han.spike]=mean(han.scale[han.spike].*rhd.v[:,han.spike])
+
+        clear_c(han.c2)
         
         nothing
     end
-    =#
+
 
     function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
 
@@ -151,7 +154,12 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
         clear_c(han.c)
         clear_c(han.c2)
 
-        han.spike=16*han.num16-16+han.num
+        if han.num16>0
+            han.spike=16*han.num16-16+han.num
+
+            #put scale bar in appropriate position
+            setproperty!(han.adj3,:value,han.scale[han.spike])
+        end
 
         nothing
         
@@ -165,22 +173,31 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
 
         clear_c(han.c2)
 
-        han.spike=16*han.num16-16+han.num
+        if han.num16>0
+            han.spike=16*han.num16-16+han.num
+
+            #put scale bar in appropriate position
+            setproperty!(han.adj3,:value,han.scale[han.spike])
+        end
         
         nothing
     end
     
     #Create type with handles to everything
-    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1)
+    scales=ones(Int64,size(r.v,2))
+    offs=squeeze(mean(r.v,1),1)
+    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
     
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
     id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))
 
-    id2 = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
+    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
 
-    id3 = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,))
+    id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,))
+
+    id = signal_connect(update_scale, s_slider, "value-changed", Void, (), false, (handles,r))
           
     return handles
     
