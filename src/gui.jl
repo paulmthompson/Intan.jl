@@ -9,6 +9,13 @@ type Gui_Handles
     adj2::Gtk.GtkAdjustmentLeaf
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
+    slider3::Gtk.GtkScaleLeaf
+    adj3::Gtk.GtkAdjustmentLeaf
+    spike::Int64 #currently selected spike out of total
+    num::Int64 #currently selected spike out of 16
+    num16::Int64 #currently selected 16 channels
+    #scale::Array{Int64,1}
+    #offset::Array{Int64,1}
 end
 
 function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
@@ -49,17 +56,21 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
 
+    s_slider = @Scale(true, 1:10)
+    adj3 = @Adjustment(s_slider)
+    setproperty!(adj3,:value,1)
+
     #Arrangement of stuff on GUI
     grid = @Grid()
+    grid[1,2]=s_slider
     hbox = @ButtonBox(:h)
-    grid[1,1]=hbox
+    grid[2,1]=hbox
     push!(hbox,button)
     push!(hbox,cal)
-    grid[2,2]=c
-    grid[2,3]=c_slider
-    grid[1,2]=c2
-    grid[1,3]=c2_slider
-    setproperty!(grid, :column_homogeneous, true) 
+    grid[3,2]=c
+    grid[3,3]=c_slider
+    grid[2,2]=c2
+    grid[2,3]=c2_slider
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -83,36 +94,13 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
             ctx = getgc(han.c)
             ctx2 = getgc(han.c2)
             
-            #c
-            c_old=1
-            c_new=1
-            
-            #c2
-            c2_old=1
-            c2_new=1
-            
             while getproperty(widget,:active,Bool)==true
 
                 #plot spikes
-                 
-                c_new=getproperty(han.adj,:value,Int64)
-                c2_new=getproperty(han.adj2, :value, Int64)
                 
-                if c_new != c_old
-                    clear_c(han.c)
-                    clear_c(han.c2)
-                end
-                
-                if c2_new != c2_old
-                    clear_c(han.c2)
-                end
-                
-                c_old=c_new
-                c2_old=c2_new
-                
-                if c_old>0
+                if han.num16>0
                     
-                    k=16*c_old-15
+                    k=16*han.num16-15
                     for i=50:200:650
                         for j=50:200:650
                             draw_spike(rhd,i,j,k,ctx)
@@ -123,11 +111,9 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
                 stroke(ctx);
                 reveal(han.c);
                     
-                    if c2_old>0
+                    if han.num>0
                         
-                        k=16*c_old-16+c2_old
-                        
-                        draw_spike(rhd,k,ctx2)
+                        draw_spike(rhd,han.spike,ctx2)
                         
                         stroke(ctx2);
                         reveal(han.c2);
@@ -143,14 +129,58 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
         
         nothing
     end
+
+    #=
+    function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
+
+        #Get currently selected spike
+
+        #Get currently selected 
+
+        
+        nothing
+    end
+    =#
+
+    function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+        han, = user_data
+        
+        han.num16=getproperty(han.adj,:value,Int64) # 16 channels
+        
+        clear_c(han.c)
+        clear_c(han.c2)
+
+        han.spike=16*han.num16-16+han.num
+
+        nothing
+        
+    end
+
+    function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+        han, = user_data
+
+        han.num=getproperty(han.adj2, :value, Int64) # primary display
+
+        clear_c(han.c2)
+
+        han.spike=16*han.num16-16+han.num
+        
+        nothing
+    end
     
     #Create type with handles to everything
-    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2)
+    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1)
     
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
-    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))   
+    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))
+
+    id2 = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
+
+    id3 = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,))
           
     return handles
     
