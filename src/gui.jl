@@ -162,3 +162,25 @@ function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},n
     
 end
 
+function test_data!(rhd::RHD2000)
+
+    num_channels=size(rhd.v,2)
+    
+    #Create fake data for 1) analog input 2) output Spike buffer 
+    # 3) output number buffer
+    for i=1:num_channels
+        for j=1:10
+            ind=rand(1:SAMPLES_PER_DATA_BLOCK-50,1)[1]
+            rhd.buf[j,i]=Spike(ind:(ind+49),1) 
+        end
+    end
+
+    #random input
+    rhd.v[:] = rand(1:100,SAMPLES_PER_DATA_BLOCK,num_channels); 
+
+    #output number
+    rhd.nums[:]=1;
+
+    nothing
+    
+end
