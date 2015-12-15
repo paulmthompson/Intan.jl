@@ -2,6 +2,7 @@
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
+    init::Gtk.GtkButtonLeaf
     cal::Gtk.GtkCheckButtonLeaf
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
@@ -21,7 +22,10 @@ end
 function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     
     #Button to run Intan
-    button = @ToggleButton("Run") 
+    button = @ToggleButton("Run")
+
+    #Button to initialize Board
+    button_init = @Button("Init")
 
     #Calibration
     cal = @CheckButton("Calibrate")
@@ -65,6 +69,7 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     grid[1,2]=s_slider
     hbox = @ButtonBox(:h)
     grid[2,1]=hbox
+    push!(hbox,button_init)
     push!(hbox,button)
     push!(hbox,cal)
     grid[3,2]=c
@@ -182,11 +187,21 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
         
         nothing
     end
+
+    function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+        han, rhd = user_data
+        
+        init_board!(rhd)
+
+        nothing
+    end
+    
     
     #Create type with handles to everything
     scales=ones(Int64,size(r.v,2))
     offs=squeeze(mean(r.v,1),1)
-    handles=Gui_Handles(win,button,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
+    handles=Gui_Handles(win,button,button_init,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
     
     #Connect Callbacks to objects on GUI
     
@@ -198,6 +213,8 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,))
 
     id = signal_connect(update_scale, s_slider, "value-changed", Void, (), false, (handles,r))
+
+    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
           
     return handles
     

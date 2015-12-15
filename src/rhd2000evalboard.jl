@@ -124,9 +124,7 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
 
 end
 
-function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", params=default_sort)
-
-    rhd=RHD2000(amps,sort,params);
+function init_board!{T<:Amp,V<:Sorting}(rhd::RHD2000{T,V})
     
     #Opal Kelly XEM6010 board
     open_board(rhd)
@@ -164,7 +162,6 @@ function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", params=
     ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(rhd,ledArray)
 
-
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
     r=CreateRHD2000Registers(Float64(sr))
 
@@ -191,28 +188,8 @@ function init_board{T<:Amp}(amps::Array{T,1}, sr::Int64 ; sort="single", params=
     flushBoard()
 
     selectAuxCommandBank("PortA", "AuxCmd3", 0)
-
-    rhd
     
 end
-
-#=
-function run!(rhd::RHD2000,calsamples::Int64)
-
-    setMaxTimeStep(calsamples)
-    setContinuousRunMode(false)
-    mytime=zeros(Int32,2)
-
-    usbDataRead=true
-
-    runBoard()
-
-    usbDataRead = readDataBlocks(1,mytime,"firstrun")
-
-    count=SAMPLES_PER_DATA_BLOCK
-    
-end
-=#
 
 function open_board(rhd::RHD2000)
 
@@ -570,7 +547,7 @@ end
 
 function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
 
-    maxTimeStep=convert(Uint32, maxTimeStep)
+    maxTimeStep=convert(UInt32, maxTimeStep)
     
     maxTimeStepLsb = maxTimeStep & 0x0000ffff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
@@ -1094,7 +1071,7 @@ function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     nothing
     
 end
-
+#=
 function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, saveOut)
 
     time=time[3:end] #get rid of initial zeros
@@ -1126,7 +1103,7 @@ function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1
     nothing
     
 end
-
+=#
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
     x1 = convert(UInt32,usbBuffer[index])
