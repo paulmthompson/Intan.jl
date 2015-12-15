@@ -11,6 +11,12 @@ type Gui_Handles
     c2::Gtk.GtkCanvasLeaf
 end
 
+function makegui(rhd::RHD2000)
+
+    handles = makegui(rhd.v,rhd.buf,rhd.nums)
+
+end
+
 function makegui(mynums::AbstractArray{Int64,2},spikes::AbstractArray{Spike,2},ns::AbstractArray{Int64,1})
     
     #Button to run Intan

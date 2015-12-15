@@ -78,7 +78,7 @@ end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
 
-function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params::Array{Algorithm,1})
+function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
 
     numchannels=0
 
