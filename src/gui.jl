@@ -135,7 +135,8 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                     
                 sleep(0.2)
 
-                #write to disk
+                #write to disk, clear buffers
+                #queueToFile(rhd)
             
             end
             

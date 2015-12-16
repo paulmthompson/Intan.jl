@@ -1073,10 +1073,24 @@ function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     nothing
     
 end
+
+function queueToFile(rhd::RHD2000)
+
+    #Write to disk
+
+    #Clear buffers
+    for i=1:size(rhd.v,2)
+        @inbounds for j=1:rhd.nums[i]
+            rhd.buf[j,i]=Spike()
+        end
+        @inbounds rhd.nums[i]=0
+    end
+    
+    nothing
+end
+
 #=
 function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, saveOut)
-
-    time=time[3:end] #get rid of initial zeros
 
     h5open(saveOut,"r+") do fid
         d=d_open(fid, "time")
@@ -1093,13 +1107,6 @@ function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1
             e[(length(e[:])-s[i].numSpikes+1):end]=s[i].neuronnum[1:s[i].numSpikes]
         end
         
-    end
-
-    time=zeros(Int32,2)
-    @sync @parallel for i=1:length(s)
-        s[i].electrode[:]=zeros(Int,length(s[i].electrode))
-        s[i].neuronnum[:]=zeros(Int,length(s[i].neuronnum))
-        s[i].numSpikes=2
     end
     
     nothing
