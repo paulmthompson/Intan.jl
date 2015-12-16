@@ -15,8 +15,8 @@ type Gui_Handles
     spike::Int64 #currently selected spike out of total
     num::Int64 #currently selected spike out of 16
     num16::Int64 #currently selected 16 channels
-    scale::Array{Int64,1}
-    offset::Array{Float64,1}
+    scale::Array{Float64,2}
+    offset::Array{Float64,2}
 end
 
 function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
@@ -115,7 +115,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                     k=16*han.num16-15
                     for i=50:200:650
                         for j=50:200:650
-                            draw_spike(rhd,i,j,k,ctx)
+                            @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
                             k+=1
                         end
                     end
@@ -125,7 +125,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                     
                     if han.num>0
                         
-                        draw_spike(rhd,han.spike,ctx2,han.scale[han.spike],han.offset[han.spike])
+                        @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])
                         
                         stroke(ctx2);
                         reveal(han.c2);
@@ -149,9 +149,11 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
 
         han, rhd = user_data
 
-        han.scale[han.spike]=getproperty(han.adj3,:value,Int64)
+        @inbounds han.scale[han.spike,1]=getproperty(han.adj3,:value,Float64)
+        @inbounds han.scale[han.spike,2]=han.scale[han.spike,1]*.25
 
-        han.offset[han.spike]=mean(han.scale[han.spike].*rhd.v[:,han.spike])
+        @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
+        @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
 
         clear_c(han.c2)
         
@@ -206,10 +208,14 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
         nothing
     end
     
-    
+ 
+    scales=ones(Float64,size(r.v,2),2)
+    scales[:,2]=scales[:,2].*.25
+    offs=zeros(Float64,size(r.v,2),2)
+    offs[:,1]=squeeze(mean(r.v,1),1)
+    offs[:,2]=offs[:,1]*.25
+
     #Create type with handles to everything
-    scales=ones(Int64,size(r.v,2))
-    offs=squeeze(mean(r.v,1),1)
     handles=Gui_Handles(win,button,button_init,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
     
     #Connect Callbacks to objects on GUI
