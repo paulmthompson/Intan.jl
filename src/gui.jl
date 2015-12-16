@@ -28,8 +28,8 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     button_init = @Button("Init")
 
     #Calibration
-    cal = @CheckButton("Calibrate")
-    setproperty!(cal,:active,true)
+    button_cal = @CheckButton("Calibrate")
+    setproperty!(button_cal,:active,true)
 
     #16 channels at a time can be visualized on the right side
     c=@Canvas(800,800) #16 channels
@@ -71,7 +71,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     grid[2,1]=hbox
     push!(hbox,button_init)
     push!(hbox,button)
-    push!(hbox,cal)
+    push!(hbox,button_cal)
     grid[3,2]=c
     grid[3,3]=c_slider
     grid[2,2]=c2
@@ -207,8 +207,22 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
 
         nothing
     end
-    
- 
+
+    function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+
+        han, rhd = user_data
+
+        mycal=getproperty(han.cal,:active,Bool)
+        
+        if mycal==true
+            rhd.cal=0
+        else
+            rhd.cal=2
+        end
+
+        nothing
+    end
+
     scales=ones(Float64,size(r.v,2),2)
     scales[:,2]=scales[:,2].*.25
     offs=zeros(Float64,size(r.v,2),2)
@@ -216,21 +230,23 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button,button_init,cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
+    handles=Gui_Handles(win,button,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
     
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
     id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))
-
+    
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
-
+    
     id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,))
-
+    
     id = signal_connect(update_scale, s_slider, "value-changed", Void, (), false, (handles,r))
-
+    
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
-          
+    
+    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
+    
     return handles
     
 end

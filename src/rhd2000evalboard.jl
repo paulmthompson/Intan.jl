@@ -74,6 +74,7 @@ type RHD2000{T<:Amp,U,V<:AbstractArray{Int64,2},W<:AbstractArray{Spike,2},X<:Abs
     time::Array{Int32,1}
     buf::W
     nums::X
+    cal::Int64
 end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
@@ -109,17 +110,17 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=create_multi(params...,numchannels,false)
         (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         s=create_multi(params...,numchannels,true)
         (buf,nums)=output_buffer(numchannels,true)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
     else
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=create_multi(params...,numchannels,false)
         (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
     end
 
 end
@@ -985,7 +986,7 @@ function numWordsInFifo(rhd::RHD2000)
     
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss=1)
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
 
     if (numWordsInFifo(rhd) < rhd.numWords)
         return false
@@ -1002,20 +1003,21 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss=1)
     ReadFromPipeOut(rhd,PipeOutData, convert(Clong, numBytesToRead), rhd.usbBuffer)
 
     for i=0:(numBlocks-1)
-        
-        # make data block from fillFromUsbBuffer
-        # add block to queue       
+
+        #Move data from usbBuffer to v
         fillFromUsbBuffer!(rhd,i)
 
-        if ss==1
+        if rhd.cal==0
 
             cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,true)
+
+            rhd.cal=1
                       
-        elseif ss==2
+        elseif rhd.cal==1
 
             cal!(rhd.s,rhd.v,rhd.buf,rhd.nums)
         
-        elseif ss==3
+        elseif rhd.cal==2
             
             onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
 
