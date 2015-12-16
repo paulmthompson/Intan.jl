@@ -60,7 +60,7 @@ function RHD2132(port::ASCIIString)
 end
 
 
-type RHD2000{T<:Amp,V<:Sorting}
+type RHD2000{T<:Amp,U,V<:AbstractArray{Int64,2},W<:AbstractArray{Spike,2},X<:AbstractArray{Int64,1}}
     board::Ptr{Void}
     sampleRate::Int64
     numDataStreams::Int64
@@ -69,11 +69,11 @@ type RHD2000{T<:Amp,V<:Sorting}
     numWords::Int64
     numBytesPerBlock::Int64
     amps::Array{T,1}
-    v::AbstractArray{Int64,2}
-    s::AbstractArray{V,1}
+    v::V
+    s::U
     time::Array{Int32,1}
-    buf::AbstractArray{Spike,2}
-    nums::AbstractArray{Int64,1}
+    buf::W
+    nums::X
 end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
@@ -124,7 +124,7 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
 
 end
 
-function init_board!{T<:Amp,V<:Sorting}(rhd::RHD2000{T,V})
+function init_board!(rhd::RHD2000)
     
     #Opal Kelly XEM6010 board
     open_board(rhd)
@@ -149,8 +149,10 @@ function init_board!{T<:Amp,V<:Sorting}(rhd::RHD2000{T,V})
         
     end
 
-    rhd.v=SharedArray(Float64,SAMPLES_PER_DATA_BLOCK,rhd.numDataStreams*32)
-
+    #Calculate Data Stream block size
+    calculateDataBlockSizeInWords(rhd)
+    calculateDataBlockSizeInBytes(rhd)
+    
     #Select per-channel amplifier sampling rate
     setSampleRate(rhd,sr)
 
@@ -188,6 +190,8 @@ function init_board!{T<:Amp,V<:Sorting}(rhd::RHD2000{T,V})
     flushBoard()
 
     selectAuxCommandBank("PortA", "AuxCmd3", 0)
+
+    nothing
     
 end
 
@@ -977,11 +981,11 @@ function numWordsInFifo(rhd::RHD2000)
     UpdateWireOuts(rhd)
 
     #Rhythm makes this a Uint32 (not sure that it matters)
-    return GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(WireOutNumWordsLsb)
+    return GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)
     
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss="s")
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss=1)
 
     if (numWordsInFifo(rhd) < rhd.numWords)
         return false
@@ -1003,15 +1007,15 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,ss="s")
         # add block to queue       
         fillFromUsbBuffer!(rhd,i)
 
-        if ss=="f"
+        if ss==1
 
             cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,true)
                       
-        elseif ss=="c"
+        elseif ss==2
 
             cal!(rhd.s,rhd.v,rhd.buf,rhd.nums)
         
-        elseif ss=="s"
+        elseif ss==3
             
             onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
 
@@ -1026,16 +1030,14 @@ end
 
 function calculateDataBlockSizeInWords(rhd::RHD2000)
 
-    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.nDataStreams*36)+8+2)
+    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)
                            
-    # return convert(Uint32, numWords)
-
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 
 end
 
-function calculateDataBlockSizeinBytes(rhd::RHD2000)
+function calculateDataBlockSizeInBytes(rhd::RHD2000)
 
     rhd.numBytesPerBlock=convert(Int64,2 * rhd.numWords / SAMPLES_PER_DATA_BLOCK)
 
@@ -1046,28 +1048,26 @@ end
 function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     
     index = blockIndex * rhd.numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
-
-    timeStamp=Array(Int32,SAMPLES_PER_DATA_BLOCK)
     
     index+=8
-    for t=(1+blockIndex*SAMPLES_PER_DATA_BLOCK):(SAMPLES_PER_DATA_BLOCK+SAMPLES_PER_DATA_BLOCK*block_index)
+    for t=(1+blockIndex*SAMPLES_PER_DATA_BLOCK):(SAMPLES_PER_DATA_BLOCK+SAMPLES_PER_DATA_BLOCK*blockIndex)
         rhd.time[t]=convert(Int32,convertUsbTimeStamp(rhd.usbBuffer,index))
         index+=rhd.numBytesPerBlock
     end
 
     # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
     start=10+6*rhd.numDataStreams
-    
+
+    b=UInt32(0)
     for i=1:rhd.numDataStreams*32
         ind=start+i+i
-        b=0
         for j=1:SAMPLES_PER_DATA_BLOCK
             b=(convert(UInt32,rhd.usbBuffer[ind+1]) << 8) | (convert(UInt32,rhd.usbBuffer[ind]) << 0)
             rhd.v[j,i]=convert(Int64,b)
             ind+=rhd.numBytesPerBlock
         end
     end
-        
+
     nothing
     
 end
@@ -1167,7 +1167,7 @@ function GetWireOutValue(rhd::RHD2000,epAddr::UInt8)
 
 end
 
-function ReadFromPipeOut(epAddr::UInt8, length, data::AbstractArray{UInt8,1})
+function ReadFromPipeOut(rhd::RHD2000,epAddr::UInt8, length, data::AbstractArray{UInt8,1})
 
     #CCall can fill Shared Arrays!
     ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)

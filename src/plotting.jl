@@ -5,7 +5,7 @@
 #=
 Plots detected spike on canvas for multiple channels
 =#
-function draw_spike{T,V}(rhd::RHD2000{T,V},xoff::Int64,yoff::Int64,spike_num::Int64,ctx::Cairo.CairoContext)
+function draw_spike(rhd::RHD2000,xoff::Int64,yoff::Int64,spike_num::Int64,ctx::Cairo.CairoContext)
     
     #first point
     
@@ -29,7 +29,7 @@ end
 Single maximized channel plotting
 =#
 
-function draw_spike{T,V}(rhd::RHD2000{T,V},spike_num::Int64,ctx::Cairo.CairoContext,s::Int64,o::Float64)
+function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Int64,o::Float64)
 
     for i=1:rhd.nums[spike_num]
     

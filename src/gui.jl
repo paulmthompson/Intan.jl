@@ -19,7 +19,7 @@ type Gui_Handles
     offset::Array{Float64,1}
 end
 
-function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
+function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     
     #Button to run Intan
     button = @ToggleButton("Run")
@@ -86,7 +86,7 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
     #Callback function definitions
 
     #Drawing
-    function run_cb{T<:Amp,V<:Sorting}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000{T,V}})
+    function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
         widget = convert(ToggleButton, widgetptr) 
         
@@ -100,6 +100,13 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
             ctx2 = getgc(han.c2)
             
             while getproperty(widget,:active,Bool)==true
+
+                #get spikes and sort
+                readDataBlocks(rhd,1)
+
+                #process (e.g. kalman, spike triggered stim calc, etc)
+
+                #output (e.g. cursor, stim, etc)
 
                 #plot spikes
                 
@@ -127,6 +134,8 @@ function makegui{T<:Amp,V<:Sorting}(r::RHD2000{T,V})
                 end
                     
                 sleep(0.2)
+
+                #write to disk
             
             end
             
