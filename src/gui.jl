@@ -102,8 +102,12 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
             while getproperty(widget,:active,Bool)==true
 
                 #get spikes and sort
-                readDataBlocks(rhd,1)
-
+                if rhd.debug.state==false
+                    readDataBlocks(rhd,1)
+                else
+                    readDataBlocks(rhd)
+                end
+                
                 #process (e.g. kalman, spike triggered stim calc, etc)
 
                 #output (e.g. cursor, stim, etc)
@@ -136,7 +140,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                 sleep(0.2)
 
                 #write to disk, clear buffers
-                #queueToFile(rhd)
+                queueToFile(rhd)
             
             end
             
@@ -218,7 +222,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
         if mycal==true
             rhd.cal=0
         else
-            rhd.cal=2
+            rhd.cal=3
         end
 
         nothing

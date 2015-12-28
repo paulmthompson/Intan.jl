@@ -59,6 +59,13 @@ function RHD2132(port::ASCIIString)
     RHD2132(ports)
 end
 
+type Debug
+    state::Bool
+    m::ASCIIString
+    data::Array{Float64,1}
+    ind::Int64
+    maxind::Int64
+end
 
 type RHD2000{T<:Amp,U,V<:AbstractArray{Int64,2},W<:AbstractArray{Spike,2},X<:AbstractArray{Int64,1}}
     board::Ptr{Void}
@@ -75,11 +82,15 @@ type RHD2000{T<:Amp,U,V<:AbstractArray{Int64,2},W<:AbstractArray{Spike,2},X<:Abs
     buf::W
     nums::X
     cal::Int64
+    debug::Debug
+    reads::Int64
 end
 
-default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureDD(),ReductionNone()]
+default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 
-function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
+default_debug=Debug(false,"off",zeros(Float64,1),0,0)
+
+function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort, debug=default_debug)
 
     numchannels=0
 
@@ -105,22 +116,22 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString,params=default_sort)
     mytime=zeros(Int32,10000)
 
     board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
-
+    
     if sort=="single"
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=create_multi(params...,numchannels,false)
+        s=create_multi(params...,numchannels)
         (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         s=create_multi(params...,numchannels,true)
         (buf,nums)=output_buffer(numchannels,true)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
     else
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=create_multi(params...,numchannels,false)
+        s=create_multi(params...,numchannels)
         (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0)
+        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
     end
 
 end
@@ -1007,26 +1018,40 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         #Move data from usbBuffer to v
         fillFromUsbBuffer!(rhd,i)
 
-        if rhd.cal==0
-
-            cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,true)
-
-            rhd.cal=1
-                      
-        elseif rhd.cal==1
-
-            cal!(rhd.s,rhd.v,rhd.buf,rhd.nums)
-        
-        elseif rhd.cal==2
-            
-            onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
-
-        end
+        applySorting(rhd)
         
     end
 
     return true
    
+end
+
+function applySorting(rhd::RHD2000)
+
+    if rhd.cal==0
+
+        cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+
+        rhd.cal=1
+                      
+    elseif rhd.cal<3
+
+        cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+
+        if rhd.reads>20
+            rhd.cal=2
+        end
+        
+    elseif rhd.cal==3
+            
+        onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
+
+    end
+
+    rhd.reads+=1
+
+    nothing
+    
 end
 
 
