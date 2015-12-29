@@ -20,7 +20,7 @@ function draw_spike(rhd::RHD2000,xoff::Int64,yoff::Int64,spike_num::Int64,ctx::C
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count+xoff,rhd.v[k,spike_num]*s+yoff-o);
                 set_line_width(ctx,0.5);
-                set_source_rgb(ctx, 1, 0, 0)
+                select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=2
             end
 
@@ -46,7 +46,7 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+400-o);
                 set_line_width(ctx,0.5);
-                set_source_rgb(ctx, 1, 0, 0)
+                select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=12
             end
         end
@@ -67,3 +67,24 @@ function clear_c(myc::Gtk.GtkCanvas)
         
     nothing
 end
+
+function select_color(ctx,clus::Int64)
+
+    if clus==1
+        set_source_rgb(ctx,1,0,0)
+    elseif clus==2
+        set_source_rgb(ctx,0,1,0)
+    elseif clus==3
+        set_source_rgb(ctx,0,0,1)
+    elseif clus==4
+        set_source_rgb(ctx,1,0,1)
+    elseif clus==5
+        set_source_rgb(ctx,0,1,1)
+    else
+        set_source_rgb(ctx,1,1,0)
+    end
+    
+    nothing
+end
+
+
