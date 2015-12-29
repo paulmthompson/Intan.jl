@@ -22,10 +22,13 @@ end
 function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     
     #Button to run Intan
-    button = @ToggleButton("Run")
+    button_run = @ToggleButton("Run")
 
     #Button to initialize Board
     button_init = @Button("Init")
+
+    #Button for Autoscaling
+    button_auto = @Button("Autoscale")
 
     #Calibration
     button_cal = @CheckButton("Calibrate")
@@ -70,7 +73,8 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     hbox = @ButtonBox(:h)
     grid[2,1]=hbox
     push!(hbox,button_init)
-    push!(hbox,button)
+    push!(hbox,button_auto)
+    push!(hbox,button_run)
     push!(hbox,button_cal)
     grid[3,2]=c
     grid[3,3]=c_slider
@@ -154,7 +158,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
 
         han, rhd = user_data
 
-        @inbounds han.scale[han.spike,1]=getproperty(han.adj3,:value,Float64)
+        @inbounds han.scale[han.spike,1]=getproperty(han.adj3,:value,Float64)*han.scale[han.spike,3]
         @inbounds han.scale[han.spike,2]=han.scale[han.spike,1]*.25
 
         @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
@@ -165,7 +169,16 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
         nothing
     end
 
+    function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
+        han, rhd = user_data
+
+        han.scale[:,3]=mean(rhd.v,1)'
+
+        nothing 
+
+    end
+    
     function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
 
         han, = user_data
@@ -223,24 +236,31 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
             rhd.cal=0
         else
             rhd.cal=3
+
+            #scale
+            han.scale[:,1]=1./mean(rhd.v,1)'
+            han.scale[:,2]=.25*han.scale[:,1]
+            han.scale[:,3]=1./mean(rhd.v,1)'
         end
 
         nothing
     end
 
-    scales=ones(Float64,size(r.v,2),2)
+    scales=ones(Float64,size(r.v,2),3)
     scales[:,2]=scales[:,2].*.25
     offs=zeros(Float64,size(r.v,2),2)
     offs[:,1]=squeeze(mean(r.v,1),1)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
     
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
-    id = signal_connect(run_cb, button, "clicked",Void,(),false,(handles,r))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
+
+    id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     
