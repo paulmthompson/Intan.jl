@@ -11,14 +11,26 @@ A simple GUI is under development that will control 1) data acquisition, 2) visu
 
 .. image:: GUI.png
 
+**************
+Creating GUI
+**************
+
 
 *****************
 Data Acquisition
 *****************
 
+===================
+Connecting to Intan
+===================
+
+Simply click the "Init" button
+
 **************
 Visualization
 **************
+
+
 
 **************
 Spike Sorting

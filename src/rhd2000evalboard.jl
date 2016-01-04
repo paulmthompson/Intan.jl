@@ -103,7 +103,12 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort
     end
 
     sampleRate=30000 #default
-    numDataStreams=0
+
+    if debug.state==false
+    	numDataStreams=0
+    else
+	numDataStreams=round(Int,numchannels/32)
+    end
 
     dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
 
