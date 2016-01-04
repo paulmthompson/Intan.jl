@@ -5,8 +5,8 @@ Constants
 #Constant parameters
 
 
-const lib = "$(homedir())/Intan.jl/lib/libokFrontPanel.so"
-const bit = "$(homedir())/Intan.jl/lib/main.bit"
+const lib = "$(homedir())/Programs/Intan.jl/lib/libokFrontPanel.so"
+const bit = "$(homedir())/Programs/Intan.jl/lib/main.bit"
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500

@@ -153,7 +153,7 @@ function init_board!(rhd::RHD2000)
     stream=0
     for i=1:length(rhd.amps)
 
-        for j in rhd.amps.ports
+        for j in rhd.amps[i].port
             enableDataStream(rhd,stream,true)
             setDataSource(rhd,stream,j)
             stream+=1
