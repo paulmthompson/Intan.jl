@@ -114,8 +114,6 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort
     numBytesPerBlock = 0
 
     mytime=zeros(Int32,10000)
-
-    board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
     
     if sort=="single"
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
@@ -203,6 +201,8 @@ function init_board!(rhd::RHD2000)
 
     selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)
 
+    setContinuousRunMode(rhd,true)
+
     nothing
     
 end
@@ -214,7 +214,7 @@ function open_board(rhd::RHD2000)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number (I'm assuing there is only one device)
-    serial=Array(Uint8,11)
+    serial=Array(UInt8,11)
     ccall((:okFrontPanel_GetDeviceListSerial,lib), Int32, (Ptr{Void}, Int, Ptr{UInt8}), rhd.board, 0,serial)
     serial[end]=0
     serialnumber=bytestring(pointer(serial))

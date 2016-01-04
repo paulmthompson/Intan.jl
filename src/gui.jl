@@ -92,8 +92,8 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     #Drawing
     function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-        widget = convert(ToggleButton, widgetptr) 
-        
+        widget = convert(ToggleButton, widgetptr)
+	          
         @async if getproperty(widget,:active,Bool)==true
         
             #unpack tuple
@@ -102,7 +102,11 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
             #get context
             ctx = getgc(han.c)
             ctx2 = getgc(han.c2)
-            
+
+	    if rhd.debug.state==false
+                runBoard(rhd)
+            end
+
             while getproperty(widget,:active,Bool)==true
 
                 #get spikes and sort

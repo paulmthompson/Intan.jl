@@ -8,6 +8,8 @@ Constants
 const lib = "$(homedir())/Programs/Intan.jl/lib/libokFrontPanel.so"
 const bit = "$(homedir())/Programs/Intan.jl/lib/main.bit"
 
+const board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
+
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
 const MAX_NUM_DATA_STREAMS = 8
