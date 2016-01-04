@@ -166,7 +166,7 @@ function init_board!(rhd::RHD2000)
     calculateDataBlockSizeInBytes(rhd)
     
     #Select per-channel amplifier sampling rate
-    setSampleRate(rhd,sr)
+    setSampleRate(rhd,rhd.sampleRate)
 
     #Now that we have set our sampling rate, we can set the MISO sampling delay
     #which is dependent on the sample rate. We use a 6.0 foot cable
@@ -177,31 +177,31 @@ function init_board!(rhd::RHD2000)
     setLedDisplay(rhd,ledArray)
 
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
-    r=CreateRHD2000Registers(Float64(sr))
+    r=CreateRHD2000Registers(Float64(rhd.sampleRate))
 
     #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
-    uploadCommandList(commandList, "AuxCmd3", 0)
+    uploadCommandList(rhd,commandList, "AuxCmd3", 0)
 
     #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
-    uploadCommandList(commandList, "AuxCmd3", 1)
+    uploadCommandList(rhd,commandList, "AuxCmd3", 1)
 
-    selectAuxCommandLength("AuxCmd3", 0, length(commandList) - 1)
+    selectAuxCommandLength(rhd,"AuxCmd3", 0, length(commandList) - 1)
 
     #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
-    selectAuxCommandBank("PortA", "AuxCmd3", 1);
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 1);
 
-    setMaxTimeStep(SAMPLES_PER_DATA_BLOCK)
-    setContinuousRunMode(false)
-    runBoard()
+    setMaxTimeStep(rhd,SAMPLES_PER_DATA_BLOCK)
+    setContinuousRunMode(rhd,false)
+    runBoard(rhd)
 
-    while (isRunning())
+    while (isRunning(rhd))
     end
 
-    flushBoard()
+    flushBoard(rhd)
 
-    selectAuxCommandBank("PortA", "AuxCmd3", 0)
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)
 
     nothing
     
