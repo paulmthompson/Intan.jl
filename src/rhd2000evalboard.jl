@@ -88,6 +88,8 @@ end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 
+debug_sort=Algorithm[DetectPower(),ClusterNone(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
+
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort, debug=default_debug)
@@ -108,6 +110,7 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort
     	numDataStreams=0
     else
 	numDataStreams=round(Int,numchannels/32)
+        params=debug_sort
     end
 
     dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
