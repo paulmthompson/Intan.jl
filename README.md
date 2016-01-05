@@ -5,7 +5,7 @@ RHD2000-Series Amplifier Evaluation System for neural signal acquisition.
 
 #Installation
 
-Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl.git")
+Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl.git") <br>
 Pkg.clone("https://github.com/paulmthompson/Intan.jl.git")
 
 # Documentation
