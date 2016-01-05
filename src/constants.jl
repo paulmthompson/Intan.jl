@@ -4,9 +4,8 @@ Constants
 
 #Constant parameters
 
-
-const lib = "$(homedir())/Intan.jl/lib/libokFrontPanel.so"
-const bit = "$(homedir())/Intan.jl/lib/main.bit"
+const lib = "$(Pkg.dir("Intan"))/lib/libokFrontPanel.so"
+const bit = "$(Pkg.dir("Intan"))/lib/main.bit"
 
 const board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
 
