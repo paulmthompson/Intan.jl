@@ -132,8 +132,8 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                         end
                     end
     
-                stroke(ctx);
-                reveal(han.c);
+                    stroke(ctx);
+                    reveal(han.c);
                     
                     if han.num>0
                         
@@ -144,11 +144,11 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
                         
                     end
                 end
-                    
-                sleep(0.2)
 
                 #write to disk, clear buffers
                 queueToFile(rhd)
+
+                sleep(.01)
             
             end
             
@@ -196,7 +196,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
             han.spike=16*han.num16-16+han.num
 
             #put scale bar in appropriate position
-            setproperty!(han.adj3,:value,han.scale[han.spike])
+            @inbounds setproperty!(han.adj3,:value,han.scale[han.spike])
         end
 
         nothing
@@ -215,7 +215,7 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
             han.spike=16*han.num16-16+han.num
 
             #put scale bar in appropriate position
-            setproperty!(han.adj3,:value,han.scale[han.spike])
+            @inbounds setproperty!(han.adj3,:value,han.scale[han.spike])
         end
         
         nothing

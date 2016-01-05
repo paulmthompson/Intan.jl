@@ -20,7 +20,7 @@ function draw_spike(rhd::RHD2000,xoff::Int64,yoff::Int64,spike_num::Int64,ctx::C
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count+xoff,rhd.v[k,spike_num]*s+yoff-o);
                 set_line_width(ctx,0.5);
-                select_color(ctx,rhd.buf[i,spike_num].id)
+                @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=2
             end
 
@@ -46,7 +46,7 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+400-o);
                 set_line_width(ctx,0.5);
-                select_color(ctx,rhd.buf[i,spike_num].id)
+                @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=12
             end
         end
