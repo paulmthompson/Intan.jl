@@ -1,62 +1,8 @@
 
-abstract Amp
 abstract Filter
+abstract RHD2000
 
-type RHD2164 <: Amp
-    port::Array{Int64,1}
-end
-
-function RHD2164(port::ASCIIString)
-    if port=="PortA1"
-        ports=[PortA1,PortA1Ddr]
-    elseif port=="PortA2"
-        ports=[PortA2,PortA2Ddr]
-    elseif port=="PortB1"
-        ports=[PortB1,PortB1Ddr]
-    elseif port=="PortB2"
-        ports=[PortB2,PortB2Ddr]
-    elseif port=="PortC1"
-        ports=[PortC1,PortC1Ddr]
-    elseif port=="PortC2"
-        ports=[PortC2,PortC2Ddr]
-    elseif port=="PortD1"
-        ports=[PortD1,PortD1Ddr]
-    elseif port=="PortD2"
-        ports=[PortD2,PortD2Ddr]
-    else
-        ports=[0,0]
-    end
-
-    RHD2164(ports) 
-end
-
-type RHD2132 <: Amp
-    port::Array{Int64,1}
-end
-
-function RHD2132(port::ASCIIString)
-    if port=="PortA1"
-        ports=[PortA1]
-    elseif port=="PortA2"
-        ports=[PortA2]
-    elseif port=="PortB1"
-        ports=[PortB1]
-    elseif port=="PortB2"
-        ports=[PortB2]
-    elseif port=="PortC1"
-        ports=[PortC1]
-    elseif port=="PortC2"
-        ports=[PortC2]
-    elseif port=="PortD1"
-        ports=[PortD1]
-    elseif port=="PortD2"
-        ports=[PortD2]
-    else
-        ports=[0]
-    end
-
-    RHD2132(ports)
-end
+global num_rhd = 0
 
 type Debug
     state::Bool
@@ -66,23 +12,38 @@ type Debug
     maxind::Int64
 end
 
-type RHD2000{T<:Amp,U,V<:AbstractArray{Int64,2},W<:AbstractArray{Spike,2},X<:AbstractArray{Int64,1}}
-    board::Ptr{Void}
-    sampleRate::Int64
-    numDataStreams::Int64
-    dataStreamEnabled::Array{Int64,2}
-    usbBuffer::Array{UInt8,1}
-    numWords::Int64
-    numBytesPerBlock::Int64
-    amps::Array{T,1}
-    v::V
-    s::U
-    time::Array{Int32,1}
-    buf::W
-    nums::X
-    cal::Int64
-    debug::Debug
-    reads::Int64
+function gen_rhd(v,s,buf,nums)
+
+    global num_rhd::Int64
+    num_rhd+=1
+    k=num_rhd
+    
+    @eval begin
+        type $(symbol("RHD200$k")) <: RHD2000
+            board::Ptr{Void}
+            sampleRate::Int64
+            numDataStreams::Int64
+            dataStreamEnabled::Array{Int64,2}
+            usbBuffer::Array{UInt8,1}
+            numWords::Int64
+            numBytesPerBlock::Int64
+            amps::Array{Int64,1}
+            v::$(typeof(v))
+            s::$(typeof(s))
+            time::Array{Int32,1}
+            buf::$(typeof(buf))
+            nums::$(typeof(nums))
+            cal::Int64
+            debug::Debug
+            reads::Int64
+            kins::Array{Float64,2}
+        end
+
+        function make_rhd(amps::Array{Int64,1},nd::Int64,v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug)
+            
+            $(symbol("RHD200$k"))(board,30000,nd,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(Int32,10000),buf,nums,0,debug,0,zeros(Float64,10000,8))
+        end
+    end
 end
 
 default_sort=Algorithm[DetectPower(),ClusterOSort(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
@@ -91,19 +52,9 @@ debug_sort=Algorithm[DetectPower(),ClusterNone(),AlignMax(),FeatureTime(),Reduct
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
-function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort, debug=default_debug)
+function RHD2000(amps::Array{Int64,1},sort::ASCIIString; params=default_sort, debug=default_debug)
 
-    numchannels=0
-
-    for i=1:length(amps)
-        if typeof(amps[i])==RHD2164
-            numchannels+=64
-        elseif typeof(amps[i])==2132
-            numchannels+=32
-        end
-    end
-
-    sampleRate=30000 #default
+    numchannels=length(amps)*32
 
     if debug.state==false
     	numDataStreams=0
@@ -111,34 +62,18 @@ function RHD2000{T<:Amp}(amps::Array{T,1},sort::ASCIIString; params=default_sort
 	numDataStreams=round(Int,numchannels/32)
         params=debug_sort
     end
-
-    dataStreamEnabled=zeros(Int64,1,MAX_NUM_DATA_STREAMS)
-
-    usbBuffer = zeros(UInt8,USB_BUFFER_SIZE)
-
-    numWords = 0
-
-    numBytesPerBlock = 0
-
-    mytime=zeros(Int32,10000)
-    
+      
     if sort=="single"
         v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=create_multi(params...,numchannels)
-        (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
+        (buf,nums)=output_buffer(numchannels)      
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         s=create_multi(params...,numchannels,true)
-        (buf,nums)=output_buffer(numchannels,true)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
-    else
-        v=zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels)
-        s=create_multi(params...,numchannels)
-        (buf,nums)=output_buffer(numchannels)
-        RHD2000(board,sampleRate,numDataStreams,dataStreamEnabled,usbBuffer,numWords,numBytesPerBlock,amps,v,s,mytime,buf,nums,0,debug,0)
+        (buf,nums)=output_buffer(numchannels,true)       
     end
-
+    gen_rhd(v,s,buf,nums)
+    make_rhd(amps,numDataStreams,v,s,buf,nums,debug)
 end
 
 type Gui_Handles
@@ -162,10 +97,20 @@ type Gui_Handles
 end
 
 type Weiner <: Filter
-    train_s::Array{Array{Int64,1},1}
+    taps::FloatRange{Float64}
+    period::Int64
+    train_s::Array{Float64,2}
     train_k::Array{Float64,1}
     coeffs::Array{Float64,2}
 end
+
+function Weiner(rhd::RHD2000,ntaps::FloatRange{Float64},x::Int64,y::Int64,z::Int64)
+    n=length(ntaps)
+    per=ntaps.step/ntaps.divsor*rhd.sampleRate
+    Weiner(ntaps,per,zeros(Float64,x,n*y+1),zeros(Float64,x,z),zeros(Float64,n*y+1,z))
+end
+
+Weiner(rhd::RHD2000,x::Int64,y::Int64,z::Int64)=Weiner(rhd,0.0:.1:0.0,x,y,z)
 
 type Kalman <: Filter
 

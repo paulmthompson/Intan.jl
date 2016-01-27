@@ -1,4 +1,48 @@
 
+function RHD2164(port::ASCIIString)
+    if port=="PortA1"
+        ports=[PortA1,PortA1Ddr]
+    elseif port=="PortA2"
+        ports=[PortA2,PortA2Ddr]
+    elseif port=="PortB1"
+        ports=[PortB1,PortB1Ddr]
+    elseif port=="PortB2"
+        ports=[PortB2,PortB2Ddr]
+    elseif port=="PortC1"
+        ports=[PortC1,PortC1Ddr]
+    elseif port=="PortC2"
+        ports=[PortC2,PortC2Ddr]
+    elseif port=="PortD1"
+        ports=[PortD1,PortD1Ddr]
+    elseif port=="PortD2"
+        ports=[PortD2,PortD2Ddr]
+    else
+        ports=[0,0]
+    end
+end
+
+function RHD2132(port::ASCIIString)
+    if port=="PortA1"
+        ports=[PortA1]
+    elseif port=="PortA2"
+        ports=[PortA2]
+    elseif port=="PortB1"
+        ports=[PortB1]
+    elseif port=="PortB2"
+        ports=[PortB2]
+    elseif port=="PortC1"
+        ports=[PortC1]
+    elseif port=="PortC2"
+        ports=[PortC2]
+    elseif port=="PortD1"
+        ports=[PortD1]
+    elseif port=="PortD2"
+        ports=[PortD2]
+    else
+        ports=[0]
+    end
+end
+
 function init_board!(rhd::RHD2000)
     
     open_board(rhd)
@@ -8,12 +52,10 @@ function init_board!(rhd::RHD2000)
     #For 64 channel need two data streams, and data will come in 
     #on the rising AND falling edges of SCLK
     stream=0
-    for i=1:length(rhd.amps)
-        for j in rhd.amps[i].port
+    for i in rhd.amps
             enableDataStream(rhd,stream,true)
-            setDataSource(rhd,stream,j)
-            stream+=1
-        end    
+            setDataSource(rhd,stream,i)
+            stream+=1  
     end
 
     calculateDataBlockSizeInWords(rhd)
@@ -498,7 +540,7 @@ function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
     nothing            
 end
 
-function enableDac(rhd::RHD2000,dacChannel::Int, enabled::Bool)
+function enableDac(rhd::RHD2000,dacChannel::Int,enabled::Bool)
 
     #error checking goes here
 
