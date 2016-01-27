@@ -1,23 +1,4 @@
 
-type Gui_Handles
-    win::Gtk.GtkWindowLeaf
-    run::Gtk.GtkToggleButtonLeaf
-    init::Gtk.GtkButtonLeaf
-    cal::Gtk.GtkCheckButtonLeaf
-    slider::Gtk.GtkScaleLeaf
-    adj::Gtk.GtkAdjustmentLeaf
-    slider2::Gtk.GtkScaleLeaf
-    adj2::Gtk.GtkAdjustmentLeaf
-    c::Gtk.GtkCanvasLeaf
-    c2::Gtk.GtkCanvasLeaf
-    slider3::Gtk.GtkScaleLeaf
-    adj3::Gtk.GtkAdjustmentLeaf
-    spike::Int64 #currently selected spike out of total
-    num::Int64 #currently selected spike out of 16
-    num16::Int64 #currently selected 16 channels
-    scale::Array{Float64,2}
-    offset::Array{Float64,2}
-end
 
 function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     
@@ -85,8 +66,6 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
     win = @Window(grid, "Intan.jl GUI")
     showall(win)
 
-    
-    
     #Callback function definitions
 
     #Drawing
@@ -156,7 +135,6 @@ function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
         
         nothing
     end
-
 
     function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 

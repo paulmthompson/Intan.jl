@@ -89,3 +89,10 @@ const PortC1Ddr = 12
 const PortC2Ddr = 13
 const PortD1Ddr = 14
 const PortD2Ddr = 15
+
+const speedOfLight = 299792458.0
+const xilinxLvdsOutputDelay=1.9e-9
+const xilinxLvdsInputDelay=1.4e-9
+const rhd2000Delay=9.0e-9
+const misoSettleTime=6.7e-9
+const cableVelocity=.555*speedOfLight
