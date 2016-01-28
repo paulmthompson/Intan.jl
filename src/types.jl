@@ -52,7 +52,7 @@ debug_sort=Algorithm[DetectPower(),ClusterNone(),AlignMax(),FeatureTime(),Reduct
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
-function RHD2000(amps::Array{Int64,1},sort::ASCIIString; params=default_sort, debug=default_debug)
+function makeRHD(amps::Array{Int64,1},sort::ASCIIString; params=default_sort, debug=default_debug)
 
     numchannels=length(amps)*32
 

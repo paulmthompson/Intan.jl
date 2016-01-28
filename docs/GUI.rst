@@ -23,7 +23,7 @@ The GUI can easily be created from an IJulia notebook. The user must specify whi
 	myamp=RHD2164("PortA1")
 
 	#Initialize evaluation board setup
-	myrhd=RHD2000([myamp],"single");
+	myrhd=RHD2000(myamp,"single");
 
 	handles = makegui(myrhd);
 

@@ -1,6 +1,6 @@
 
 
-function makegui{T,U,V,W,X}(r::RHD2000{T,U,V,W,X})
+function makegui(r::RHD2000)
     
     #Button to run Intan
     button_run = @ToggleButton("Run")
