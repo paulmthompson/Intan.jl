@@ -16,8 +16,7 @@ addons:
          - libgtk-3-0
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia 'Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl")'
+  - julia ./test/install_SS.jl
   - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Intan"); Pkg.test("Intan"; coverage=true)'
-  - julia 'Pkg.rm("SpikeSorting")'
 after_success:
   - julia -e 'cd(Pkg.dir("Intan")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
