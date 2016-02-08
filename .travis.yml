@@ -16,6 +16,6 @@ addons:
          - libgtk-3-0
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Intan"); Pkg.test("Intan"; coverage=true)'
+  - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Intan"); Pkg.test("Intan"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Intan")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
