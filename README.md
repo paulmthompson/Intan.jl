@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/paulmthompson/Intan.jl.svg?branch=master)](https://travis-ci.org/paulmthompson/Intan.jl)
+[![codecov.io](http://codecov.io/github/paulmthompson/Intan.jl/coverage.svg?branch=master)](http://codecov.io/github/paulmthompson/Intan.jl?branch=master)
+
 # Intan RHD2000 Evaluation Board Interface
 
 These modules are a Julia port of the Rhythm acquisition software that comes with Intan Technologies 
