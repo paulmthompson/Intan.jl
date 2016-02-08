@@ -3,4 +3,3 @@ HDF5
 DistributedArrays
 Gtk
 MAT
-Pkg.clone("https://github.com/paulmthompson/SpikeSorting.jl")
