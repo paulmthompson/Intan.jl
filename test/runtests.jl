@@ -6,4 +6,6 @@ using Intan
 
 include("board_test.jl")
 
+Pkg.rm("SpikeSorting")
+
 end
