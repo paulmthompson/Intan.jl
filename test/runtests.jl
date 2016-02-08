@@ -1,5 +1,7 @@
-using Intan
-using Base.Test
+module TestSetup
 
-# write your own tests here
-@test 1 == 1
+using Intan
+
+include("board_test.jl")
+
+end
