@@ -865,7 +865,20 @@ end
 
 function queueToFile(rhd::RHD2000)
 
-    #Write to disk
+    #write analog voltage traces
+    f=open("v.bin", "a+")
+    write(f,rhd.v)
+    close(f)
+
+    #write spike times and cluster identity
+    
+    #TODO use subarray indexing here TODO
+    #TODO option to just save voltage trace around spike TODO
+    
+    f=open("ts.bin", "a+")
+    for i=1:size(rhd.v,2)
+            write(f,reinterpret(Int64,rhd.buf[1:rhd.nums[i],i]))
+    end
 
     #Clear buffers
     for i=1:size(rhd.v,2)
@@ -878,30 +891,6 @@ function queueToFile(rhd::RHD2000)
     nothing
 end
 
-#=
-function queueToFile(time::Array{Int32,1}, s::DArray{Sorting, 1, Array{Sorting,1}}, saveOut)
-
-    h5open(saveOut,"r+") do fid
-        d=d_open(fid, "time")
-        set_dims!(d,(length(d)+length(time),))
-        d[(length(d[:])-length(time)+1):end]=time
-        
-        @sync @parallel for i=1:length(s)
-            #if sorting was  used, length of each electrode array is not necessarily the same
-            e=d_open(fid, string(i))
-            set_dims!(e,(length(e)+s[i].numSpikes,))
-            e[(length(e[:])-s[i].numSpikes+1):end]=s[i].electrode[1:s[i].numSpikes]
-            e=d_open(fid, string("n",i))
-            set_dims!(e,(length(e)+s[i].numSpikes,))
-            e[(length(e[:])-s[i].numSpikes+1):end]=s[i].neuronnum[1:s[i].numSpikes]
-        end
-        
-    end
-    
-    nothing
-    
-end
-=#
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
     x1 = convert(UInt32,usbBuffer[index])
