@@ -3,41 +3,69 @@
 Getting Started
 ################
 
-**********
+*********
 Overview
-**********
-
-This software surrounds hardware made with Intan RHD amplifier and digitization chips for electrophysiology:
-
-http://intantech.com/
-
-Which communicate with Opal Kelly FPGAs 
-
-http://intantech.com/products_RHD2000_Rhythm.html
-
-Opal Kelly provides the Rhythm interface as open source C++ and verilog code. This project seeks to be a Julia alternative to allow for easier integration of spike sorting and closed loop control in the Julia language. 
-
-Although you don't have to use spike sorting, the module assumes that you have the SpikeSorting.jl module on your computer:
-
-https://github.com/paulmthompson/SpikeSorting.jl
-
-*********
-Workflow
 *********
 
+A simple GUI is under development that will control 1) data acquisition, 2) visualization, 3) automatic and manual spike sorting, and 4) experimental control.
 
+.. image:: GUI.png
 
+**************
+Creating GUI
+**************
 
-************
-Quick Start
-************
+The GUI can easily be created from an IJulia notebook. The user must specify which amplifiers are connected to which ports, and whether single or multi core processing is to be used. These are used to create an RHD2000 data structure, which is then used to construct the GUI. For example:
 
-The RHD2000 data type will keep track of the specifics of your setup, such as the amplifiers, TTL logic, and DAQs that are connected to the FPGA. Amplifiers are their own type and can be initialized by specifying their location. We are assuming the Intan Evaluation board or OpenEphys setup, where there are 4 SPI ports, each which can be attached to a Y connector. Therefore, there are 8 possible locations: A1,A2,B1,B2,C1,C2,D1,D2. We can initialize the board then as follows:
+.. code-block:: julia 
 
-.. code-block:: julia
-	
-	#Create Amplifier setup. Here we assume 1 64 channel connected at PortA1
+	#First create amplifier array:
 	myamp=RHD2164("PortA1")
 
+	#Initialize evaluation board setup
+	myrhd=RHD2000(myamp,"single");
 
-	
+	handles = makegui(myrhd);
+
+
+*****************
+Data Acquisition
+*****************
+
+===================
+Connecting to Intan
+===================
+
+The "Init" button will connect to the Intan board. The output should indicate if the board is found and initialized correctly.
+
+The "Run" button will begin acquisition with the evaluation board. The "calibration" button will be checked by default. As long as this is checked, detection thresholds will first be calculated, followed by any values that need calibrated for feature extraction, dimensionality reduction, or clustering. Unchecking the calibration button will cause normal data acquisition to start.
+
+**************
+Visualization
+**************
+
+There are two main canvases: the left canvas is a zoomed in view of one channel, while the right canvas shows 16 channels at a time. Each spike that was detected and clustered will be plotted to these canvases in real time.
+
+The slider underneath the left canvas selects which of the 16 channels from the right canvas will be displayed. The slider underneath the right canvas selects which group of 16 channels from the total channel count will be displayed.
+
+The slider to the right of the left canvas adjusts the scaling of the channel of interest in both the left canvas and right canvas. This only effects plotting, but not sorting.
+
+**************
+Spike Sorting
+**************
+
+Sorted spikes are plotted in the canvases with their colors indicating the cluster they are assigned to.
+
+=======
+Manual
+=======
+
+=========
+Automatic
+=========
+
+Intan.jl is integrated with the SpikeSorting.jl package for automatic spike sorting of multi-channel recordings.
+
+********************
+Experimental Control
+********************

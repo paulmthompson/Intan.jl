@@ -12,7 +12,12 @@ Contents:
    :maxdepth: 2
 
   Getting_Started.rst
-  GUI.rst
+  Data_Acquisition.rst
+  Visualization.rst
+  Spike_Sorting.rst
+  Experimental_Control.rst
+  Online_Decoding.rst
+  Tasks.rst
   TypesMethods.rst
   
 
