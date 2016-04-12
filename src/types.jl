@@ -42,7 +42,7 @@ function gen_rhd(v,s,buf,nums)
 
         function make_rhd(amps::Array{Int64,1},nd::Int64,v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug)
             
-            $(symbol("RHD200$k"))(board,30000,nd,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(Int32,10000),buf,nums,0,debug,0,zeros(Float64,10000,8))
+            $(symbol("RHD200$k"))(board,30000,nd,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(Int32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,zeros(Float64,SAMPLES_PER_DATA_BLOCK,8))
         end
     end
 end
@@ -70,7 +70,7 @@ function makeRHD(amps::Array{Int64,1},sort::ASCIIString; params=default_sort, de
         (buf,nums)=output_buffer(numchannels)      
     elseif sort=="parallel"
         v=convert(SharedArray{Int64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
-        s=create_multi(params...,numchannels,true)
+        s=create_multi(params...,numchannels,1:1)
         (buf,nums)=output_buffer(numchannels,true)       
     end
     gen_rhd(v,s,buf,nums)
