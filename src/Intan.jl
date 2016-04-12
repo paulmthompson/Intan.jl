@@ -13,5 +13,9 @@ include("gui.jl")
 include("plotting.jl")
 include("offline.jl")
 include("filters.jl")
+include("task_list.jl")
+
+#Graphics
+include("graphics_help/cairo.jl")
 
 end

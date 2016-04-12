@@ -1,6 +1,7 @@
 
 abstract Filter
 abstract RHD2000
+abstract Task
 
 global num_rhd = 0
 

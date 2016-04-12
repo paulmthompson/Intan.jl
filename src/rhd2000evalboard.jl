@@ -365,6 +365,7 @@ function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
         bitShift=8
     elseif port=="PortD"
         bitShift=12
+
     end
 
     if commandslot=="AuxCmd1"
@@ -916,13 +917,11 @@ function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
 end
 
 function UpdateWireIns(rhd::RHD2000)
-
     ccall((:okFrontPanel_UpdateWireIns,lib),Void,(Ptr{Void},),rhd.board)
     nothing
 end
 
 function UpdateWireOuts(rhd::RHD2000)
-
     ccall((:okFrontPanel_UpdateWireOuts,lib),Void,(Ptr{Void},),rhd.board)
     nothing
 end
