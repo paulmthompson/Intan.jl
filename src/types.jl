@@ -95,6 +95,7 @@ type Gui_Handles
     num16::Int64 #currently selected 16 channels
     scale::Array{Float64,2}
     offset::Array{Float64,2}
+    mi::NTuple{2,Float64}
 end
 
 type Weiner <: Filter

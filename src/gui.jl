@@ -166,9 +166,13 @@ function makegui(r::RHD2000)
         han, rhd = user_data
         event = unsafe_load(param_tuple)
 
-        println("press xy: ")
-        println(event.x)
-        println(event.y)
+        if event.button == 1 #left click captures window
+            han.mi=(event.x,event.y)
+        elseif event.button == 2 #right click cycles through clusters
+            
+        elseif event.button == 3 #middle click cycles through windows in given cluster
+
+        end
 
         nothing
 
@@ -179,10 +183,29 @@ function makegui(r::RHD2000)
         han, rhd = user_data
         event = unsafe_load(param_tuple)
 
-        println("release xy: ")
-        println(event.x)
-        println(event.y)
+        #Convert canvas coordinates to voltage vs time coordinates
+        myx=collect(51:12:600)
+        x1=indmin(abs(myx-han.mi[1]))
+        x2=indmin(abs(myx-event.x))
+        s=han.scale[han.spike,1]
+        o=han.offset[han.spike,1]
+        y1=(han.mi[2]-400+o)/s
+        y2=(event.y-400+o)/s
 
+        #ensure that left most point is first
+        if x1>x2
+            x=x1
+            x1=x2
+            x2=x
+            y=y1
+            y1=y2
+            y2=y
+        end
+
+        if length(rhd.s[han.spike].c.win)==0
+            push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
+        end
+        
         nothing
     end
     
@@ -260,7 +283,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0))
     
     #Connect Callbacks to objects on GUI
     
