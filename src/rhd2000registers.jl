@@ -68,11 +68,11 @@ function CreateRHD2000Registers(sampleRate)
 
     r=register(zeros(Int32,40)...,zeros(Int32,1))
     
-    r=defineSampleRate(sampleRate,r)
+    defineSampleRate(sampleRate,r)
 
     #Register 0 variables
     r.adcReferenceBw = 3
-    r=setFastSettle(false,r)
+    setFastSettle(false,r)
     r.ampVrefEnable=1
     r.adcComparatorBias=3
     r.adcComparatorSelect=2
@@ -84,25 +84,25 @@ function CreateRHD2000Registers(sampleRate)
     r.tempS1=0
     r.tempS2=0
     r.tempEn=0
-    r=setDigOutHiZ(r)
+    setDigOutHiZ(r)
 
     #Register 4 variables
     r.weakMiso=1
     r.twosComp=0
     r.absMode=0
-    r=enableDsp(true,r)
-    r=setDspCutoffFreq(1.0,r)
+    enableDsp(true,r)
+    setDspCutoffFreq(1.0,r)
 
     #Register 5 variables
     r.zcheckDacPower=1
     r.zcheckLoad=0
-    r=setZcheckScale("ZcheckCs100fF", r)
+    setZcheckScale("ZcheckCs100fF", r)
     r.zcheckConnAll=0
-    r=setZcheckPolarity("ZcheckPositiveInput",r)
-    r=enableZcheck(false,r)
+    setZcheckPolarity("ZcheckPositiveInput",r)
+    enableZcheck(false,r)
 
     #Register 7 variable
-    r=setZcheckChannel(0,r)
+    setZcheckChannel(0,r)
 
     #Register 8-13 variables
     r.offChipRH1=0
@@ -113,14 +113,12 @@ function CreateRHD2000Registers(sampleRate)
     r.adcAux3En=1
 
     #these set RHdac and RLdac variables
-    r=setUpperBandwidth(10000.0,r)
-    r=setLowerBandwidth(1.0,r)
-
+    setUpperBandwidth(10000.0,r)
+    setLowerBandwidth(1.0,r)
     
-    r=powerUpAllAmps(r)
+    powerUpAllAmps(r)
 
-    return r
-
+    r
 end
 
 function defineSampleRate(newSampleRate,r)
@@ -158,44 +156,16 @@ function defineSampleRate(newSampleRate,r)
         r.adcBufferBias=2
     end
 
-    return r
-    
+    nothing
 end
 
-function setFastSettle(enabled, r)
+setFastSettle(enabled, r)=r.ampFastSettle=(enabled ? 1 : 0)
 
-    r.ampFastSettle=(enabled ? 1 : 0)
+setDigOutLow(r)=(r.digOut=0;r.digOutHiZ=0)
 
-    return r
+setDigOutHigh(r)=(r.digOut=1;r.digOutHiZ=0)
 
-end
-
-function setDigOutLow(r)
-
-    r.digOut=0
-    r.digOutHiZ=0
-
-    return r
-
-end
-
-function setDigOutHigh(r)
-
-    r.digOut=1
-    r.digOutHiZ=0
-
-    return r
-
-end
-
-function setDigOutHiZ(r)
-
-    r.digOut=0
-    r.digOutHiZ=1
-
-    return r
-
-end
+setDigOutHiZ(r)=(r.digOut=0; r.digOutHiZ=1)
 
 function setDspCutoffFreq(newDspCutoffFreq, r)
     
@@ -219,59 +189,22 @@ function setDspCutoffFreq(newDspCutoffFreq, r)
         end 
         r.dspCutoffFreq=findmin(temp)[2]
     end   
-    
-    return r
-   
+        
+    nothing
 end
 
 
-function enableAux1(enabled, r)
+enableAux1(enabled, r)=(r.adcAux1En = (enabled ? 1 : 0))
 
-    r.adcAux1En = (enabled ? 1 : 0)
+enableAux2(enabled, r)=(r.adcAux2En = (enabled ? 1 : 0))
 
-    return r
+enableAux3(enabled, r)=(r.adcAux3En = (enabled ? 1: 0))
 
-end
+enableDsp(enabled, r)=(r.dspEn = (enabled ? 1 : 0))
 
-function enableAux2(enabled, r)
+enableZcheck(enabled, r)=(r.zcheckEn = (enabled ? 1 : 0))
 
-    r.adcAux2En = (enabled ? 1 : 0)
-
-    return r
-
-end
-
-function enableAux3(enabled, r)
-
-    r.adcAux3En = (enabled ? 1: 0)
-
-    return r
-
-end
-
-function enableDsp(enabled, r)
-
-    r.dspEn = (enabled ? 1 : 0)
-
-    return r
-
-end
-
-function enableZcheck(enabled, r)
-
-    r.zcheckEn = (enabled ? 1 : 0)
-
-    return r
-
-end
-
-function setZcheckDacPower(enabled, r)
-
-    r.zcheckDacPower = (enabled ? 1 : 0)
-
-    return r
-
-end
+setZcheckDacPower(enabled, r)=(r.zcheckDacPower = (enabled ? 1 : 0))
 
 function setZcheckScale(scale, r)
 
@@ -282,9 +215,7 @@ function setZcheckScale(scale, r)
     elseif scale=="ZcheckCs10pF"
         r.zcheckScale = 0x03
     end
-
-    return r
-
+    nothing
 end
 
 function setZcheckPolarity(polarity, r)
@@ -295,42 +226,23 @@ function setZcheckPolarity(polarity, r)
         r.zcheckSelPol=1
     end
 
-    return r
-
+    nothing
 end
 
-function setZcheckChannel(channel, r)
-    
-    r.zcheckSelect=channel
-    
-    return r
-end
+setZcheckChannel(channel, r)=(r.zcheckSelect=channel)
 
+powerUpAllAmps(r)=(r.aPwr=ones(Int32, 64))
 
-function powerUpAllAmps(r)
+powerDownAllAmps(r)=(r.aPwr=zeros(Int32,64))
 
-    r.aPwr=ones(Int32, 64)
-
-    return r
-
-end
-
-function powerDownAllAmps(r)
-
-    r.aPwr=zeros(Int32,64)
-
-    return r
-
-end
+const RLBase = 3500.0
+const RLDac1Unit = 175.0
+const RLDac2Unit = 12700.0
+const RLDac3Unit = 3000000.0
+const RLDac1Steps = 127
+const RLDac2Steps = 63
 
 function setLowerBandwidth(lowerBandwidth, r)
-
-    const RLBase = 3500.0
-    const RLDac1Unit = 175.0
-    const RLDac2Unit = 12700.0
-    const RLDac3Unit = 3000000.0
-    const RLDac1Steps = 127
-    const RLDac2Steps = 63
 
     if lowerBandwidth > 1500.0
         lowerBandwidth = 1500.0
@@ -363,9 +275,8 @@ function setLowerBandwidth(lowerBandwidth, r)
     end
 
     actualLowerBandwidth=lowerBandwidthFromRL(rLActual)
-
-    return r
-
+   
+    nothing
 end
 
 function setUpperBandwidth(upperBandwidth, r)
@@ -436,9 +347,8 @@ function setUpperBandwidth(upperBandwidth, r)
     actualUpperBandwidth2 = upperBandwidthFromRH2(rH2Actual)
 
     actualUpperBandwidth = sqrt(actualUpperBandwidth1 * actualUpperBandwidth2)
-
-    return r
-       
+    
+    nothing  
 end
 
 function rLFromLowerBandwidth(lowerBandwidth)
@@ -476,8 +386,7 @@ function upperBandwidthFromRH1(rH1)
     b = -1.1892
     c = 8.0968 - log10(rH1/0.9730)
 
-    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
-
+    10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 end
 
 function upperBandwidthFromRH2(rH2)
@@ -486,8 +395,7 @@ function upperBandwidthFromRH2(rH2)
     b = -1.0821
     c = 8.1009 - log10(rH2/1.0191)
 
-    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
-
+    10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 end
 
 function lowerBandwidthFromRL(rL)
@@ -506,8 +414,7 @@ function lowerBandwidthFromRL(rL)
         c = 4.9873 - log10(rL/1.0061)
     end
      
-    return 10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
-
+    10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 end
 
 function createRhd2000Command(commandType, arg1=0, arg2=0)
@@ -523,7 +430,6 @@ function createRhd2000Command(commandType, arg1=0, arg2=0)
     elseif commandType=="Rhd2000CommandRegWrite"
         return 0x8000 + (arg1 << 8) + arg2
     end
-
 end
 
 function getRegisterValue(reg, r)
@@ -590,8 +496,7 @@ function getRegisterValue(reg, r)
         (aPwr[60] << 3) + (aPwr[59] << 2) + (aPwr[58] << 1) + aPwr[57]
     end
 
-    return regout
-        
+    return regout      
 end
 
 #Create a list of 60 commands to program most RAM registers on a RHD2000 chip, read those values back to confirm programming, read ROM registers, and (if calibrate == true) run ADC calibration.
