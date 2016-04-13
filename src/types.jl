@@ -49,7 +49,7 @@ end
 
 default_sort=Algorithm[DetectSignal(),ClusterOSort(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 
-debug_sort=Algorithm[DetectSignal(),ClusterNone(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
+debug_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 

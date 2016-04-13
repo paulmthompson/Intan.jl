@@ -160,6 +160,31 @@ function makegui(r::RHD2000)
         nothing 
 
     end
+
+    function canvas_press(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+        han, rhd = user_data
+        event = unsafe_load(param_tuple)
+
+        println("press xy: ")
+        println(event.x)
+        println(event.y)
+
+        nothing
+
+    end
+
+    function canvas_release(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+        
+        han, rhd = user_data
+        event = unsafe_load(param_tuple)
+
+        println("release xy: ")
+        println(event.x)
+        println(event.y)
+
+        nothing
+    end
     
     function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
 
@@ -240,6 +265,11 @@ function makegui(r::RHD2000)
     #Connect Callbacks to objects on GUI
     
     #Run button starts main loop
+    
+    id = signal_connect(canvas_press,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+
+id =signal_connect(canvas_release,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
 
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
@@ -253,7 +283,7 @@ function makegui(r::RHD2000)
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
-    
+
     return handles
     
 end
