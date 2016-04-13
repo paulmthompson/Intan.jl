@@ -287,8 +287,6 @@ function makegui(r::RHD2000)
     
     #Connect Callbacks to objects on GUI
     
-    #Run button starts main loop
-    
     id = signal_connect(canvas_press,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
 
 id =signal_connect(canvas_release,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
