@@ -63,3 +63,8 @@ function do_task(myt::Task_COT,rhd::RHD2000)
     end
         
 end
+
+function save_task(myt::Task_COT,rhd::RHD2000)
+
+
+end

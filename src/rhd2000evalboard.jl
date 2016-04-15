@@ -867,19 +867,25 @@ end
 function queueToFile(rhd::RHD2000)
 
     #write analog voltage traces
-    f=open("v.bin", "a+")
-    write(f,rhd.v)
-    close(f)
+    if 1==0
+        f=open("v.bin", "a+")
+        write(f,rhd.v)
+        close(f)
+    end
 
     #write spike times and cluster identity
     
     #TODO use subarray indexing here TODO
     #TODO option to just save voltage trace around spike TODO
-    
-    f=open("ts.bin", "a+")
-    for i=1:size(rhd.v,2)
+
+    if 1==0
+        f=open("ts.bin", "a+")
+        for i=1:size(rhd.v,2)
             write(f,reinterpret(Int64,rhd.buf[1:rhd.nums[i],i]))
+        end
     end
+
+    save_task(rhd.task,rhd)
 
     #Clear buffers
     for i=1:size(rhd.v,2)

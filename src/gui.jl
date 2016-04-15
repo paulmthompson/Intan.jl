@@ -90,6 +90,9 @@ function makegui(r::RHD2000)
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
 
+    #Initialize Task
+    init_task(r.task,r)
+
     handles  
 end
 
@@ -112,7 +115,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         end
 
         while getproperty(widget,:active,Bool)==true
-
+            
             #get spikes and sort
             if rhd.debug.state==false
                 readDataBlocks(rhd,1)
@@ -121,6 +124,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             end
             
             #process and output (e.g. kalman, spike triggered stim calc, etc)
+            do_task(rhd.task,rhd)
 
             #plot spikes               
             if han.num16>0
@@ -147,7 +151,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             #write to disk, clear buffers
             queueToFile(rhd)
 
-            sleep(.01)          
+            sleep(.00001)
         end        
     end
         

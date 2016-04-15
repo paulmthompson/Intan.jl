@@ -46,8 +46,9 @@ end
 Single Core Data Structure
 =#
 myamp=RHD2164("PortA1")
+myt=Task_NoTask()
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
-myrhd=makeRHD(myamp,"single",debug=d);
+myrhd=makeRHD(myamp,"single",myt,debug=d);
 
 facts() do
     @fact myrhd.numDataStreams --> 2
@@ -68,7 +69,8 @@ Multi Core Data Structure
 =#
 myamp=RHD2132("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
-myrhd=makeRHD(myamp,"parallel",debug=d);
+myt=Task_NoTask()
+myrhd=makeRHD(myamp,"parallel",myt,debug=d);
 
 facts() do
     @fact myrhd.numDataStreams --> 1

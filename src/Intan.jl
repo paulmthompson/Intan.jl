@@ -14,6 +14,8 @@ include("plotting.jl")
 include("offline.jl")
 include("filters.jl")
 include("task_list.jl")
+include("save_load.jl")
+include("benchmark.jl")
 
 #Graphics
 include("graphics_help/cairo.jl")
