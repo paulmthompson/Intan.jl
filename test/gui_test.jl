@@ -33,6 +33,7 @@ end
 
 #Run
 setproperty!(handles.run,:active,true)
+sleep(1.0)
 Intan.run_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
