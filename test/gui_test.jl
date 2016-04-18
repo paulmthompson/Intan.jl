@@ -1,6 +1,6 @@
 module Gui_Test
 
-using FactCheck, Intan, SpikeSorting, Gtk
+using FactCheck, Intan, SpikeSorting, Gtk.ShortNames
 
 myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
