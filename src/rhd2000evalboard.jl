@@ -542,7 +542,7 @@ function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
             SetWireInValue(rhd,WireInDataStreamEn,0x0000 << stream, 0x0001 << stream)
             UpdateWireIns(rhd)
             rhd.dataStreamEnabled[stream+1] = 0;
-            rhd.numDataStream=rhd.numDataStreams-1;
+            rhd.numDataStreams=rhd.numDataStreams-1;
         end
     end
 
