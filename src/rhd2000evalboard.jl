@@ -44,9 +44,11 @@ function RHD2132(port::ASCIIString)
 end
 
 function init_board!(rhd::RHD2000)
-    
-    open_board(rhd)
-    uploadFpgaBitfile(rhd);
+
+    if rhd.debug.state==false
+        open_board(rhd)
+        uploadFpgaBitfile(rhd)
+    end
     initialize_board(rhd)
 
     #For 64 channel need two data streams, and data will come in 
@@ -62,6 +64,7 @@ function init_board!(rhd::RHD2000)
     calculateDataBlockSizeInBytes(rhd)
     
     setSampleRate(rhd,rhd.sampleRate)
+    println("Sample Rate set at :",rhd.sampleRate)
 
     #Now that we have set our sampling rate, we can set the MISO sampling delay
     #which is dependent on the sample rate. We use a 6.0 foot cable
@@ -88,17 +91,16 @@ function init_board!(rhd::RHD2000)
 
     setMaxTimeStep(rhd,SAMPLES_PER_DATA_BLOCK)
     setContinuousRunMode(rhd,false)
-    runBoard(rhd)
 
-    while (isRunning(rhd))
+    if rhd.debug.state==false
+        runBoard(rhd)
+        while (isRunning(rhd))
+        end
+        flushBoard(rhd) 
     end
-
-    flushBoard(rhd)
-
-    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)
-
+     
+    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)   
     setContinuousRunMode(rhd,true)
-
     nothing  
 end
 
@@ -317,18 +319,24 @@ end
 
 function isDcmProgDone(rhd::RHD2000)
 
-    UpdateWireOuts(rhd)
-    value=GetWireOutValue(rhd,WireOutDataClkLocked)
-
-    ((value & 0x0002) > 1)
+    if rhd.debug.state==false
+        UpdateWireOuts(rhd)
+        value=GetWireOutValue(rhd,WireOutDataClkLocked)
+        return ((value & 0x0002) > 1)
+    else
+        return true
+    end
 end
 
 function isDataClockLocked(rhd::RHD2000)
 
-    UpdateWireOuts(rhd)
-    value=GetWireOutValue(rhd,WireOutDataClkLocked)
-    
-    ((value & 0x0001) > 0)
+    if rhd.debug.state==false
+        UpdateWireOuts(rhd)
+        value=GetWireOutValue(rhd,WireOutDataClkLocked)
+        return ((value & 0x0001) > 0)
+    else
+        return true
+    end
 end
 
 function uploadCommandList(rhd::RHD2000,commandList, auxCommandSlot, bank)
@@ -824,17 +832,13 @@ end
 
 
 function calculateDataBlockSizeInWords(rhd::RHD2000)
-
-    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)
-                           
+    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)                         
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 end
 
 function calculateDataBlockSizeInBytes(rhd::RHD2000)
-
     rhd.numBytesPerBlock=convert(Int64,2 * rhd.numWords / SAMPLES_PER_DATA_BLOCK)
-
     nothing 
 end
 
@@ -864,20 +868,30 @@ function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     nothing   
 end
 
-function queueToFile(rhd::RHD2000)
+function queueToFile(rhd::RHD2000,sav::SaveAll)
 
     #write analog voltage traces
-    if 1==0
-        f=open("v.bin", "a+")
-        write(f,rhd.v)
-        close(f)
-    end
+    f=open("v.bin", "a+")
+    write(f,rhd.v)
+    close(f)
+
+    writeTimeStamp(rhd)
+    nothing
+end
+
+function queueToFile(rhd::RHD2000,sav::SaveWave)
+    #TODO write just spikes to array TODO
+    
+    writeTimeStamp(rhd)
+    nothing
+end
+
+queueToFile(rhd::RHD2000,sav::SaveNone)=writeTimeStamp(rhd)
+
+function writeTimeStamp(rhd::RHD2000)
 
     #write spike times and cluster identity
-    
     #TODO use subarray indexing here TODO
-    #TODO option to just save voltage trace around spike TODO
-
     if 1==0
         f=open("ts.bin", "a+")
         for i=1:size(rhd.v,2)
@@ -894,9 +908,9 @@ function queueToFile(rhd::RHD2000)
         end
         @inbounds rhd.nums[i]=0
     end
-    
     nothing
 end
+
 
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 

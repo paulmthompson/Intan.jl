@@ -149,7 +149,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             end
 
             #write to disk, clear buffers
-            queueToFile(rhd)
+            queueToFile(rhd,rhd.save)
 
             sleep(.00001)
         end        

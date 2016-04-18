@@ -1,7 +1,10 @@
 
+export SaveWave,SaveAll,SaveNone
+
 abstract Filter
 abstract RHD2000
 abstract Task
+abstract SaveOpt
 
 global num_rhd = 0
 
@@ -13,7 +16,19 @@ type Debug
     maxind::Int64
 end
 
-function gen_rhd(v,s,buf,nums,tas)
+type SaveWave <: SaveOpt
+    
+end
+
+type SaveAll <: SaveOpt
+
+end
+
+type SaveNone <: SaveOpt
+
+end
+
+function gen_rhd(v,s,buf,nums,tas,sav)
 
     global num_rhd::Int64
     num_rhd+=1
@@ -39,11 +54,12 @@ function gen_rhd(v,s,buf,nums,tas)
             reads::Int64
             kins::Array{Float64,2}
             task::$(typeof(tas))
+            save::$(typeof(sav))
         end
 
-        function make_rhd(amps::Array{Int64,1},nd::Int64,v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)))
+        function make_rhd(amps::Array{Int64,1},v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)))
             
-            $(symbol("RHD200$k"))(board,30000,nd,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(Int32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,zeros(Float64,SAMPLES_PER_DATA_BLOCK,8),tas)
+            $(symbol("RHD200$k"))(board,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(Int32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,zeros(Float64,SAMPLES_PER_DATA_BLOCK,8),tas,sav)
         end
     end
 end
@@ -54,14 +70,12 @@ debug_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),Red
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
-function makeRHD(amps::Array{Int64,1},sort::ASCIIString,mytask::Task; params=default_sort, debug=default_debug)
+default_save=SaveAll()
+
+function makeRHD(amps::Array{Int64,1},sort::ASCIIString,mytask::Task; params=default_sort, debug=default_debug,sav=default_sav)
 
     numchannels=length(amps)*32
-
-    if debug.state==false
-    	numDataStreams=0
-    else
-	numDataStreams=round(Int,numchannels/32)
+    if debug.state==true
         params=debug_sort
     end
       
@@ -74,8 +88,8 @@ function makeRHD(amps::Array{Int64,1},sort::ASCIIString,mytask::Task; params=def
         s=create_multi(params...,numchannels,1:1)
         (buf,nums)=output_buffer(numchannels,true)       
     end
-    gen_rhd(v,s,buf,nums,mytask)
-    make_rhd(amps,numDataStreams,v,s,buf,nums,debug,mytask)
+    gen_rhd(v,s,buf,nums,mytask,sav)
+    make_rhd(amps,v,s,buf,nums,debug,mytask,sav)
 end
 
 type Gui_Handles

@@ -47,11 +47,12 @@ Single Core Data Structure
 =#
 myamp=RHD2164("PortA1")
 myt=Task_NoTask()
+mys=SaveNone()
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
-myrhd=makeRHD(myamp,"single",myt,debug=d);
+myrhd=makeRHD(myamp,"single",myt,debug=d,sav=mys);
 
 facts() do
-    @fact myrhd.numDataStreams --> 2
+    @fact myrhd.numDataStreams --> 0
     @fact myrhd.dataStreamEnabled --> zeros(Int64,1,Intan.MAX_NUM_DATA_STREAMS)
     @fact myrhd.amps --> [0,8]
     @fact myrhd.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -64,16 +65,26 @@ facts() do
     @fact myrhd.kins --> zeros(Float64,Intan.SAMPLES_PER_DATA_BLOCK, 8)
 end
 
+Intan.init_board!(myrhd)
+
+facts() do
+    @fact myrhd.numDataStreams --> 2
+    @fact myrhd.dataStreamEnabled --> [1 1 0 0 0 0 0 0]
+    @fact myrhd.sampleRate --> 30000
+    @fact myrhd.numWords --> 52800
+    @fact myrhd.numBytesPerBlock --> 176
+end
+
 #=
 Multi Core Data Structure
 =#
 myamp=RHD2132("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
-myrhd=makeRHD(myamp,"parallel",myt,debug=d);
+myrhd=makeRHD(myamp,"parallel",myt,debug=d,sav=mys);
 
 facts() do
-    @fact myrhd.numDataStreams --> 1
+    @fact myrhd.numDataStreams --> 0
     @fact myrhd.dataStreamEnabled --> zeros(Int64,1,Intan.MAX_NUM_DATA_STREAMS)
     @fact myrhd.amps --> [0]
     @fact myrhd.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,32)
@@ -84,5 +95,27 @@ facts() do
     @fact size(myrhd.buf,2) --> 32
     @fact myrhd.nums --> zeros(Int64,32)
     @fact myrhd.kins --> zeros(Float64,Intan.SAMPLES_PER_DATA_BLOCK, 8)
+end
+
+Intan.init_board!(myrhd)
+
+facts() do
+    @fact myrhd.numDataStreams --> 1
+    @fact myrhd.dataStreamEnabled --> [1 0 0 0 0 0 0 0]
+    @fact myrhd.sampleRate --> 30000
+    @fact myrhd.numWords --> 31200
+    @fact myrhd.numBytesPerBlock --> 104
+end
+
+#=
+Sample Rate Testing
+=#
+
+facts() do
+
+    for i in [1000,1250,1500,2000,2500,3000,3333,4000,5000,6250,8000,10000,12500,15000,20000,25000,30000]
+        Intan.setSampleRate(myrhd,i)
+        @fact myrhd.sampleRate --> i
+    end
 end
 end
