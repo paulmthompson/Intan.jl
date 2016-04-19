@@ -245,6 +245,10 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+#=
+Window Discriminator Spike Sorting
+=#
+
 function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
@@ -284,7 +288,10 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         y1=y2
         y2=y
     end
-            
+
+    #If this is distributed, it is going to be *really* slow
+    #becuase it will be sending over the entire DArray from whatever processor
+    #Change this so it is just communicating with the cluster part (JNeuron does something similar)
     if length(rhd.s[han.spike].c.win)==0
         push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
     end
