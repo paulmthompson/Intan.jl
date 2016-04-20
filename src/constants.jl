@@ -4,12 +4,11 @@ Constants
 
 #Constant parameters
 
-base_path=string(dirname(Base.source_path()),"/../lib/");
+@unix_only begin
+    base_path=string(dirname(Base.source_path()),"/../lib/")
+    const lib = string(base_path,"libokFrontPanel.so")
+end
 
-#const lib = "$(Pkg.dir("Intan"))/lib/libokFrontPanel.so"
-#const bit = "$(Pkg.dir("Intan"))/lib/main.bit"
-
-const lib = string(base_path,"libokFrontPanel.so")
 const bit = string(base_path,"main.bit")
 
 const board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())

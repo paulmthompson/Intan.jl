@@ -373,7 +373,6 @@ function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
         bitShift=8
     elseif port=="PortD"
         bitShift=12
-
     end
 
     if commandslot=="AuxCmd1"
