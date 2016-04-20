@@ -9,6 +9,11 @@ Constants
     const lib = string(base_path,"libokFrontPanel.so")
 end
 
+@windows_only begin
+	base_path=string(dirname(Base.source_path()),"\\..\\lib\\")
+	const lib = string(base_path,"okFrontPanel.dll")
+end
+	
 const bit = string(base_path,"main.bit")
 
 const board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
