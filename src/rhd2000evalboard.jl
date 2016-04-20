@@ -807,7 +807,6 @@ function applySorting(rhd::RHD2000)
     if rhd.cal==0
 
         cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
-
         rhd.cal=1
                       
     elseif rhd.cal<3
@@ -821,11 +820,9 @@ function applySorting(rhd::RHD2000)
     elseif rhd.cal==3
             
         onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
-
     end
 
     rhd.reads+=1
-
     nothing 
 end
 
@@ -847,19 +844,17 @@ function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
     
     index+=8
     for t=(1+blockIndex*SAMPLES_PER_DATA_BLOCK):(SAMPLES_PER_DATA_BLOCK+SAMPLES_PER_DATA_BLOCK*blockIndex)
-        rhd.time[t]=convert(Int32,convertUsbTimeStamp(rhd.usbBuffer,index))
+        rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
         index+=rhd.numBytesPerBlock
     end
 
     # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
     start=10+6*rhd.numDataStreams
 
-    b=UInt32(0)
     for i=1:rhd.numDataStreams*32
         ind=start+i+i
         for j=1:SAMPLES_PER_DATA_BLOCK
-            b=(convert(UInt32,rhd.usbBuffer[ind+1]) << 8) | (convert(UInt32,rhd.usbBuffer[ind]) << 0)
-            rhd.v[j,i]=convert(Int64,b)
+            rhd.v[j,i]=convertUsbWord(rhd.usbBuffer,ind)
             ind+=rhd.numBytesPerBlock
         end
     end
@@ -913,21 +908,20 @@ end
 
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = convert(UInt32,usbBuffer[index])
-    x2 = convert(UInt32,usbBuffer[index+1])
-    x3 = convert(UInt32,usbBuffer[index+2])
-    x4 = convert(UInt32,usbBuffer[index+3])
+    x1 = usbBuffer[index]
+    x2 = usbBuffer[index+1]
+    x3 = usbBuffer[index+2]
+    x4 = usbBuffer[index+3]
 
-    return ((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0))
+    convert(UInt32,((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)))
 end
 
 function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1=convert(UInt32, usbBuffer[index])
-    x2=convert(UInt32, usbBuffer[index+1])
+    x1=usbBuffer[index]
+    x2=usbBuffer[index+1]
 
-    #The original C++ Rhythm API uses Int32, but Julia hasn't been playing nice with making sure that Int32s are type stable through calculations.
-    return convert(Int64, ((x2<<8) | (x1<<0))) 
+    convert(Int16, ((x2<<8) | (x1<<0))) 
 end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
