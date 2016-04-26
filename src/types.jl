@@ -60,7 +60,7 @@ function gen_rhd(v,s,buf,nums,tas,sav)
     end
 end
 
-default_sort=Algorithm[DetectSignal(),ClusterOSort(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
+default_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 
 debug_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
 

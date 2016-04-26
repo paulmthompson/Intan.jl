@@ -23,3 +23,5 @@ Automatic sorting
 ***************
 Manual Sorting
 ***************
+
+Spike clusters can be selected manually. For each channel, a cluster can be specified with a series of lines. A spike that crosses those lines will be assigned to that cluster. A new line for the selected cluster can be specified by left clicking, moving and releases. Right click allows the user to cycle through the lines of each cluster. Middle click clicks through clusters.
