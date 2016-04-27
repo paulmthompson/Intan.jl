@@ -62,7 +62,6 @@ facts() do
     @fact typeof(myrhd.buf) --> Array{SpikeSorting.Spike,2}
     @fact size(myrhd.buf,2) --> 64
     @fact myrhd.nums --> zeros(Int64,64)
-    @fact myrhd.kins --> zeros(Float64,Intan.SAMPLES_PER_DATA_BLOCK, 8)
 end
 
 Intan.init_board!(myrhd)
@@ -94,7 +93,6 @@ facts() do
     @fact typeof(myrhd.buf) --> SharedArray{SpikeSorting.Spike,2}
     @fact size(myrhd.buf,2) --> 32
     @fact myrhd.nums --> zeros(Int64,32)
-    @fact myrhd.kins --> zeros(Float64,Intan.SAMPLES_PER_DATA_BLOCK, 8)
 end
 
 Intan.init_board!(myrhd)

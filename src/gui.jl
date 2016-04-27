@@ -75,7 +75,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0))
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2))
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -257,43 +257,87 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
     elseif event.button == 2 #right click cycles through clusters
-        
+        #go to next cluster
+        clus=han.var1[han.spike,2]+1
+
+        if clus==han.var1[han.spike,1]+2
+            han.var1[han.spike,2]=0
+            han.var2[han.spike,1]=0
+        elseif clus==han.var1[han.spike,1]+1
+            #create new cluster
+            han.var1[han.spike,2]=clus
+            han.var2[han.spike,1]=0
+        else
+            han.var1[han.spike,2]=clus
+            han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
+        end
+            
+        #reset currently selected window to zero
+        han.var2[han.spike,2]=0
+
+        #get number of windows from cluster
     elseif event.button == 3 #middle click cycles through windows in given cluster
-        
+        #go to next window
+        win=han.var2[han.spike,2]+1
+
+        if win==han.var2[han.spike,1]+2
+            han.var2[han.spike,2]=0
+        elseif win==han.var1[han.spike,1]+1
+            #create new window
+            han.var2[han.spike,2]=win
+        else
+            han.var2[han.spike,2]=win
+        end
     end
+
+    println("Cluster: ", han.var1[han.spike,2])
+    println("Window: ", han.var2[han.spike,2])
     
     nothing
 end
 
 function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
-        
-    han, rhd = user_data
-    event = unsafe_load(param_tuple)
-    
-    #Convert canvas coordinates to voltage vs time coordinates
-    myx=collect(51:12:600)
-    x1=indmin(abs(myx-han.mi[1]))
-    x2=indmin(abs(myx-event.x))
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike,1]
-    y1=(han.mi[2]-400+o)/s
-    y2=(event.y-400+o)/s
-    
-    #ensure that left most point is first
-    if x1>x2
-        x=x1
-        x1=x2
-        x2=x
-        y=y1
-        y1=y2
-        y2=y
-    end
 
-    #If this is distributed, it is going to be *really* slow
-    #becuase it will be sending over the entire DArray from whatever processor
-    #Change this so it is just communicating with the cluster part (JNeuron does something similar)
-    if length(rhd.s[han.spike].c.win)==0
-        push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
+    event = unsafe_load(param_tuple)
+    if event.button==1
+        han, rhd = user_data
+        event = unsafe_load(param_tuple)
+    
+        #Convert canvas coordinates to voltage vs time coordinates
+        myx=collect(51:12:600)
+        x1=indmin(abs(myx-han.mi[1]))
+        x2=indmin(abs(myx-event.x))
+        s=han.scale[han.spike,1]
+        o=han.offset[han.spike,1]
+        y1=(han.mi[2]-400+o)/s
+        y2=(event.y-400+o)/s
+    
+        #ensure that left most point is first
+        if x1>x2
+            x=x1
+            x1=x2
+            x2=x
+            y=y1
+            y1=y2
+            y2=y
+        end
+
+        #If this is distributed, it is going to be *really* slow
+        #because it will be sending over the entire DArray from whatever processor
+        #Change this so it is just communicating with the cluster part (JNeuron does something similar)
+
+    
+        if (han.var1[han.spike,2]==0)||(han.var2[han.spike,2]==0) #do nothing if zeroth cluster or window      
+        elseif (length(rhd.s[han.spike].c.win) < han.var1[han.spike,2]) #new cluster
+            push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
+            han.var1[han.spike,1]+=1
+            han.var2[han.spike,1]+=1
+        elseif length(rhd.s[han.spike].c.win[han.var1[han.spike,2]]) < han.var2[han.spike,2] #new window
+            push!(rhd.s[han.spike].c.win[han.var1[han.spike,2]],SpikeSorting.mywin(x1,x2,y1,y2))
+            han.var2[han.spike,1]+=1
+        else #replace old window
+            rhd.s[han.spike].c.win[han.var1[han.spike,2]][han.var2[han.spike,2]]=SpikeSorting.mywin(x1,x2,y1,y2)
+        end
     end
     
     nothing

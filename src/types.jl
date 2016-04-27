@@ -48,14 +48,13 @@ function gen_rhd(v,s,buf,nums,tas,sav)
             cal::Int64
             debug::Debug
             reads::Int64
-            kins::Array{Float64,2}
             task::$(typeof(tas))
             save::$(typeof(sav))
         end
 
         function make_rhd(amps::Array{Int64,1},v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)))
             
-            $(symbol("RHD200$k"))(board,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,zeros(Float64,SAMPLES_PER_DATA_BLOCK,8),tas,sav)
+            $(symbol("RHD200$k"))(board,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,tas,sav)
         end
     end
 end
@@ -106,5 +105,7 @@ type Gui_Handles
     num16::Int64 #currently selected 16 channels
     scale::Array{Float64,2}
     offset::Array{Float64,2}
-    mi::NTuple{2,Float64}
+    mi::NTuple{2,Float64} #saved x,y position of mouse input
+    var1::Array{Int64,2} #saved variable 1 for each channel
+    var2::Array{Int64,2} #saved variable 2 for each channel
 end
