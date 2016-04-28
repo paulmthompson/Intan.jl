@@ -24,11 +24,13 @@ end
 
 function fillFromOffline!(rhd::RHD2000)
 
+    toff=rhd.time[end]
     for j=1:SAMPLES_PER_DATA_BLOCK
         for i=1:rhd.numDataStreams*32    
-            rhd.v[j,i]=round(Int64,rhd.debug.data[rhd.debug.ind])
+            rhd.v[j,i]=round(Int16,rhd.debug.data[rhd.debug.ind])
         end
         rhd.debug.ind+=1
+        rhd.time[j]=toff+j
     end
 
     if rhd.debug.ind>=rhd.debug.maxind

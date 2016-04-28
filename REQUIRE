@@ -3,4 +3,5 @@ HDF5
 DistributedArrays
 Gtk
 MAT
+JLD
 Cairo

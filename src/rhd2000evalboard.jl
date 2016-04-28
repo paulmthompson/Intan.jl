@@ -885,12 +885,29 @@ queueToFile(rhd::RHD2000,sav::SaveNone)=writeTimeStamp(rhd)
 function writeTimeStamp(rhd::RHD2000)
 
     #write spike times and cluster identity
-    #TODO use subarray indexing here TODO
-    if 1==0
+
+    #Time
+    
+    #Channel
+    #Num
+    #Spikes
+    
+    #Channel
+    #Num
+    #Spikes
+    
+    if 1==1
         f=open("ts.bin", "a+")
+        write(f,rhd.time[1])
         for i=1:size(rhd.v,2)
-            write(f,reinterpret(Int64,rhd.buf[1:rhd.nums[i],i]))
+            write(f,i)
+            write(f,rhd.nums[i])
+            for j=1:rhd.nums[i]
+                write(f,reinterpret(Int64,rhd.buf[j,i].inds[1]))
+                write(f,reinterpret(Int64,rhd.buf[j,i].id))
+            end
         end
+        close(f)
     end
 
     save_task(rhd.task,rhd)
