@@ -874,7 +874,16 @@ function queueToFile(rhd::RHD2000,sav::SaveAll)
 end
 
 function queueToFile(rhd::RHD2000,sav::SaveWave)
-    #TODO write just spikes to array TODO
+    
+    f=open("v.bin","a+")
+    for i=1:size(rhd.v,2)
+        for j=1:rhd.nums[i]
+            if rhd.buf[j,i].inds[1]>0
+                write(f,rhd.v[rhd.buf[j,i].inds,i])
+            end
+        end
+    end
+    close(f)
     
     writeTimeStamp(rhd)
     nothing
