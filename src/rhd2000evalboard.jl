@@ -780,7 +780,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         return false
     end
 
-    numBytesToRead = 2 * rhd.numWords
+    numBytesToRead = rhd.numBytesPerBlock
 
     if (numBytesToRead > USB_BUFFER_SIZE)
         println("USB buffer size exceeded")
@@ -834,32 +834,48 @@ function calculateDataBlockSizeInWords(rhd::RHD2000)
 end
 
 function calculateDataBlockSizeInBytes(rhd::RHD2000)
-    rhd.numBytesPerBlock=convert(Int64,2 * rhd.numWords / SAMPLES_PER_DATA_BLOCK)
+    rhd.numBytesPerBlock=2 * rhd.numWords
     nothing 
 end
 
-function fillFromUsbBuffer!(rhd::RHD2000, blockIndex::Int64)
-    
-    index = blockIndex * rhd.numBytesPerBlock * SAMPLES_PER_DATA_BLOCK + 1
-    
-    index+=8
-    for t=(1+blockIndex*SAMPLES_PER_DATA_BLOCK):(SAMPLES_PER_DATA_BLOCK+SAMPLES_PER_DATA_BLOCK*blockIndex)
-        rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
-        index+=rhd.numBytesPerBlock
-    end
+function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 
-    # 8 + 4 + 3*nDataStreams * 2 arrives at first amp channel (subtract 2 based on the way it is indexed)
-    start=10+6*rhd.numDataStreams
+	index = blockIndex * rhd.numBytesPerBlock + 1
 
-    for i=1:rhd.numDataStreams*32
-        ind=start+i+i
-        for j=1:SAMPLES_PER_DATA_BLOCK
-            rhd.v[j,i]=convertUsbWord(rhd.usbBuffer,ind)
-            ind+=rhd.numBytesPerBlock
-        end
-    end
+	for t=1:SAMPLES_PER_DATA_BLOCK
 
-    nothing   
+		#Header
+
+		
+		index+=8
+		rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
+		index+=4
+
+		#Auxiliary results
+		index += (2*3*rhd.numDataStreams)
+
+		channel=1
+		#Amplifier
+		for i=1:32
+			for j=1:rhd.numDataStreams
+				rhd.v[t,channel]=convertUsbWord(rhd.usbBuffer,index)
+				index+=2
+				channel+=1
+			end
+		end
+
+		#skip 36 filler word
+		index += (2*rhd.numDataStreams)
+
+		#ADCs
+		index += 16
+
+		#TTL
+		index += 4
+
+	
+	end
+	nothing
 end
 
 function queueToFile(rhd::RHD2000,sav::SaveAll)
@@ -931,23 +947,22 @@ function writeTimeStamp(rhd::RHD2000)
     nothing
 end
 
-
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = usbBuffer[index]
-    x2 = usbBuffer[index+1]
-    x3 = usbBuffer[index+2]
-    x4 = usbBuffer[index+3]
+    x1 = convert(UInt32,usbBuffer[index])
+    x2 = convert(UInt32,usbBuffer[index+1])
+    x3 = convert(UInt32,usbBuffer[index+2])
+    x4 = convert(UInt32,usbBuffer[index+3])
 
     convert(UInt32,((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)))
 end
 
 function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1=usbBuffer[index]
-    x2=usbBuffer[index+1]
+    x1 = usbBuffer[index]
+    x2 = usbBuffer[index+1]
 
-    convert(Int16, ((x2<<8) | (x1<<0))) 
+    convert(Int16,((x2<<8) | (x1<<0))) 
 end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
@@ -964,7 +979,6 @@ function UpdateWireOuts(rhd::RHD2000)
     ccall((:okFrontPanel_UpdateWireOuts,lib),Void,(Ptr{Void},),rhd.board)
     nothing
 end
-
 
 function ActivateTriggerIn(rhd::RHD2000,epAddr::UInt8,bit::Int)
     
