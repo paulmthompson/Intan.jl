@@ -22,7 +22,7 @@ const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
 const MAX_NUM_DATA_STREAMS = 8
 const FIFO_CAPACITY_WORDS = 67108864
-const SAMPLES_PER_DATA_BLOCK = 600 #This is normally 60.
+const SAMPLES_PER_DATA_BLOCK = 600
 
 const WireInResetRun = 0x00
 const WireInMaxTimeStepLsb = 0x01
