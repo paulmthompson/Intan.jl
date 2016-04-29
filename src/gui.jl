@@ -115,48 +115,53 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         end
 
         while getproperty(widget,:active,Bool)==true
-            
-            #get spikes and sort
-            if rhd.debug.state==false
-                readDataBlocks(rhd,1)
-            else
-                readDataBlocks(rhd)
-            end
-            
-            #process and output (e.g. kalman, spike triggered stim calc, etc)
-            do_task(rhd.task,rhd)
-
-            #plot spikes               
-            if han.num16>0
-                    
-                k=16*han.num16-15
-                for i=50:200:650
-                    for j=50:200:650
-                        @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
-                        k+=1
-                    end
-                end
-              
-                stroke(ctx);
-                reveal(han.c);
-                
-                if han.num>0
-                        
-                    @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])                      
-                    stroke(ctx2);
-                    reveal(han.c2);                    
-                end
-            end
-
-            #write to disk, clear buffers
-            queueToFile(rhd,rhd.save)
-
-            sleep(.00001)
-        end        
+           main_loop(rhd,han,ctx,ctx2) 
+        end       
     end
         
     nothing
 end
+
+function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
+    #get spikes and sort
+    if rhd.debug.state==false
+        readDataBlocks(rhd,1)
+    else
+        readDataBlocks(rhd)
+    end
+            
+    #process and output (e.g. kalman, spike triggered stim calc, etc)
+    do_task(rhd.task,rhd)
+
+    #plot spikes               
+    if han.num16>0
+                    
+        k=16*han.num16-15
+        for i=50:200:650
+            for j=50:200:650
+                @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
+                k+=1
+            end
+        end
+              
+        stroke(ctx);
+        reveal(han.c);
+                
+        if han.num>0
+                        
+            @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])                      
+            stroke(ctx2);
+            reveal(han.c2);                    
+        end
+    end
+
+    #write to disk, clear buffers
+    queueToFile(rhd,rhd.save)
+
+    sleep(.00001)
+    nothing
+end
+
 
 function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
