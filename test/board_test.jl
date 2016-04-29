@@ -71,7 +71,7 @@ facts() do
     @fact myrhd.dataStreamEnabled --> [1 1 0 0 0 0 0 0]
     @fact myrhd.sampleRate --> 30000
     @fact myrhd.numWords --> 52800
-    @fact myrhd.numBytesPerBlock --> 176
+    @fact myrhd.numBytesPerBlock --> 105600
 end
 
 #=
@@ -102,7 +102,7 @@ facts() do
     @fact myrhd.dataStreamEnabled --> [1 0 0 0 0 0 0 0]
     @fact myrhd.sampleRate --> 30000
     @fact myrhd.numWords --> 31200
-    @fact myrhd.numBytesPerBlock --> 104
+    @fact myrhd.numBytesPerBlock --> 62400
 end
 
 #=
