@@ -27,7 +27,7 @@ The main control loop has the following steps
 
 The Intan board will continuous run throughout the experiment, capture and organize the digital neural signals coming from headstage, and keep them in RAM until the control computer brings them over. How frequently data is brought over from the FPGA board is set by the user, and the "best" frequency depends on the experimental setup (remember that this will not affect the sampling rate of the headstages). By default, Intan.jl pulls from the FPGA board once 600 samples from each channel have accumulated. At a 20kHz sample frequency, this will correspond to a latency of roughly 30 ms. 
 
-The control loop must run faster than this minimum latency. Therefore, at the beginning of each loop iteration, the board is check to see if it has accumulated 600 samples. If not, it waits very briefly and then checks again. If it has, it pulls the data over to the PC. This will take a small amount of time due to overhead of the method of transfer, as well as the speed of transfer itself. Once the data is brought over, it must be parsed into a more sensible format, which is a 600 x channel matrix of 16 bit integers.
+The control loop must run faster than this minimum latency. Therefore, at the beginning of each loop iteration, the board checks to see if it has accumulated 600 samples. If not, it waits very briefly and then checks again. If it has, it pulls the data over to the PC. This will take a small amount of time due to overhead of the method of transfer, as well as the speed of transfer itself. Once the data is brought over, it must be parsed into a more sensible format, which is a 600 x channel matrix of 16 bit integers.
 
 #. Spike Sorting
 
@@ -97,4 +97,47 @@ Data Collection
 ****************
 
 After calibration has finished, the full control loop will run until the "Run" button is unclicked.
+
+*******************
+Saving Neural Data
+*******************
+
+During the experiment, saving the neural data in a binary format is significantly faster than alternative methods. Different parts of the neural data can be saved: the entire voltage trace from each channel, the voltage waveforms, or nothing at all. These options are specified by creating a save type and passing this to the RHD2000 function with the sav keyword like so:
+
+.. code-block:: julia 
+
+	#Save all waveforms
+	mysave=SaveAll()
+
+	myrhd=RHD2000(myamp,"single",mytask,sav=mysave)
+
+
+	#Save just the waveforms
+	myrhd2=RHD2000(myamp,"single",mytask,sav=SaveWave())
+
+	#Don't save anything
+	myrhd3=RHD2000(myamp,"single",mytask,sav=SaveNone())
+
+Whatever version of the voltage traces will be saved as a file named "v.bin" in the working directory. If all of the analog traces need to be worked with directly, they can be loaded into the workspace with the parse_v function by specifying the channel number:
+
+.. code-block:: julia
+
+	#Assumes v.bin is in working directly and the number of samples per data block is the same as when data was collected.
+	parse_v(64)
+
+Time stamps for each detected spike is also saved in the working directory in binary form as "ts.bin"  Binary is not immediately useful for any future analysis, so a parser can be run immediately after recording to save the timestamps in a HDF5 format file such as .mat (MATLAB) or .jld (Julia). This can be done as follows:
+
+.. code-block:: julia 
+	
+	#Saves timestamps as "spikes.mat" in working directory
+	num=64 #Number of channels in the recording	
+	save_mat(num)
+
+	#the user can optionally specify a time threshold, where no stamps are saved before it (like before the experiment started or sorting was completed).
+
+	save_mat(num, 200000)
+
+	#Saves timestamps as "spikes.jld" in working directory
+	save_jld(num)
+
 

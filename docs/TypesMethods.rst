@@ -19,6 +19,14 @@ Initialization
 
 .. function:: makegui(rhd)
 
+.. function:: SaveAll()
+
+   
+
+.. function:: SaveWave()
+
+.. function:: SaveNone()
+
 ********************
 Experimental Control
 ********************
