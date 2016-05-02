@@ -19,6 +19,7 @@ Contents:
   Online_Decoding.rst
   Tasks.rst
   TypesMethods.rst
+  Performance.rst
   
 
 This module is designed to work with Intan Technologies RHD2000-Series Amplifier Evaluation System for neural signal acquisition.
