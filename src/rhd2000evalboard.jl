@@ -845,7 +845,6 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 	for t=1:SAMPLES_PER_DATA_BLOCK
 
 		#Header
-
 		
 		index+=8
 		rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
@@ -854,13 +853,11 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 		#Auxiliary results
 		index += (2*3*rhd.numDataStreams)
 
-		channel=1
 		#Amplifier
 		for i=1:32
 			for j=1:rhd.numDataStreams
-				rhd.v[t,channel]=convertUsbWord(rhd.usbBuffer,index)
+				rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
 				index+=2
-				channel+=1
 			end
 		end
 
@@ -871,9 +868,7 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 		index += 16
 
 		#TTL
-		index += 4
-
-	
+		index += 4	
 	end
 	nothing
 end
@@ -959,10 +954,10 @@ end
 
 function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = usbBuffer[index]
-    x2 = usbBuffer[index+1]
+    x1 = convert(UInt16,usbBuffer[index])
+    x2 = convert(UInt16,usbBuffer[index+1])
 
-    convert(Int16,((x2<<8) | (x1<<0))) 
+    convert(Int16,signed((x2<<8)|x1))
 end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
