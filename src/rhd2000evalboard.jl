@@ -64,11 +64,13 @@ function init_board!(rhd::RHD2000)
     calculateDataBlockSizeInBytes(rhd)
     
     setSampleRate(rhd,rhd.sampleRate)
-    println("Sample Rate set at :",rhd.sampleRate)
+    println("Sample Rate set at: ",rhd.sampleRate)
 
     #Now that we have set our sampling rate, we can set the MISO sampling delay
     #which is dependent on the sample rate. We use a 6.0 foot cable
-    setCableLengthFeet(rhd,"PortA", 6.0)
+
+    #TODO this should be automatically selected based on what is plugged in where TODO
+    setCableLengthFeet(rhd,"PortA", 3.0)
 
     ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(rhd,ledArray)
@@ -382,7 +384,7 @@ function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
     elseif commandslot=="AuxCmd3"
         SetWireInValue(rhd,WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift))
     end
-
+    
     UpdateWireIns(rhd)
 
     nothing
@@ -840,37 +842,37 @@ end
 
 function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 
-	index = blockIndex * rhd.numBytesPerBlock + 1
+    index = blockIndex * rhd.numBytesPerBlock + 1
 
-	for t=1:SAMPLES_PER_DATA_BLOCK
+    for t=1:SAMPLES_PER_DATA_BLOCK
 
-		#Header
+	#Header
 		
-		index+=8
-		rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
-		index+=4
+	index+=8
+	rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
+	index+=4
 
-		#Auxiliary results
-		index += (2*3*rhd.numDataStreams)
+	#Auxiliary results
+	index += (2*3*rhd.numDataStreams)
 
-		#Amplifier
-		for i=1:32
-			for j=1:rhd.numDataStreams
-				rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
-				index+=2
-			end
-		end
-
-		#skip 36 filler word
-		index += (2*rhd.numDataStreams)
-
-		#ADCs
-		index += 16
-
-		#TTL
-		index += 4	
+	#Amplifier
+	for i=1:32
+	    for j=1:rhd.numDataStreams
+		rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
+		index+=2
+	    end
 	end
-	nothing
+
+	#skip 36 filler word
+	index += (2*rhd.numDataStreams)
+        
+	#ADCs
+	index += 16
+
+	#TTL
+	index += 4	
+    end
+    nothing
 end
 
 function queueToFile(rhd::RHD2000,sav::SaveAll)
@@ -904,22 +906,11 @@ queueToFile(rhd::RHD2000,sav::SaveNone)=writeTimeStamp(rhd)
 
 function writeTimeStamp(rhd::RHD2000)
 
-    #write spike times and cluster identity
-
-    #Time
-    
-    #Channel
-    #Num
-    #Spikes
-    
-    #Channel
-    #Num
-    #Spikes
-    
+    #write spike times and cluster identity   
     if 1==1
         f=open("ts.bin", "a+")
         write(f,rhd.time[1])
-        for i=1:size(rhd.v,2)
+        @inbounds for i=1:size(rhd.v,2)
             write(f,i)
             write(f,rhd.nums[i])
             for j=1:rhd.nums[i]
@@ -944,24 +935,23 @@ end
 
 function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = convert(UInt32,usbBuffer[index])
-    x2 = convert(UInt32,usbBuffer[index+1])
-    x3 = convert(UInt32,usbBuffer[index+2])
-    x4 = convert(UInt32,usbBuffer[index+3])
+    @inbounds x1 = convert(UInt32,usbBuffer[index])
+    @inbounds x2 = convert(UInt32,usbBuffer[index+1])
+    @inbounds x3 = convert(UInt32,usbBuffer[index+2])
+    @inbounds x4 = convert(UInt32,usbBuffer[index+3])
 
     convert(UInt32,((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)))
 end
 
 function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
 
-    x1 = convert(UInt16,usbBuffer[index])
-    x2 = convert(UInt16,usbBuffer[index+1])
+    @inbounds x1 = convert(UInt16,usbBuffer[index])
+    @inbounds x2 = convert(UInt16,usbBuffer[index+1])
 
     convert(Int16,signed((x2<<8)|x1))
 end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
-    
     er=ccall((:okFrontPanel_SetWireInValue,lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
 end
 
@@ -976,17 +966,14 @@ function UpdateWireOuts(rhd::RHD2000)
 end
 
 function ActivateTriggerIn(rhd::RHD2000,epAddr::UInt8,bit::Int)
-    
     er=ccall((:okFrontPanel_ActivateTriggerIn,lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
 end
 
 function GetWireOutValue(rhd::RHD2000,epAddr::UInt8)
-
     value = ccall((:okFrontPanel_GetWireOutValue,lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 end
 
 function ReadFromPipeOut(rhd::RHD2000,epAddr::UInt8, length, data::AbstractArray{UInt8,1})
-
     ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
     nothing
 end

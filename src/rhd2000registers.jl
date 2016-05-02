@@ -88,13 +88,13 @@ function CreateRHD2000Registers(sampleRate)
 
     #Register 4 variables
     r.weakMiso=1
-    r.twosComp=0
+    r.twosComp=1
     r.absMode=0
     enableDsp(true,r)
     setDspCutoffFreq(1.0,r)
 
     #Register 5 variables
-    r.zcheckDacPower=1
+    r.zcheckDacPower=0
     r.zcheckLoad=0
     setZcheckScale("ZcheckCs100fF", r)
     r.zcheckConnAll=0
