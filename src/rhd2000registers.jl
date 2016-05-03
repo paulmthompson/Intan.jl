@@ -88,7 +88,7 @@ function CreateRHD2000Registers(sampleRate)
 
     #Register 4 variables
     r.weakMiso=1
-    r.twosComp=1
+    r.twosComp=1 #This is weird
     r.absMode=0
     enableDsp(true,r)
     setDspCutoffFreq(1.0,r)

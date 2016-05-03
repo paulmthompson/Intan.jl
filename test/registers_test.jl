@@ -29,13 +29,13 @@ facts() do
 
     #Register 4
     @fact r.weakMiso --> 1
-    @fact r.twosComp --> 0
+    @fact r.twosComp --> 1
     @fact r.absMode --> 0
     @fact r.dspEn --> 1
     @fact r.dspCutoffFreq --> 12
 
     #Register 5
-    @fact r.zcheckDacPower --> 1
+    @fact r.zcheckDacPower --> 0
     @fact r.zcheckLoad --> 0
     @fact r.zcheckScale --> 0x00
     @fact r.zcheckConnAll --> 0

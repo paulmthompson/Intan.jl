@@ -215,12 +215,12 @@ function initialize_board(rhd::RHD2000)
     setDacGain(rhd,0)
     setAudioNoiseSuppress(rhd,0)
 
-    setTtlMode(rhd,1)   # Digital outputs 0-7 are DAC comparators; 8-15 under manual control
+    setTtlMode(rhd,0) 
 
     for i=0:7; setDacThreshold(rhd,i, 32768, true); end
 
     enableExternalFastSettle(rhd,false)
-    setExternalFastSettleChannel(rhd,0)
+    setExternalFastSettleChannel(rhd,15)
 
     enableExternalDigOut(rhd,"PortA", false)
     enableExternalDigOut(rhd,"PortB", false)
@@ -726,6 +726,20 @@ function getTtlIn(rhd::RHD2000,ttlInArray)
     ttlInArray
 end
 
+function setTtlOut(rhd::RHD2000,ttlOutArray)
+
+    ttlOut=Int32(0)
+    for i=1:16
+        if ttlOutArray[i]>0
+            ttlOut += (1<< (i-1))
+        end
+    end
+
+    SetWireInValue(rhd,WireInTtlOut,ttlOut)
+    UpdateWireIns(rhd)
+    nothing
+end
+
 function setLedDisplay(rhd::RHD2000,ledArray)
 
     ledOut=0
@@ -858,7 +872,7 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 	#Amplifier
 	for i=1:32
 	    for j=1:rhd.numDataStreams
-		rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
+		@inbounds rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
 		index+=2
 	    end
 	end
@@ -867,10 +881,18 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 	index += (2*rhd.numDataStreams)
         
 	#ADCs
-	index += 16
+        for i=1:8
+            @inbounds rhd.adc[t,i]=convertUsbWordu(rhd.usbBuffer,index)     
+            index+=2
+        end
 
-	#TTL
-	index += 4	
+	#TTL in
+        @inbounds rhd.ttlin[t]=convertUsbWordu(rhd.usbBuffer,index)
+        index += 2
+        
+        #TTL out
+        @inbounds rhd.ttlout[t]=convertUsbWordu(rhd.usbBuffer,index)
+	index += 2	
     end
     nothing
 end
@@ -949,6 +971,14 @@ function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
     @inbounds x2 = convert(UInt16,usbBuffer[index+1])
 
     convert(Int16,signed((x2<<8)|x1))
+end
+
+function convertUsbWordu(usbBuffer::AbstractArray{UInt8,1},index::Int64)
+
+    @inbounds x1 = convert(UInt16,usbBuffer[index])
+    @inbounds x2 = convert(UInt16,usbBuffer[index+1])
+
+    (x2<<8)|x1
 end
 
 function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)

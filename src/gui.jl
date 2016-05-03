@@ -90,9 +90,6 @@ function makegui(r::RHD2000)
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
 
-    #Initialize Task
-    init_task(r.task,r)
-
     handles  
 end
 
@@ -226,6 +223,9 @@ function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data       
     init_board!(rhd)
+
+    #Initialize Task
+    init_task(rhd.task,rhd)
 
     nothing
 end

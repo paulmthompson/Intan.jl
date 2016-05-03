@@ -50,11 +50,14 @@ function gen_rhd(v,s,buf,nums,tas,sav)
             reads::Int64
             task::$(typeof(tas))
             save::$(typeof(sav))
+            adc::Array{UInt16,2}
+            ttlin::Array{UInt16,1}
+            ttlout::Array{UInt16,1}
         end
 
         function make_rhd(amps::Array{Int64,1},v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)))
             
-            $(symbol("RHD200$k"))(board,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,tas,sav)
+            $(symbol("RHD200$k"))(board,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,v,s,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),buf,nums,0,debug,0,tas,sav,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK))
         end
     end
 end
