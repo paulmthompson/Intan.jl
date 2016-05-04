@@ -114,6 +114,7 @@ type Gui_Handles
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     var1::Array{Int64,2} #saved variable 1 for each channel
     var2::Array{Int64,2} #saved variable 2 for each channel
+    sb::Gtk.GtkSpinButtonLeaf
     tb1::Gtk.GtkLabelLeaf
     tb2::Gtk.GtkLabelLeaf
 end
