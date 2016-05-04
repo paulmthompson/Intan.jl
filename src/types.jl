@@ -15,6 +15,9 @@ type Debug
     maxind::Int64
 end
 
+const v_save_file = "v.bin"
+const ts_save_file = "ts.bin"
+
 type SaveWave <: SaveOpt 
 end
 

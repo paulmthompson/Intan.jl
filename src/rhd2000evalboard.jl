@@ -900,7 +900,7 @@ end
 function queueToFile(rhd::RHD2000,sav::SaveAll)
 
     #write analog voltage traces
-    f=open("v.bin", "a+")
+    f=open(v_save_file, "a+")
     write(f,rhd.v)
     close(f)
 
@@ -910,7 +910,7 @@ end
 
 function queueToFile(rhd::RHD2000,sav::SaveWave)
     
-    f=open("v.bin","a+")
+    f=open(v_save_file,"a+")
     for i=1:size(rhd.v,2)
         for j=1:rhd.nums[i]
             if rhd.buf[j,i].inds[1]>0
@@ -930,7 +930,7 @@ function writeTimeStamp(rhd::RHD2000)
 
     #write spike times and cluster identity   
     if 1==1
-        f=open("ts.bin", "a+")
+        f=open(ts_save_file, "a+")
         write(f,rhd.time[1])
         @inbounds for i=1:size(rhd.v,2)
             write(f,i)
