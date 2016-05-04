@@ -48,6 +48,13 @@ function makegui(r::RHD2000)
     adj3 = @Adjustment(s_slider)
     setproperty!(adj3,:value,1)
 
+    if typeof(r.s[1].c)==ClusterWindow 
+        tb1=@Label("Cluster")
+        tb2=@Label("Window")
+    else
+        tb1=@Label("text1")
+        tb2=@Label("text2")
+    end
     #Arrangement of stuff on GUI
     grid = @Grid()
     grid[1,2]=s_slider
@@ -57,6 +64,8 @@ function makegui(r::RHD2000)
     push!(hbox,button_auto)
     push!(hbox,button_run)
     push!(hbox,button_cal)
+    push!(hbox,tb1)
+    push!(hbox,tb2)
     grid[3,2]=c
     grid[3,3]=c_slider
     grid[2,2]=c2
@@ -75,7 +84,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2))
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),tb1,tb2)
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -261,7 +270,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
-    elseif event.button == 2 #right click cycles through clusters
+    elseif event.button == 2 #middle click cycles through clusters
         #go to next cluster
         clus=han.var1[han.spike,2]+1
 
@@ -280,8 +289,11 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
         #reset currently selected window to zero
         han.var2[han.spike,2]=0
 
+        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+        setproperty!(han.tb2,:label,"Window: 0")
+        
         #get number of windows from cluster
-    elseif event.button == 3 #middle click cycles through windows in given cluster
+    elseif event.button == 3 #right click cycles through windows in given cluster
         #go to next window
         win=han.var2[han.spike,2]+1
 
@@ -293,11 +305,9 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
         else
             han.var2[han.spike,2]=win
         end
-    end
-
-    println("Cluster: ", han.var1[han.spike,2])
-    println("Window: ", han.var2[han.spike,2])
-    
+        
+        setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
+    end  
     nothing
 end
 

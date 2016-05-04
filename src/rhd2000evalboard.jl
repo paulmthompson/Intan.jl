@@ -796,7 +796,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         return false
     end
 
-    numBytesToRead = rhd.numBytesPerBlock
+    numBytesToRead = rhd.numBytesPerBlock * numBlocks
 
     if (numBytesToRead > USB_BUFFER_SIZE)
         println("USB buffer size exceeded")
