@@ -104,8 +104,6 @@ type Gui_Handles
     adj2::Gtk.GtkAdjustmentLeaf
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
-    slider3::Gtk.GtkScaleLeaf
-    adj3::Gtk.GtkAdjustmentLeaf
     spike::Int64 #currently selected spike out of total
     num::Int64 #currently selected spike out of 16
     num16::Int64 #currently selected 16 channels
@@ -117,4 +115,6 @@ type Gui_Handles
     sb::Gtk.GtkSpinButtonLeaf
     tb1::Gtk.GtkLabelLeaf
     tb2::Gtk.GtkLabelLeaf
+    gain::Gtk.GtkCheckButtonLeaf
+    gainbox::Gtk.GtkSpinButtonLeaf
 end

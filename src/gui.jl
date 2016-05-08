@@ -44,10 +44,6 @@ function makegui(r::RHD2000)
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
 
-    s_slider = @Scale(true, 1:10)
-    adj3 = @Adjustment(s_slider)
-    setproperty!(adj3,:value,1)
-
     if typeof(r.s[1].c)==ClusterWindow 
         tb1=@Label("Cluster")
         tb2=@Label("Window")
@@ -60,23 +56,35 @@ function makegui(r::RHD2000)
 
     setproperty!(sb,:value,0)
     setproperty!(sb,:name,"Threshold:")
+
+    sb2=@SpinButton(1:1000)
+    setproperty!(sb2,:value,1)
+
+    tb_gain=@Label("Gain")
+
+    button_gain = @CheckButton("All Channels")
+    setproperty!(button_gain,:active,false)
     
     #Arrangement of stuff on GUI
     grid = @Grid()
-    grid[1,2]=s_slider
     hbox = @ButtonBox(:h)
     grid[2,1]=hbox
     push!(hbox,button_init)
-    push!(hbox,button_auto)
     push!(hbox,button_run)
     push!(hbox,button_cal)
     push!(hbox,sb)
     push!(hbox,tb1)
     push!(hbox,tb2)
-    grid[3,2]=c
-    grid[3,3]=c_slider
-    grid[2,2]=c2
-    grid[2,3]=c2_slider
+    hbox2=@ButtonBox(:h)
+    push!(hbox2,tb_gain)
+    push!(hbox2,sb2)
+    push!(hbox2,button_gain)
+    push!(hbox2,button_auto)
+    grid[2,2]=hbox2
+    grid[3,3]=c
+    grid[3,4]=c_slider
+    grid[2,3]=c2
+    grid[2,4]=c2_slider
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -91,7 +99,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,s_slider,adj3,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2)
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -102,10 +110,10 @@ function makegui(r::RHD2000)
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,r))
-    id = signal_connect(update_scale, s_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
+    id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 
     handles  
 end
@@ -176,26 +184,17 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     nothing
 end
 
-
-function update_scale(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    @inbounds han.scale[han.spike,1]=getproperty(han.adj3,:value,Float64)*han.scale[han.spike,3]
-    @inbounds han.scale[han.spike,2]=han.scale[han.spike,1]*.25
-
-    @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
-    @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
-
-    clear_c(han.c2)
-        
-    nothing
-end
-
 function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
-    han.scale[:,3]=mean(rhd.v,1)'
+    
+    #scale
+    @inbounds han.scale[han.spike,1]=abs(1./mean(rhd.v[:,han.spike]))
+    @inbounds han.scale[han.spike,2]=.25*han.scale[han.spike,1]
+    @inbounds han.scale[han.spike,3]=han.scale[han.spike,1]
+
+    @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
+    @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
 
     nothing 
 end
@@ -210,9 +209,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
     
     if han.num16>0
         han.spike=16*han.num16-16+han.num
-        
-        #put scale bar in appropriate position
-        @inbounds setproperty!(han.adj3,:value,han.scale[han.spike])
+       
     end
 
     nothing    
@@ -228,9 +225,6 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if han.num16>0
         han.spike=16*han.num16-16+han.num
-
-        #put scale bar in appropriate position
-        @inbounds setproperty!(han.adj3,:value,han.scale[han.spike])
     end
 
     #update threshold
@@ -262,9 +256,9 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         rhd.cal=3
 
         #scale
-        han.scale[:,1]=1./mean(rhd.v,1)'
+        han.scale[:,1]=abs(1./mean(rhd.v,1)')
         han.scale[:,2]=.25*han.scale[:,1]
-        han.scale[:,3]=1./mean(rhd.v,1)'
+        han.scale[:,3]=han.scale[:,1]
     end
 
     nothing
@@ -275,6 +269,33 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     rhd.s[han.spike].thres=getproperty(han.sb,:value,Int)
+
+    nothing
+end
+
+function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    mygain=getproperty(han.gain,:active,Bool)
+
+    gainval=getproperty(han.gainbox,:value,Int)
+
+    if mygain==true
+        han.scale[:,1]=gainval/100
+        han.scale[:,2]=.25*gainval/100
+        han.scale[:,3]=gainval/100
+
+        @inbounds han.offset[:,1]=mean(gainval/100.*rhd.v,1)
+        @inbounds han.offset[:,2]=han.offset[:,1].*.25
+    else
+        han.scale[han.spike,1]=gainval/100
+        han.scale[han.spike,2]=.25*gainval/100
+        han.scale[han.spike,3]=gainval/100
+
+        @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
+        @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
+    end
 
     nothing
 end
