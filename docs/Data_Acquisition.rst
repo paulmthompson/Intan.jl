@@ -49,7 +49,7 @@ Finally, the data from this loop iteration will be saved. This includes the neur
 Initialization
 ***************
 
-First, the user should specify how the headstage is connected to the Intan Evaluation board. The evaluation board has 4 SPI ports, which each can recieve two headstages via a y connector. These headstages are therefore labeled A1,A2,B1,B2,C1,C2,D1,D2. The user must create an Amp data structure for each amplifying by specifying the port it is connected to and calling the function corresponding to the amplifying type. These are then provided to the RHD2000 function as an array. For example:
+First, the user should specify how the headstage is connected to the Intan Evaluation board. The evaluation board has 4 SPI ports, which each can recieve two headstages via a y connector. These headstages are therefore labeled A1,A2,B1,B2,C1,C2,D1,D2. The user must create an Amp data structure for each amplifying by specifying the port it is connected to and calling the function corresponding to the amplifying type. These are then provided to the FPGA function as an array. For example:
 
 .. code-block:: julia 
 
@@ -61,7 +61,7 @@ First, the user should specify how the headstage is connected to the Intan Evalu
 	#32 channel amp connected to the A2 port
 	myamp2=RHD2132("PortA1")
 
-	myrhd=RHD2000([myamp1,myamp2],"single",mytask)
+	myfpga=FPGA([myamp1,myamp2])
 
 
 .. code-block:: julia 
@@ -74,12 +74,14 @@ First, the user should specify how the headstage is connected to the Intan Evalu
 	#64 channel amp connected to the B2 port
 	myamp2=RHD2164("PortB1")
 
-	myrhd=RHD2000([myamp1,myamp2],"single",mytask)
+	myfpga=FPGA([myamp1,myamp2])
 
 
-Once the main RHD2000 data structure is created, the user can create the GUI with the makegui function.
+Now add the FPGA to the primary RHD2000 data structure, which will include options for spike sorting, saving, task logic etc.
 
 .. code-block:: julia 
+
+	myrhd=RHD2000([myfpga],single",mytask,sav=mysave);
 
 	#Creates the GUI
 	handles = makegui(myrhd);
@@ -109,14 +111,14 @@ During the experiment, saving the neural data in a binary format is significantl
 	#Save all waveforms
 	mysave=SaveAll()
 
-	myrhd=RHD2000(myamp,"single",mytask,sav=mysave)
+	myrhd=RHD2000([myfpga],"single",mytask,sav=mysave)
 
 
 	#Save just the waveforms
-	myrhd2=RHD2000(myamp,"single",mytask,sav=SaveWave())
+	myrhd2=RHD2000([myfpga],"single",mytask,sav=SaveWave())
 
 	#Don't save anything
-	myrhd3=RHD2000(myamp,"single",mytask,sav=SaveNone())
+	myrhd3=RHD2000([myfpga],"single",mytask,sav=SaveNone())
 
 Whatever version of the voltage traces will be saved as a file named "v.bin" in the working directory. If all of the analog traces need to be worked with directly, they can be loaded into the workspace with the parse_v function by specifying the channel number:
 

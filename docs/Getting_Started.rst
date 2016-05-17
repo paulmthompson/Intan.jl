@@ -22,6 +22,10 @@ The GUI can easily be created from an IJulia notebook. The user must specify 1) 
 	#First create amplifier array:
 	myamp=RHD2164("PortA1")
 
+	#Assign amplifiers to FPGA:
+	fpga_id=1
+	myfpga=FPGA(fpga_id,myamp)
+
 	#Specify a task file (NoTask is a valid option)
 	mt=Task_NoTask()
 
@@ -29,7 +33,7 @@ The GUI can easily be created from an IJulia notebook. The user must specify 1) 
 	#mys=SaveAll()
 
 	#Initialize evaluation board setup
-	myrhd=RHD2000(myamp,"single",mt, sav=mys)
+	myrhd=RHD2000([myfpga],"single",mt, sav=mys)
 
 	#Creates the GUI
 	handles = makegui(myrhd);

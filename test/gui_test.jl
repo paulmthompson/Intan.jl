@@ -6,7 +6,8 @@ myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveAll()
-myrhd=makeRHD(myamp,"single",myt,debug=d,sav=mys)
+myfpga=FPGA(1,myamp)
+myrhd=makeRHD([myfpga],"single",myt,debug=d,sav=mys)
 
 handles = makegui(myrhd)
 
@@ -26,8 +27,8 @@ Callback Testing
 Intan.init_cb(handles.init.handle,(handles,myrhd))
 
 facts() do
-    @fact myrhd.numDataStreams --> 2
-    @fact myrhd.dataStreamEnabled --> [1 1 0 0 0 0 0 0]
+    @fact myrhd.fpga[1].numDataStreams --> 2
+    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0]
 end
 
 

@@ -55,7 +55,7 @@ function makegui(r::RHD2000)
     sb=@SpinButton(-1000:1000)
 
     setproperty!(sb,:value,0)
-    setproperty!(sb,:name,"Threshold:")
+    tb_threshold=@Label("Threshold")
 
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
@@ -64,6 +64,10 @@ function makegui(r::RHD2000)
 
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
+
+    button_sort1 = @Button("Delete Cluster")
+    button_sort2 = @Button("Delete Window")
+    button_sort3 = @Button("Show Windows")
     
     #Arrangement of stuff on GUI
     grid = @Grid()
@@ -72,19 +76,25 @@ function makegui(r::RHD2000)
     push!(hbox,button_init)
     push!(hbox,button_run)
     push!(hbox,button_cal)
+    push!(hbox,tb_threshold)
     push!(hbox,sb)
-    push!(hbox,tb1)
-    push!(hbox,tb2)
     hbox2=@ButtonBox(:h)
+    grid[2,2]=hbox2
     push!(hbox2,tb_gain)
     push!(hbox2,sb2)
     push!(hbox2,button_gain)
     push!(hbox2,button_auto)
-    grid[2,2]=hbox2
-    grid[3,3]=c
-    grid[3,4]=c_slider
-    grid[2,3]=c2
-    grid[2,4]=c2_slider
+    hbox3=@ButtonBox(:h)
+    grid[2,3]=hbox3
+    push!(hbox3,tb1)
+    push!(hbox3,tb2)
+    push!(hbox3,button_sort1)
+    push!(hbox3,button_sort2)
+    push!(hbox3,button_sort3)
+    grid[3,4]=c
+    grid[3,5]=c_slider
+    grid[2,4]=c2
+    grid[2,5]=c2_slider
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -105,6 +115,9 @@ function makegui(r::RHD2000)
     if typeof(r.s[1].c)==ClusterWindow
         id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
         id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+        id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
+        id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
+        id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
     end
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
@@ -133,7 +146,9 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         ctx2 = getgc(han.c2)
         
 	if rhd.debug.state==false
-            runBoard(rhd)
+            for fpga in rhd.fpga
+                runBoard(fpga)
+            end
         end
 
         while getproperty(widget,:active,Bool)==true
@@ -380,9 +395,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
 
         #If this is distributed, it is going to be *really* slow
         #because it will be sending over the entire DArray from whatever processor
-        #Change this so it is just communicating with the cluster part (JNeuron does something similar)
-
-    
+        #Change this so it is just communicating with the cluster part; JNeuron does something similar
         if (han.var1[han.spike,2]==0)||(han.var2[han.spike,2]==0) #do nothing if zeroth cluster or window      
         elseif (length(rhd.s[han.spike].c.win) < han.var1[han.spike,2]) #new cluster
             push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
@@ -396,5 +409,66 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         end
     end
     
+    nothing
+end
+
+#Delete clusters
+function b1_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
+    else
+        deleteat!(rhd.s[han.spike].c.win,han.var1[han.spike,2])
+        han.var1[han.spike,1]-= 1
+        han.var1[han.spike,2] = 0
+        han.var2[han.spike,1] = 0
+        han.var2[han.spike,2] = 0
+        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+        setproperty!(han.tb2,:label,"Window: 0")
+    end
+    nothing
+end
+
+function b2_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data 
+
+    if (han.var2[han.spike,2]==0)||(han.var2[han.spike,2]>han.var2[han.spike,1]) #do nothing if zeroth window
+    else
+        deleteat!(rhd.s[han.spike].c.win[han.var1[han.spike,2]],han.var2[han.spike,2])
+        han.var2[han.spike,1]-= 1
+        han.var2[han.spike,2] = 0
+        setproperty!(han.tb2,:label,"Window: 0")
+    end
+    
+    nothing
+end
+
+#Display Windows
+function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data   
+    ctx = getgc(han.c2)
+        
+    #loop over clusters
+    for i=1:length(rhd.s[han.spike].c.win)
+        #loop over windows
+        for j=1:length(rhd.s[han.spike].c.win[i])
+
+            x1=rhd.s[han.spike].c.win[i][j].x1
+            x2=rhd.s[han.spike].c.win[i][j].x2
+            y1=rhd.s[han.spike].c.win[i][j].y1
+            y2=rhd.s[han.spike].c.win[i][j].y2
+            move_to(ctx,x1*12+50,y1*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+            line_to(ctx,x2*12+50,y2*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+            set_line_width(ctx,5.0)
+            select_color(ctx,i+1)
+            stroke(ctx)
+        end
+    end
+     
+    reveal(han.c2)
+
     nothing
 end

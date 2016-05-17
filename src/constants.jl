@@ -17,6 +17,7 @@ end
 const bit = string(base_path,"main.bit")
 
 const board = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
+const board2 = ccall((:okFrontPanel_Construct, lib), Ptr{Void}, ())
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500

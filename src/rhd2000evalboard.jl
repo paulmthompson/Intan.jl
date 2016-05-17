@@ -47,91 +47,100 @@ function init_board!(rhd::RHD2000)
 
     if rhd.debug.state==false
         open_board(rhd)
-        uploadFpgaBitfile(rhd)
-    end
-    initialize_board(rhd)
-
-    #For 64 channel need two data streams, and data will come in 
-    #on the rising AND falling edges of SCLK
-    stream=0
-    for i in rhd.amps
-            enableDataStream(rhd,stream,true)
-            setDataSource(rhd,stream,i)
-            stream+=1  
-    end
-
-    calculateDataBlockSizeInWords(rhd)
-    calculateDataBlockSizeInBytes(rhd)
-    
-    setSampleRate(rhd,rhd.sampleRate)
-    println("Sample Rate set at: ",rhd.sampleRate)
-
-    #Now that we have set our sampling rate, we can set the MISO sampling delay
-    #which is dependent on the sample rate. We use a 6.0 foot cable
-
-    #TODO this should be automatically selected based on what is plugged in where TODO
-    setCableLengthFeet(rhd,"PortA", 3.0)
-
-    ledArray=[1,0,0,0,0,0,0,0]
-    setLedDisplay(rhd,ledArray)
-
-    #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
-    r=CreateRHD2000Registers(Float64(rhd.sampleRate))
-
-    #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
-    commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
-    uploadCommandList(rhd,commandList, "AuxCmd3", 0)
-
-    #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
-    commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
-    uploadCommandList(rhd,commandList, "AuxCmd3", 1)
-
-    selectAuxCommandLength(rhd,"AuxCmd3", 0, length(commandList) - 1)
-
-    #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
-    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 1);
-
-    setMaxTimeStep(rhd,SAMPLES_PER_DATA_BLOCK)
-    setContinuousRunMode(rhd,false)
-
-    if rhd.debug.state==false
-        runBoard(rhd)
-        while (isRunning(rhd))
+        for fpga in rhd.fpga
+            uploadFpgaBitfile(fpga)
         end
-        flushBoard(rhd) 
     end
+    for fpga in rhd.fpga
+        
+        initialize_board(fpga,rhd.debug.state)
+
+        #For 64 channel need two data streams, and data will come in 
+        #on the rising AND falling edges of SCLK
+        stream=0
+        for i in fpga.amps
+            enableDataStream(fpga,stream,true)
+            setDataSource(fpga,stream,i)
+            stream+=1  
+        end
+
+        calculateDataBlockSizeInWords(fpga)
+        calculateDataBlockSizeInBytes(fpga)
+    
+        setSampleRate(fpga,fpga.sampleRate,rhd.debug.state)
+        println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
+
+        #Now that we have set our sampling rate, we can set the MISO sampling delay
+        #which is dependent on the sample rate. We use a 6.0 foot cable
+
+        #TODO this should be automatically selected based on what is plugged in where TODO
+        setCableLengthFeet(fpga,"PortA", 3.0)
+
+        ledArray=[1,0,0,0,0,0,0,0]
+        setLedDisplay(fpga,ledArray)
+
+        #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
+        r=CreateRHD2000Registers(Float64(fpga.sampleRate))
+
+        #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
+        commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
+        uploadCommandList(fpga,commandList, "AuxCmd3", 0)
+
+        #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
+        commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
+        uploadCommandList(fpga,commandList, "AuxCmd3", 1)
+
+        selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
+
+        #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
+        selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 1);
+
+        setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
+        setContinuousRunMode(fpga,false)
+
+        if rhd.debug.state==false
+            runBoard(fpga)
+            while (isRunning(fpga))
+            end
+            flushBoard(fpga) 
+        end
      
-    selectAuxCommandBank(rhd,"PortA", "AuxCmd3", 0)   
-    setContinuousRunMode(rhd,true)
+        selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 0)   
+        setContinuousRunMode(fpga,true)
+    end
     nothing  
 end
 
 function open_board(rhd::RHD2000)
 
-    println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall((:okFrontPanel_GetDeviceCount,lib), Int, (Ptr{Void},), rhd.board) 
-    println("Found ", nDevices, " Opal Kelly device(s)")
+    board_num=1
+    for fpga in rhd.fpga
+        println("Scanning USB for Opal Kelly devices...")
+        nDevices=ccall((:okFrontPanel_GetDeviceCount,lib), Int, (Ptr{Void},), fpga.board) 
+        println("Found ", nDevices, " Opal Kelly device(s)")
 
-    #Get Serial Number (I'm assuing there is only one device)
-    serial=Array(UInt8,11)
-    ccall((:okFrontPanel_GetDeviceListSerial,lib), Int32, (Ptr{Void}, Int, Ptr{UInt8}), rhd.board, 0,serial)
-    serial[end]=0
-    serialnumber=bytestring(pointer(serial))
-    println("Serial number of device 0 is ", serialnumber)
+        #Get Serial Number
+        serial=Array(UInt8,11)
+        ccall((:okFrontPanel_GetDeviceListSerial,lib), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, board_num,serial)
+        serial[end]=0
+        serialnumber=bytestring(pointer(serial))
+        println("Serial number of device 0 is ", serialnumber)
     
-    #Open by serial 
-    if (ccall((:okFrontPanel_OpenBySerial, lib), Cint, (Ptr{Void},Ptr{UInt8}),rhd.board,serialnumber)!=0)
-        println("Device could not be opened. Is one connected?")
-        return -2
+        #Open by serial 
+        if (ccall((:okFrontPanel_OpenBySerial, lib), Cint, (Ptr{Void},Ptr{UInt8}),fpga.board,serialnumber)!=0)
+            println("Device could not be opened. Is one connected?")
+            return -2
+        end
+    
+        #configure on-board PLL
+        ccall((:okFrontPanel_LoadDefaultPLLConfiguration,lib), Cint, (Ptr{Void},),fpga.board)
+
+        board_num+=1
     end
-    
-    #configure on-board PLL
-    ccall((:okFrontPanel_LoadDefaultPLLConfiguration,lib), Cint, (Ptr{Void},),rhd.board)
-
     nothing
 end
 
-function uploadFpgaBitfile(rhd::RHD2000)
+function uploadFpgaBitfile(rhd::FPGA)
 
     #upload configuration file
     errorcode=ccall((:okFrontPanel_ConfigureFPGA,lib),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
@@ -158,10 +167,10 @@ function uploadFpgaBitfile(rhd::RHD2000)
     nothing   
 end
 
-function initialize_board(rhd::RHD2000)
+function initialize_board(rhd::FPGA,debug=false)
   
     resetBoard(rhd)
-    setSampleRate(rhd,30000)
+    setSampleRate(rhd,30000,debug)
     selectAuxCommandBank(rhd,"PortA", "AuxCmd1", 0)
     selectAuxCommandBank(rhd,"PortB", "AuxCmd1", 0)
     selectAuxCommandBank(rhd,"PortC", "AuxCmd1", 0)
@@ -234,7 +243,7 @@ function initialize_board(rhd::RHD2000)
     nothing      
 end
 
-function resetBoard(rhd::RHD2000)
+function resetBoard(rhd::FPGA)
 
     SetWireInValue(rhd,WireInResetRun, 0x01, 0x01)
     UpdateWireIns(rhd)
@@ -244,7 +253,7 @@ function resetBoard(rhd::RHD2000)
     nothing   
 end
 
-function setSampleRate(rhd::RHD2000,newSampleRate::Int64)
+function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
 
     if newSampleRate==1000
         M=7
@@ -303,7 +312,7 @@ function setSampleRate(rhd::RHD2000,newSampleRate::Int64)
     rhd.sampleRate=newSampleRate
 
     #Wait for DcmProgDone==1 before reprogramming clock synthesizer
-    while (isDcmProgDone(rhd)==false)   
+    while (isDcmProgDone(rhd,debug)==false)   
     end
    
     #Reprogram clock synthesizer
@@ -313,15 +322,15 @@ function setSampleRate(rhd::RHD2000,newSampleRate::Int64)
     ActivateTriggerIn(rhd,TrigInDcmProg,0)
    
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
-    while (isDataClockLocked(rhd) == false)
+    while (isDataClockLocked(rhd,debug) == false)
     end
 
     nothing                
 end
 
-function isDcmProgDone(rhd::RHD2000)
+function isDcmProgDone(rhd::FPGA,debug::Bool)
 
-    if rhd.debug.state==false
+    if debug==false
         UpdateWireOuts(rhd)
         value=GetWireOutValue(rhd,WireOutDataClkLocked)
         return ((value & 0x0002) > 1)
@@ -330,9 +339,9 @@ function isDcmProgDone(rhd::RHD2000)
     end
 end
 
-function isDataClockLocked(rhd::RHD2000)
+function isDataClockLocked(rhd::FPGA,debug::Bool)
 
-    if rhd.debug.state==false
+    if debug==false
         UpdateWireOuts(rhd)
         value=GetWireOutValue(rhd,WireOutDataClkLocked)
         return ((value & 0x0001) > 0)
@@ -341,7 +350,7 @@ function isDataClockLocked(rhd::RHD2000)
     end
 end
 
-function uploadCommandList(rhd::RHD2000,commandList, auxCommandSlot, bank)
+function uploadCommandList(rhd::FPGA,commandList, auxCommandSlot, bank)
 
     #error checking goes here
 
@@ -363,7 +372,7 @@ function uploadCommandList(rhd::RHD2000,commandList, auxCommandSlot, bank)
     nothing    
 end
 
-function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
+function selectAuxCommandBank(rhd::FPGA,port, commandslot, bank)
 
     #Error checking goes here
 
@@ -390,7 +399,7 @@ function selectAuxCommandBank(rhd::RHD2000,port, commandslot, bank)
     nothing
 end
 
-function selectAuxCommandLength(rhd::RHD2000,commandslot,loopIndex,endIndex)
+function selectAuxCommandLength(rhd::FPGA,commandslot,loopIndex,endIndex)
     
     #Error checking goes here
 
@@ -410,7 +419,7 @@ function selectAuxCommandLength(rhd::RHD2000,commandslot,loopIndex,endIndex)
     nothing  
 end
 
-function setContinuousRunMode(rhd::RHD2000,continuousMode)
+function setContinuousRunMode(rhd::FPGA,continuousMode)
     
     if continuousMode
         SetWireInValue(rhd,WireInResetRun,0x02,0x02)
@@ -423,7 +432,7 @@ function setContinuousRunMode(rhd::RHD2000,continuousMode)
     nothing
 end
 
-function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
+function setMaxTimeStep(rhd::FPGA,maxTimeStep)
 
     maxTimeStep=convert(UInt32, maxTimeStep)
     
@@ -437,9 +446,9 @@ function setMaxTimeStep(rhd::RHD2000,maxTimeStep)
     nothing  
 end
 
-setCableLengthFeet(rhd::RHD2000,port,lengthInFeet::Float64)=setCableLengthMeters(rhd,port,.3048*lengthInFeet)
+setCableLengthFeet(rhd::FPGA,port,lengthInFeet::Float64)=setCableLengthMeters(rhd,port,.3048*lengthInFeet)
 
-function setCableLengthMeters(rhd::RHD2000,port, lengthInMeters::Float64)
+function setCableLengthMeters(rhd::FPGA,port, lengthInMeters::Float64)
 
     tStep=1.0 / (2800.0 * rhd.sampleRate)
 
@@ -457,7 +466,7 @@ function setCableLengthMeters(rhd::RHD2000,port, lengthInMeters::Float64)
     nothing
 end
 
-function setCableDelay(rhd::RHD2000,port, delay)
+function setCableDelay(rhd::FPGA,port, delay)
     
     #error checking goes here
 
@@ -487,9 +496,9 @@ function setCableDelay(rhd::RHD2000,port, delay)
     nothing 
 end
 
-setDspSettle(rhd::RHD2000,enabled)=(SetWireInValue(rhd,WireInResetRun,(enabled ? 0x04 : 0x00),0x04);UpdateWireIns(rhd))
+setDspSettle(rhd::FPGA,enabled)=(SetWireInValue(rhd,WireInResetRun,(enabled ? 0x04 : 0x00),0x04);UpdateWireIns(rhd))
 
-function setDataSource(rhd::RHD2000,stream, dataSource)
+function setDataSource(rhd::FPGA,stream, dataSource)
 
     #error checking goes here
 
@@ -526,7 +535,7 @@ function setDataSource(rhd::RHD2000,stream, dataSource)
     nothing
 end
 
-function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
+function enableDataStream(rhd::FPGA,stream::Int, enabled::Bool)
     
     #error checking goes here
 
@@ -550,7 +559,7 @@ function enableDataStream(rhd::RHD2000,stream::Int, enabled::Bool)
     nothing            
 end
 
-function enableDac(rhd::RHD2000,dacChannel::Int,enabled::Bool)
+function enableDac(rhd::FPGA,dacChannel::Int,enabled::Bool)
 
     #error checking goes here
 
@@ -577,7 +586,7 @@ function enableDac(rhd::RHD2000,dacChannel::Int,enabled::Bool)
     nothing
 end
 
-function selectDacDataStream(rhd::RHD2000,dacChannel, stream)
+function selectDacDataStream(rhd::FPGA,dacChannel, stream)
     #error checking goes here
     
     if dacChannel == 0
@@ -603,7 +612,7 @@ function selectDacDataStream(rhd::RHD2000,dacChannel, stream)
     nothing       
 end
 
-function selectDacDataChannel(rhd::RHD2000,dacChannel::Int, dataChannel)
+function selectDacDataChannel(rhd::FPGA,dacChannel::Int, dataChannel)
     #error checking goes here
 
     if dacChannel == 0
@@ -629,17 +638,17 @@ function selectDacDataChannel(rhd::RHD2000,dacChannel::Int, dataChannel)
     nothing  
 end
 
-setDacManual(rhd::RHD2000,value)=(SetWireInValue(rhd,WireInDacManual,value);UpdateWireIns(rhd))
+setDacManual(rhd::FPGA,value)=(SetWireInValue(rhd,WireInDacManual,value);UpdateWireIns(rhd))
 
-setDacGain(rhd::RHD2000,gain)=(SetWireInValue(rhd,WireInResetRun,gain<<13,0xe000);UpdateWireIns(rhd))
+setDacGain(rhd::FPGA,gain)=(SetWireInValue(rhd,WireInResetRun,gain<<13,0xe000);UpdateWireIns(rhd))
 
-setAudioNoiseSuppress(rhd::RHD2000,noiseSuppress)=(SetWireInValue(rhd,WireInResetRun,noiseSuppress<<6,0x1fc0);UpdateWireIns(rhd))
+setAudioNoiseSuppress(rhd::FPGA,noiseSuppress)=(SetWireInValue(rhd,WireInResetRun,noiseSuppress<<6,0x1fc0);UpdateWireIns(rhd))
 
-setTtlMode(rhd::RHD2000,mode)=(SetWireInValue(rhd,WireInResetRun,mode<<3,0x0008);UpdateWireIns(rhd))
+setTtlMode(rhd::FPGA,mode)=(SetWireInValue(rhd,WireInResetRun,mode<<3,0x0008);UpdateWireIns(rhd))
 
-clearTtlOut(rhd::RHD2000)=(SetWireInValue(rhd,WireInTtlOut, 0x0000);UpdateWireIns(rhd))
+clearTtlOut(rhd::FPGA)=(SetWireInValue(rhd,WireInTtlOut, 0x0000);UpdateWireIns(rhd))
 
-function setDacThreshold(rhd::RHD2000,dacChannel, threshold, trigPolarity)
+function setDacThreshold(rhd::FPGA,dacChannel, threshold, trigPolarity)
 
     #error checking goes here
 
@@ -656,7 +665,7 @@ function setDacThreshold(rhd::RHD2000,dacChannel, threshold, trigPolarity)
     nothing  
 end
 
-function enableExternalFastSettle(rhd::RHD2000,enable)
+function enableExternalFastSettle(rhd::FPGA,enable)
 
     SetWireInValue(rhd,WireInMultiUse, (enable ? 1 : 0))
     UpdateWireIns(rhd)
@@ -665,7 +674,7 @@ function enableExternalFastSettle(rhd::RHD2000,enable)
     nothing  
 end
 
-function setExternalFastSettleChannel(rhd::RHD2000,channel)
+function setExternalFastSettleChannel(rhd::FPGA,channel)
 
     #error checking goes here
 
@@ -676,7 +685,7 @@ function setExternalFastSettleChannel(rhd::RHD2000,channel)
     nothing 
 end
 
-function enableExternalDigOut(rhd::RHD2000,port, enable)
+function enableExternalDigOut(rhd::FPGA,port, enable)
 
     SetWireInValue(rhd,WireInMultiUse, (enable ? 1 : 0))
     UpdateWireIns(rhd)
@@ -694,7 +703,7 @@ function enableExternalDigOut(rhd::RHD2000,port, enable)
     nothing  
 end
 
-function setExternalDigOutChannel(rhd::RHD2000,port, channel)
+function setExternalDigOutChannel(rhd::FPGA,port, channel)
 
     SetWireInValue(rhd,WireInMultiUse,channel)
     UpdateWireIns(rhd)
@@ -712,7 +721,7 @@ function setExternalDigOutChannel(rhd::RHD2000,port, channel)
     nothing 
 end
 
-function getTtlIn(rhd::RHD2000,ttlInArray)
+function getTtlIn(rhd::FPGA,ttlInArray)
 
     UpdateWireOuts(rhd)
     ttlIn=GetWireOutValue(rhd,WireOutTtlIn)
@@ -726,7 +735,7 @@ function getTtlIn(rhd::RHD2000,ttlInArray)
     ttlInArray
 end
 
-function setTtlOut(rhd::RHD2000,ttlOutArray)
+function setTtlOut(rhd::FPGA,ttlOutArray)
 
     ttlOut=Int32(0)
     for i=1:16
@@ -740,7 +749,7 @@ function setTtlOut(rhd::RHD2000,ttlOutArray)
     nothing
 end
 
-function setLedDisplay(rhd::RHD2000,ledArray)
+function setLedDisplay(rhd::FPGA,ledArray)
 
     ledOut=0
     for i=1:8
@@ -755,9 +764,9 @@ function setLedDisplay(rhd::RHD2000,ledArray)
     nothing   
 end
 
-runBoard(rhd::RHD2000)=ActivateTriggerIn(rhd,TrigInSpiStart,0)
+runBoard(rhd::FPGA)=ActivateTriggerIn(rhd,TrigInSpiStart,0)
 
-function isRunning(rhd::RHD2000)
+function isRunning(rhd::FPGA)
 
     UpdateWireOuts(rhd)
     value=GetWireOutValue(rhd,WireOutSpiRunning)
@@ -769,7 +778,7 @@ function isRunning(rhd::RHD2000)
     end       
 end
 
-function flushBoard(rhd::RHD2000)
+function flushBoard(rhd::FPGA)
 
     while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
@@ -782,7 +791,7 @@ function flushBoard(rhd::RHD2000)
     nothing
 end
 
-function numWordsInFifo(rhd::RHD2000)
+function numWordsInFifo(rhd::FPGA)
 
     UpdateWireOuts(rhd)
 
@@ -792,11 +801,13 @@ end
 
 function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
 
-    if (numWordsInFifo(rhd) < rhd.numWords)
-        return false
+    for fpga in rhd.fpga
+        if (numWordsInFifo(fpga) < fpga.numWords)
+            return false
+        end
     end
 
-    numBytesToRead = rhd.numBytesPerBlock * numBlocks
+    numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
 
     if (numBytesToRead > USB_BUFFER_SIZE)
         println("USB buffer size exceeded")
@@ -804,15 +815,21 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
     end
 
     #this is where usbBuffer is filled from Fifo
-    ReadFromPipeOut(rhd,PipeOutData, convert(Clong, numBytesToRead), rhd.usbBuffer)
-
+    #For multiple boards this should be done in parallel
+    if length(rhd.fpga)>1
+        for fpga in rhd.fpga
+            @spawn ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
+        end
+    else
+        ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+    end
+        
     for i=0:(numBlocks-1)
 
         #Move data from usbBuffer to v
         fillFromUsbBuffer!(rhd,i)
 
-        applySorting(rhd)
-        
+        applySorting(rhd)       
     end
 
     return true 
@@ -843,56 +860,59 @@ function applySorting(rhd::RHD2000)
 end
 
 
-function calculateDataBlockSizeInWords(rhd::RHD2000)
+function calculateDataBlockSizeInWords(rhd::FPGA)
     rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)                         
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 end
 
-function calculateDataBlockSizeInBytes(rhd::RHD2000)
+function calculateDataBlockSizeInBytes(rhd::FPGA)
     rhd.numBytesPerBlock=2 * rhd.numWords
     nothing 
 end
 
 function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 
-    index = blockIndex * rhd.numBytesPerBlock + 1
+    for fpga in rhd.fpga
 
-    for t=1:SAMPLES_PER_DATA_BLOCK
+        index = blockIndex * fpga.numBytesPerBlock + 1
+        
+        for t=1:SAMPLES_PER_DATA_BLOCK
 
-	#Header
+	    #Header
 		
-	index+=8
-	rhd.time[t]=convertUsbTimeStamp(rhd.usbBuffer,index)
-	index+=4
+	    index+=8
+	    fpga.time[t]=convertUsbTimeStamp(fpga.usbBuffer,index)
+	    index+=4
 
-	#Auxiliary results
-	index += (2*3*rhd.numDataStreams)
+	    #Auxiliary results
+	    index += (2*3*fpga.numDataStreams)
 
-	#Amplifier
-	for i=1:32
-	    for j=1:rhd.numDataStreams
-		@inbounds rhd.v[t,32*(j-1)+i]=convertUsbWord(rhd.usbBuffer,index)
-		index+=2
+	    #Amplifier
+	    for i=1:32
+	        for j=1:fpga.numDataStreams
+		    @inbounds rhd.v[t,32*(j-1)+i+fpga.shift]=convertUsbWord(fpga.usbBuffer,index)
+		    index+=2
+	        end
 	    end
-	end
 
-	#skip 36 filler word
-	index += (2*rhd.numDataStreams)
+	    #skip 36 filler word
+	    index += (2*fpga.numDataStreams)
         
-	#ADCs
-        for i=1:8
-            @inbounds rhd.adc[t,i]=convertUsbWordu(rhd.usbBuffer,index)     
-            index+=2
+	    #ADCs
+            for i=1:8
+                @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)     
+                index+=2
+            end
+
+	    #TTL in
+            @inbounds fpga.ttlin[t]=convertUsbWordu(fpga.usbBuffer,index)
+            index += 2
+        
+            #TTL out
+            @inbounds fpga.ttlout[t]=convertUsbWordu(fpga.usbBuffer,index)
+	    index += 2	
         end
-
-	#TTL in
-        @inbounds rhd.ttlin[t]=convertUsbWordu(rhd.usbBuffer,index)
-        index += 2
-        
-        #TTL out
-        @inbounds rhd.ttlout[t]=convertUsbWordu(rhd.usbBuffer,index)
-	index += 2	
     end
     nothing
 end
@@ -929,19 +949,17 @@ queueToFile(rhd::RHD2000,sav::SaveNone)=writeTimeStamp(rhd)
 function writeTimeStamp(rhd::RHD2000)
 
     #write spike times and cluster identity   
-    if 1==1
-        f=open(ts_save_file, "a+")
-        write(f,rhd.time[1])
-        @inbounds for i=1:size(rhd.v,2)
-            write(f,i)
-            write(f,rhd.nums[i])
-            for j=1:rhd.nums[i]
-                write(f,reinterpret(Int64,rhd.buf[j,i].inds[1]))
-                write(f,reinterpret(Int64,rhd.buf[j,i].id))
-            end
+    f=open(ts_save_file, "a+")
+    write(f,rhd.fpga[1].time[1])
+    @inbounds for i=1:size(rhd.v,2)
+        write(f,i)
+        write(f,rhd.nums[i])
+        for j=1:rhd.nums[i]
+            write(f,reinterpret(Int64,rhd.buf[j,i].inds[1]))
+            write(f,reinterpret(Int64,rhd.buf[j,i].id))
         end
-        close(f)
     end
+    close(f)
 
     save_task(rhd.task,rhd)
 
@@ -981,29 +999,29 @@ function convertUsbWordu(usbBuffer::AbstractArray{UInt8,1},index::Int64)
     (x2<<8)|x1
 end
 
-function SetWireInValue(rhd::RHD2000, ep, val, mask = 0xffffffff)
+function SetWireInValue(rhd::FPGA, ep, val, mask = 0xffffffff)
     er=ccall((:okFrontPanel_SetWireInValue,lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
 end
 
-function UpdateWireIns(rhd::RHD2000)
+function UpdateWireIns(rhd::FPGA)
     ccall((:okFrontPanel_UpdateWireIns,lib),Void,(Ptr{Void},),rhd.board)
     nothing
 end
 
-function UpdateWireOuts(rhd::RHD2000)
+function UpdateWireOuts(rhd::FPGA)
     ccall((:okFrontPanel_UpdateWireOuts,lib),Void,(Ptr{Void},),rhd.board)
     nothing
 end
 
-function ActivateTriggerIn(rhd::RHD2000,epAddr::UInt8,bit::Int)
+function ActivateTriggerIn(rhd::FPGA,epAddr::UInt8,bit::Int)
     er=ccall((:okFrontPanel_ActivateTriggerIn,lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
 end
 
-function GetWireOutValue(rhd::RHD2000,epAddr::UInt8)
+function GetWireOutValue(rhd::FPGA,epAddr::UInt8)
     value = ccall((:okFrontPanel_GetWireOutValue,lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 end
 
-function ReadFromPipeOut(rhd::RHD2000,epAddr::UInt8, length, data::AbstractArray{UInt8,1})
+function ReadFromPipeOut(rhd::FPGA,epAddr::UInt8, length, data::AbstractArray{UInt8,1})
     ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
     nothing
 end
