@@ -178,17 +178,17 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             for j=50:200:650
                 @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
                 k+=1
+                stroke(ctx)
             end
-        end
-              
-        stroke(ctx);
-        reveal(han.c);
+        end             
+        
+        reveal(han.c)
                 
         if han.num>0
                         
             @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])                      
-            stroke(ctx2);
-            reveal(han.c2);                    
+            stroke(ctx2)
+            reveal(han.c2)                  
         end
     end
 
