@@ -121,7 +121,7 @@ function makegui(r::RHD2000)
     end
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
-    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
+    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
@@ -214,9 +214,9 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing 
 end
 
-function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
+function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
-    han, = user_data 
+    han, rhd = user_data 
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
     
     clear_c(han.c)
@@ -227,12 +227,16 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
        
     end
 
+    #Audio output
+    selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
+    selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
+    
     nothing    
 end
 
 function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han,rhd = user_data
+    han, rhd = user_data
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
@@ -244,6 +248,10 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     #update threshold
     setproperty!(han.sb,:value,round(Int64,rhd.s[han.spike].thres))
+
+    #Audio output
+    selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
+    selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
     
     nothing
 end

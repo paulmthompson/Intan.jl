@@ -64,6 +64,9 @@ function init_board!(rhd::RHD2000)
             stream+=1  
         end
 
+        #Enable DAC
+        enableDac(fpga,0,true)
+
         calculateDataBlockSizeInWords(fpga)
         calculateDataBlockSizeInBytes(fpga)
     
