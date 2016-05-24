@@ -829,13 +829,27 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         
     for i=0:(numBlocks-1)
 
-        #Move data from usbBuffer to v
+        #Move data from usbBuffer to prev
         fillFromUsbBuffer!(rhd,i)
+
+        #Filter
+        applyFilter(rhd)
 
         applySorting(rhd)       
     end
 
     return true 
+end
+
+function applyFilter(rhd::RHD2000)
+
+    for i=1:length(rhd.nums)
+        filt!(sub(rhd.prev,:,i),rhd.filts[i],sub(rhd.v,:,i))
+        for j=1:SAMPLES_PER_DATA_BLOCK
+            rhd.v[j,i]=round(Int16,rhd.prev[j,i])
+        end
+    end
+    nothing
 end
 
 function applySorting(rhd::RHD2000)

@@ -114,7 +114,7 @@ function CreateRHD2000Registers(sampleRate)
 
     #these set RHdac and RLdac variables
     setUpperBandwidth(10000.0,r)
-    setLowerBandwidth(1.0,r)
+    setLowerBandwidth(10.0,r)
     
     powerUpAllAmps(r)
 

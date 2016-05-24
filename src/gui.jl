@@ -52,16 +52,17 @@ function makegui(r::RHD2000)
         tb2=@Label("text2")
     end
 
-    sb=@SpinButton(-1000:1000)
-
+    #Threshold
+    sb=@SpinButton(-10000:10000)
     setproperty!(sb,:value,0)
     tb_threshold=@Label("Threshold")
+    button_thres = @CheckButton("Show")
+    setproperty!(button_thres,:active,true)
 
+    #Gain
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
-
     tb_gain=@Label("Gain")
-
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
 
@@ -77,6 +78,7 @@ function makegui(r::RHD2000)
     push!(hbox,button_run)
     push!(hbox,button_cal)
     push!(hbox,tb_threshold)
+    push!(hbox,button_thres)
     push!(hbox,sb)
     hbox2=@ButtonBox(:h)
     grid[2,2]=hbox2
@@ -109,7 +111,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0)
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -118,6 +120,9 @@ function makegui(r::RHD2000)
         id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
         id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
         id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
+    end
+    if typeof(r.s[1].d)==DetectSignal
+        id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
     end
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
@@ -190,6 +195,14 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             stroke(ctx2)
             reveal(han.c2)                  
         end
+    end
+
+    han.draws+=1
+
+    if han.draws>1000
+        han.draws=0
+        clear_c(han.c)
+        clear_c(han.c2)
     end
 
     #write to disk, clear buffers
@@ -287,6 +300,36 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    mywidget = convert(CheckButton, widget)
+	          
+    if getproperty(mywidget,:active,Bool)==true
+        plot_thres_abs(han,rhd)
+    end
+
+    nothing
+end
+
+function plot_thres_abs(han::Gui_Handles,rhd::RHD2000)
+
+    ctx = getgc(han.c2)
+
+    thres=rhd.s[han.spike].thres
+    move_to(ctx,1,thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+    line_to(ctx,800,thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+
+    move_to(ctx,1,-1*thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+    line_to(ctx,800,-1*thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+
+    set_source_rgb(ctx,0,0,0)
+    stroke(ctx)
+    
+    nothing
+end
+
 function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
@@ -305,16 +348,16 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     gainval=getproperty(han.gainbox,:value,Int)
 
     if mygain==true
-        han.scale[:,1]=gainval/100
-        han.scale[:,2]=.25*gainval/100
-        han.scale[:,3]=gainval/100
+        han.scale[:,1]=gainval/1000
+        han.scale[:,2]=.25*gainval/1000
+        han.scale[:,3]=gainval/1000
 
-        @inbounds han.offset[:,1]=mean(gainval/100.*rhd.v,1)
+        @inbounds han.offset[:,1]=mean(gainval/1000.*rhd.v,1)
         @inbounds han.offset[:,2]=han.offset[:,1].*.25
     else
-        han.scale[han.spike,1]=gainval/100
-        han.scale[han.spike,2]=.25*gainval/100
-        han.scale[han.spike,3]=gainval/100
+        han.scale[han.spike,1]=gainval/1000
+        han.scale[han.spike,2]=.25*gainval/1000
+        han.scale[han.spike,3]=gainval/1000
 
         @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
         @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])

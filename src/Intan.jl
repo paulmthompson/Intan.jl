@@ -1,7 +1,7 @@
 
 module Intan
 
-using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD
+using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug
 

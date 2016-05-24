@@ -65,7 +65,7 @@ myfpga=FPGA(1,myamp)
 myrhd=makeRHD([myfpga],"single",myt,debug=d,sav=mys);
 
 facts() do
-    @fact myrhd.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
+    @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
     @fact length(myrhd.s) --> 64
     @fact typeof(myrhd.s) --> Array{SpikeSorting.Sorting_1,1}
     @fact typeof(myrhd.buf) --> Array{SpikeSorting.Spike,2}

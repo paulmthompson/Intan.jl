@@ -52,7 +52,7 @@ function FPGA(board_id::Int64,amps::Array{Int64,1})
     end
 end
 
-function gen_rhd(v,s,buf,nums,tas,sav)
+function gen_rhd(v,prev,s,buf,nums,tas,sav,filts)
 
     global num_rhd::Int64
     num_rhd+=1
@@ -62,6 +62,7 @@ function gen_rhd(v,s,buf,nums,tas,sav)
         type $(symbol("RHD200$k")) <: RHD2000
             fpga::Array{FPGA,1}
             v::$(typeof(v))
+            prev::$(typeof(prev))
             s::$(typeof(s))
             buf::$(typeof(buf))
             nums::$(typeof(nums))
@@ -70,11 +71,12 @@ function gen_rhd(v,s,buf,nums,tas,sav)
             cal::Int64
             task::$(typeof(tas))
             save::$(typeof(sav))
+            filts::$(typeof(filts))
         end
 
-        function make_rhd(fpga::Array{FPGA,1},v::$(typeof(v)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)))
+        function make_rhd(fpga::Array{FPGA,1},v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)))
             
-            $(symbol("RHD200$k"))(fpga,v,s,buf,nums,debug,0,0,tas,sav)
+            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts)
         end
     end
 end
@@ -102,18 +104,29 @@ function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=defa
     if debug.state==true
         params=debug_sort
     end
-      
+
+    notches=[make_notch(59,61,30000) for i=1:numchannels]
+    
     if sort=="single"
         v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
+        prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK,numchannels)
         s=create_multi(params...,numchannels)
         (buf,nums)=output_buffer(numchannels)      
     elseif sort=="parallel"
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
+        prev=convert(SharedArray{Float64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         s=create_multi(params...,numchannels,1:1)
         (buf,nums)=output_buffer(numchannels,true)       
     end
-    gen_rhd(v,s,buf,nums,mytask,sav)
-    make_rhd(fpga,v,s,buf,nums,debug,mytask,sav)
+    gen_rhd(v,prev,s,buf,nums,mytask,sav,notches)
+    make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches)
+end
+
+function make_notch(wn1,wn2,sr)
+    responsetype = Bandstop(wn1,wn2; fs=sr)
+    designmethod = Butterworth(4)
+    df1=digitalfilter(responsetype, designmethod)
+    DF2TFilter(df1)
 end
 
 type Gui_Handles
@@ -140,4 +153,5 @@ type Gui_Handles
     tb2::Gtk.GtkLabelLeaf
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf
+    draws::Int64
 end
