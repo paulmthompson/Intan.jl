@@ -243,6 +243,11 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #Audio output
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
+
+    #Display Gain
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
+
+    #Display Threshold
     
     nothing    
 end
@@ -265,6 +270,11 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #Audio output
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
+
+    #Display Gain
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
+
+    #Display threshold if box checked
     
     nothing
 end

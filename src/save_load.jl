@@ -116,6 +116,14 @@ function save_jld(num_channel::Int64,biname="ts.bin",savename="spikes.jld",tmin=
     spikes
 end
 
+#=
+Methods to convert data waveforms to PLX so it can be used with offline sorter.
+Thanks to Simon Kornblith for linking to description of PLX data structures here:
+http://hardcarve.com/wikipic/PlexonDataFileStructureDocumentation.pdf
+
+These methods are specific for 
+=#
+
 type PL_FileHeader
 	MagicNumber::UInt32
 	Version::Int32
