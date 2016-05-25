@@ -236,8 +236,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     clear_c(han.c2)
     
     if han.num16>0
-        han.spike=16*han.num16-16+han.num
-       
+        han.spike=16*han.num16-16+han.num      
     end
 
     #Audio output

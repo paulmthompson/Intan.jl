@@ -29,7 +29,12 @@ facts() do
 
     #Register 4
     @fact r.weakMiso --> 1
-    @fact r.twosComp --> 1
+    @unix_only begin
+        @fact r.twosComp --> 1
+    end
+    @windows_only begin
+        @fact r.twosCom --> 0
+    end
     @fact r.absMode --> 0
     @fact r.dspEn --> 1
     @fact r.dspCutoffFreq --> 12

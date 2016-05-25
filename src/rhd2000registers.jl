@@ -88,7 +88,14 @@ function CreateRHD2000Registers(sampleRate)
 
     #Register 4 variables
     r.weakMiso=1
-    r.twosComp=1 #This is weird
+
+    #I'm not totally sure, but I think the .so library requires this to be true and Windows requires it to be false. Don't really know what is going on.
+    @windows_only begin
+        r.twosComp=0 #This is weird
+    end
+    @unix_only begin
+        r.twosComp=1
+    end
     r.absMode=0
     enableDsp(true,r)
     setDspCutoffFreq(1.0,r)

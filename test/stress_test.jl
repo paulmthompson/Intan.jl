@@ -42,36 +42,38 @@ function total_test(amps)
     stress_times=stress_test(myrhd,myhandles)
 end
 
+function perform_test()
+    st=zeros(Float64,8)
 
-st=zeros(Float64,8)
+    myamp=RHD2132("PortA1")
+    st[1]=mean(total_test(myamp))
 
-myamp=RHD2132("PortA1")
-st[1]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortA2"))
+    st[2]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortA2"))
-st[2]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortB1"))
+    st[3]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortB1"))
-st[3]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortB2"))
+    st[4]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortB2"))
-st[4]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortC1"))
+    st[5]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortC1"))
-st[5]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortC2"))
+    st[6]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortC2"))
-st[6]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortD1"))
+    st[7]=mean(total_test(myamp))
 
-append!(myamp,RHD2132("PortD1"))
-st[7]=mean(total_test(myamp))
-
-append!(myamp,RHD2132("PortD2"))
-st[8]=mean(total_test(myamp))
+    append!(myamp,RHD2132("PortD2"))
+    st[8]=mean(total_test(myamp))
 
 
-#normalize
-st=st./(Intan.SAMPLES_PER_DATA_BLOCK/30000)
-println(st)
+    #normalize
+    st=st./(Intan.SAMPLES_PER_DATA_BLOCK/30000)
+    println(st)
+
+end
 
 end
