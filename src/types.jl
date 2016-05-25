@@ -109,12 +109,12 @@ function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=defa
     
     if sort=="single"
         v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
-        prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK,numchannels)
+        prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
         s=create_multi(params...,numchannels)
         (buf,nums)=output_buffer(numchannels)      
     elseif sort=="parallel"
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
-        prev=convert(SharedArray{Float64,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
+        prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
         s=create_multi(params...,numchannels,1:1)
         (buf,nums)=output_buffer(numchannels,true)       
     end

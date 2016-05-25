@@ -829,7 +829,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         
     for i=0:(numBlocks-1)
 
-        #Move data from usbBuffer to prev
+        #Move data from usbBuffer to v
         fillFromUsbBuffer!(rhd,i)
 
         #Filter
@@ -843,10 +843,13 @@ end
 
 function applyFilter(rhd::RHD2000)
 
-    for i=1:length(rhd.nums)
-        filt!(sub(rhd.prev,:,i),rhd.filts[i],sub(rhd.v,:,i))
+    for i=1:size(rhd.v,2)
         for j=1:SAMPLES_PER_DATA_BLOCK
-            rhd.v[j,i]=round(Int16,rhd.prev[j,i])
+            rhd.prev[j]=convert(Float64,rhd.v[j,i])
+        end
+        filt!(rhd.prev,rhd.filts[i],rhd.prev)
+        for j=1:SAMPLES_PER_DATA_BLOCK
+            rhd.v[j,i]=round(Int16,rhd.prev[j])
         end
     end
     nothing

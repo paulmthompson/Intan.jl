@@ -18,6 +18,11 @@ end
 function readDataBlocks(rhd::RHD2000)
 
     fillFromOffline!(rhd)
+
+    #Filter
+    applyFilter(rhd)
+
+    #Sort
     applySorting(rhd)
     nothing
 end
