@@ -154,4 +154,5 @@ type Gui_Handles
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf
     draws::Int64
+    thres_all::Gtk.GtkCheckButtonLeaf
 end

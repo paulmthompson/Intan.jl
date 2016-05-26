@@ -24,7 +24,7 @@ function readDataBlocks(rhd::RHD2000)
 
     #Sort
     applySorting(rhd)
-    nothing
+    true
 end
 
 function fillFromOffline!(rhd::RHD2000)

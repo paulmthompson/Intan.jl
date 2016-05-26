@@ -55,14 +55,14 @@ function makegui(r::RHD2000)
     #Threshold
     sb=@SpinButton(-10000:10000)
     setproperty!(sb,:value,0)
-    tb_threshold=@Label("Threshold")
     button_thres = @CheckButton("Show")
-    setproperty!(button_thres,:active,true)
+    setproperty!(button_thres,:active,false)
+    button_thres_all = @CheckButton("All Channels")
+    setproperty!(button_thres_all,:active,false)
 
     #Gain
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
-    tb_gain=@Label("Gain")
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
 
@@ -71,21 +71,33 @@ function makegui(r::RHD2000)
     button_sort3 = @Button("Show Windows")
     
     #Arrangement of stuff on GUI
+    #First Row
     grid = @Grid()
     hbox = @ButtonBox(:h)
     grid[2,1]=hbox
     push!(hbox,button_init)
     push!(hbox,button_run)
     push!(hbox,button_cal)
-    push!(hbox,tb_threshold)
-    push!(hbox,button_thres)
-    push!(hbox,sb)
+    frame1=@Frame("Threshold")
+    push!(hbox,frame1)
+    hbox1_1=@ButtonBox(:h)
+    push!(frame1,hbox1_1)
+    push!(hbox1_1,button_thres)
+    push!(hbox1_1,button_thres_all)
+    push!(hbox1_1,sb)
+
+    #Second Row
     hbox2=@ButtonBox(:h)
-    grid[2,2]=hbox2
-    push!(hbox2,tb_gain)
-    push!(hbox2,sb2)
-    push!(hbox2,button_gain)
-    push!(hbox2,button_auto)
+    grid[3,1]=hbox2
+    frame2=@Frame("Gain")
+    push!(hbox2,frame2)
+    hbox2_1=@ButtonBox(:h)
+    push!(frame2,hbox2_1)
+    push!(hbox2_1,sb2)
+    push!(hbox2_1,button_gain)
+    push!(hbox2_1,button_auto)
+
+    #Row 3
     hbox3=@ButtonBox(:h)
     grid[2,3]=hbox3
     push!(hbox3,tb1)
@@ -111,7 +123,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.25
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all)
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -167,9 +179,9 @@ end
 function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     #get spikes and sort
     if rhd.debug.state==false
-        readDataBlocks(rhd,1)
+        myread=readDataBlocks(rhd,1)
     else
-        readDataBlocks(rhd)
+        myread=readDataBlocks(rhd)
     end
             
     #process and output (e.g. kalman, spike triggered stim calc, etc)
@@ -206,8 +218,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     end
 
     #write to disk, clear buffers
-    queueToFile(rhd,rhd.save)
-
+    if myread
+        queueToFile(rhd,rhd.save)
+    end
     sleep(.00001)
     nothing
 end
@@ -343,7 +356,15 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    rhd.s[han.spike].thres=getproperty(han.sb,:value,Int)
+    if getproperty(han.thres_all,:active,Bool)
+        @inbounds rhd.s[han.spike].thres=getproperty(han.sb,:value,Int)
+    else
+        mythres=getproperty(han.sb,:value,Int)
+        @inbounds for i=1:length(rhd.s)
+            rhd.s[i].thres=mythres
+        end
+    end
+            
 
     nothing
 end
