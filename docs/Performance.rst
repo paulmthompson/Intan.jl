@@ -55,6 +55,10 @@ Of the above steps, transferring data from the acquisition board to the experime
 
 Rather than report units of processing "time", we are going to normalize values to the sampling latency. For instance, if we are bringing data over from the data acquisition board every 30 ms, and a processing step takes 15 ms, we will report this value as using "50% of processing window".  Therefore, values above 100% are strictly impossible to implement, as the entire process (data transfer + data processing) must be less than 100%.
 
+====================
+Overall Performance
+====================
+
 ==============
 Data Transfer
 ==============
@@ -78,4 +82,18 @@ We can add the possibility of more channels in a few ways. First we could decrea
 .. image:: pics/dtvlatency_i5_usb2_20k.png
 
 
+==========
+Filtering
+==========
 
+==============
+Spike Sorting
+==============
+
+=========
+Plotting
+=========
+
+=======
+Saving
+=======
