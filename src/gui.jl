@@ -204,17 +204,17 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         if han.num>0
                         
             @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])                      
-            stroke(ctx2)
-            reveal(han.c2)                  
+            stroke(ctx2)                
         end
     end
-
+    reveal(han.c2)
     han.draws+=1
 
     if han.draws>1000
         han.draws=0
         clear_c(han.c)
         clear_c(han.c2)
+        highlight_channel(han,rhd)
     end
 
     #write to disk, clear buffers
@@ -260,6 +260,9 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
 
     #Display Threshold
+
+    #Show which channel is highligted on 16 channel display
+    highlight_channel(han,rhd)
     
     nothing    
 end
@@ -287,6 +290,9 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
 
     #Display threshold if box checked
+
+    #Show which channel is highlighted on 16 channel display
+    highlight_channel(han,rhd)
     
     nothing
 end
@@ -320,6 +326,28 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     nothing
+end
+
+function highlight_channel(han::Gui_Handles,rhd::RHD2000)
+
+    ctx = getgc(han.c)
+    
+    if han.num16>0
+        myy=rem(han.num-1,4)*200+1
+        myx=div(han.num-1,4)*200+1
+    end
+
+    move_to(ctx,myx,myy)
+    line_to(ctx,myx+199,myy)
+    line_to(ctx,myx+199,myy+199)
+    line_to(ctx,myx,myy+199)
+    line_to(ctx,myx,myy)
+
+    set_source_rgb(ctx,0,0,0)
+    stroke(ctx)
+
+    nothing
+    
 end
 
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
