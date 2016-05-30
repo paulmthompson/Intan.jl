@@ -20,8 +20,7 @@ function makegui(r::RHD2000)
     
     @guarded draw(c) do widget
     ctx = getgc(c)
-    set_source_rgb(ctx,1,1,1)
-    paint(ctx)
+    clear_c(c)
     end
     show(c)
        
@@ -31,13 +30,12 @@ function makegui(r::RHD2000)
     setproperty!(adj,:value,1)
     
     #One channel can be magnified for easier inspection
-    c2=@Canvas(800,800) #Single channel to focus on
+    c2=@Canvas(600,800) #Single channel to focus on
     c2_slider=@Scale(false, 1:16)
     
     @guarded draw(c2) do widget
     ctx = getgc(c2)
-    set_source_rgb(ctx,1,1,1)
-    paint(ctx)
+    clear_c2(c2)
     end
     show(c2)
     
@@ -192,7 +190,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
                     
         k=16*han.num16-15
         for i=50:200:650
-            for j=50:200:650
+            for j=100:200:700
                 @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
                 k+=1
                 stroke(ctx)
@@ -213,7 +211,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     if han.draws>1000
         han.draws=0
         clear_c(han.c)
-        clear_c(han.c2)
+        clear_c2(han.c2)
         highlight_channel(han,rhd)
     end
 
@@ -246,7 +244,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
     
     clear_c(han.c)
-    clear_c(han.c2)
+    clear_c2(han.c2)
     
     if han.num16>0
         han.spike=16*han.num16-16+han.num      
@@ -273,7 +271,7 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
-    clear_c(han.c2)
+    clear_c2(han.c2)
 
     if han.num16>0
         han.spike=16*han.num16-16+han.num
@@ -335,16 +333,16 @@ function highlight_channel(han::Gui_Handles,rhd::RHD2000)
     if han.num16>0
         myy=rem(han.num-1,4)*200+1
         myx=div(han.num-1,4)*200+1
+		
+		move_to(ctx,myx,myy)
+		line_to(ctx,myx+199,myy)
+		line_to(ctx,myx+199,myy+199)
+		line_to(ctx,myx,myy+199)
+		line_to(ctx,myx,myy)
+
+		set_source_rgb(ctx,1,0,0)
+		stroke(ctx)
     end
-
-    move_to(ctx,myx,myy)
-    line_to(ctx,myx+199,myy)
-    line_to(ctx,myx+199,myy+199)
-    line_to(ctx,myx,myy+199)
-    line_to(ctx,myx,myy)
-
-    set_source_rgb(ctx,0,0,0)
-    stroke(ctx)
 
     nothing
     

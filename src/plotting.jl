@@ -42,7 +42,7 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             @inbounds move_to(ctx,51,(rhd.v[rhd.buf[i,spike_num].inds[1],spike_num])*s+400-o);
             
             #draw line
-            count=63
+            count=1
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+400-o);
                 set_line_width(ctx,0.5);
@@ -60,6 +60,26 @@ Reset Canvas
 =#
 
 function clear_c(myc::Gtk.GtkCanvas)
+        
+    ctx = getgc(myc)
+    set_source_rgb(ctx,1,1,1)
+    paint(ctx)
+
+	for x in [200, 400, 600]
+		move_to(ctx,x,1)
+		line_to(ctx,x,800)
+	end
+	for y in [200,400,600]
+		move_to(ctx,1,y)
+		line_to(ctx,800,y)
+	end
+	set_source_rgb(ctx,0,0,0)
+	stroke(ctx)
+	
+    nothing
+end
+
+function clear_c2(myc::Gtk.GtkCanvas)
         
     ctx = getgc(myc)
     set_source_rgb(ctx,1,1,1)
