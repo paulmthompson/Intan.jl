@@ -96,10 +96,11 @@ function makegui(r::RHD2000)
     push!(vbox1_2,frame1_3)
     vbox1_3_1=@ButtonBox(:v)
     push!(frame1_3,vbox1_3_1)
+	push!(vbox1_3_1,sb)
+	push!(vbox1_3_1,button_thres_all)
     push!(vbox1_3_1,button_thres)
-    push!(vbox1_3_1,button_thres_all)
-    push!(vbox1_3_1,sb)
-	
+    
+ 
 	#Cluster
 	button_sort1 = @Button("Delete Cluster")
     button_sort2 = @Button("Delete Window")
