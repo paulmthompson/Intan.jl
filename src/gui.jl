@@ -16,7 +16,7 @@ function makegui(r::RHD2000)
     setproperty!(button_cal,:active,true)
 
     #16 channels at a time can be visualized on the right side
-    c=@Canvas(800,800) #16 channels
+    c=@Canvas(500,800) #16 channels
     
     @guarded draw(c) do widget
     ctx = getgc(c)
@@ -50,63 +50,75 @@ function makegui(r::RHD2000)
         tb2=@Label("text2")
     end
 
-    #Threshold
+	#GUI ARRANGEMENT
+	grid = @Grid()
+	
+	#COLUMN 1
+	
+	#ROW 1
+
+    vbox1_1 = @ButtonBox(:v)
+    grid[1,1]=vbox1_1
+    push!(vbox1_1,button_init)
+    push!(vbox1_1,button_run)
+    push!(vbox1_1,button_cal)
+	
+	#ROW 2
+	#Gain
+    sb2=@SpinButton(1:1000)
+    setproperty!(sb2,:value,1)
+    button_gain = @CheckButton("All Channels")
+    setproperty!(button_gain,:active,false)
+	
+	vbox1_2=@ButtonBox(:v)
+    grid[1,2]=vbox1_2
+    frame1_2=@Frame("Gain")
+    push!(vbox1_2,frame1_2)
+    vbox1_2_1=@ButtonBox(:v)
+    push!(frame1_2,vbox1_2_1)
+    push!(vbox1_2_1,sb2)
+    push!(vbox1_2_1,button_gain)
+    push!(vbox1_2_1,button_auto)
+	
+	
+	#Threshold
     sb=@SpinButton(-10000:10000)
     setproperty!(sb,:value,0)
     button_thres = @CheckButton("Show")
     setproperty!(button_thres,:active,false)
     button_thres_all = @CheckButton("All Channels")
     setproperty!(button_thres_all,:active,false)
-
-    #Gain
-    sb2=@SpinButton(1:1000)
-    setproperty!(sb2,:value,1)
-    button_gain = @CheckButton("All Channels")
-    setproperty!(button_gain,:active,false)
-
-    button_sort1 = @Button("Delete Cluster")
+    frame1_3=@Frame("Threshold")
+    push!(vbox1_2,frame1_3)
+    vbox1_3_1=@ButtonBox(:v)
+    push!(frame1_3,vbox1_3_1)
+    push!(vbox1_3_1,button_thres)
+    push!(vbox1_3_1,button_thres_all)
+    push!(vbox1_3_1,sb)
+	
+	#Cluster
+	button_sort1 = @Button("Delete Cluster")
     button_sort2 = @Button("Delete Window")
     button_sort3 = @Button("Show Windows")
-    
-    #Arrangement of stuff on GUI
-    #First Row
-    grid = @Grid()
-    hbox = @ButtonBox(:h)
-    grid[2,1]=hbox
-    push!(hbox,button_init)
-    push!(hbox,button_run)
-    push!(hbox,button_cal)
-    frame1=@Frame("Threshold")
-    push!(hbox,frame1)
-    hbox1_1=@ButtonBox(:h)
-    push!(frame1,hbox1_1)
-    push!(hbox1_1,button_thres)
-    push!(hbox1_1,button_thres_all)
-    push!(hbox1_1,sb)
-
-    #Second Row
-    hbox2=@ButtonBox(:h)
-    grid[3,1]=hbox2
-    frame2=@Frame("Gain")
-    push!(hbox2,frame2)
-    hbox2_1=@ButtonBox(:h)
-    push!(frame2,hbox2_1)
-    push!(hbox2_1,sb2)
-    push!(hbox2_1,button_gain)
-    push!(hbox2_1,button_auto)
-
-    #Row 3
-    hbox3=@ButtonBox(:h)
-    grid[2,3]=hbox3
-    push!(hbox3,tb1)
-    push!(hbox3,tb2)
-    push!(hbox3,button_sort1)
-    push!(hbox3,button_sort2)
-    push!(hbox3,button_sort3)
-    grid[3,4]=c
-    grid[3,5]=c_slider
-    grid[2,4]=c2
-    grid[2,5]=c2_slider
+	frame1_4=@Frame("Clustering")
+	push!(vbox1_2,frame1_4)
+    vbox1_3_2=@ButtonBox(:v)
+    push!(frame1_4,vbox1_3_2)
+    push!(vbox1_3_2,tb1)
+    push!(vbox1_3_2,tb2)
+    push!(vbox1_3_2,button_sort1)
+    push!(vbox1_3_2,button_sort2)
+    push!(vbox1_3_2,button_sort3)
+	
+	#Event Plotting
+	
+		
+	#COLUMN 2   
+	#ROW 2
+    grid[2,2]=c2
+    grid[2,3]=c2_slider
+    grid[3,2]=c
+    grid[3,3]=c_slider
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -115,10 +127,10 @@ function makegui(r::RHD2000)
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
     scales=ones(Float64,size(r.v,2),3)
-    scales[:,2]=scales[:,2].*.25
+    scales[:,2]=scales[:,2].*.2
     offs=zeros(Float64,size(r.v,2),2)
     offs[:,1]=squeeze(mean(r.v,1),1)
-    offs[:,2]=offs[:,1]*.25
+    offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
     handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all)
@@ -189,8 +201,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     if han.num16>0
                     
         k=16*han.num16-15
-        for i=50:200:650
-            for j=100:200:700
+        for i=1:124:375
+            for j=75:125:450
                 @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
                 k+=1
                 stroke(ctx)
@@ -229,7 +241,7 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     #scale
     @inbounds han.scale[han.spike,1]=abs(1./mean(rhd.v[:,han.spike]))
-    @inbounds han.scale[han.spike,2]=.25*han.scale[han.spike,1]
+    @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
     @inbounds han.scale[han.spike,3]=han.scale[han.spike,1]
 
     @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
@@ -319,7 +331,7 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
 
         #scale
         han.scale[:,1]=abs(1./mean(rhd.v,1)')
-        han.scale[:,2]=.25*han.scale[:,1]
+        han.scale[:,2]=.2*han.scale[:,1]
         han.scale[:,3]=han.scale[:,1]
     end
 
@@ -331,13 +343,13 @@ function highlight_channel(han::Gui_Handles,rhd::RHD2000)
     ctx = getgc(han.c)
     
     if han.num16>0
-        myy=rem(han.num-1,4)*200+1
-        myx=div(han.num-1,4)*200+1
+        myy=rem(han.num-1,4)*125+1
+        myx=div(han.num-1,4)*125+1
 		
 		move_to(ctx,myx,myy)
-		line_to(ctx,myx+199,myy)
-		line_to(ctx,myx+199,myy+199)
-		line_to(ctx,myx,myy+199)
+		line_to(ctx,myx+124,myy)
+		line_to(ctx,myx+124,myy+124)
+		line_to(ctx,myx,myy+124)
 		line_to(ctx,myx,myy)
 
 		set_source_rgb(ctx,1,0,0)
@@ -366,11 +378,11 @@ function plot_thres_abs(han::Gui_Handles,rhd::RHD2000)
     ctx = getgc(han.c2)
 
     thres=rhd.s[han.spike].thres
-    move_to(ctx,1,thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
-    line_to(ctx,800,thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+    move_to(ctx,1,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    line_to(ctx,600,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
 
-    move_to(ctx,1,-1*thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
-    line_to(ctx,800,-1*thres*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+    move_to(ctx,1,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    line_to(ctx,600,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
 
     set_source_rgb(ctx,0,0,0)
     stroke(ctx)
@@ -405,14 +417,14 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if mygain==true
         han.scale[:,1]=gainval/1000
-        han.scale[:,2]=.25*gainval/1000
+        han.scale[:,2]=.2*gainval/1000
         han.scale[:,3]=gainval/1000
 
         @inbounds han.offset[:,1]=mean(gainval/1000.*rhd.v,1)
-        @inbounds han.offset[:,2]=han.offset[:,1].*.25
+        @inbounds han.offset[:,2]=han.offset[:,1].*.2
     else
         han.scale[han.spike,1]=gainval/1000
-        han.scale[han.spike,2]=.25*gainval/1000
+        han.scale[han.spike,2]=.2*gainval/1000
         han.scale[han.spike,3]=gainval/1000
 
         @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
@@ -487,8 +499,8 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         x2=indmin(abs(myx-event.x))
         s=han.scale[han.spike,1]
         o=han.offset[han.spike,1]
-        y1=(han.mi[2]-400+o)/s
-        y2=(event.y-400+o)/s
+        y1=(han.mi[2]-300+o)/s
+        y2=(event.y-300+o)/s
     
         #ensure that left most point is first
         if x1>x2
@@ -567,8 +579,8 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             x2=(rhd.s[han.spike].c.win[i][j].x2-1)*12+1
             y1=rhd.s[han.spike].c.win[i][j].y1
             y2=rhd.s[han.spike].c.win[i][j].y2
-            move_to(ctx,x1,y1*han.scale[han.spike,1]+400-han.offset[han.spike,1])
-            line_to(ctx,x2,y2*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+            move_to(ctx,x1,y1*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+            line_to(ctx,x2,y2*han.scale[han.spike,1]+300-han.offset[han.spike,1])
             set_line_width(ctx,5.0)
             select_color(ctx,i+1)
             stroke(ctx)
