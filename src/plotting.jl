@@ -42,10 +42,10 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             @inbounds move_to(ctx,1,(rhd.v[rhd.buf[i,spike_num].inds[1],spike_num])*s+300-o);
             
             #draw line
-            count=13
+            count=11
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+300-o);
-                count+=12
+                count+=10
             end
 			
 			count=(rhd.buf[i,spike_num].id-1)*100+10
@@ -103,7 +103,7 @@ function clear_c2(myc::Gtk.GtkCanvas)
     paint(ctx)
 	
 	move_to(ctx,1,600)
-	line_to(ctx,600,600)
+	line_to(ctx,500,600)
 	set_source_rgb(ctx,0,0,0)
 	stroke(ctx)
         

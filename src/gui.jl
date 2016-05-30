@@ -30,7 +30,7 @@ function makegui(r::RHD2000)
     setproperty!(adj,:value,1)
     
     #One channel can be magnified for easier inspection
-    c2=@Canvas(600,800) #Single channel to focus on
+    c2=@Canvas(500,800) #Single channel to focus on
     c2_slider=@Scale(false, 1:16)
     
     @guarded draw(c2) do widget
@@ -222,7 +222,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     reveal(han.c2)
     han.draws+=1
 
-    if han.draws>600
+    if han.draws>500
         han.draws=0
         clear_c(han.c)
         clear_c2(han.c2)
@@ -381,10 +381,10 @@ function plot_thres_abs(han::Gui_Handles,rhd::RHD2000)
 
     thres=rhd.s[han.spike].thres
     move_to(ctx,1,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-    line_to(ctx,600,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    line_to(ctx,500,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
 
     move_to(ctx,1,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-    line_to(ctx,600,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    line_to(ctx,500,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
 
     set_source_rgb(ctx,0,0,0)
     stroke(ctx)
@@ -496,7 +496,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         event = unsafe_load(param_tuple)
     
         #Convert canvas coordinates to voltage vs time coordinates
-        myx=collect(1:12:600)
+        myx=collect(1:10:500)
         x1=indmin(abs(myx-han.mi[1]))
         x2=indmin(abs(myx-event.x))
         s=han.scale[han.spike,1]
