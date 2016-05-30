@@ -482,7 +482,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         event = unsafe_load(param_tuple)
     
         #Convert canvas coordinates to voltage vs time coordinates
-        myx=collect(51:12:600)
+        myx=collect(1:12:600)
         x1=indmin(abs(myx-han.mi[1]))
         x2=indmin(abs(myx-event.x))
         s=han.scale[han.spike,1]
@@ -563,12 +563,12 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         #loop over windows
         for j=1:length(rhd.s[han.spike].c.win[i])
 
-            x1=rhd.s[han.spike].c.win[i][j].x1
-            x2=rhd.s[han.spike].c.win[i][j].x2
+            x1=(rhd.s[han.spike].c.win[i][j].x1-1)*12+1
+            x2=(rhd.s[han.spike].c.win[i][j].x2-1)*12+1
             y1=rhd.s[han.spike].c.win[i][j].y1
             y2=rhd.s[han.spike].c.win[i][j].y2
-            move_to(ctx,x1*12+50,y1*han.scale[han.spike,1]+400-han.offset[han.spike,1])
-            line_to(ctx,x2*12+50,y2*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+            move_to(ctx,x1,y1*han.scale[han.spike,1]+400-han.offset[han.spike,1])
+            line_to(ctx,x2,y2*han.scale[han.spike,1]+400-han.offset[han.spike,1])
             set_line_width(ctx,5.0)
             select_color(ctx,i+1)
             stroke(ctx)
