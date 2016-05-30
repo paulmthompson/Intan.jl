@@ -19,11 +19,11 @@ function draw_spike(rhd::RHD2000,xoff::Int64,yoff::Int64,spike_num::Int64,ctx::C
             count=3
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count+xoff,rhd.v[k,spike_num]*s+yoff-o);
-                set_line_width(ctx,0.5);
-                @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=2
             end
-
+			set_line_width(ctx,0.5);
+            @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
+			stroke(ctx)
         end
     end
     nothing
@@ -33,7 +33,7 @@ end
 Single maximized channel plotting
 =#
 
-function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Float64,o::Float64)
+function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Float64,o::Float64,reads::Int64)
 
     for i=1:rhd.nums[spike_num]
 
@@ -45,10 +45,25 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             count=13
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
                 @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+300-o);
-                set_line_width(ctx,0.5);
-                @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
                 count+=12
             end
+			
+			count=(rhd.buf[i,spike_num].id-1)*100+10
+			@inbounds move_to(ctx,count,(rhd.v[rhd.buf[i,spike_num].inds[1],spike_num])*.2*s+650-.2*o);
+            
+            #draw separted cluster
+            count+=2
+            @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
+                @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*.2*s+650-.2*o);              
+                count+=2
+            end
+			
+			@inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+700)
+			@inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+720)
+			
+			set_line_width(ctx,0.5);
+			@inbounds select_color(ctx,rhd.buf[i,spike_num].id)
+			stroke(ctx)
         end
     end
    

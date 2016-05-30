@@ -57,21 +57,25 @@ function makegui(r::RHD2000)
 	
 	#ROW 1
 
-    vbox1_1 = @ButtonBox(:v)
-    grid[1,1]=vbox1_1
-    push!(vbox1_1,button_init)
-    push!(vbox1_1,button_run)
-    push!(vbox1_1,button_cal)
 	
 	#ROW 2
+	vbox1_2=@ButtonBox(:v)
+    grid[1,2]=vbox1_2
+	
+	frame_control=@Frame("Control")
+    push!(vbox1_2,frame_control)
+	vbox_control = @ButtonBox(:v)
+	push!(frame_control,vbox_control)
+    push!(vbox_control,button_init)
+    push!(vbox_control,button_run)
+    push!(vbox_control,button_cal)
+	
 	#Gain
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
 	
-	vbox1_2=@ButtonBox(:v)
-    grid[1,2]=vbox1_2
     frame1_2=@Frame("Gain")
     push!(vbox1_2,frame1_2)
     vbox1_2_1=@ButtonBox(:v)
@@ -205,22 +209,19 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             for j=75:125:450
                 @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
                 k+=1
-                stroke(ctx)
             end
         end             
         
         reveal(han.c)
                 
-        if han.num>0
-                        
-            @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1])                      
-            stroke(ctx2)                
+        if han.num>0                     
+            @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
         end
     end
     reveal(han.c2)
     han.draws+=1
 
-    if han.draws>1000
+    if han.draws>600
         han.draws=0
         clear_c(han.c)
         clear_c2(han.c2)
