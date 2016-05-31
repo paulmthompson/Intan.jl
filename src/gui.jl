@@ -179,7 +179,9 @@ function makegui(r::RHD2000)
         id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
         id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
         id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
-    end
+    elseif typeof(r.s[1].c)==ClusterTemplate
+	
+	end
     if typeof(r.s[1].d)==DetectSignal
         id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
     end
@@ -614,8 +616,8 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         #loop over windows
         for j=1:length(rhd.s[han.spike].c.win[i])
 
-            x1=(rhd.s[han.spike].c.win[i][j].x1-1)*12+1
-            x2=(rhd.s[han.spike].c.win[i][j].x2-1)*12+1
+            x1=(rhd.s[han.spike].c.win[i][j].x1-1)*10+1
+            x2=(rhd.s[han.spike].c.win[i][j].x2-1)*10+1
             y1=rhd.s[han.spike].c.win[i][j].y1
             y2=rhd.s[han.spike].c.win[i][j].y2
             move_to(ctx,x1,y1*han.scale[han.spike,1]+300-han.offset[han.spike,1])
