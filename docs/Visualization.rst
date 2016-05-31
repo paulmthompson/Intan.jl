@@ -38,9 +38,15 @@ Waveform Display
 
 For better visualization, each waveform on the main display channel will be plotted separately, along with the corresponding spike raster.
 
-********
+=========================
+Event and Analog Display
+=========================
+
+Up to six channels of analog and ttl signals can be displayed at one time. The signal of interest can be selected from the combo boxes to the right. By default, no channels are selected. TTL channels will display as either high or low, while analog signals will show continuous changes.
+
+========
 Control
-********
+========
 
 .. image:: pics/GUI_control.png
 
