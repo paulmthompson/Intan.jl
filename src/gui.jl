@@ -118,12 +118,44 @@ function makegui(r::RHD2000)
 	#Event Plotting
 	
 		
-	#COLUMN 2   
+	#COLUMN 2
 	#ROW 2
     grid[2,2]=c2
+	#ROW 3
     grid[2,3]=c2_slider
+	
+	#COLUMN 3
+	#ROW 2
     grid[3,2]=c
+	#ROW 3
     grid[3,3]=c_slider
+	
+	#COLUMN 4
+	#ROW 2
+	vbox4=@ButtonBox(:v)
+	grid[4,2]=vbox4
+	c_temp=@Canvas(40,500)
+	push!(vbox4,c_temp)
+	event_label=@Label("Events")
+	push!(vbox4,event_label)
+	
+	combos=Array(typeof(@ComboBoxText(false)),0)
+	myevents=Array(ASCIIString,0)
+	for i=1:8
+		push!(myevents,string("a",i))
+	end
+	for i=1:16
+		push!(myevents,string("ttl",i))
+	end
+	for i=1:6
+		combo = @ComboBoxText(false)
+		for tt in myevents
+			push!(combo,tt)
+		end
+		push!(combos,combo)
+		push!(vbox4,combo)
+	end
+	
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
