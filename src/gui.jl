@@ -170,7 +170,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all)
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,zeros(Int64,6))
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -191,6 +191,9 @@ function makegui(r::RHD2000)
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
     id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+	for i=1:6
+		id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
+	end
 
     handles  
 end
@@ -245,6 +248,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             end
         end             
         
+		plot_events(rhd,han,han.draws)
+		
         reveal(han.c)
                 
         if han.num>0                     
@@ -624,4 +629,51 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     reveal(han.c2)
 
     nothing
+end
+
+#Event plotting
+
+function combo_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+	han, rhd, chan_id = user_data
+
+    mywidget = convert(Gtk.GtkComboBoxTextLeaf, widgetptr)
+	mychannel=getproperty(mywidget,:active,Int64)
+
+	han.events[chan_id]=mychannel
+	nothing
+end
+
+function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
+
+	for i=1:6
+		if han.events[i]>-1
+				if han.events[i]<8 #analog
+					plot_analog(rhd,han,i,myreads)
+				else
+					plot_ttl(rhd,han,i,myreads)
+				end
+		end
+	end
+
+	nothing
+end
+
+function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64)
+
+	ctx=getgc(han.c)
+
+	nothing
+end
+
+function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64)
+
+	ctx=getgc(han.c)
+
+	move_to(ctx,myreads-1,550+(channel-1)*48)
+	line_to(ctx,myreads,550+(channel-1)*48)
+	set_source_rgb(ctx,1,0,0)
+	stroke(ctx)
+	
+	nothing
 end
