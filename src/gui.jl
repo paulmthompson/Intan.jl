@@ -170,7 +170,7 @@ function makegui(r::RHD2000)
     offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,zeros(Int64,6))
+    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
     
     #Connect Callbacks to objects on GUI
     if typeof(r.s[1].c)==ClusterWindow
@@ -649,7 +649,8 @@ function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
 	for i=1:6
 		if han.events[i]>-1
 				if han.events[i]<8 #analog
-					plot_analog(rhd,han,i,myreads)
+					val=parse_analog(rhd,han,han.events[i]+1)
+					plot_analog(rhd,han,i,myreads,val)
 				else
 					val=parse_ttl(rhd,han,han.events[i]-7)
 					plot_ttl(rhd,han,i,myreads,val)
@@ -660,10 +661,25 @@ function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
 	nothing
 end
 
-function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64)
+function parse_analog(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+
+	mysum=0
+	for i=1:size(rhd.fpga[1].adc,1)
+		mysum+=rhd.fpga[1].adc[i,chan]
+	end
+	
+	round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
+end
+
+function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
 
 	ctx=getgc(han.c)
 
+	move_to(ctx,myreads-1,540+(channel-1)*50-val)
+	line_to(ctx,myreads,540+(channel-1)*50-val)
+	set_source_rgb(ctx,1,0,0)
+	stroke(ctx)
+	
 	nothing
 end
 
