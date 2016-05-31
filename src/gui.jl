@@ -651,7 +651,8 @@ function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
 				if han.events[i]<8 #analog
 					plot_analog(rhd,han,i,myreads)
 				else
-					plot_ttl(rhd,han,i,myreads)
+					val=parse_ttl(rhd,han,han.events[i]-7)
+					plot_ttl(rhd,han,i,myreads,val)
 				end
 		end
 	end
@@ -666,12 +667,32 @@ function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64
 	nothing
 end
 
-function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64)
+function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+   
+    y=0
+    
+    for i=1:length(rhd.fpga[1].ttlin)
+        y=y|(rhd.fpga[1].ttlin[i]&(2^(chan-1)))
+    end
+    
+    if y>0
+        return true
+    else
+        return false
+    end
+end
+
+function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
 
 	ctx=getgc(han.c)
 
-	move_to(ctx,myreads-1,550+(channel-1)*48)
-	line_to(ctx,myreads,550+(channel-1)*48)
+	offset=0
+	if val==true
+		offset=30
+	end
+	
+	move_to(ctx,myreads-1,540+(channel-1)*50-offset)
+	line_to(ctx,myreads,540+(channel-1)*50-offset)
 	set_source_rgb(ctx,1,0,0)
 	stroke(ctx)
 	

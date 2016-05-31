@@ -84,12 +84,10 @@ function clear_c(myc::Gtk.GtkCanvas)
 		move_to(ctx,x,1)
 		line_to(ctx,x,500)
 	end
-	for y in [125,250,375]
+	for y in [125,250,375,500,550,600,650,700,750]
 		move_to(ctx,1,y)
 		line_to(ctx,500,y)
 	end
-	move_to(ctx,1,500)
-	line_to(ctx,500,500)
 	set_source_rgb(ctx,0,0,0)
 	stroke(ctx)
 	
