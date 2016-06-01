@@ -156,6 +156,52 @@ function makegui(r::RHD2000)
 		push!(vbox4,combo)
 	end
 	
+	#MENU ITEMS
+	
+	#SAVING
+	saveopts = @MenuItem("_Save")
+	savemenu = @Menu(saveopts)
+	save_ts_ = @MenuItem("Save Time Stamps")
+	push!(savemenu,save_ts_)
+	save_v_ = @MenuItem("Save Voltage")
+	push!(savemenu,save_v_)
+	
+	#SORTING
+	sortopts = @MenuItem("_Sorting")
+	sortmenu = @Menu(sortopts)
+	load_sort_ = @MenuItem("Load Sorting Parameters")
+	push!(sortmenu,load_sort_)
+	save_sort_ = @MenuItem("Save Sorting Parameters")
+	push!(sortmenu,save_sort_)
+	
+	#Reference Electrode
+	refopts = @MenuItem("_Reference Electrodes")
+	refmenu = @Menu(refopts)
+	define_ref_ = @MenuItem("Define Reference Configuration")
+	push!(refmenu,define_ref_)
+	save_ref_ = @MenuItem("Save Current Configuration")
+	push!(refmenu,save_ref_)
+	load_ref_ = @MenuItem("Load Configuration")
+	push!(refmenu,load_ref_)
+	
+	#Export
+	exopts = @MenuItem("_Export")
+	exmenu = @Menu(exopts)
+	export_plex_ = @MenuItem("Plexon")
+	push!(exmenu,export_plex_)
+	export_klusta_ = @MenuItem("KlustaFormat")
+	push!(exmenu,export_klusta_)
+	export_nwb_ = @MenuItem("NWB")
+	push!(exmenu,export_nwb_)
+	
+	
+	mb = @MenuBar()
+	push!(mb,saveopts)
+	push!(mb,sortopts)
+	push!(mb,refopts)
+	push!(mb,exopts)
+	
+	grid[2,1]=mb
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -239,37 +285,37 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd)
 
-    #plot spikes               
-    if han.num16>0
+    #plot spikes    
+	if myread
+		if han.num16>0
                     
-        k=16*han.num16-15
-        for i=1:124:375
-            for j=75:125:450
-                @inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
-                k+=1
-            end
-        end             
+			k=16*han.num16-15
+			for i=1:124:375
+				for j=75:125:450
+					@inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
+					k+=1
+				end
+			end             
         
-		plot_events(rhd,han,han.draws)
+			plot_events(rhd,han,han.draws)
 		
-        reveal(han.c)
+			reveal(han.c)
                 
-        if han.num>0                     
-            @inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
-        end
-    end
-    reveal(han.c2)
-    han.draws+=1
+			if han.num>0                     
+				@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
+			end
+		end
+		reveal(han.c2)
+		han.draws+=1
 
-    if han.draws>500
-        han.draws=0
-        clear_c(han.c)
-        clear_c2(han.c2)
-        highlight_channel(han,rhd)
-    end
+		if han.draws>500
+			han.draws=0
+			clear_c(han.c)
+			clear_c2(han.c2)
+			highlight_channel(han,rhd)
+		end
 
-    #write to disk, clear buffers
-    if myread
+		#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
     end
     sleep(.00001)
