@@ -20,7 +20,7 @@ function readDataBlocks(rhd::RHD2000)
     fillFromOffline!(rhd)
 
     #Filter
-    applyFilter(rhd)
+    #applyFilter(rhd)
 
     #Sort
     applySorting(rhd)

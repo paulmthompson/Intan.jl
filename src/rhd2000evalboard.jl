@@ -833,7 +833,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         fillFromUsbBuffer!(rhd,i)
 
         #Filter
-        applyFilter(rhd)
+        #applyFilter(rhd)
 
         applySorting(rhd)       
     end
