@@ -286,36 +286,26 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     do_task(rhd.task,rhd)
 
     #plot spikes    
-	if myread
-		if han.num16>0
-                    
-			k=16*han.num16-15
-			for i=1:124:375
-				for j=75:125:450
-					@inbounds draw_spike(rhd,i,j,k,ctx,han.scale[k,2],han.offset[k,2])
-					k+=1
-				end
-			end             
-        
-			plot_events(rhd,han,han.draws)
-		
-			reveal(han.c)
+    if myread
+	if han.num16>0
+            
+            draw_spike16(rhd,han,ctx)
+	    plot_events(rhd,han,han.draws)	
+	    reveal(han.c)
                 
-			if han.num>0                     
-				@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
-			end
-		end
-		reveal(han.c2)
-		han.draws+=1
-
-		if han.draws>500
-			han.draws=0
-			clear_c(han.c)
-			clear_c2(han.c2)
-			highlight_channel(han,rhd)
-		end
-
-		#write to disk, clear buffers
+	    if han.num>0                     
+		@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
+	    end
+	end
+	reveal(han.c2)
+	han.draws+=1
+	if han.draws>500
+	    han.draws=0
+	    clear_c(han.c)
+	    clear_c2(han.c2)
+	    highlight_channel(han,rhd)
+	end
+	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
     end
     sleep(.00001)
