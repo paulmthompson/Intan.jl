@@ -595,6 +595,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         if (han.var1[han.spike,2]==0)||(han.var2[han.spike,2]==0) #do nothing if zeroth cluster or window      
         elseif (length(rhd.s[han.spike].c.win) < han.var1[han.spike,2]) #new cluster
             push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
+            push!(rhd.s[han.spike].c.hits,0)
             han.var1[han.spike,1]+=1
             han.var2[han.spike,1]+=1
         elseif length(rhd.s[han.spike].c.win[han.var1[han.spike,2]]) < han.var2[han.spike,2] #new window
@@ -616,6 +617,7 @@ function b1_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
     else
         deleteat!(rhd.s[han.spike].c.win,han.var1[han.spike,2])
+        pop!(rhd.s[han.spike].c.hits)
         han.var1[han.spike,1]-= 1
         han.var1[han.spike,2] = 0
         han.var2[han.spike,1] = 0
