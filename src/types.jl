@@ -155,6 +155,6 @@ type Gui_Handles
     gainbox::Gtk.GtkSpinButtonLeaf
     draws::Int64
     thres_all::Gtk.GtkCheckButtonLeaf
-	events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
-	events::Array{Int64,1}
+    events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
+    events::Array{Int64,1}
 end

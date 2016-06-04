@@ -971,12 +971,12 @@ function writeTimeStamp(rhd::RHD2000)
     #write spike times and cluster identity   
     f=open(ts_save_file, "a+")
     write(f,rhd.fpga[1].time[1])
-    @inbounds for i=1:size(rhd.v,2)
-        write(f,i)
-        write(f,rhd.nums[i])
+    @inbounds for i::UInt16=1:size(rhd.v,2)
+        write(f,i) #channel number (UInt16)
+        write(f,rhd.nums[i]) #number of spikes coming up (UInt16)
         for j=1:rhd.nums[i]
-            write(f,reinterpret(Int64,rhd.buf[j,i].inds[1]))
-            write(f,reinterpret(Int64,rhd.buf[j,i].id))
+            write(f,rhd.buf[j,i].inds[1]) #Index of start
+            write(f,rhd.buf[j,i].id) # cluster number (UInt8)
         end
     end
     close(f)
@@ -984,11 +984,11 @@ function writeTimeStamp(rhd::RHD2000)
     save_task(rhd.task,rhd)
 
     #Clear buffers
-    for i=1:size(rhd.v,2)
-        @inbounds for j=1:rhd.nums[i]
+    @inbounds for i=1:size(rhd.v,2)
+        for j=1:rhd.nums[i]
             rhd.buf[j,i]=Spike()
         end
-        @inbounds rhd.nums[i]=0
+        rhd.nums[i]=0
     end
     nothing
 end

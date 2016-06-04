@@ -163,7 +163,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     nothing
 end
 
-function select_color(ctx,clus::Int64)
+function select_color(ctx,clus)
 
     if clus==1
         set_source_rgb(ctx,1,0,0)

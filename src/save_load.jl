@@ -50,14 +50,15 @@ function get_spike_matrix(num_channel::Int64; name="ts.bin")
         t=read(f,UInt32,1)[1]
 
         for j=1:num_channel
-            chan=read(f,Int64,1)[1] #channel
-            num=read(f,Int64,1)[1]
+            chan=read(f,UInt16,1)[1] #channel
+            num=read(f,UInt16,1)[1] #Number of upcoming spikes
             for i=1:num
-                myss=read(f,Int64,2)
-                if myss[2]>numcells[j]
-                    numcells[j]=myss[2]
+                myss=read(f,Int64,1)[1] #first time stamps
+                clus=read(f,UInt8,1)[1] #cluster
+                if clus>numcells[j]
+                    numcells[j]=clus
                 end
-                push!(ss[j],Spike((t+myss[1]:t+myss[1]),myss[2]))
+                push!(ss[j],Spike((t+myss:t+myss),clus))
             end
         end
     
