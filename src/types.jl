@@ -146,6 +146,7 @@ type Gui_Handles
     scale::Array{Float64,2}
     offset::Array{Float64,2}
     mi::NTuple{2,Float64} #saved x,y position of mouse input
+    mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
     var1::Array{Int64,2} #saved variable 1 for each channel
     var2::Array{Int64,2} #saved variable 2 for each channel
     sb::Gtk.GtkSpinButtonLeaf
@@ -156,5 +157,5 @@ type Gui_Handles
     draws::Int64
     thres_all::Gtk.GtkCheckButtonLeaf
     events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
-    events::Array{Int64,1}
+    events::Array{Int64,1} 
 end

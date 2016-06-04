@@ -210,7 +210,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
     
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -225,10 +225,11 @@ if typeof(r.s[1].c)==ClusterWindow
     if typeof(r.s[1].d)==DetectSignal
         id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
     end
+id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
-    id = signal_connect(update_c2, c2_slider, "value-changed", Void, (), false, (handles,r))
+    id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
@@ -348,10 +349,15 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing    
 end
 
-function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
+    update_c2(han,rhd)
+    nothing
+end
 
+function update_c2(han::Gui_Handles,rhd::RHD2000)
+    
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
     if han.num16>0
@@ -503,6 +509,45 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     nothing
+end
+
+
+#Multiple channel display mouse input
+function canvas_press_m(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    event = unsafe_load(param_tuple)
+    
+    if event.button == 1 #left click selects channel
+        han.mim=(event.x,event.y)
+
+        (inmulti,channel_num)=check_multi(event.x,event.y)
+
+        if inmulti
+            setproperty!(han.adj2,:value,channel_num)
+            update_c2(han,rhd)
+        end
+        
+    elseif event.button == 2 #middle click 
+
+    elseif event.button == 3 #right click 
+        han.mim=(event.x,event.y)
+    end  
+    nothing
+end
+
+function check_multi(x,y)
+
+    count=1
+    inmulti=false
+    for i in 125:125:500,j in 125:125:500 #x
+        if (x<i)&(y<j)
+            inmulti=true
+            break
+        end
+        count+=1
+    end
+    (inmulti,count)
 end
 
 #=
