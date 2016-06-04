@@ -964,27 +964,34 @@ function queueToFile(rhd::RHD2000,sav::SaveWave)
     nothing
 end
 
-queueToFile(rhd::RHD2000,sav::SaveNone)=writeTimeStamp(rhd)
+function queueToFile(rhd::RHD2000,sav::SaveNone)
+    writeTimeStamp(rhd)
+end
 
 function writeTimeStamp(rhd::RHD2000)
 
-    #write spike times and cluster identity   
+    #write spike times and cluster identity
+
     f=open(ts_save_file, "a+")
+
     write(f,rhd.fpga[1].time[1])
+
     @inbounds for i::UInt16=1:size(rhd.v,2)
         write(f,i) #channel number (UInt16)
         write(f,rhd.nums[i]) #number of spikes coming up (UInt16)
         for j=1:rhd.nums[i]
-            write(f,rhd.buf[j,i].inds[1]) #Index of start
+            write(f,rhd.buf[j,i].inds.start) #Index of start
             write(f,rhd.buf[j,i].id) # cluster number (UInt8)
         end
     end
+
     close(f)
+
 
     save_task(rhd.task,rhd)
 
     #Clear buffers
-    @inbounds for i=1:size(rhd.v,2)
+    @inbounds for i=1:size(rhd.buf,2)
         for j=1:rhd.nums[i]
             rhd.buf[j,i]=Spike()
         end
