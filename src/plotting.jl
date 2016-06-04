@@ -22,10 +22,10 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                     if rhd.buf[g,k].id==1
                         s=han.scale[k,2]
                         o=han.offset[k,2]
-                        move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds[1],k]*s+j-o)
+                        move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds[1],k]*s+j-o))
                         count=3
                         for kk=rhd.buf[g,k].inds[2]:rhd.buf[g,k].inds[end] 
-                            line_to(ctx,count+i,rhd.v[kk,k]*s+j-o);
+                            line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
                             count+=2
                         end
                     elseif rhd.buf[g,k].id>maxid
@@ -52,10 +52,10 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                         if rhd.buf[g,k].id==thisid
                             s=han.scale[k,2]
                             o=han.offset[k,2]
-                            move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds[1],k]*s+j-o);
+                            move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds[1],k]*s+j-o))
                             count=3
                             for kk=rhd.buf[g,k].inds[2]:rhd.buf[g,k].inds[end] 
-                                line_to(ctx,count+i,rhd.v[kk,k]*s+j-o);
+                                line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
                                 count+=2
                             end
                         end
@@ -82,22 +82,22 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
 
         if rhd.buf[i,spike_num].inds[1]>0
         
-            @inbounds move_to(ctx,1,(rhd.v[rhd.buf[i,spike_num].inds[1],spike_num])*s+300-o);
+            @inbounds move_to(ctx,1,round(Int16,rhd.v[rhd.buf[i,spike_num].inds[1],spike_num]*s+300-o))
             
             #draw line
             count=11
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
-                @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*s+300-o);
+                @inbounds line_to(ctx,count,round(Int16,rhd.v[k,spike_num]*s+300-o))
                 count+=10
             end
 			
-			count=(rhd.buf[i,spike_num].id-1)*100+10
-			@inbounds move_to(ctx,count,(rhd.v[rhd.buf[i,spike_num].inds[1],spike_num])*.2*s+650-.2*o);
+	    count=(rhd.buf[i,spike_num].id-1)*100+10
+	    @inbounds move_to(ctx,count,round(Int16,rhd.v[rhd.buf[i,spike_num].inds[1],spike_num]*.2*s+650-.2*o))
             
             #draw separted cluster
             count+=2
             @inbounds for k=rhd.buf[i,spike_num].inds[2]:rhd.buf[i,spike_num].inds[end] 
-                @inbounds line_to(ctx,count,(rhd.v[k,spike_num])*.2*s+650-.2*o);              
+                @inbounds line_to(ctx,count,round(Int16,rhd.v[k,spike_num]*.2*s+650-.2*o))              
                 count+=2
             end
 			

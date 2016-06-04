@@ -669,52 +669,52 @@ end
 
 function combo_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
 
-	han, rhd, chan_id = user_data
+    han, rhd, chan_id = user_data
 
     mywidget = convert(Gtk.GtkComboBoxTextLeaf, widgetptr)
-	mychannel=getproperty(mywidget,:active,Int64)
+    mychannel=getproperty(mywidget,:active,Int64)
 
-	han.events[chan_id]=mychannel
-	nothing
+    han.events[chan_id]=mychannel
+    nothing
 end
 
 function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
 
-	for i=1:6
-		if han.events[i]>-1
-				if han.events[i]<8 #analog
-					val=parse_analog(rhd,han,han.events[i]+1)
-					plot_analog(rhd,han,i,myreads,val)
-				else
-					val=parse_ttl(rhd,han,han.events[i]-7)
-					plot_ttl(rhd,han,i,myreads,val)
-				end
-		end
+    for i=1:6
+	if han.events[i]>-1
+	    if han.events[i]<8 #analog
+		val=parse_analog(rhd,han,han.events[i]+1)
+		plot_analog(rhd,han,i,myreads,val)
+	    else
+		val=parse_ttl(rhd,han,han.events[i]-7)
+		plot_ttl(rhd,han,i,myreads,val)
+	    end
 	end
+    end
 
-	nothing
+    nothing
 end
 
 function parse_analog(rhd::RHD2000,han::Gui_Handles,chan::Int64)
 
-	mysum=0
-	for i=1:size(rhd.fpga[1].adc,1)
-		mysum+=rhd.fpga[1].adc[i,chan]
-	end
-	
-	round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
+    mysum=0
+    for i=1:size(rhd.fpga[1].adc,1)
+	mysum+=rhd.fpga[1].adc[i,chan]
+    end
+    
+    round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
 end
 
 function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
 
-	ctx=getgc(han.c)
-
-	move_to(ctx,myreads-1,540+(channel-1)*50-val)
-	line_to(ctx,myreads,540+(channel-1)*50-val)
-	set_source_rgb(ctx,1,0,0)
-	stroke(ctx)
-	
-	nothing
+    ctx=getgc(han.c)
+    
+    move_to(ctx,myreads-1,540+(channel-1)*50-val)
+    line_to(ctx,myreads,540+(channel-1)*50-val)
+    set_source_rgb(ctx,1,0,0)
+    stroke(ctx)
+    
+    nothing
 end
 
 function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
@@ -734,17 +734,17 @@ end
 
 function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
 
-	ctx=getgc(han.c)
+    ctx=getgc(han.c)
 
-	offset=0
-	if val==true
-		offset=30
-	end
-	
-	move_to(ctx,myreads-1,540+(channel-1)*50-offset)
-	line_to(ctx,myreads,540+(channel-1)*50-offset)
-	set_source_rgb(ctx,1,0,0)
-	stroke(ctx)
-	
-	nothing
+    offset=0
+    if val==true
+	offset=30
+    end
+    
+    move_to(ctx,myreads-1,540+(channel-1)*50-offset)
+    line_to(ctx,myreads,540+(channel-1)*50-offset)
+    set_source_rgb(ctx,1,0,0)
+    stroke(ctx)
+    
+    nothing
 end
