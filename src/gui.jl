@@ -1,46 +1,75 @@
 
 
 function makegui(r::RHD2000)
+
+    #GUI ARRANGEMENT
+    grid = @Grid()
+
+    #COLUMN 1 - control buttons
+	
+    #ROW 1
+	
+    #ROW 2
+    vbox1_2=@ButtonBox(:v)
+    grid[1,2]=vbox1_2
+	
+    frame_control=@Frame("Control")
+    push!(vbox1_2,frame_control)
+    vbox_control = @ButtonBox(:v)
+    push!(frame_control,vbox_control)
     
-    #Button to run Intan
-    button_run = @ToggleButton("Run")
-
-    #Button to initialize Board
     button_init = @Button("Init")
-
-    #Button for Autoscaling
-    button_auto = @Button("Autoscale")
-
-    #Calibration
+    push!(vbox_control,button_init)
+    
+    button_run = @ToggleButton("Run")
+    push!(vbox_control,button_run)
+    
     button_cal = @CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
+    push!(vbox_control,button_cal)
 
-    #16 channels at a time can be visualized on the right side
-    c=@Canvas(500,800) #16 channels
+    #GAIN
+    frame1_2=@Frame("Gain")
+    push!(vbox1_2,frame1_2)
+    vbox1_2_1=@ButtonBox(:v)
+    push!(frame1_2,vbox1_2_1)
     
-    @guarded draw(c) do widget
-    ctx = getgc(c)
-    clear_c(c)
-    end
-    show(c)
-       
-    #Which 16 channels can be selected with a slider
-    c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
-    adj = @Adjustment(c_slider)
-    setproperty!(adj,:value,1)
+    sb2=@SpinButton(1:1000)
+    setproperty!(sb2,:value,1)
+    push!(vbox1_2_1,sb2)
     
-    #One channel can be magnified for easier inspection
-    c2=@Canvas(500,800) #Single channel to focus on
-    c2_slider=@Scale(false, 1:16)
+    button_gain = @CheckButton("All Channels")
+    setproperty!(button_gain,:active,false)
+    push!(vbox1_2_1,button_gain)
     
-    @guarded draw(c2) do widget
-    ctx = getgc(c2)
-    clear_c2(c2)
-    end
-    show(c2)
+    button_auto = @Button("Autoscale")
+    push!(vbox1_2_1,button_auto)
+	
+	
+    #THRESHOLD
+    frame1_3=@Frame("Threshold")
+    push!(vbox1_2,frame1_3)
+    vbox1_3_1=@ButtonBox(:v)
+    push!(frame1_3,vbox1_3_1)
     
-    adj2 = @Adjustment(c2_slider)
-    setproperty!(adj2,:value,1)
+    sb=@SpinButton(-10000:10000)
+    setproperty!(sb,:value,0)
+    push!(vbox1_3_1,sb)
+
+    button_thres_all = @CheckButton("All Channels")
+    setproperty!(button_thres_all,:active,false)
+    push!(vbox1_3_1,button_thres_all)
+    
+    button_thres = @CheckButton("Show")
+    setproperty!(button_thres,:active,false)
+    push!(vbox1_3_1,button_thres)
+    
+ 
+    #CLUSTER
+    frame1_4=@Frame("Clustering")
+    push!(vbox1_2,frame1_4)
+    vbox1_3_2=@ButtonBox(:v)
+    push!(frame1_4,vbox1_3_2)
 
     if typeof(r.s[1].c)==ClusterWindow 
         tb1=@Label("Cluster")
@@ -49,159 +78,124 @@ function makegui(r::RHD2000)
         tb1=@Label("text1")
         tb2=@Label("text2")
     end
-
-	#GUI ARRANGEMENT
-	grid = @Grid()
-	
-	#COLUMN 1
-	
-	#ROW 1
-
-	
-	#ROW 2
-	vbox1_2=@ButtonBox(:v)
-    grid[1,2]=vbox1_2
-	
-	frame_control=@Frame("Control")
-    push!(vbox1_2,frame_control)
-	vbox_control = @ButtonBox(:v)
-	push!(frame_control,vbox_control)
-    push!(vbox_control,button_init)
-    push!(vbox_control,button_run)
-    push!(vbox_control,button_cal)
-	
-	#Gain
-    sb2=@SpinButton(1:1000)
-    setproperty!(sb2,:value,1)
-    button_gain = @CheckButton("All Channels")
-    setproperty!(button_gain,:active,false)
-	
-    frame1_2=@Frame("Gain")
-    push!(vbox1_2,frame1_2)
-    vbox1_2_1=@ButtonBox(:v)
-    push!(frame1_2,vbox1_2_1)
-    push!(vbox1_2_1,sb2)
-    push!(vbox1_2_1,button_gain)
-    push!(vbox1_2_1,button_auto)
-	
-	
-	#Threshold
-    sb=@SpinButton(-10000:10000)
-    setproperty!(sb,:value,0)
-    button_thres = @CheckButton("Show")
-    setproperty!(button_thres,:active,false)
-    button_thres_all = @CheckButton("All Channels")
-    setproperty!(button_thres_all,:active,false)
-    frame1_3=@Frame("Threshold")
-    push!(vbox1_2,frame1_3)
-    vbox1_3_1=@ButtonBox(:v)
-    push!(frame1_3,vbox1_3_1)
-	push!(vbox1_3_1,sb)
-	push!(vbox1_3_1,button_thres_all)
-    push!(vbox1_3_1,button_thres)
-    
- 
-	#Cluster
-	button_sort1 = @Button("Delete Cluster")
-    button_sort2 = @Button("Delete Window")
-    button_sort3 = @Button("Show Windows")
-	frame1_4=@Frame("Clustering")
-	push!(vbox1_2,frame1_4)
-    vbox1_3_2=@ButtonBox(:v)
-    push!(frame1_4,vbox1_3_2)
     push!(vbox1_3_2,tb1)
     push!(vbox1_3_2,tb2)
+    
+    button_sort1 = @Button("Delete Cluster")
+    button_sort2 = @Button("Delete Window")
+    button_sort3 = @Button("Show Windows")
+    
     push!(vbox1_3_2,button_sort1)
     push!(vbox1_3_2,button_sort2)
     push!(vbox1_3_2,button_sort3)
-	
-	#Event Plotting
-	
-		
-	#COLUMN 2
-	#ROW 2
+
+    #COLUMN 2 - MAXIMIZED CHANNEL PLOTTING
+    
+    #ROW 2
+    c2=@Canvas(500,800)     
+    @guarded draw(c2) do widget
+    ctx = getgc(c2)
+    clear_c2(c2,1)
+    end
+    show(c2)
     grid[2,2]=c2
-	#ROW 3
+
+    #ROW 3
+    c2_slider=@Scale(false, 1:16)
+    adj2 = @Adjustment(c2_slider)
+    setproperty!(adj2,:value,1)
     grid[2,3]=c2_slider
-	
-	#COLUMN 3
-	#ROW 2
+ 
+    #COLUMN 3 - 16 CHANNEL DISPLAY
+    
+    #ROW 2
+    c=@Canvas(500,800)  
+    @guarded draw(c) do widget
+    ctx = getgc(c)
+    clear_c(c,1)
+    end
+    show(c)   
     grid[3,2]=c
-	#ROW 3
+
+    #ROW 3
+    #Which 16 channels can be selected with a slider
+    c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
+    adj = @Adjustment(c_slider)
+    setproperty!(adj,:value,1)
     grid[3,3]=c_slider
 	
-	#COLUMN 4
-	#ROW 2
-	vbox4=@ButtonBox(:v)
-	grid[4,2]=vbox4
-	c_temp=@Canvas(40,500)
-	push!(vbox4,c_temp)
-	event_label=@Label("Events")
-	push!(vbox4,event_label)
-	
-	combos=Array(typeof(@ComboBoxText(false)),0)
-	myevents=Array(ASCIIString,0)
-	for i=1:8
-		push!(myevents,string("a",i))
+    #COLUMN 4
+    #ROW 2
+    vbox4=@ButtonBox(:v)
+    grid[4,2]=vbox4
+    c_temp=@Canvas(40,500)
+    push!(vbox4,c_temp)
+    event_label=@Label("Events")
+    push!(vbox4,event_label)
+    
+    combos=Array(typeof(@ComboBoxText(false)),0)
+    myevents=Array(ASCIIString,0)
+    for i=1:8
+	push!(myevents,string("a",i))
+    end
+    for i=1:16
+	push!(myevents,string("ttl",i))
+    end
+    for i=1:6
+	combo = @ComboBoxText(false)
+	for tt in myevents
+	    push!(combo,tt)
 	end
-	for i=1:16
-		push!(myevents,string("ttl",i))
-	end
-	for i=1:6
-		combo = @ComboBoxText(false)
-		for tt in myevents
-			push!(combo,tt)
-		end
-		push!(combos,combo)
-		push!(vbox4,combo)
-	end
+	push!(combos,combo)
+	push!(vbox4,combo)
+    end
 	
-	#MENU ITEMS
+    #MENU ITEMS
+    
+    #SAVING
+    saveopts = @MenuItem("_Save")
+    savemenu = @Menu(saveopts)
+    save_ts_ = @MenuItem("Save Time Stamps")
+    push!(savemenu,save_ts_)
+    save_v_ = @MenuItem("Save Voltage")
+    push!(savemenu,save_v_)
+    
+    #SORTING
+    sortopts = @MenuItem("_Sorting")
+    sortmenu = @Menu(sortopts)
+    load_sort_ = @MenuItem("Load Sorting Parameters")
+    push!(sortmenu,load_sort_)
+    save_sort_ = @MenuItem("Save Sorting Parameters")
+    push!(sortmenu,save_sort_)
 	
-	#SAVING
-	saveopts = @MenuItem("_Save")
-	savemenu = @Menu(saveopts)
-	save_ts_ = @MenuItem("Save Time Stamps")
-	push!(savemenu,save_ts_)
-	save_v_ = @MenuItem("Save Voltage")
-	push!(savemenu,save_v_)
+    #Reference Electrode
+    refopts = @MenuItem("_Reference Electrodes")
+    refmenu = @Menu(refopts)
+    define_ref_ = @MenuItem("Define Reference Configuration")
+    push!(refmenu,define_ref_)
+    save_ref_ = @MenuItem("Save Current Configuration")
+    push!(refmenu,save_ref_)
+    load_ref_ = @MenuItem("Load Configuration")
+    push!(refmenu,load_ref_)
 	
-	#SORTING
-	sortopts = @MenuItem("_Sorting")
-	sortmenu = @Menu(sortopts)
-	load_sort_ = @MenuItem("Load Sorting Parameters")
-	push!(sortmenu,load_sort_)
-	save_sort_ = @MenuItem("Save Sorting Parameters")
-	push!(sortmenu,save_sort_)
-	
-	#Reference Electrode
-	refopts = @MenuItem("_Reference Electrodes")
-	refmenu = @Menu(refopts)
-	define_ref_ = @MenuItem("Define Reference Configuration")
-	push!(refmenu,define_ref_)
-	save_ref_ = @MenuItem("Save Current Configuration")
-	push!(refmenu,save_ref_)
-	load_ref_ = @MenuItem("Load Configuration")
-	push!(refmenu,load_ref_)
-	
-	#Export
-	exopts = @MenuItem("_Export")
-	exmenu = @Menu(exopts)
-	export_plex_ = @MenuItem("Plexon")
-	push!(exmenu,export_plex_)
-	export_klusta_ = @MenuItem("KlustaFormat")
-	push!(exmenu,export_klusta_)
-	export_nwb_ = @MenuItem("NWB")
-	push!(exmenu,export_nwb_)
-	
-	
-	mb = @MenuBar()
-	push!(mb,saveopts)
-	push!(mb,sortopts)
-	push!(mb,refopts)
-	push!(mb,exopts)
-	
-	grid[2,1]=mb
+    #Export
+    exopts = @MenuItem("_Export")
+    exmenu = @Menu(exopts)
+    export_plex_ = @MenuItem("Plexon")
+    push!(exmenu,export_plex_)
+    export_klusta_ = @MenuItem("KlustaFormat")
+    push!(exmenu,export_klusta_)
+    export_nwb_ = @MenuItem("NWB")
+    push!(exmenu,export_nwb_)
+    
+    
+    mb = @MenuBar()
+    push!(mb,saveopts)
+    push!(mb,sortopts)
+    push!(mb,refopts)
+    push!(mb,exopts)
+    
+    grid[2,1]=mb
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -212,14 +206,14 @@ function makegui(r::RHD2000)
     scales=ones(Float64,size(r.v,2),3)
     scales[:,2]=scales[:,2].*.2
     offs=zeros(Float64,size(r.v,2),2)
-    offs[:,1]=squeeze(mean(r.v,1),1)
-    offs[:,2]=offs[:,1]*.2
+offs[:,1]=squeeze(mean(r.v,1),1)
+offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-    handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
     
     #Connect Callbacks to objects on GUI
-    if typeof(r.s[1].c)==ClusterWindow
+if typeof(r.s[1].c)==ClusterWindow
         id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
         id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
         id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
@@ -239,11 +233,11 @@ function makegui(r::RHD2000)
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
     id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
-	for i=1:6
-		id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
-	end
+for i=1:6
+    id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
+end
 
-    handles  
+handles  
 end
 
 #Drawing
@@ -301,9 +295,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
-	    clear_c(han.c)
-	    clear_c2(han.c2)
-	    highlight_channel(han,rhd)
+	    clear_c(han.c,han.num16)
+	    clear_c2(han.c2,han.spike)
+	    #highlight_channel(han,rhd)
 	end
 	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
@@ -331,13 +325,13 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data 
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
-    
-    clear_c(han.c)
-    clear_c2(han.c2)
-    
+
     if han.num16>0
         han.spike=16*han.num16-16+han.num      
     end
+    
+    clear_c(han.c,han.num16)
+    clear_c2(han.c2,han.spike)
 
     #Audio output
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
@@ -349,7 +343,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #Display Threshold
 
     #Show which channel is highligted on 16 channel display
-    highlight_channel(han,rhd)
+    #highlight_channel(han,rhd)
     
     nothing    
 end
@@ -360,12 +354,12 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
-    clear_c2(han.c2)
-
     if han.num16>0
         han.spike=16*han.num16-16+han.num
     end
 
+    clear_c2(han.c2,han.spike)
+    
     #update threshold
     setproperty!(han.sb,:value,round(Int64,rhd.s[han.spike].thres))
 
@@ -379,7 +373,7 @@ function update_c2(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #Display threshold if box checked
 
     #Show which channel is highlighted on 16 channel display
-    highlight_channel(han,rhd)
+    #highlight_channel(han,rhd)
     
     nothing
 end
@@ -423,14 +417,14 @@ function highlight_channel(han::Gui_Handles,rhd::RHD2000)
         myy=rem(han.num-1,4)*125+1
         myx=div(han.num-1,4)*125+1
 		
-		move_to(ctx,myx,myy)
-		line_to(ctx,myx+124,myy)
-		line_to(ctx,myx+124,myy+124)
-		line_to(ctx,myx,myy+124)
-		line_to(ctx,myx,myy)
-
-		set_source_rgb(ctx,1,0,0)
-		stroke(ctx)
+	move_to(ctx,myx,myy)
+	line_to(ctx,myx+124,myy)
+	line_to(ctx,myx+124,myy+124)
+	line_to(ctx,myx,myy+124)
+	line_to(ctx,myx,myy)
+        
+	set_source_rgb(ctx,1,0,0)
+	stroke(ctx)
     end
 
     nothing

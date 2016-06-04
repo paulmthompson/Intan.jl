@@ -101,12 +101,12 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
                 count+=2
             end
 			
-			@inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+700)
-			@inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+720)
+	    @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+700)
+	    @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20+720)
 			
-			set_line_width(ctx,0.5);
-			@inbounds select_color(ctx,rhd.buf[i,spike_num].id)
-			stroke(ctx)
+	    set_line_width(ctx,0.5);
+	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
+	    stroke(ctx)
         end
     end
    
@@ -117,7 +117,7 @@ end
 Reset Canvas
 =#
 
-function clear_c(myc::Gtk.GtkCanvas)
+function clear_c(myc::Gtk.GtkCanvas,num16)
         
     ctx = getgc(myc)
     set_source_rgb(ctx,1,1,1)
@@ -133,11 +133,20 @@ function clear_c(myc::Gtk.GtkCanvas)
     end
     set_source_rgb(ctx,0,0,0)
     stroke(ctx)
-	
+
+    k=16*num16-15
+    for x in [10, 135, 260, 385]
+        for y in [10, 135, 260, 385]
+            move_to(ctx,x,y)
+            show_text(ctx,string(k))
+            k+=1
+        end
+    end
+    
     nothing
 end
 
-function clear_c2(myc::Gtk.GtkCanvas)
+function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
     set_source_rgb(ctx,1,1,1)
@@ -147,6 +156,9 @@ function clear_c2(myc::Gtk.GtkCanvas)
     line_to(ctx,500,600)
     set_source_rgb(ctx,0,0,0)
     stroke(ctx)
+
+    move_to(ctx,10,10)
+    show_text(ctx,string(num))
     
     nothing
 end
