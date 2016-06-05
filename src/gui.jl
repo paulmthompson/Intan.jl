@@ -210,7 +210,7 @@ function makegui(r::RHD2000)
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
-    scales=ones(Float64,size(r.v,2),3)
+    scales=ones(Float64,size(r.v,2),2)
     scales[:,2]=scales[:,2].*.2
     offs=zeros(Float64,size(r.v,2),2)
 offs[:,1]=squeeze(mean(r.v,1),1)
@@ -244,6 +244,8 @@ id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
+id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
+id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 for i=1:6
     id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
 end
@@ -324,7 +326,6 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #scale
     @inbounds han.scale[han.spike,1]=abs(1./mean(rhd.v[:,han.spike]))
     @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
-    @inbounds han.scale[han.spike,3]=han.scale[han.spike,1]
 
     @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
     @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
@@ -419,7 +420,6 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         #scale
         han.scale[:,1]=abs(1./mean(rhd.v,1)')
         han.scale[:,2]=.2*han.scale[:,1]
-        han.scale[:,3]=han.scale[:,1]
     end
 
     nothing
@@ -505,14 +505,12 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mygain==true
         han.scale[:,1]=gainval/1000
         han.scale[:,2]=.2*gainval/1000
-        han.scale[:,3]=gainval/1000
 
         @inbounds han.offset[:,1]=mean(gainval/1000.*rhd.v,1)
         @inbounds han.offset[:,2]=han.offset[:,1].*.2
     else
         han.scale[han.spike,1]=gainval/1000
         han.scale[han.spike,2]=.2*gainval/1000
-        han.scale[han.spike,3]=gainval/1000
 
         @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
         @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
@@ -834,6 +832,61 @@ function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     write_plex(save_dialog("Export to Plex",han.win),size(rhd.v,2))
+
+    nothing
+end
+
+function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    filepath=save_dialog("Save configuration",han.win)
+
+    file = jldopen(filepath, "w")
+    
+    write(file, "Gain", han.scale)
+    write(file, "Offset", han.offset)
+    write(file, "Sorting", rhd.s)
+    write(file, "Enabled", han.enabled)
+
+    close(file)
+
+    nothing
+end
+
+function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    filepath=open_dialog("Load Configuration",han.win)
+
+    c = jldopen(filepath, "r") do file
+        g=read(file,"Gain")
+
+        for i=1:length(g)
+            han.scale[i]=g[i]
+        end
+
+        o=read(file,"Offset")
+
+        for i=1:length(o)
+            han.offset[i]=o[i]
+        end
+
+        s=read(file,"Sorting")
+
+        for i=1:length(s)
+            rhd.s[i]=s[i]
+        end
+
+        e=read(file,"Enabled")
+
+        for i=1:length(e)
+            han.enabled[i]=e[i]
+        end
+    end
+
+    
 
     nothing
 end
