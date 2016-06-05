@@ -17,21 +17,23 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     #first ID
     @inbounds for i in xbounds
         for j in ybounds
-            for g=1:rhd.nums[k]
-                if rhd.buf[g,k].inds.start>0
-                    if rhd.buf[g,k].id==1
-                        s=han.scale[k,2]
-                        o=han.offset[k,2]
-                        move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
-                        count=3
-                        for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                            line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
-                            count+=2
+            if han.enabled[k]
+                for g=1:rhd.nums[k]
+                    if rhd.buf[g,k].inds.start>0
+                        if rhd.buf[g,k].id==1
+                            s=han.scale[k,2]
+                            o=han.offset[k,2]
+                            move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
+                            count=3
+                            for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
+                                line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
+                                count+=2
+                            end
+                        elseif rhd.buf[g,k].id>maxid
+                            maxid=rhd.buf[g,k].id
                         end
-                    elseif rhd.buf[g,k].id>maxid
-                        maxid=rhd.buf[g,k].id
-                    end
-                end        
+                    end        
+                end
             end
             k+=1
         end
@@ -47,19 +49,21 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         
         for i in xbounds
             for j in ybounds
-                for g=1:rhd.nums[k]
-                    if rhd.buf[g,k].inds.start>0
-                        if rhd.buf[g,k].id==thisid
-                            s=han.scale[k,2]
-                            o=han.offset[k,2]
-                            move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
-                            count=3
-                            for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                                line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
-                                count+=2
+                if han.enabled[k]
+                    for g=1:rhd.nums[k]
+                        if rhd.buf[g,k].inds.start>0
+                            if rhd.buf[g,k].id==thisid
+                                s=han.scale[k,2]
+                                o=han.offset[k,2]
+                                move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
+                                count=3
+                                for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
+                                    line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
+                                    count+=2
+                                end
                             end
-                        end
-                    end        
+                        end        
+                    end
                 end
                 k+=1
             end
@@ -120,7 +124,7 @@ Reset Canvas
 function clear_c(myc::Gtk.GtkCanvas,num16)
         
     ctx = getgc(myc)
-    set_source_rgb(ctx,1,1,1)
+    set_source_rgb(ctx,0,0,0)
     paint(ctx)
 
     for x in [125, 250, 375]
@@ -131,7 +135,7 @@ function clear_c(myc::Gtk.GtkCanvas,num16)
 	move_to(ctx,1,y)
 	line_to(ctx,500,y)
     end
-    set_source_rgb(ctx,0,0,0)
+    set_source_rgb(ctx,1,1,1)
     stroke(ctx)
 
     k=16*num16-15
@@ -149,12 +153,12 @@ end
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
-    set_source_rgb(ctx,1,1,1)
+    set_source_rgb(ctx,0,0,0)
     paint(ctx)
 	
     move_to(ctx,1,600)
     line_to(ctx,500,600)
-    set_source_rgb(ctx,0,0,0)
+    set_source_rgb(ctx,1,1,1)
     stroke(ctx)
 
     move_to(ctx,10,10)
@@ -166,15 +170,15 @@ end
 function select_color(ctx,clus)
 
     if clus==1
-        set_source_rgb(ctx,1,0,0)
+        set_source_rgb(ctx,1,1,1) # white
     elseif clus==2
-        set_source_rgb(ctx,0,1,0)
+        set_source_rgb(ctx,1,1,0) #Yellow
     elseif clus==3
-        set_source_rgb(ctx,0,0,1)
+        set_source_rgb(ctx,0,1,0) #Green
     elseif clus==4
-        set_source_rgb(ctx,1,0,1)
+        set_source_rgb(ctx,0,0,1) #Blue
     elseif clus==5
-        set_source_rgb(ctx,0,1,1)
+        set_source_rgb(ctx,1,0,0) #Red
     else
         set_source_rgb(ctx,1,1,0)
     end

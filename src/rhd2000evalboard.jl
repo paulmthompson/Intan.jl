@@ -941,6 +941,7 @@ function queueToFile(rhd::RHD2000,sav::SaveAll)
 
     #write analog voltage traces
     f=open(v_save_file, "a+")
+
     write(f,rhd.v)
     close(f)
 

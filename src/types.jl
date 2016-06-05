@@ -157,5 +157,6 @@ type Gui_Handles
     draws::Int64
     thres_all::Gtk.GtkCheckButtonLeaf
     events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
-    events::Array{Int64,1} 
+    events::Array{Int64,1}
+    enabled::Array{Bool,1}
 end

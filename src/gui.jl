@@ -193,9 +193,17 @@ function makegui(r::RHD2000)
     push!(mb,saveopts)
     push!(mb,sortopts)
     push!(mb,refopts)
-    push!(mb,exopts)
-    
+    push!(mb,exopts) 
     grid[2,1]=mb
+
+    popupmenu = @Menu()
+    popup_enable = @MenuItem("Enable")
+    push!(popupmenu, popup_enable)
+    popup_disable = @MenuItem("Disable")
+    push!(popupmenu, popup_disable)
+    showall(popupmenu)
+    c.mouse.button3press = (widget,event) -> popup(popupmenu,event)
+    
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
@@ -210,7 +218,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)))
     
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -233,7 +241,9 @@ id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEvent
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
-    id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
+id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
 for i=1:6
     id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
 end
@@ -517,10 +527,11 @@ function canvas_press_m(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
     han, rhd = user_data
     event = unsafe_load(param_tuple)
+
+    han.mim=(event.x,event.y)
     
     if event.button == 1 #left click selects channel
-        han.mim=(event.x,event.y)
-
+        
         (inmulti,channel_num)=check_multi(event.x,event.y)
 
         if inmulti
@@ -530,8 +541,6 @@ function canvas_press_m(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
         
     elseif event.button == 2 #middle click 
 
-    elseif event.button == 3 #right click 
-        han.mim=(event.x,event.y)
     end  
     nothing
 end
@@ -548,6 +557,32 @@ function check_multi(x,y)
         count+=1
     end
     (inmulti,count)
+end
+
+function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+
+    (inmulti,count)=check_multi(han.mim[1],han.mim[2])
+
+    if inmulti
+        han.enabled[16*han.num16-16+count]=true
+    end
+
+    nothing
+end
+
+function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+
+    (inmulti,count)=check_multi(han.mim[1],han.mim[2])
+
+    if inmulti
+        han.enabled[16*han.num16-16+count]=false
+    end
+
+    nothing
 end
 
 #=
