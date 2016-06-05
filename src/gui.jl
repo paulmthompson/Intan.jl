@@ -188,7 +188,6 @@ function makegui(r::RHD2000)
     export_nwb_ = @MenuItem("NWB")
     push!(exmenu,export_nwb_)
     
-    
     mb = @MenuBar()
     push!(mb,saveopts)
     push!(mb,sortopts)
@@ -244,6 +243,7 @@ id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEvent
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
+id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 for i=1:6
     id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
 end
@@ -299,7 +299,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    reveal(han.c)
                 
 	    if han.num>0                     
-		@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)            
+		@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)
 	    end
 	end
 	reveal(han.c2)
@@ -826,5 +826,14 @@ function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,va
     set_source_rgb(ctx,1,0,0)
     stroke(ctx)
     
+    nothing
+end
+
+function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    write_plex(save_dialog("Export to Plex",han.win),size(rhd.v,2))
+
     nothing
 end
