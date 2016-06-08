@@ -30,7 +30,7 @@ Experimental Control Function
 This will implement the control logic of the task
 such as updating GUIs, modifying the data structure, talking to external boards
 =#
-function do_task(myt::Task_NoTask,rhd::RHD2000)
+function do_task(myt::Task_NoTask,rhd::RHD2000,myread)
 end
 
 #=

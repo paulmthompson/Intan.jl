@@ -289,7 +289,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     end
             
     #process and output (e.g. kalman, spike triggered stim calc, etc)
-    do_task(rhd.task,rhd)
+    do_task(rhd.task,rhd,myread)
 
     #plot spikes    
     if myread

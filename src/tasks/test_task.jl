@@ -10,7 +10,7 @@ function init_task(myt::Task_TestTask,rhd::RHD2000)
     nothing   
 end
 
-function do_task(myt::Task_TestTask,rhd::RHD2000)
+function do_task(myt::Task_TestTask,rhd::RHD2000,myread)
 
     for i=1:SAMPLES_PER_DATA_BLOCK
         if rhd.adc[i,1]>10000
