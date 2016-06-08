@@ -9,8 +9,8 @@ Plots detected spike on canvas for multiple channels
 function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
     k=16*han.num16-15
-    xbounds=1:124:375
-    ybounds=75:125:450
+    xbounds=1.0:124.0:375.0
+    ybounds=75.0:125.0:450.0
 
     maxid=1
 
@@ -23,15 +23,15 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                         if rhd.buf[g,k].id==1
                             s=han.scale[k,2]
                             o=han.offset[k,2]
-                            y=round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
+                            y=rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o
                             move_to(ctx,1+i,y)
                             count=3
                             for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                                y=round(Int16,rhd.v[kk,k]*s+j-o)
+                                y=rhd.v[kk,k]*s+j-o
                                 if y<j-65
-                                    y=j-65
-                                elseif y>j+65
-                                    y=j+65
+                                    y=j-65.0
+                                elseif y>j+65.0
+                                    y=j+65.0
                                 end  
                                 line_to(ctx,count+i,y)
                                 count+=2
@@ -62,14 +62,14 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                             if rhd.buf[g,k].id==thisid
                                 s=han.scale[k,2]
                                 o=han.offset[k,2]
-                                move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
+                                move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
                                 count=3
                                 for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                                    y=round(Int16,rhd.v[kk,k]*s+j-o)
-                                    if y<j-65
-                                        y=j-65
-                                    elseif y>j+65
-                                        y=j+65
+                                    y=rhd.v[kk,k]*s+j-o
+                                    if y<j-65.0
+                                        y=j-65.0
+                                    elseif y>j+65.0
+                                        y=j+65.0
                                     end  
                                     line_to(ctx,count+i,y)
                                     count+=2
@@ -99,16 +99,16 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
 
         if rhd.buf[i,spike_num].inds.start>0
         
-            @inbounds move_to(ctx,1,round(Int16,rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]*s+300-o))
+            @inbounds move_to(ctx,1,rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]*s+300-o)
             
             #draw line
             count=11
             @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                y=round(Int16,rhd.v[k,spike_num]*s+300-o)
-                if y<1
-                    y=1
-                elseif y>600
-                    y=600
+                y=rhd.v[k,spike_num]*s+300-o
+                if y<1.0
+                    y=1.0
+                elseif y>600.0
+                    y=600.0
                 end
                 @inbounds line_to(ctx,count,y)
                 count+=10
@@ -143,7 +143,7 @@ Reset Canvas
 function clear_c(myc::Gtk.GtkCanvas,num16)
         
     ctx = getgc(myc)
-    set_source_rgb(ctx,0,0,0)
+    set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
     for x in [125, 250, 375]
@@ -154,7 +154,7 @@ function clear_c(myc::Gtk.GtkCanvas,num16)
 	move_to(ctx,1,y)
 	line_to(ctx,500,y)
     end
-    set_source_rgb(ctx,1,1,1)
+    set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
     k=16*num16-15
@@ -172,12 +172,36 @@ end
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
-    set_source_rgb(ctx,0,0,0)
+
+    set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
-	
+
+    dashes = [10.0,  # ink 
+          10.0,  # skip
+          10.0,  # ink 
+          10.0   # skip
+              ];
+    
+    set_dash(ctx, dashes, 0.0)
+    
+    for y = [100, 200, 300, 400, 500]
+        move_to(ctx,1,y)
+        line_to(ctx,500,y)
+    end
+
+    for x = [100, 200, 300, 400]
+        move_to(ctx,x,1)
+        line_to(ctx,x,600)
+    end
+
+    set_source_rgba(ctx,1.0,1.0,1.0,.5)
+    stroke(ctx) 
+    
+    set_dash(ctx,Float64[])
+    
     move_to(ctx,1,600)
     line_to(ctx,500,600)
-    set_source_rgb(ctx,1,1,1)
+    set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
     move_to(ctx,10,10)
@@ -189,17 +213,17 @@ end
 function select_color(ctx,clus)
 
     if clus==1
-        set_source_rgb(ctx,1,1,1) # white
+        set_source_rgb(ctx,1.0,1.0,1.0) # white
     elseif clus==2
-        set_source_rgb(ctx,1,1,0) #Yellow
+        set_source_rgb(ctx,1.0,1.0,0.0) #Yellow
     elseif clus==3
-        set_source_rgb(ctx,0,1,0) #Green
+        set_source_rgb(ctx,0.0,1.0,0.0) #Green
     elseif clus==4
-        set_source_rgb(ctx,0,0,1) #Blue
+        set_source_rgb(ctx,0.0,0.0,1.0) #Blue
     elseif clus==5
-        set_source_rgb(ctx,1,0,0) #Red
+        set_source_rgb(ctx,1.0,0.0,0.0) #Red
     else
-        set_source_rgb(ctx,1,1,0)
+        set_source_rgb(ctx,1.0,1.0,0.0)
     end
     
     nothing
