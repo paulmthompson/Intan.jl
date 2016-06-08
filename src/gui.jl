@@ -217,7 +217,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false)
     
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -229,9 +229,8 @@ if typeof(r.s[1].c)==ClusterWindow
     elseif typeof(r.s[1].c)==ClusterTemplate
 	
 	end
-    if typeof(r.s[1].d)==DetectAbs
-        id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
-    end
+
+    id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
 id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
@@ -310,6 +309,11 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    han.draws=0
 	    clear_c(han.c,han.num16)
 	    clear_c2(han.c2,han.spike)
+
+            #Display threshold if box checked
+            if han.show_thres==true
+                plot_thres(han,rhd,rhd.s[1].d)
+            end
 	    #highlight_channel(han,rhd)
 	end
 	#write to disk, clear buffers
@@ -350,9 +354,9 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
 
     #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
-    #Display Threshold
+  
 
     #Show which channel is highligted on 16 channel display
     #highlight_channel(han,rhd)
@@ -385,9 +389,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
 
     #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*1000))
-
-    #Display threshold if box checked
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
     #Show which channel is highlighted on 16 channel display
     #highlight_channel(han,rhd)
@@ -420,6 +422,8 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         #scale
         han.scale[:,1]=-1.*abs(1./mean(rhd.v,1)')
         han.scale[:,2]=.2*han.scale[:,1]
+        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
+        setproperty!(han.sb,:value,round(Int64,rhd.s[han.spike].thres)) #show threshold
     end
 
     nothing
@@ -443,8 +447,7 @@ function highlight_channel(han::Gui_Handles,rhd::RHD2000)
 	stroke(ctx)
     end
 
-    nothing
-    
+    nothing  
 end
 
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
@@ -452,15 +455,17 @@ function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     mywidget = convert(CheckButton, widget)
+
+    han.show_thres=getproperty(mywidget,:active,Bool)
 	          
-    if getproperty(mywidget,:active,Bool)==true
-        plot_thres_abs(han,rhd)
+    if han.show_thres==true
+        plot_thres(han,rhd,rhd.s[1].d)
     end
 
     nothing
 end
 
-function plot_thres_abs(han::Gui_Handles,rhd::RHD2000)
+function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
 
     ctx = getgc(han.c2)
 
@@ -471,7 +476,20 @@ function plot_thres_abs(han::Gui_Handles,rhd::RHD2000)
     move_to(ctx,1,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
     line_to(ctx,500,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
 
-    set_source_rgb(ctx,0,0,0)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    stroke(ctx)
+    
+    nothing
+end
+
+function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
+
+    ctx = getgc(han.c2)
+
+    thres=rhd.s[han.spike].thres
+    move_to(ctx,1,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    line_to(ctx,500,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
     
     nothing
@@ -789,7 +807,7 @@ function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64
     
     move_to(ctx,myreads-1,540+(channel-1)*50-val)
     line_to(ctx,myreads,540+(channel-1)*50-val)
-    set_source_rgb(ctx,1,0,0)
+    set_source_rgb(ctx,1.0,1.0,0.0)
     stroke(ctx)
     
     nothing
@@ -821,7 +839,7 @@ function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,va
     
     move_to(ctx,myreads-1,540+(channel-1)*50-offset)
     line_to(ctx,myreads,540+(channel-1)*50-offset)
-    set_source_rgb(ctx,1,0,0)
+    set_source_rgb(ctx,1.0,1.0,0.0)
     stroke(ctx)
     
     nothing
