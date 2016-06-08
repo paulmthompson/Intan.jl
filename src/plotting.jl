@@ -23,10 +23,17 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                         if rhd.buf[g,k].id==1
                             s=han.scale[k,2]
                             o=han.offset[k,2]
-                            move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
+                            y=round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
+                            move_to(ctx,1+i,y)
                             count=3
                             for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                                line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
+                                y=round(Int16,rhd.v[kk,k]*s+j-o)
+                                if y<j-65
+                                    y=j-65
+                                elseif y>j+65
+                                    y=j+65
+                                end  
+                                line_to(ctx,count+i,y)
                                 count+=2
                             end
                         elseif rhd.buf[g,k].id>maxid
@@ -58,7 +65,13 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                                 move_to(ctx,1+i,round(Int16,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o))
                                 count=3
                                 for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
-                                    line_to(ctx,count+i,round(Int16,rhd.v[kk,k]*s+j-o))
+                                    y=round(Int16,rhd.v[kk,k]*s+j-o)
+                                    if y<j-65
+                                        y=j-65
+                                    elseif y>j+65
+                                        y=j+65
+                                    end  
+                                    line_to(ctx,count+i,y)
                                     count+=2
                                 end
                             end
@@ -91,7 +104,13 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             #draw line
             count=11
             @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                @inbounds line_to(ctx,count,round(Int16,rhd.v[k,spike_num]*s+300-o))
+                y=round(Int16,rhd.v[k,spike_num]*s+300-o)
+                if y<1
+                    y=1
+                elseif y>600
+                    y=600
+                end
+                @inbounds line_to(ctx,count,y)
                 count+=10
             end
 			
