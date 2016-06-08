@@ -481,15 +481,15 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    if getproperty(han.thres_all,:active,Bool)
-        @inbounds rhd.s[han.spike].thres=getproperty(han.sb,:value,Int)
-    else
-        mythres=getproperty(han.sb,:value,Int)
+    mythres=getproperty(han.sb,:value,Int)
+    
+    if getproperty(han.thres_all,:active,Bool)      
         @inbounds for i=1:length(rhd.s)
             rhd.s[i].thres=mythres
-        end
+        end    
+    else
+        @inbounds rhd.s[han.spike].thres=mythres
     end
-            
 
     nothing
 end
