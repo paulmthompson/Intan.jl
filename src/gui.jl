@@ -229,7 +229,7 @@ if typeof(r.s[1].c)==ClusterWindow
     elseif typeof(r.s[1].c)==ClusterTemplate
 	
 	end
-    if typeof(r.s[1].d)==DetectSignal
+    if typeof(r.s[1].d)==DetectAbs
         id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
     end
 id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
@@ -324,7 +324,7 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     
     #scale
-    @inbounds han.scale[han.spike,1]=abs(1./mean(rhd.v[:,han.spike]))
+    @inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
     @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
 
     @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
@@ -418,7 +418,7 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         rhd.cal=3
 
         #scale
-        han.scale[:,1]=abs(1./mean(rhd.v,1)')
+        han.scale[:,1]=-1.*abs(1./mean(rhd.v,1)')
         han.scale[:,2]=.2*han.scale[:,1]
     end
 
@@ -503,14 +503,14 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     gainval=getproperty(han.gainbox,:value,Int)
 
     if mygain==true
-        han.scale[:,1]=gainval/1000
-        han.scale[:,2]=.2*gainval/1000
+        han.scale[:,1]=-1.*gainval/1000
+        han.scale[:,2]=-.2*gainval/1000
 
         @inbounds han.offset[:,1]=mean(gainval/1000.*rhd.v,1)
         @inbounds han.offset[:,2]=han.offset[:,1].*.2
     else
-        han.scale[han.spike,1]=gainval/1000
-        han.scale[han.spike,2]=.2*gainval/1000
+        han.scale[han.spike,1]=-1*gainval/1000
+        han.scale[han.spike,2]=-.2*gainval/1000
 
         @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
         @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])

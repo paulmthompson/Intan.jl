@@ -81,9 +81,9 @@ function gen_rhd(v,prev,s,buf,nums,tas,sav,filts)
     end
 end
 
-default_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
+default_sort=Algorithm[DetectNeg(),ClusterWindow(),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
-debug_sort=Algorithm[DetectSignal(),ClusterWindow(),AlignMax(),FeatureTime(),ReductionNone(),ThresholdMean()]
+debug_sort=Algorithm[DetectNeg(),ClusterWindow(),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
