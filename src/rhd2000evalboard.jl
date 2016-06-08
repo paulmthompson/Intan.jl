@@ -1016,7 +1016,7 @@ function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
     @inbounds x1 = convert(UInt16,usbBuffer[index])
     @inbounds x2 = convert(UInt16,usbBuffer[index+1])
 
-    convert(Int16,signed((x2<<8)|x1))
+    convert(Int16,signed((x2<<8)|x1))-typemax(Int16)
 end
 
 function convertUsbWordu(usbBuffer::AbstractArray{UInt8,1},index::Int64)
