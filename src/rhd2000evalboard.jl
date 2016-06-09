@@ -891,6 +891,22 @@ function calculateDataBlockSizeInBytes(rhd::FPGA)
     nothing 
 end
 
+function checkUsbHeader(usbBuffer,index)
+
+    @inbounds x1 = convert(UInt64,usbBuffer[index])
+    @inbounds x2 = convert(UInt64,usbBuffer[index+1])
+    @inbounds x3 = convert(UInt64,usbBuffer[index+2])
+    @inbounds x4 = convert(UInt64,usbBuffer[index+3])
+    @inbounds x5 = convert(UInt64,usbBuffer[index+4])
+    @inbounds x6 = convert(UInt64,usbBuffer[index+5])
+    @inbounds x7 = convert(UInt64,usbBuffer[index+6])
+    @inbounds x8 = convert(UInt64,usbBuffer[index+7])
+
+    header = (x8 << 56) + (x7 << 48) + (x6 << 40) + (x5 << 32) + (x4 << 24) + (x3 << 16) + (x2 << 8) + (x1 << 0)
+
+    return (header == RHD2000_HEADER_MAGIC_NUMBER)
+end
+
 function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 
     for fpga in rhd.fpga
@@ -900,6 +916,9 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
         for t=1:SAMPLES_PER_DATA_BLOCK
 
 	    #Header
+            if !checkUsbHeader(fpga.usbBuffer,index)
+                println("Incorrect Header")
+            end
 		
 	    index+=8
 	    fpga.time[t]=convertUsbTimeStamp(fpga.usbBuffer,index)
@@ -1001,7 +1020,7 @@ function writeTimeStamp(rhd::RHD2000)
     nothing
 end
 
-function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
+function convertUsbTimeStamp(usbBuffer, index::Int64)
 
     @inbounds x1 = convert(UInt32,usbBuffer[index])
     @inbounds x2 = convert(UInt32,usbBuffer[index+1])
@@ -1011,7 +1030,7 @@ function convertUsbTimeStamp(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
     convert(UInt32,((x4<<24) + (x3<<16) + (x2<<8) + (x1<<0)))
 end
 
-function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
+function convertUsbWord(usbBuffer, index::Int64)
 
     @inbounds x1 = convert(UInt16,usbBuffer[index])
     @inbounds x2 = convert(UInt16,usbBuffer[index+1])
@@ -1019,7 +1038,7 @@ function convertUsbWord(usbBuffer::AbstractArray{UInt8,1}, index::Int64)
     convert(Int16,signed((x2<<8)|x1))-typemax(Int16)
 end
 
-function convertUsbWordu(usbBuffer::AbstractArray{UInt8,1},index::Int64)
+function convertUsbWordu(usbBuffer,index::Int64)
 
     @inbounds x1 = convert(UInt16,usbBuffer[index])
     @inbounds x2 = convert(UInt16,usbBuffer[index+1])
