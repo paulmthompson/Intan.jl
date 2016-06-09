@@ -129,6 +129,15 @@ function make_notch(wn1,wn2,sr)
     DF2TFilter(df1)
 end
 
+type mytime
+    h::Int8
+    h_l::Gtk.GtkLabelLeaf
+    m::Int8
+    m_l::Gtk.GtkLabelLeaf
+    s::Int8
+    s_l::Gtk.GtkLabelLeaf
+end
+    
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -160,4 +169,5 @@ type Gui_Handles
     events::Array{Int64,1}
     enabled::Array{Bool,1}
     show_thres::Bool
+    time::mytime
 end

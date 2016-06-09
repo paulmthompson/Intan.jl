@@ -107,6 +107,25 @@ function makegui(r::RHD2000)
     grid[2,3]=c2_slider
  
     #COLUMN 3 - 16 CHANNEL DISPLAY
+
+    #ROW 1 - Time
+    s_label=@Label("0")
+    m_label=@Label("0")
+    h_label=@Label("0")
+    sm_label=@Label(":")
+    mh_label=@Label(":")
+
+    frame_time=@Frame("Time Elapsed")
+    grid[3,1]=frame_time
+    hbox_time=@ButtonBox(:h)
+    push!(frame_time,hbox_time)
+
+    push!(hbox_time,h_label)
+    push!(hbox_time,mh_label)
+    push!(hbox_time,m_label)
+    push!(hbox_time,sm_label)
+    push!(hbox_time,s_label)
+    
     
     #ROW 2
     c=@Canvas(500,800)  
@@ -217,7 +236,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label))
     
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -296,7 +315,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	if han.num16>0
             
             draw_spike16(rhd,han,ctx)
-	    plot_events(rhd,han,han.draws)	
+	    plot_events(rhd,han,han.draws)
+
+            update_time(rhd,han)         
 	    reveal(han.c)
                 
 	    if han.num>0                     
@@ -427,6 +448,35 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     nothing
+end
+
+function update_time(rhd::RHD2000,han::Gui_Handles)
+
+    total_seconds=convert(Int64,div(rhd.fpga[1].time[1],rhd.fpga[1].sampleRate))
+
+    this_h=div(total_seconds,3600)
+
+    total_seconds=total_seconds - this_h*3600 
+
+    this_m=div(total_seconds,60)
+
+    this_s=total_seconds - this_m*60
+
+    if this_s != han.time.s
+        setproperty!(han.time.s_l,:label,string(this_s))
+        han.time.s=this_s
+    end
+    if this_m != han.time.m
+        setproperty!(han.time.m_l,:label,string(this_m))
+        han.time.m=this_m
+    end
+    if this_h != han.time.h
+        setproperty!(han.time.h_l,:label,string(this_h))
+        han.time.h=this_h
+    end
+
+    nothing
+
 end
 
 function highlight_channel(han::Gui_Handles,rhd::RHD2000)
