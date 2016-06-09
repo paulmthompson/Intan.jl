@@ -73,7 +73,7 @@ sleep(1.0)
 facts() do
     for i=1:4
         setproperty!(handles.adj2,:value,i)
-        Intan.update_c2(handles.adj2.handle,(handles,myrhd))
+        Intan.update_c2(handles,myrhd)
         sleep(1.0)
         @fact handles.num --> i
         @fact handles.spike --> 16*handles.num16-16+i
