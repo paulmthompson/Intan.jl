@@ -817,14 +817,19 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         return false
     end
 
+    numRead=0
     #this is where usbBuffer is filled from Fifo
     #For multiple boards this should be done in parallel
     if length(rhd.fpga)>1
         for fpga in rhd.fpga
-            @spawn ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
+            @spawn numRead=ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
         end
     else
-        ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+    end
+
+    if numRead!=numBytesToRead
+        return false
     end
         
     for i=0:(numBlocks-1)
@@ -917,7 +922,49 @@ function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
 
 	    #Header
             if !checkUsbHeader(fpga.usbBuffer,index)
-                println("Incorrect Header")
+                if t==1 #first header missing, we're fucked. creep ahead and see what you find
+                    #Add data
+
+                    lag=0
+                    newindex=index
+
+                    for i=2:fpga.numBytesPerBlock
+                        if checkUsbHeader(fpga.usbBuffer,i)
+                            lag=i-index
+                            newindex=i
+                            break
+                        end
+                    end
+
+                else #something is messed up, probably in the last sample. start incrementing backward until header is found
+                    lag=0
+                    newindex=index
+                    for i=(index-1):-1:1
+                        if checkUsbHeader(fpga.usbBuffer,i) #lag specifies number of bytes that are missing
+                            lag=index-i
+                            newindex=i
+                            break
+                        end
+                    end                
+                end
+
+                #get extra bytes
+
+                while (2*numWordsInFifo(fpga) < lag)
+                end
+
+                temp_array=zeros(UInt8,lag)
+                
+                ReadFromPipeOut(fpga,PipeOutData, convert(Clong, lag), temp_array)
+
+                count=1
+                for i=(fpga.numBytesPerBlock-lag+1):fpga.numBytesPerBlock
+                    fpga.usbBuffer[i]=temp_array[count]
+                    count+=1
+                end
+
+                #start fresh
+                index=newindex
             end
 		
 	    index+=8
@@ -1035,7 +1082,7 @@ function convertUsbWord(usbBuffer, index::Int64)
     @inbounds x1 = convert(UInt16,usbBuffer[index])
     @inbounds x2 = convert(UInt16,usbBuffer[index+1])
 
-    convert(Int16,signed((x2<<8)|x1))-typemax(Int16)
+    convert(Int16,signed((x2<<8)|x1)-typemax(Int16)) #is this right?
 end
 
 function convertUsbWordu(usbBuffer,index::Int64)
@@ -1068,7 +1115,6 @@ function GetWireOutValue(rhd::FPGA,epAddr::UInt8)
     value = ccall((:okFrontPanel_GetWireOutValue,lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 end
 
-function ReadFromPipeOut(rhd::FPGA,epAddr::UInt8, length, data::AbstractArray{UInt8,1})
+function ReadFromPipeOut(rhd::FPGA,epAddr::UInt8, length, data)
     ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
-    nothing
 end
