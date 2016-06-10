@@ -64,7 +64,6 @@ function makegui(r::RHD2000)
     setproperty!(button_thres,:active,false)
     push!(vbox1_3_1,button_thres)
     
- 
     #CLUSTER
     frame1_4=@Frame("Clustering")
     push!(vbox1_2,frame1_4)
@@ -662,6 +661,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
+        rubberband_start(han.c2,event.x,event.y)
     elseif event.button == 2 #middle click cycles through clusters
         #go to next cluster
         clus=han.var1[han.spike,2]+1
@@ -956,5 +956,82 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     
 
+    nothing
+end
+
+#=
+Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
+=#
+
+immutable Vec2
+    x::Float64
+    y::Float64
+end
+
+type RubberBand
+    pos1::Vec2
+    pos2::Vec2
+    moved::Bool
+    minpixels::Int
+end
+
+function rb_erase(r::Cairo.CairoContext, ctxcopy)
+    # Erase the previous rubberband by copying from back surface to front
+    set_source(r, ctxcopy)
+    set_line_width(r, 3)
+    stroke(r)
+end
+
+function rb_draw(r::Cairo.CairoContext, rb::RubberBand)
+    rb_set(r, rb)
+    set_line_width(r, 1)
+    #set_source_rgb(r, 0, 0, 0)
+    #stroke_preserve(r)
+    set_source_rgb(r, 1, 1, 1)
+    stroke_preserve(r)
+end
+
+function rb_set(r::Cairo.CairoContext, rb::RubberBand)
+    move_to(r, rb.pos1.x, rb.pos1.y)
+    rel_line_to(r,rb.pos2.x-rb.pos1.x, rb.pos2.y-rb.pos1.y)
+end
+
+function rubberband_start(c::Canvas, x, y; minpixels::Int=2)
+    # Copy the surface to another buffer, so we can repaint the areas obscured by the rubberband
+    r = getgc(c)
+    Cairo.save(r)
+    ctxcopy = copy(r)
+    rb = RubberBand(Vec2(x,y), Vec2(x,y), false, minpixels)
+    push!((c.mouse, :button1motion),  (c, event) -> rubberband_move(c, rb, event.x, event.y, ctxcopy))
+    push!((c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((c.mouse, :button1release), (c, event) -> rubberband_stop(c, rb, event.x, event.y, ctxcopy))
+    nothing
+end
+
+function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
+    r = getgc(c)
+    if rb.moved
+        rb_erase(r, ctxcopy)
+    end
+    rb.moved = true
+    
+    # Draw the new rubberband
+    rb.pos2 = Vec2(x, y)
+    rb_draw(r, rb)
+    reveal(c, false)
+end
+
+function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
+    pop!((c.mouse, :button1motion))
+    pop!((c.mouse, :motion))
+    pop!((c.mouse, :button1release))
+    if !rb.moved
+        return
+    end
+    r = getgc(c)
+    rb_set(r, rb)
+    rb_erase(r, ctxcopy)
+    restore(r)
+    reveal(c, false)
     nothing
 end
