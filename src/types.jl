@@ -15,16 +15,32 @@ type Debug
     maxind::Int64
 end
 
-const v_save_file = "v.bin"
-const ts_save_file = "ts.bin"
-
 type SaveWave <: SaveOpt 
 end
 
 type SaveAll <: SaveOpt
+    v::ASCIIString
+    ts::ASCIIString
+    adc::ASCIIString
+    ttl::ASCIIString
+    folder::ASCIIString
+end
+
+function SaveAll()
+    t=string("./",now())
+    SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
 end
 
 type SaveNone <: SaveOpt
+    ts::ASCIIString
+    adc::ASCIIString
+    ttl::ASCIIString
+    folder::ASCIIString
+end
+
+function SaveNone()
+    t=string("./",now())
+    SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
 end
 
 type FPGA

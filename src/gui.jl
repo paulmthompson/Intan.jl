@@ -231,11 +231,14 @@ push!(exmenu,export_mat_)
 showall(win)
 
 #Prepare saving headers
+
+mkdir(r.save.folder)
+
 if typeof(r.save)==SaveAll
-    prepare_v_header(r,"v.bin")
-    prepare_stamp_header(r,"ts.bin")
+    prepare_v_header(r)
+    prepare_stamp_header(r)
 elseif typeof(r.save)==SaveNone
-    prepare_stamp_header(r,"ts.bin")
+    prepare_stamp_header(r)
 end
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
@@ -917,7 +920,7 @@ function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    write_plex(save_dialog("Export to Plex",han.win))
+    write_plex(save_dialog("Export to Plex",han.win),rhd.save.v,rhd.save.ts)
 
     nothing
 end

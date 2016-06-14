@@ -1006,7 +1006,7 @@ end
 function queueToFile(rhd::RHD2000,sav::SaveAll)
 
     #write analog voltage traces
-    f=open(v_save_file, "a+")
+    f=open(rhd.save.v, "a+")
 
     write(f,rhd.v)
     close(f)
@@ -1039,7 +1039,7 @@ function writeTimeStamp(rhd::RHD2000)
 
     #write spike times and cluster identity
 
-    f=open(ts_save_file, "a+")
+    f=open(rhd.save.ts, "a+")
 
     write(f,rhd.fpga[1].time[1])
 

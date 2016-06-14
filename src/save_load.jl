@@ -35,9 +35,9 @@ function read_v_header(fname="v.bin")
     myheader
 end
 
-function prepare_v_header(rhd::RHD2000,fname="v.bin")
+function prepare_v_header(rhd::RHD2000)
 
-    f=open(fname,"a+")
+    f=open(rhd.save.v,"a+")
 
     t=now()
     
@@ -85,9 +85,9 @@ function read_stamp_header(fname="ts.bin")
     myheader    
 end
 
-function prepare_stamp_header(rhd::RHD2000,fname="ts.bin")
+function prepare_stamp_header(rhd::RHD2000)
 
-    f=open(fname,"a+")
+    f=open(rhd.save.ts,"a+")
 
     t=now()
     
@@ -135,6 +135,25 @@ function read_adc_header(fname="adc.bin")
     myheader   
 end
 
+function prepare_adc_header(rhd::RHD2000)
+
+    f=open(rhd.save.adc,"a+")
+
+    t=now()
+
+    write(f,convert(UInt8,Dates.month(t)))
+    write(f,convert(UInt8,Dates.day(t)))
+    write(f,convert(UInt16,Dates.year(t)))
+    write(f,convert(UInt8,Dates.hour(t)))
+    write(f,convert(UInt8,Dates.minute(t)))
+    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,size(rhd.v,1)))
+
+    close(f)
+
+    nothing
+end
+
 type TTL_Header
     date_m::UInt8
     date_d::UInt8
@@ -164,6 +183,25 @@ function read_ttl_header(fname="ttl.bin")
     close(f)
 
     myheader 
+end
+
+function prepare_ttl_header(rhd::RHD2000)
+
+    f=open(rhd.save.ttl,"a+")
+
+    t=now()
+
+    write(f,convert(UInt8,Dates.month(t)))
+    write(f,convert(UInt8,Dates.day(t)))
+    write(f,convert(UInt16,Dates.year(t)))
+    write(f,convert(UInt8,Dates.hour(t)))
+    write(f,convert(UInt8,Dates.minute(t)))
+    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,size(rhd.v,1)))
+
+    close(f)
+    
+    nothing
 end
 
 #=
@@ -414,15 +452,15 @@ function PL_DataBlockHeader(t,num,unit,wave_size)
     PL_DataBlockHeader(1,0,t,num,unit,1,wave_size)
 end
 
-function write_plex(myname::ASCIIString,tmin=0)
+function write_plex(out_name::ASCIIString,vname="v.bin",tsname="ts.bin",tmin=0)
 
-    v_header=read_v_header()
-    ts_header=read_stamp_header()
+    v_header=read_v_header(vname)
+    ts_header=read_stamp_header(tsname)
 
     sample_size=v_header.samples_per_block
     sr=ts_header.sr
     
-    (ss,numcells)=parse_ts()
+    (ss,numcells)=parse_ts(tsname)
 
     num_channel=length(ss)
     
@@ -438,7 +476,7 @@ function write_plex(myname::ASCIIString,tmin=0)
 
     samples_per_wave=convert(Int16,length(ss[1][1].inds))
     
-    f_out=open(myname,"a+")
+    f_out=open(out_name,"a+")
     
     file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,ss[1][end].inds.stop/sr,tscounts)
     
@@ -454,7 +492,7 @@ function write_plex(myname::ASCIIString,tmin=0)
     end
     #This will suck for big files
     #should read in one channel voltage at a time
-    v=parse_v()
+    v=parse_v(vname)
     
     myv=zeros(Int16,samples_per_wave)
     for i=1:length(ss)

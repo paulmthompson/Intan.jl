@@ -1,6 +1,6 @@
 module Gui_Test
 
-using FactCheck, Intan, SpikeSorting, Gtk.ShortNames
+using FactCheck, Intan, SpikeSorting, Gtk.ShortNames, MAT, JLD
 
 myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
@@ -78,6 +78,24 @@ facts() do
         @fact handles.num --> i
         @fact handles.spike --> 16*handles.num16-16+i
     end
+end
+
+#=
+SAVE LOAD Test
+=#
+
+myv=parse_v(myrhd.save.v)
+
+facts() do
+
+    @fact size(myv,2) --> 64
+end
+
+mys_m=save_ts_mat(myrhd.save.ts)
+mys_j=save_ts_jld(myrhd.save.ts)
+
+facts() do
+    @fact length(mys_m) --> length(mys_j)
 end
 
 end
