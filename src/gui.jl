@@ -205,6 +205,10 @@ function makegui(r::RHD2000)
     push!(exmenu,export_klusta_)
     export_nwb_ = @MenuItem("NWB")
     push!(exmenu,export_nwb_)
+    export_jld_ = @MenuItem("JLD")
+    push!(exmenu,export_jld_)
+    export_mat_ = @MenuItem("MAT")
+push!(exmenu,export_mat_)
     
     mb = @MenuBar()
     push!(mb,saveopts)
@@ -224,7 +228,15 @@ function makegui(r::RHD2000)
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI")
-    showall(win)
+showall(win)
+
+#Prepare saving headers
+if typeof(r.save)==SaveAll
+    prepare_v_header(r,"v.bin")
+    prepare_stamp_header(r,"ts.bin")
+elseif typeof(r.save)==SaveNone
+    prepare_stamp_header(r,"ts.bin")
+end
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
@@ -261,6 +273,8 @@ id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
+id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
+id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 for i=1:6
@@ -895,11 +909,35 @@ function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,va
     nothing
 end
 
+#=
+Export Callbacks
+=#
+
 function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    write_plex(save_dialog("Export to Plex",han.win),size(rhd.v,2))
+    write_plex(save_dialog("Export to Plex",han.win))
+
+    nothing
+end
+
+function export_jld_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    #get prefix for exported data name
+
+    #find out what to export
+
+    #call appropriate save functions based on above
+    
+    nothing
+end
+
+function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
 
     nothing
 end

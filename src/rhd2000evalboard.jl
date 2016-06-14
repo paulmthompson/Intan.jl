@@ -1048,12 +1048,12 @@ function writeTimeStamp(rhd::RHD2000)
         write(f,rhd.nums[i]) #number of spikes coming up (UInt16)
         for j=1:rhd.nums[i]
             write(f,rhd.buf[j,i].inds.start) #Index of start
+            write(f,rhd.buf[j,i].inds.stop) #Index of stop
             write(f,rhd.buf[j,i].id) # cluster number (UInt8)
         end
     end
 
     close(f)
-
 
     save_task(rhd.task,rhd)
 

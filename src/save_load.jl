@@ -35,6 +35,25 @@ function read_v_header(fname="v.bin")
     myheader
 end
 
+function prepare_v_header(rhd::RHD2000,fname="v.bin")
+
+    f=open(fname,"a+")
+
+    t=now()
+    
+    write(f,convert(UInt8,Dates.month(t)))
+    write(f,convert(UInt8,Dates.day(t)))
+    write(f,convert(UInt16,Dates.year(t)))
+    write(f,convert(UInt8,Dates.hour(t)))
+    write(f,convert(UInt8,Dates.minute(t)))
+    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,size(rhd.v,1)))
+
+    close(f)
+
+    nothing
+end
+
 type Stamp_Header
     date_m::UInt8
     date_d::UInt8
@@ -64,6 +83,25 @@ function read_stamp_header(fname="ts.bin")
     close(f)
 
     myheader    
+end
+
+function prepare_stamp_header(rhd::RHD2000,fname="ts.bin")
+
+    f=open(fname,"a+")
+
+    t=now()
+    
+    write(f,convert(UInt8,Dates.month(t)))
+    write(f,convert(UInt8,Dates.day(t)))
+    write(f,convert(UInt16,Dates.year(t)))
+    write(f,convert(UInt8,Dates.hour(t)))
+    write(f,convert(UInt8,Dates.minute(t)))
+    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt32,rhd.fpga[1].sampleRate))
+
+    close(f)
+
+    nothing
 end
     
 type ADC_Header
@@ -134,15 +172,15 @@ Voltage
 
 function parse_v(fname="v.bin")
 
-    myheader=Voltage_Header(fname)
+    myheader=read_v_header(fname)
 
     f=open(fname, "r+")
 
     seekend(f)
-    l=position(f)-80
-    v=zeros(Int16,div(l,(16*8)),myheader.num_channels)
+    l=position(f)-10
+    v=zeros(Int16,div(l,2*myheader.num_channels),myheader.num_channels)
 
-    seek(f,81)
+    seek(f,10)
 
     count=0
     while eof(f)==false
@@ -151,11 +189,33 @@ function parse_v(fname="v.bin")
                 v[count+j,i]=read(f,Int16)
             end
         end
-        count+=samples_per_block
+        count+=myheader.samples_per_block
     end
     close(f)
     
     v
+end
+
+function save_v_mat(in_name="v.bin",out_name="v.mat")
+
+    v=parse_v(in_name)
+
+    file = matopen(out_name, "w")
+    write(file, "v", v)
+    close(file)
+      
+    nothing
+end
+
+function save_v_jld(in_name="v.bin",out_name="v.jld")
+
+    v=parse_v(in_name)
+
+    file = jldopen(out_name, "w")
+    write(file, "v", v)
+    close(file)
+    
+    nothing
 end
 
 function parse_v(channel_num::Int64; name="v.bin", sample_size=SAMPLES_PER_DATA_BLOCK)
@@ -183,7 +243,7 @@ end
 
 
 #=
-Binary 
+Time Stamps
 =#
 
 function parse_ts(fname="ts.bin")
@@ -196,7 +256,7 @@ function parse_ts(fname="ts.bin")
 
     f=open(fname, "r+")
 
-    seek(f,97)
+    seek(f,12)
 
     while eof(f)==false
 
@@ -206,12 +266,12 @@ function parse_ts(fname="ts.bin")
             chan=read(f,UInt16,1)[1] #channel
             num=read(f,UInt16,1)[1] #Number of upcoming spikes
             for i=1:num
-                myss=read(f,Int64,1)[1] #first time stamps
+                myss=read(f,Int64,2) #time stamps
                 clus=read(f,UInt8,1)[1] #cluster
                 if clus>numcells[j]
                     numcells[j]=clus
                 end
-                push!(ss[j],Spike((t+myss:t+myss),clus))
+                push!(ss[j],Spike((t+myss[1]:t+myss[2]),clus))
             end
         end
     
@@ -238,12 +298,12 @@ function get_spike_matrix(num_channel::Int64; name="ts.bin")
             chan=read(f,UInt16,1)[1] #channel
             num=read(f,UInt16,1)[1] #Number of upcoming spikes
             for i=1:num
-                myss=read(f,Int64,1)[1] #first time stamps
+                myss=read(f,Int64,2) #time stamps
                 clus=read(f,UInt8,1)[1] #cluster
                 if clus>numcells[j]
                     numcells[j]=clus
                 end
-                push!(ss[j],Spike((t+myss:t+myss),clus))
+                push!(ss[j],Spike((t+myss[1]:t+myss[2]),clus))
             end
         end
     
@@ -255,7 +315,7 @@ function get_spike_matrix(num_channel::Int64; name="ts.bin")
 end
 
 
-function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},tmin=0.0,sr=30000)
+function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},sr=30000,tmin=0.0)
 
     spikes=Dict{ASCIIString,Array{Float64,1}}()
 
@@ -266,14 +326,44 @@ function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},tmin=0
             myspikes=zeros(Float64,0)
             
             for k=1:length(ss[i])
-                if (ss[i][k].inds[1]/sr>tmin) &&(ss[i][k].id==j)
-                    push!(myspikes,ss[i][k].inds[1]/sr)
+                if (ss[i][k].inds.start/sr>tmin) &&(ss[i][k].id==j)
+                    push!(myspikes,ss[i][k].inds.start/sr)
                 end             
             end   
             spikes[myname]=myspikes
         end
     end
     spikes
+end
+
+function save_ts_mat(in_name="ts.bin",out_name="ts.mat")
+
+    myheader=read_stamp_header(in_name)
+
+    (ss,numcells)=parse_ts(in_name)
+    
+    spikes=get_ts_dict(ss,numcells,myheader.sr)
+    
+    file = matopen(out_name, "w")
+    write(file, "spikes", spikes)
+    close(file)
+      
+    spikes   
+end
+
+function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
+
+    myheader=read_stamp_header(in_name)
+
+    (ss,numcells)=parse_ts(in_name)
+    
+    spikes=get_ts_dict(ss,numcells,myheader.sr)
+    
+    file = jldopen(out_name, "w")
+    write(file, "spikes", spikes)
+    close(file)
+      
+    spikes 
 end
 
 function save_mat(num_channel::Int64; biname="ts.bin",savename="spikes.mat",tmin=0,sr=30000)
@@ -306,7 +396,6 @@ end
 Methods to convert data waveforms to PLX so it can be used with offline sorter.
 Thanks to Simon Kornblith for linking to description of PLX data structures here:
 http://hardcarve.com/wikipic/PlexonDataFileStructureDocumentation.pdf
-
 =#
 
 type PL_FileHeader
@@ -408,10 +497,17 @@ function PL_DataBlockHeader(t,num,unit,wave_size)
     PL_DataBlockHeader(1,0,t,num,unit,1,wave_size)
 end
 
-function write_plex(myname::ASCIIString,num_channel::Int64,sr=30000,tmin=0,sample_size=Intan.SAMPLES_PER_DATA_BLOCK)
-    f_out=open(myname,"a+")
+function write_plex(myname::ASCIIString,tmin=0)
+
+    v_header=read_v_header()
+    ts_header=read_stamp_header()
+
+    sample_size=v_header.samples_per_block
+    sr=ts_header.sr
     
-    (ss,numcells)=Intan.get_spike_matrix(num_channel)
+    (ss,numcells)=parse_ts()
+
+    num_channel=length(ss)
     
     spikes=Intan.get_ts_dict(ss,numcells,tmin,sr)
     
@@ -422,8 +518,12 @@ function write_plex(myname::ASCIIString,num_channel::Int64,sr=30000,tmin=0,sampl
             tscounts[i+1,ss[i][j].id+1]+=1 
         end
     end
+
+    samples_per_wave=convert(Int16,length(ss[1][1].inds))
     
-    file_header=PL_FileHeader(sr,length(ss),50,24,ss[1][end].inds[end]/sr,tscounts)
+    f_out=open(myname,"a+")
+    
+    file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,ss[1][end].inds.stop/sr,tscounts)
     
     for i=1:length(fieldnames(file_header))
         write(f_out,getfield(file_header,i)) 
@@ -437,16 +537,17 @@ function write_plex(myname::ASCIIString,num_channel::Int64,sr=30000,tmin=0,sampl
     end
     #This will suck for big files
     #should read in one channel voltage at a time
-    v=parse_v(length(ss))
-    myv=zeros(Int16,50)
+    v=parse_v()
+    
+    myv=zeros(Int16,samples_per_wave)
     for i=1:length(ss)
         for j=1:length(ss[i])
-            header=PL_DataBlockHeader(ss[i][j].inds[1],i,ss[i][j].id,50)
-            myind=ss[i][j].inds[1]
+            header=PL_DataBlockHeader(ss[i][j].inds.start,i,ss[i][j].id,samples_per_wave)
+            myind=ss[i][j].inds.start
             
-            if myind+50 < size(v,1)
+            if myind+samples_per_wave-1 < size(v,1)
                 count=1
-                for k=myind:(myind+49)                    
+                for k=myind:(myind+samples_per_wave-1)                    
                     myv[count]=v[k,i]
                     count+=1
                 end
