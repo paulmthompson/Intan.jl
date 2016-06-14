@@ -1,5 +1,5 @@
 
-export save_jld, save_mat, parse_v
+export save_ts_jld, save_ts_mat, parse_v
 #=
 methods to select which variables in workspace to save
 =#
@@ -218,30 +218,6 @@ function save_v_jld(in_name="v.bin",out_name="v.jld")
     nothing
 end
 
-function parse_v(channel_num::Int64; name="v.bin", sample_size=SAMPLES_PER_DATA_BLOCK)
-
-    f=open(name, "r+")
-
-    seekend(f)
-    l=position(f)
-    v=zeros(Int16,div(l,(16*8)),channel_num)
-
-    seekstart(f)
-
-    count=0
-    while eof(f)==false
-        for i=1:channel_num
-            for j=1:sample_size
-                v[count+j,i]=read(f,Int16)
-            end
-        end
-        count+=sample_size
-    end
-    close(f)
-    v
-end
-
-
 #=
 Time Stamps
 =#
@@ -281,39 +257,6 @@ function parse_ts(fname="ts.bin")
 
     (ss,numcells)
 end
-
-function get_spike_matrix(num_channel::Int64; name="ts.bin")
-
-    ss=[Array(Spike,0) for i=1:num_channel]
-    
-    numcells=zeros(Int64,num_channel)
-
-    f=open(name, "r+")
-
-    while eof(f)==false
-
-        t=read(f,UInt32,1)[1]
-
-        for j=1:num_channel
-            chan=read(f,UInt16,1)[1] #channel
-            num=read(f,UInt16,1)[1] #Number of upcoming spikes
-            for i=1:num
-                myss=read(f,Int64,2) #time stamps
-                clus=read(f,UInt8,1)[1] #cluster
-                if clus>numcells[j]
-                    numcells[j]=clus
-                end
-                push!(ss[j],Spike((t+myss[1]:t+myss[2]),clus))
-            end
-        end
-    
-    end
-
-    close(f)
-
-    (ss,numcells)
-end
-
 
 function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},sr=30000,tmin=0.0)
 
@@ -364,32 +307,6 @@ function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
     close(file)
       
     spikes 
-end
-
-function save_mat(num_channel::Int64; biname="ts.bin",savename="spikes.mat",tmin=0,sr=30000)
-
-    (ss,numcells)=get_spike_matrix(num_channel,name=biname)
-    
-    spikes=get_ts_dict(ss,numcells,tmin,sr)
-    
-    file = matopen(savename, "w")
-    write(file, "spikes", spikes)
-    close(file)
-      
-    spikes
-end
-
-function save_jld(num_channel::Int64,biname="ts.bin",savename="spikes.jld",tmin=0.0,sr=30000)
-
-    (ss,numcells)=get_spike_matrix(num_channel,name=biname)
-
-    spikes=get_ts_dict(ss,numcells,tmin,sr)
-    
-    file = jldopen(savename, "w")
-    write(file, "spikes", spikes)
-    close(file)
-      
-    spikes
 end
 
 #=
