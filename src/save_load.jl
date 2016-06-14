@@ -162,9 +162,10 @@ type TTL_Header
     time_m::UInt8
     num_channels::UInt16
     samples_per_block::UInt16
+    sr::UInt32
 end
 
-TTL_Header()=TTL_Header(0,0,0,0,0,0,0)
+TTL_Header()=TTL_Header(0,0,0,0,0,0,0,0)
 
 function read_ttl_header(fname="ttl.bin")
 
@@ -179,6 +180,7 @@ function read_ttl_header(fname="ttl.bin")
     myheader.time_m=read(f,UInt8,1)[1]
     myheader.num_channels=read(f,UInt16,1)[1]
     myheader.samples_per_block=read(f,UInt16,1)[1]
+    myheader.sr=read(f,UInt32,1)[1]
 
     close(f)
 
@@ -196,8 +198,9 @@ function prepare_ttl_header(rhd::RHD2000)
     write(f,convert(UInt16,Dates.year(t)))
     write(f,convert(UInt8,Dates.hour(t)))
     write(f,convert(UInt8,Dates.minute(t)))
-    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,16))
     write(f,convert(UInt16,size(rhd.v,1)))
+    write(f,convert(UInt32,rhd.fpga[1].sampleRate))
 
     close(f)
     
@@ -348,6 +351,76 @@ function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
 end
 
 #=
+ADC Signals
+=#
+
+function parse_adc(fname="adc.bin")
+
+    myheader=read_adc_header(fname)
+
+    f=open(fname, "r+")
+
+    seekend(f)
+    l=position(f)-10
+    adc=zeros(UInt16,div(l,2*myheader.num_channels),myheader.num_channels)
+
+    seek(f,10)
+
+    count=0
+    while eof(f)==false
+        for i=1:myheader.num_channels
+            for j=1:myheader.samples_per_block
+                adc[count+j,i]=read(f,UInt16)
+            end
+        end
+        count+=myheader.samples_per_block
+    end
+    close(f)
+    
+    adc
+end
+
+#=
+Events
+=#
+
+function parse_ttl(fname="ttl.bin")
+
+    myheader=read_ttl_header(fname)
+
+    ttl_times=[zeros(Float64,0) for i=1:myheader.num_channels]
+    
+    f=open(fname, "r+")
+
+    seek(f,14) #start at second time step
+
+    x_p=read(f,UInt16)
+
+    count=2
+    while eof(f)==false
+
+        x=read(f,UInt16)
+        
+        for i=1:myheader.num_channels
+            y=x&(2^(i-1))
+            if y>0
+                y_p=x_p&(2^(i-1))
+                if y_p==0
+                    push!(ttl_times[i],count/myheader.sr)
+                end
+            end
+        end
+        x_p=x
+        count+=1
+    end
+    close(f)
+    
+    ttl_times
+end
+
+#=
+EXPORT TO PLEXON
+
 Methods to convert data waveforms to PLX so it can be used with offline sorter.
 Thanks to Simon Kornblith for linking to description of PLX data structures here:
 http://hardcarve.com/wikipic/PlexonDataFileStructureDocumentation.pdf
