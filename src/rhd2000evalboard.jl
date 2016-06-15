@@ -70,7 +70,7 @@ function init_board!(rhd::RHD2000)
         calculateDataBlockSizeInWords(fpga)
         calculateDataBlockSizeInBytes(fpga)
     
-        setSampleRate(fpga,fpga.sampleRate,rhd.debug.state)
+        setSampleRate(fpga,rhd.sr,rhd.debug.state)
         println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
 
         #Now that we have set our sampling rate, we can set the MISO sampling delay

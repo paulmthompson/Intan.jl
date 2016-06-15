@@ -250,7 +250,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win)
     
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -337,7 +337,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    reveal(han.c)
                 
 	    if han.num>0                     
-		@inbounds draw_spike(rhd,han.spike,ctx2,han.scale[han.spike,1],han.offset[han.spike,1],han.draws)
+		draw_spike(rhd,han,ctx2)
 	    end
 	end
 	reveal(han.c2)
@@ -728,7 +728,8 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         event = unsafe_load(param_tuple)
     
         #Convert canvas coordinates to voltage vs time coordinates
-        myx=collect(1:10:500)
+        increment=div(500,han.wave_points)
+        myx=collect(1:increment:500)
         x1=indmin(abs(myx-han.mi[1]))
         x2=indmin(abs(myx-event.x))
         s=han.scale[han.spike,1]
@@ -805,14 +806,16 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data   
     ctx = getgc(han.c2)
+
+    increment=div(500,han.wave_points)
         
     #loop over clusters
     for i=1:length(rhd.s[han.spike].c.win)
         #loop over windows
         for j=1:length(rhd.s[han.spike].c.win[i])
 
-            x1=(rhd.s[han.spike].c.win[i][j].x1-1)*10+1
-            x2=(rhd.s[han.spike].c.win[i][j].x2-1)*10+1
+            x1=(rhd.s[han.spike].c.win[i][j].x1-1)*increment+1
+            x2=(rhd.s[han.spike].c.win[i][j].x2-1)*increment+1
             y1=rhd.s[han.spike].c.win[i][j].y1
             y2=rhd.s[han.spike].c.win[i][j].y2
             move_to(ctx,x1,y1*han.scale[han.spike,1]+300-han.offset[han.spike,1])
@@ -994,8 +997,6 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             han.enabled[i]=e[i]
         end
     end
-
-    
 
     nothing
 end

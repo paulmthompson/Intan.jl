@@ -88,11 +88,12 @@ function gen_rhd(v,prev,s,buf,nums,tas,sav,filts)
             task::$(typeof(tas))
             save::$(typeof(sav))
             filts::$(typeof(filts))
+            sr::Int64
         end
 
         function make_rhd(fpga::Array{FPGA,1},v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)))
             
-            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts)
+            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000)
         end
     end
 end
@@ -105,7 +106,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=default_sort, debug=default_debug,sav=default_sav)
+function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=default_sort, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -121,21 +122,27 @@ function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=defa
         params=debug_sort
     end
 
-    notches=[make_notch(59,61,30000) for i=1:numchannels]
+    notches=[make_notch(59,61,sr) for i=1:numchannels]
+
+    wave_points=get_wavelength(sr,wave_time)
     
     if sort=="single"
         v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
         prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
-        s=create_multi(params...,numchannels,48)
+        s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)      
     elseif sort=="parallel"
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
-        s=create_multi(params...,numchannels,1:1,48)
+        s=create_multi(params...,numchannels,1:1,wave_points)
         (buf,nums)=output_buffer(numchannels,true)       
     end
     gen_rhd(v,prev,s,buf,nums,mytask,sav,notches)
-    make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches)
+    rhd=make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches)
+
+    rhd.sr=sr
+
+    rhd
 end
 
 function make_notch(wn1,wn2,sr)
@@ -144,6 +151,8 @@ function make_notch(wn1,wn2,sr)
     df1=digitalfilter(responsetype, designmethod)
     DF2TFilter(df1)
 end
+
+get_wavelength(sr,timewin)=round(Int,sr*timewin/1000)
 
 type mytime
     h::Int8
@@ -186,4 +195,5 @@ type Gui_Handles
     enabled::Array{Bool,1}
     show_thres::Bool
     time::mytime
+    wave_points::Int64
 end

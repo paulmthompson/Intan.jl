@@ -13,20 +13,21 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     ybounds=75.0:125.0:450.0
 
     maxid=1
+    increment=div(125,han.wave_points)*2
 
     #first ID
     @inbounds for i in xbounds
         for j in ybounds
             if han.enabled[k]
-                for g=1:rhd.nums[k]
+                for g=1:rhd.nums[k] #plotting every spike, do we need to do that?
                     if rhd.buf[g,k].inds.start>0
                         if rhd.buf[g,k].id==1
                             s=han.scale[k,2]
                             o=han.offset[k,2]
                             y=rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o
                             move_to(ctx,1+i,y)
-                            count=3
-                            for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
+                            count=increment+1
+                            for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
                                 y=rhd.v[kk,k]*s+j-o
                                 if y<j-65
                                     y=j-65.0
@@ -34,7 +35,7 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                                     y=j+65.0
                                 end  
                                 line_to(ctx,count+i,y)
-                                count+=2
+                                count+=increment
                             end
                         elseif rhd.buf[g,k].id>maxid
                             maxid=rhd.buf[g,k].id
@@ -63,8 +64,8 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                                 s=han.scale[k,2]
                                 o=han.offset[k,2]
                                 move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
-                                count=3
-                                for kk=rhd.buf[g,k].inds.start+1:rhd.buf[g,k].inds.stop
+                                count=increment+1
+                                for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
                                     y=rhd.v[kk,k]*s+j-o
                                     if y<j-65.0
                                         y=j-65.0
@@ -72,7 +73,7 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                                         y=j+65.0
                                     end  
                                     line_to(ctx,count+i,y)
-                                    count+=2
+                                    count+=increment
                                 end
                             end
                         end        
@@ -93,8 +94,15 @@ end
 Single maximized channel plotting
 =#
 
-function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Float64,o::Float64,reads::Int64)
+function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
+    spike_num=han.spike
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike,1]
+    reads=han.draws
+
+    increment=div(500,han.wave_points)
+    
     for i=1:rhd.nums[spike_num]
 
         if rhd.buf[i,spike_num].inds.start>0
@@ -102,7 +110,7 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
             @inbounds move_to(ctx,1,rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]*s+300-o)
             
             #draw line
-            count=11
+            count=increment+1
             @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
                 y=rhd.v[k,spike_num]*s+300-o
                 if y<1.0
@@ -111,7 +119,7 @@ function draw_spike(rhd::RHD2000,spike_num::Int64,ctx::Cairo.CairoContext,s::Flo
                     y=600.0
                 end
                 @inbounds line_to(ctx,count,y)
-                count+=10
+                count+=increment
             end
 			
 	    count=(rhd.buf[i,spike_num].id-1)*100+10
