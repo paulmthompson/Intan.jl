@@ -62,7 +62,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-myrhd=makeRHD([myfpga],"single",myt,debug=d,sav=mys);
+myrhd=makeRHD([myfpga],myt,debug=d,sav=mys);
 
 facts() do
     @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -90,7 +90,7 @@ myamp=RHD2132("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 myfpga=FPGA(1,myamp)
-myrhd=makeRHD([myfpga],"parallel",myt,debug=d,sav=mys);
+myrhd=makeRHD([myfpga],myt,debug=d,sav=mys,parallel=true);
 
 facts() do
     @fact myrhd.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,32)

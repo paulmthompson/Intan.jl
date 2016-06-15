@@ -15,7 +15,7 @@ A simple GUI is under development that will control 1) data acquisition, 2) visu
 Creating GUI
 **************
 
-The GUI can easily be created from an IJulia notebook. The user must specify 1) which amplifiers are connected to which ports, 2) what experimental control paradigm will be used, 3) how data should be saved and 4) if the GUI should be run in debug mode. These are used to create an RHD2000 data structure, which is then used to construct the GUI. Every initialization requires the amp structure, processing option, and task file. Everything else is given as keywords. For example:
+The GUI can easily be created from an IJulia notebook. The user must specify 1) which amplifiers are connected to which ports, 2) what experimental control paradigm will be used, 3) how data should be saved and 4) if the GUI should be run in debug mode. These are used to create an RHD2000 data structure, which is then used to construct the GUI. Every initialization requires the amp structure and task file. Everything else is given as keywords. For example:
 
 .. code-block:: julia 
 
@@ -33,7 +33,7 @@ The GUI can easily be created from an IJulia notebook. The user must specify 1) 
 	#mys=SaveAll()
 
 	#Initialize evaluation board setup
-	myrhd=RHD2000([myfpga],"single",mt, sav=mys)
+	myrhd=RHD2000([myfpga],mt, sav=mys)
 
 	#Creates the GUI
 	handles = makegui(myrhd);
@@ -115,8 +115,10 @@ The "do_task" function will implement the control logic of the task such as upda
 
 .. code-block:: julia 
 
-	function do_task(myt::Task_NoTask,rhd::RHD2000)
+	function do_task(myt::Task_NoTask,rhd::RHD2000,myread)
 	end
+
+The "myread" variable is a boolean that indicates if data was read from the Intan board or not. If you only want your experimental control to run every time new data is acquired (for instance every 20 ms when sampling at 30khz), then place your methods inside a conditional myread==true block of code.
 
 =================
 Logging Function

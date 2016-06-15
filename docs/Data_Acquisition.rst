@@ -81,10 +81,10 @@ Now add the FPGA to the primary RHD2000 data structure, which will include optio
 
 .. code-block:: julia 
 
-	myrhd=RHD2000([myfpga],single",mytask,sav=mysave);
+	myrhd=RHD2000([myfpga],mytask,sav=mysave)
 
 	#Creates the GUI
-	handles = makegui(myrhd);
+	handles = makegui(myrhd)
 
 To connect to the board and perform initialization, click the Init button in the top left hand corner.
 
@@ -111,35 +111,31 @@ During the experiment, saving the neural data in a binary format is significantl
 	#Save all waveforms
 	mysave=SaveAll()
 
-	myrhd=RHD2000([myfpga],"single",mytask,sav=mysave)
+	myrhd=RHD2000([myfpga],mytask,sav=mysave)
 
 
 	#Save just the waveforms
-	myrhd2=RHD2000([myfpga],"single",mytask,sav=SaveWave())
+	myrhd2=RHD2000([myfpga],mytask,sav=SaveWave())
 
 	#Don't save anything
-	myrhd3=RHD2000([myfpga],"single",mytask,sav=SaveNone())
+	myrhd3=RHD2000([myfpga],mytask,sav=SaveNone())
 
-Whatever version of the voltage traces will be saved as a file named "v.bin" in the working directory. If all of the analog traces need to be worked with directly, they can be loaded into the workspace with the parse_v function by specifying the channel number:
+Data is saved in a folder named with the date and time in the working director. Voltage traces will be saved as a file named "v.bin" in the working directory. If all of the analog traces need to be worked with directly, they can be loaded into the workspace with the parse_v function by specifying the channel number:
 
 .. code-block:: julia
 
 	#Assumes v.bin is in working directly and the number of samples per data block is the same as when data was collected.
-	parse_v(64)
+	parse_v()
 
 Time stamps for each detected spike is also saved in the working directory in binary form as "ts.bin"  Binary is not immediately useful for any future analysis, so a parser can be run immediately after recording to save the timestamps in a HDF5 format file such as .mat (MATLAB) or .jld (Julia). This can be done as follows:
 
 .. code-block:: julia 
 	
 	#Saves timestamps as "spikes.mat" in working directory
-	num=64 #Number of channels in the recording	
-	save_mat(num)
-
-	#the user can optionally specify a time threshold, where no stamps are saved before it (like before the experiment started or sorting was completed).
-
-	save_mat(num, 200000)
+	save_ts_mat()
 
 	#Saves timestamps as "spikes.jld" in working directory
-	save_jld(num)
+	save_ts_jld()
 
+Alternatively, data can be exported into MAT, JLD or Plexon file types after the experiment is completed using the "Export" menu in the GUI.
 

@@ -7,7 +7,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveAll()
 myfpga=FPGA(1,myamp)
-myrhd=makeRHD([myfpga],"single",myt,debug=d,sav=mys)
+myrhd=makeRHD([myfpga],myt,debug=d,sav=mys)
 
 handles = makegui(myrhd)
 

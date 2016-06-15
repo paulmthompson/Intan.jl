@@ -42,8 +42,10 @@ The "do_task" function will implement the control logic of the task such as upda
 
 .. code-block:: julia 
 
-	function do_task(myt::Task_NoTask,rhd::RHD2000)
+	function do_task(myt::Task_NoTask,rhd::RHD2000,myread)
 	end
+
+The "myread" variable is a boolean that indicates if data was read from the Intan board or not. If you only want your experimental control to run every time new data is acquired (for instance every 20 ms when sampling at 30khz), then place your methods inside a conditional myread==true block of code.
 
 =================
 Logging Function

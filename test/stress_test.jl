@@ -7,7 +7,7 @@ function stress_init(amps)
     d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
     myt=Task_NoTask()
     mys=SaveAll()
-    rhd=makeRHD(amps,"single",myt,debug=d,sav=mys)
+    rhd=makeRHD(amps,myt,debug=d,sav=mys)
     handles = makegui(rhd)
     (rhd,handles)
 end

@@ -106,7 +106,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=default_sort, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
+function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -126,12 +126,12 @@ function makeRHD(fpga::Array{FPGA,1},sort::ASCIIString,mytask::Task; params=defa
 
     wave_points=get_wavelength(sr,wave_time)
     
-    if sort=="single"
+    if parallel==false
         v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
         prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)      
-    elseif sort=="parallel"
+    else
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
         s=create_multi(params...,numchannels,1:1,wave_points)
