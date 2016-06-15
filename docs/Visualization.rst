@@ -16,7 +16,7 @@ Interface
 Single Channel Display
 =======================
 
-.. image:: ./pics/GUI_single.png
+.. image:: pics/GUI_single.png
 
 The left display shows voltage-time plots of detected spike events. The scroll bar at the bottom can be used to select the individual channel from the group display (to the right) to display.
 
@@ -34,7 +34,7 @@ Different clusters are represented with different colors.
 Waveform Display
 ==================
 
-.. image:: ./pics/GUI_specific.png
+.. image:: pics/GUI_specific.png
 
 For better visualization, each waveform on the main display channel will be plotted separately, along with the corresponding spike raster.
 
@@ -48,7 +48,7 @@ Up to six channels of analog and ttl signals can be displayed at one time. The s
 Control
 ========
 
-.. image:: ./pics/GUI_control.png
+.. image:: pics/GUI_control.png
 
 Before starting, click the Init button to connect to the FPGA and calibrate the headstages. The run button will start collecting data. The first data is initially collected in "calibration mode." All the board to run for several seconds (or longer depending on what spike sorting method is selected) before unchecking the calibration box. After this box is unchacked, data will begin to be displayed on the displays.
 
@@ -56,7 +56,7 @@ Before starting, click the Init button to connect to the FPGA and calibrate the 
 Channel Gain
 *************
 
-.. image:: ./pics/GUI_gain.png
+.. image:: pics/GUI_gain.png
 
 Gain can be adjusted for a single channel or, with the All Channels checkbox selected, for every channel on the headstage. The autoscale button will try to calculate the optimal gain value for the channel which is displayed.
 
@@ -64,6 +64,6 @@ Gain can be adjusted for a single channel or, with the All Channels checkbox sel
 Channel Threshold
 ******************
 
-.. image:: ./pics/GUI_thresh.png
+.. image:: pics/GUI_thresh.png
 
 The threshold can be adjusted for a single channel, or with the All Channels checkbox selected, for every channel on the headstage. The show checkbox is used to display the threshold for the single maximized channel.
