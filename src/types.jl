@@ -188,7 +188,7 @@ type Gui_Handles
     tb2::Gtk.GtkLabelLeaf
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf
-    draws::Int64
+    draws::Int64 #how many displays have occured since the last refresh
     thres_all::Gtk.GtkCheckButtonLeaf
     events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
     events::Array{Int64,1}
@@ -196,4 +196,27 @@ type Gui_Handles
     show_thres::Bool
     time::mytime
     wave_points::Int64
+    c_right_top::UInt8 #flag to indicate the drawing method to be displayed on top part of right display
+    c_right_bottom::UInt8 #flag to indicate the drawing method to be displayed on the bottom part of right display
 end
+
+#=
+C_Right Top Flags
+
+1 = 16 channel
+2 = 32 channels
+3 = 64 channels
+4 = 64 channels raster
+5 = blank
+
+C_Right Bottom Flags
+
+1 = events/analog
+2 = 16 channel raster
+3 = 32 channel raster
+4 = soft scope
+5 = 64 channel
+6 = 64 channel raster
+7 = blank
+
+=#

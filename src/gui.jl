@@ -129,8 +129,9 @@ function makegui(r::RHD2000)
     #ROW 2
     c=@Canvas(500,800)  
     @guarded draw(c) do widget
-    ctx = getgc(c)
-    clear_c(c,1)
+        ctx = getgc(c)
+        set_source_rgb(ctx,0.0,0.0,0.0)
+        paint(ctx)
     end
     show(c)   
     grid[3,2]=c
@@ -250,8 +251,11 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win)
-    
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1)
+
+#first draw on canvases
+#clear_c(handles)
+
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
         id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
@@ -329,9 +333,24 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     #plot spikes    
     if myread
 	if han.num16>0
-            
-            draw_spike16(rhd,han,ctx)
-	    plot_events(rhd,han,han.draws)
+
+            #top right
+            if han.c_right_top==1
+                draw_spike16(rhd,han,ctx)
+            elseif han.c_right_top==2
+                draw_spike32(rhd,han,ctx)
+            else
+                
+            end
+
+            #bottom right
+            if han.c_right_bottom==1
+	        plot_events(rhd,han,han.draws)
+            elseif han.c_right_bottom==4
+                draw_scope(rhd,han,ctx)
+            else
+                
+            end
 
             update_time(rhd,han)         
 	    reveal(han.c)
@@ -344,7 +363,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
-	    clear_c(han.c,han.num16)
+	    clear_c(han)
 	    clear_c2(han.c2,han.spike)
 
             #Display threshold if box checked
@@ -383,7 +402,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         han.spike=16*han.num16-16+han.num      
     end
     
-    clear_c(han.c,han.num16)
+    clear_c(han)
     clear_c2(han.c2,han.spike)
 
     #Audio output
