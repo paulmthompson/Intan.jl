@@ -201,6 +201,80 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     nothing
 end
 
+#Event plotting
+
+function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
+
+    for i=1:6
+	if han.events[i]>-1
+	    if han.events[i]<8 #analog
+		val=parse_analog(rhd,han,han.events[i]+1)
+		plot_analog(rhd,han,i,myreads,val)
+	    else
+		val=parse_ttl(rhd,han,han.events[i]-7)
+		plot_ttl(rhd,han,i,myreads,val)
+	    end
+	end
+    end
+
+    nothing
+end
+
+function parse_analog(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+
+    mysum=0
+    for i=1:size(rhd.fpga[1].adc,1)
+	mysum+=rhd.fpga[1].adc[i,chan]
+    end
+    
+    round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
+end
+
+function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
+
+    ctx=getgc(han.c)
+    
+    move_to(ctx,myreads-1,540+(channel-1)*50-val)
+    line_to(ctx,myreads,540+(channel-1)*50-val)
+    set_source_rgb(ctx,1.0,1.0,0.0)
+    stroke(ctx)
+    
+    nothing
+end
+
+function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+   
+    y=0
+    
+    for i=1:length(rhd.fpga[1].ttlin)
+        y=y|(rhd.fpga[1].ttlin[i]&(2^(chan-1)))
+    end
+    
+    if y>0
+        return true
+    else
+        return false
+    end
+end
+
+function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
+
+    ctx=getgc(han.c)
+
+    offset=0
+    if val==true
+	offset=30
+    end
+    
+    move_to(ctx,myreads-1,540+(channel-1)*50-offset)
+    line_to(ctx,myreads,540+(channel-1)*50-offset)
+    set_source_rgb(ctx,1.0,1.0,0.0)
+    stroke(ctx)
+    
+    nothing
+end
+
+
 #=
 Single maximized channel plotting
 =#
@@ -274,7 +348,7 @@ function clear_c(han::Gui_Handles)
     end
 
     if han.c_right_bottom==1
-        prepare_events(ctx)
+        prepare_events(ctx,han)
     else
         
     end
@@ -337,7 +411,7 @@ end
 function prepare_raster32(ctx)
 end
 
-function prepare_events(ctx)
+function prepare_events(ctx,han)
 
     for y in collect(550.0:50.0:750.0)
 	move_to(ctx,1.0,y)
@@ -345,6 +419,18 @@ function prepare_events(ctx)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
+
+    for i=1:6
+	if han.events[i]>-1
+            move_to(ctx,10,460+i*50)
+	    if han.events[i]<8 #analog
+		show_text(ctx,string("A",han.events[i]))
+	    else
+		show_text(ctx,string("TTL",han.events[i]-8))
+	    end
+	end
+    end
+    
     nothing
 end
     

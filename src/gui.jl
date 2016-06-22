@@ -142,33 +142,55 @@ function makegui(r::RHD2000)
     adj = @Adjustment(c_slider)
     setproperty!(adj,:value,1)
     grid[3,3]=c_slider
-	
+
     #COLUMN 4
     #ROW 2
-    vbox4=@ButtonBox(:v)
-    grid[4,2]=vbox4
-    c_temp=@Canvas(40,500)
-    push!(vbox4,c_temp)
-    event_label=@Label("Events")
-    push!(vbox4,event_label)
+    vbox_42=@Box(:v)
+    grid[4,2]=vbox_42
     
-    combos=Array(typeof(@ComboBoxText(false)),0)
-    myevents=Array(ASCIIString,0)
-    for i=1:8
-	push!(myevents,string("a",i))
-    end
-    for i=1:16
-	push!(myevents,string("ttl",i))
-    end
-    for i=1:6
-	combo = @ComboBoxText(false)
-	for tt in myevents
-	    push!(combo,tt)
-	end
-	push!(combos,combo)
-	push!(vbox4,combo)
-    end
-	
+    vbox_rb_upper=@Box(:v)
+    push!(vbox_42,vbox_rb_upper)
+    
+    push!(vbox_rb_upper,@Label("Top Panel"))
+    
+    rbs=Array(RadioButton,5)
+    rbs[1]=@RadioButton("16 Channel",active=true)
+    rbs[2]=@RadioButton(rbs[1],"32 Channel")
+    rbs[3]=@RadioButton(rbs[2],"64 Channel")
+    rbs[4]=@RadioButton(rbs[3],"64 Raster")
+    rbs[5]=@RadioButton(rbs[4],"Blank")
+
+    push!(vbox_rb_upper,rbs[1])
+    push!(vbox_rb_upper,rbs[2])
+    push!(vbox_rb_upper,rbs[3])
+    push!(vbox_rb_upper,rbs[4])
+    push!(vbox_rb_upper,rbs[5])
+
+    c_rb=@Canvas(40,400)
+
+    push!(vbox_42,c_rb)
+
+    vbox_rb_lower=@Box(:v)
+    push!(vbox_42,vbox_rb_lower)
+    push!(vbox_rb_lower,@Label("Lower Panel"))
+
+    rbs2=Array(RadioButton,7)
+    rbs2[1]=@RadioButton("Events",active=true)
+    rbs2[2]=@RadioButton(rbs2[1],"16 Raster")
+    rbs2[3]=@RadioButton(rbs2[2],"32 Raster")
+    rbs2[4]=@RadioButton(rbs2[3],"Soft Scope")
+    rbs2[5]=@RadioButton(rbs2[4],"64 Channel")
+    rbs2[6]=@RadioButton(rbs2[5],"64 Raster")
+    rbs2[7]=@RadioButton(rbs2[6],"Nothing")
+
+    push!(vbox_rb_lower,rbs2[1])
+    push!(vbox_rb_lower,rbs2[2])
+    push!(vbox_rb_lower,rbs2[3])
+    push!(vbox_rb_lower,rbs2[4])
+    push!(vbox_rb_lower,rbs2[5])
+    push!(vbox_rb_lower,rbs2[6])
+    push!(vbox_rb_lower,rbs2[7])
+		
     #MENU ITEMS
     
     #SAVING
@@ -218,13 +240,33 @@ push!(exmenu,export_mat_)
     push!(mb,exopts) 
     grid[2,1]=mb
 
+
+#POPUP MENUS
+
+#Enable-Disable
     popupmenu = @Menu()
     popup_enable = @MenuItem("Enable")
     push!(popupmenu, popup_enable)
     popup_disable = @MenuItem("Disable")
     push!(popupmenu, popup_disable)
-    showall(popupmenu)
-    c.mouse.button3press = (widget,event) -> popup(popupmenu,event)
+showall(popupmenu)
+
+#Event
+popup_event = @Menu()
+event_handles=Array(Gtk.GtkMenuItemLeaf,0)
+for i=1:8
+    push!(event_handles,@MenuItem(string("Analog ",i)))
+    push!(popup_event,event_handles[i])
+end
+
+for i=1:16
+    push!(event_handles,@MenuItem(string("TTL ",i)))
+    push!(popup_event,event_handles[8+i])
+end
+
+popup_event_none=@MenuItem("None")
+push!(popup_event,popup_event_none)
+showall(popup_event)
     
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
@@ -251,10 +293,7 @@ offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,combos,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1)
-
-#first draw on canvases
-#clear_c(handles)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -268,7 +307,7 @@ if typeof(r.s[1].c)==ClusterWindow
 	end
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
-id = signal_connect(canvas_press_m,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
@@ -284,8 +323,23 @@ id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handle
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
-for i=1:6
-    id = signal_connect(combo_cb,combos[i], "changed",Void,(),false,(handles,r,i))
+
+for i=1:8
+    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
+end
+
+for i=9:24
+    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
+end
+
+id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,r,-1))
+
+for i=1:5
+    id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,r,i))
+end
+
+for i=1:7
+    id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,r,i))
 end
 
 handles  
@@ -339,6 +393,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
                 draw_spike16(rhd,han,ctx)
             elseif han.c_right_top==2
                 draw_spike32(rhd,han,ctx)
+            elseif han.c_right_top==3
+            elseif han.c_right_top==4
+            elseif han.c_right_top==5
             else
                 
             end
@@ -346,8 +403,16 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             #bottom right
             if han.c_right_bottom==1
 	        plot_events(rhd,han,han.draws)
+            elseif han.c_right_bottom==2
+
+            elseif han.c_right_bottom==3
+                
             elseif han.c_right_bottom==4
                 draw_scope(rhd,han,ctx)
+            elseif han.c_right_bottom==5
+
+            elseif han.c_right_bottom==6
+                
             else
                 
             end
@@ -622,70 +687,6 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-
-#Multiple channel display mouse input
-function canvas_press_m(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-    event = unsafe_load(param_tuple)
-
-    han.mim=(event.x,event.y)
-    
-    if event.button == 1 #left click selects channel
-        
-        (inmulti,channel_num)=check_multi(event.x,event.y)
-
-        if inmulti
-            setproperty!(han.adj2,:value,channel_num)
-            update_c2(han,rhd)
-        end
-        
-    elseif event.button == 2 #middle click 
-
-    end  
-    nothing
-end
-
-function check_multi(x,y)
-
-    count=1
-    inmulti=false
-    for i in 125:125:500,j in 125:125:500 #x
-        if (x<i)&(y<j)
-            inmulti=true
-            break
-        end
-        count+=1
-    end
-    (inmulti,count)
-end
-
-function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    
-    han, rhd = user_data
-
-    (inmulti,count)=check_multi(han.mim[1],han.mim[2])
-
-    if inmulti
-        han.enabled[16*han.num16-16+count]=true
-    end
-
-    nothing
-end
-
-function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    
-    han, rhd = user_data
-
-    (inmulti,count)=check_multi(han.mim[1],han.mim[2])
-
-    if inmulti
-        han.enabled[16*han.num16-16+count]=false
-    end
-
-    nothing
-end
-
 #=
 Window Discriminator Spike Sorting
 =#
@@ -850,90 +851,6 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-#Event plotting
-
-function combo_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
-
-    han, rhd, chan_id = user_data
-
-    mywidget = convert(Gtk.GtkComboBoxTextLeaf, widgetptr)
-    mychannel=getproperty(mywidget,:active,Int64)
-
-    han.events[chan_id]=mychannel
-    nothing
-end
-
-function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
-
-    for i=1:6
-	if han.events[i]>-1
-	    if han.events[i]<8 #analog
-		val=parse_analog(rhd,han,han.events[i]+1)
-		plot_analog(rhd,han,i,myreads,val)
-	    else
-		val=parse_ttl(rhd,han,han.events[i]-7)
-		plot_ttl(rhd,han,i,myreads,val)
-	    end
-	end
-    end
-
-    nothing
-end
-
-function parse_analog(rhd::RHD2000,han::Gui_Handles,chan::Int64)
-
-    mysum=0
-    for i=1:size(rhd.fpga[1].adc,1)
-	mysum+=rhd.fpga[1].adc[i,chan]
-    end
-    
-    round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
-end
-
-function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
-
-    ctx=getgc(han.c)
-    
-    move_to(ctx,myreads-1,540+(channel-1)*50-val)
-    line_to(ctx,myreads,540+(channel-1)*50-val)
-    set_source_rgb(ctx,1.0,1.0,0.0)
-    stroke(ctx)
-    
-    nothing
-end
-
-function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
-   
-    y=0
-    
-    for i=1:length(rhd.fpga[1].ttlin)
-        y=y|(rhd.fpga[1].ttlin[i]&(2^(chan-1)))
-    end
-    
-    if y>0
-        return true
-    else
-        return false
-    end
-end
-
-function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
-
-    ctx=getgc(han.c)
-
-    offset=0
-    if val==true
-	offset=30
-    end
-    
-    move_to(ctx,myreads-1,540+(channel-1)*50-offset)
-    line_to(ctx,myreads,540+(channel-1)*50-offset)
-    set_source_rgb(ctx,1.0,1.0,0.0)
-    stroke(ctx)
-    
-    nothing
-end
-
 #=
 Export Callbacks
 =#
@@ -1094,5 +1011,236 @@ function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
     rb_erase(r, ctxcopy)
     restore(r)
     reveal(c, false)
+    nothing
+end
+
+#=
+Right Canvas Callbacks
+=#
+
+function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    event = unsafe_load(param_tuple)
+
+    han.mim=(event.x,event.y)
+
+    if event.y<500 #top
+
+        if han.c_right_top==1 #disable enable 16
+
+            if event.button == 1 #left click
+
+                (inmulti,channel_num)=check_multi16(event.x,event.y)
+
+                if inmulti
+                    setproperty!(han.adj2,:value,channel_num)
+                    update_c2(han,rhd)
+                end
+                
+            elseif event.button == 3 #right click
+
+                popup(han.popup_ed,event)
+
+            end
+
+        elseif han.c_right_top==2 #disable enable 32
+
+            if event.button == 1 #left click
+
+                (inmulti,channel_num)=check_multi32(event.x,event.y)
+
+                if inmulti
+                    setproperty!(han.adj2,:value,channel_num)
+                    update_c2(han,rhd)
+                end
+                
+            elseif event.button == 3 #right click
+
+                popup(han.popup_ed,event)
+
+            end
+            
+        elseif han.c_right_top==3 #disable enable 64
+
+        elseif han.c_right_top==4 #64 channel raster - nothing
+
+        else
+
+        end
+        
+    else #bottom
+
+        if han.c_right_bottom==1 #event select
+
+            if event.button ==3 #right click
+                popup(han.popup_event,event)
+            end
+
+        elseif han.c_right_bottom==2 #16 raster - nothing
+
+        elseif han.c_right_bottom==3 #32 raster - nothing
+
+        elseif han.c_right_bottom==4 #select scope channels
+
+        elseif han.c_right_bottom==5 #disable enable 64
+
+        elseif han.c_right_bottom==6 #64 channel raster - nothing
+
+        else
+
+        end            
+    end
+    
+    nothing
+end
+
+function check_multi16(x,y)
+
+    count=1
+    inmulti=false
+    for i in 125:125:500, j in 125:125:500 #x
+        if (x<i)&(y<j)
+            inmulti=true
+            break
+        end
+        count+=1
+    end
+    (inmulti,count)
+end
+
+function check_multi32(x,y)
+
+    count=1
+    inmulti=false
+    for i in 84:83:499, j in 84:83:499
+        if (x<i)&(y<j)
+            inmulti=true
+            break
+        end
+        count+=1
+    end
+    (inmulti,count)
+end
+
+function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+
+    if han.c_right_top==1 #16 channel
+        (inmulti,count)=check_multi16(han.mim[1],han.mim[2])
+    elseif han.c_right_top==2 # 32 channel
+        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+    else #64 channel
+        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+    end
+
+    if inmulti
+        if han.c_right_top==1 #16 channel
+            han.enabled[16*han.num16-16+count]=true
+        elseif han.c_right_top==2 #32 channel
+            han.enabled[32*div(han.num16+1,2)-32+count]=true
+        else #64 channel
+            
+        end
+    end
+
+    nothing
+end
+
+function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+
+    if han.c_right_top==1 #16 channel
+        (inmulti,count)=check_multi16(han.mim[1],han.mim[2])
+    elseif han.c_right_top==2 # 32 channel
+        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+    else #64 channel
+        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+    end
+
+    if inmulti
+        if han.c_right_top==1 #16 channel
+            han.enabled[16*han.num16-16+count]=false
+        elseif han.c_right_top==2 #32 channel
+             han.enabled[32*div(han.num16+1,2)-32+count]=false
+        else #64 channel
+            
+        end
+    end
+
+    nothing
+end
+
+function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
+
+    chan_id=1
+    if han.mim[2]<550
+        chan_id=1
+    elseif han.mim[2]<600
+        chan_id=2
+    elseif han.mim[2]<650
+        chan_id=3
+    elseif han.mim[2]<700
+        chan_id=4
+    elseif han.mim[2]<750
+        chan_id=5
+    else
+        chan_id=6
+    end
+        
+    han.events[chan_id]=event_id
+    
+    nothing
+end
+
+function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
+
+    if han.c_right_top != event_id
+        han.c_right_top=event_id
+
+        if event_id==3
+            if han.c_right_bottom != 5
+                setproperty!(han.rb2[5],:active,true)
+            end
+        elseif event_id==4
+            if han.c_right_bottom != 6
+                setproperty!(han.rb2[6],:active,true)
+            end
+        else
+            if (han.c_right_bottom == 5)|(han.c_right_bottom == 6)
+                setproperty!(han.rb2[7],:active,true)
+            end
+        end
+    end
+    nothing
+end
+
+function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
+
+    if han.c_right_bottom != event_id
+        han.c_right_bottom=event_id
+
+        if event_id==5
+            if han.c_right_top!=3
+                setproperty!(han.rb1[3],:active,true)
+            end
+        elseif event_id==6
+            if han.c_right_top != 4
+                setproperty!(han.rb1[4],:active,true)
+            end
+        else
+            if (han.c_right_top == 3)|(han.c_right_top == 4)
+                setproperty!(han.rb1[1],:active,true)
+            end
+        end
+    end
     nothing
 end

@@ -190,7 +190,6 @@ type Gui_Handles
     gainbox::Gtk.GtkSpinButtonLeaf
     draws::Int64 #how many displays have occured since the last refresh
     thres_all::Gtk.GtkCheckButtonLeaf
-    events_combo::Array{Gtk.GtkComboBoxTextLeaf,1}
     events::Array{Int64,1}
     enabled::Array{Bool,1}
     show_thres::Bool
@@ -198,6 +197,10 @@ type Gui_Handles
     wave_points::Int64
     c_right_top::UInt8 #flag to indicate the drawing method to be displayed on top part of right display
     c_right_bottom::UInt8 #flag to indicate the drawing method to be displayed on the bottom part of right display
+    popup_ed::Gtk.GtkMenuLeaf
+    popup_event::Gtk.GtkMenuLeaf
+    rb1::Array{Gtk.GtkRadioButton,1}
+    rb2::Array{Gtk.GtkRadioButton,1}
 end
 
 #=
