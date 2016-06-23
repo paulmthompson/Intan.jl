@@ -176,26 +176,189 @@ end
 
 function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
+    k=16*han.num16-15
+
+    maxid=1
+
+    #first ID
+    count=1
+    for i=k:(k+15)
+        if han.enabled[i]
+            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                if rhd.buf[g,i].id==1
+                    offset=500.0+18.0*(count-1)
+                    move_to(ctx,han.draws,offset)
+                    line_to(ctx,han.draws,offset+15.0)
+                elseif rhd.buf[g,i].id>maxid
+                    maxid=rhd.buf[g,i].id
+                end    
+            end
+        end
+        count+=1
+    end
+    
+    set_line_width(ctx,0.5);
+    @inbounds select_color(ctx,1)
+    stroke(ctx)
+
+    #subsequent IDs
+    @inbounds for thisid=2:maxid
+        k=16*han.num16-15
+        count=1
+        for i=k:(k+15)
+            if han.enabled[i]
+                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                    if rhd.buf[g,i].id==thisid
+                        offset=500.0+18.0*(count-1)
+                        move_to(ctx,han.draws,offset)
+                        line_to(ctx,han.draws,offset+15.0)
+                    end    
+                end
+            end
+            count+=1
+        end
+    
+        set_line_width(ctx,0.5);
+        @inbounds select_color(ctx,thisid)
+        stroke(ctx)
+    end
+
+    nothing
+    
 end
 
 function draw_raster32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+
+    k=32*div(han.num16+1,2)-31
+
+    maxid=1
+
+    #first ID
+    count=1
+    for i=k:(k+31)
+        if han.enabled[i]
+            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                if rhd.buf[g,i].id==1
+                    offset=500.0+9.0*(count-1)
+                    move_to(ctx,han.draws,offset)
+                    line_to(ctx,han.draws,offset+6.0)
+                elseif rhd.buf[g,i].id>maxid
+                    maxid=rhd.buf[g,i].id
+                end    
+            end
+        end
+        count+=1
+    end
+    
+    set_line_width(ctx,0.5);
+    @inbounds select_color(ctx,1)
+    stroke(ctx)
+
+    #subsequent IDs
+    @inbounds for thisid=2:maxid
+        k=32*div(han.num16+1,2)-31
+        count=1
+        for i=k:(k+31)
+            if han.enabled[i]
+                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                    if rhd.buf[g,i].id==thisid
+                        offset=500.0+9.0*(count-1)
+                        move_to(ctx,han.draws,offset)
+                        line_to(ctx,han.draws,offset+6.0)
+                    end    
+                end
+            end
+            count+=1
+        end
+    
+        set_line_width(ctx,0.5);
+        @inbounds select_color(ctx,thisid)
+        stroke(ctx)
+    end
+
+    nothing
+    
+end
+
+function draw_raster64(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+
+    k=64*div(han.num16+3,4)-63
+
+    maxid=1
+
+    #first ID
+    count=1
+    for i=k:(k+63)
+        if han.enabled[i]
+            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                if rhd.buf[g,i].id==1
+                    offset=12.0*(count-1)
+                    move_to(ctx,han.draws,offset)
+                    line_to(ctx,han.draws,offset+10.0)
+                elseif rhd.buf[g,i].id>maxid
+                    maxid=rhd.buf[g,i].id
+                end    
+            end
+        end
+        count+=1
+    end
+    
+    set_line_width(ctx,0.5);
+    @inbounds select_color(ctx,1)
+    stroke(ctx)
+
+    #subsequent IDs
+    @inbounds for thisid=2:maxid
+        k=64*div(han.num16+3,4)-63
+        count=1
+        for i=k:(k+63)
+            if han.enabled[i]
+                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                    if rhd.buf[g,i].id==thisid
+                        offset=12.0*(count-1)
+                        move_to(ctx,han.draws,offset)
+                        line_to(ctx,han.draws,offset+10.0)
+                    end    
+                end
+            end
+            count+=1
+        end
+    
+        set_line_width(ctx,0.5);
+        @inbounds select_color(ctx,thisid)
+        stroke(ctx)
+    end
+
+    
+    nothing
 end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
+
+    move_to(ctx,1.0,han.scope[1])
+    for i=2:499
+        line_to(ctx,i,han.scope[i,1])
+    end
     set_source_rgb(ctx,0.0,0.0,0.0)
-    rectangle(ctx,1.0,500.0,500.0,800.0)
-    fill(ctx)
+    set_line_width(ctx,2.0)
+    stroke(ctx)
    
-    s=han.scale[1,2]
+    s=han.scale[han.spike,2]
     
-    move_to(ctx,1.0,600.0+rhd.v[1,1]*s)
+    move_to(ctx,1.0,550.0+rhd.v[1,han.spike]*s)
+    han.scope[1]=550.0+rhd.v[1,han.spike]*s
+    scope_ind=2
     count=2.0
     for i=3:2:600
-        line_to(ctx,count,600.0+rhd.v[i,1]*s)
+        y=550.0+rhd.v[i,han.spike]*s
+        line_to(ctx,count,y)
+        han.scope[scope_ind,1]=y
+        scope_ind+=1
         count+=1.0
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,0.5)
     stroke(ctx)
 
     nothing
@@ -205,7 +368,7 @@ end
 
 function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
 
-    for i=1:6
+    @inbounds for i=1:6
 	if han.events[i]>-1
 	    if han.events[i]<8 #analog
 		val=parse_analog(rhd,han,han.events[i]+1)
@@ -337,6 +500,7 @@ function clear_c(han::Gui_Handles)
 
     #paint it black
     ctx = getgc(han.c)
+    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
@@ -344,11 +508,18 @@ function clear_c(han::Gui_Handles)
         prepare_16(ctx,han.num16)
     elseif han.c_right_top==2
         prepare_32(ctx,han.num16)
+    elseif han.c_right_top==3
+        prepare_64(ctx,han.num16)
     else
     end
 
     if han.c_right_bottom==1
         prepare_events(ctx,han)
+    elseif han.c_right_bottom==2
+    elseif han.c_right_bottom==3
+    elseif han.c_right_bottom==4
+        prepare_scope(ctx,han)
+    elseif han.c_right_bottom==5
     else
         
     end
@@ -366,6 +537,7 @@ function prepare_16(ctx::Cairo.CairoContext,num16)
 	line_to(ctx,500,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
     stroke(ctx)
 
     k=16*num16-15
@@ -391,11 +563,38 @@ function prepare_32(ctx::Cairo.CairoContext,num16)
 	line_to(ctx,500.0,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
     stroke(ctx)
 
     k=32*div(num16+1,2)-31
     for x in collect(10.0:83.0:450.0)
         for y in collect(10.0:83.0:450.0)
+            move_to(ctx,x,y)
+            show_text(ctx,string(k))
+            k+=1
+        end
+    end
+
+    nothing
+end
+
+function prepare_64(ctx::Cairo.CairoContext,num16)
+    
+    for x in collect(35.0:72.0:467.0)
+	move_to(ctx,x,1)
+	line_to(ctx,x,793.0)
+    end
+    for y in collect(73.0:72.0:793.0)
+	move_to(ctx,35.0,y)
+	line_to(ctx,467.0,y)
+    end
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
+    stroke(ctx)
+
+    k=64*div(num16+3,4)-63
+    for x in collect(45.0:72.0:405.0)
+        for y in collect(10.0:72.0:731.0)
             move_to(ctx,x,y)
             show_text(ctx,string(k))
             k+=1
@@ -418,6 +617,7 @@ function prepare_events(ctx,han)
 	line_to(ctx,500.0,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
     stroke(ctx)
 
     for i=1:6
@@ -432,6 +632,21 @@ function prepare_events(ctx,han)
     end
     
     nothing
+end
+
+function prepare_scope(ctx,han)
+
+    for y in [600, 700]
+	move_to(ctx,1.0,y)
+	line_to(ctx,500.0,y)
+    end
+
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
+    stroke(ctx)
+
+    nothing
+    
 end
     
 function clear_c2(myc::Gtk.GtkCanvas,num)

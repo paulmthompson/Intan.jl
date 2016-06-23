@@ -131,6 +131,7 @@ function makegui(r::RHD2000)
     @guarded draw(c) do widget
         ctx = getgc(c)
         set_source_rgb(ctx,0.0,0.0,0.0)
+        set_operator(ctx,Cairo.OPERATOR_SOURCE)
         paint(ctx)
     end
     show(c)   
@@ -292,8 +293,16 @@ end
 offs[:,1]=squeeze(mean(r.v,1),1)
 offs[:,2]=offs[:,1]*.2
 
+scope_mat=ones(Float64,500,3)
+
+for i=1:500
+    scope_mat[i,1]=550.0
+    scope_mat[i,2]=650.0
+    scope_mat[i,3]=750.0
+end
+
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -404,15 +413,15 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             if han.c_right_bottom==1
 	        plot_events(rhd,han,han.draws)
             elseif han.c_right_bottom==2
-
+                draw_raster16(rhd,han,ctx)
             elseif han.c_right_bottom==3
-                
+                draw_raster32(rhd,han,ctx)
             elseif han.c_right_bottom==4
                 draw_scope(rhd,han,ctx)
             elseif han.c_right_bottom==5
 
             elseif han.c_right_bottom==6
-                
+                draw_raster64(rhd,han,ctx)
             else
                 
             end
@@ -1218,6 +1227,7 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
             end
         end
     end
+    clear_c(han)
     nothing
 end
 
@@ -1242,5 +1252,7 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
             end
         end
     end
+
+    clear_c(han)
     nothing
 end

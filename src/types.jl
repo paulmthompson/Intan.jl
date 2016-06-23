@@ -201,6 +201,7 @@ type Gui_Handles
     popup_event::Gtk.GtkMenuLeaf
     rb1::Array{Gtk.GtkRadioButton,1}
     rb2::Array{Gtk.GtkRadioButton,1}
+    scope::Array{Float64,2}
 end
 
 #=
