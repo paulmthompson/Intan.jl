@@ -23,12 +23,12 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                     if rhd.buf[g,k].inds.start>0
                         if rhd.buf[g,k].id==1
                             s=han.scale[k,2]
-                            o=han.offset[k,2]
-                            y=rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o
+                            o=han.offset[k]
+                            y=(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j
                             move_to(ctx,1+i,y)
                             count=increment+1
                             for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                y=rhd.v[kk,k]*s+j-o
+                                y=(rhd.v[kk,k]-o)*s+j
                                 if y<j-65
                                     y=j-65.0
                                 elseif y>j+65.0
@@ -62,11 +62,11 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                         if rhd.buf[g,k].inds.start>0
                             if rhd.buf[g,k].id==thisid
                                 s=han.scale[k,2]
-                                o=han.offset[k,2]
-                                move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
+                                o=han.offset[k]
+                                move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
                                 count=increment+1
                                 for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                    y=rhd.v[kk,k]*s+j-o
+                                    y=(rhd.v[kk,k]-o)*s+j
                                     if y<j-65.0
                                         y=j-65.0
                                     elseif y>j+65.0
@@ -107,12 +107,12 @@ function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                     if rhd.buf[g,k].inds.start>0
                         if rhd.buf[g,k].id==1
                             s=han.scale[k,1]/6
-                            o=han.offset[k,1]/6
-                            y=rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o
+                            o=han.offset[k]
+                            y=(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j
                             move_to(ctx,1+i,y)
                             count=increment+1
                             for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                y=rhd.v[kk,k]*s+j-o
+                                y=(rhd.v[kk,k]-o)*s+j
                                 if y<j-40.0
                                     y=j-40.0
                                 elseif y>j+40.0
@@ -146,11 +146,11 @@ function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                         if rhd.buf[g,k].inds.start>0
                             if rhd.buf[g,k].id==thisid
                                 s=han.scale[k,1]/6
-                                o=han.offset[k,1]/6
-                                move_to(ctx,1+i,rhd.v[rhd.buf[g,k].inds.start,k]*s+j-o)
+                                o=han.offset[k]
+                                move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
                                 count=increment+1
                                 for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                    y=rhd.v[kk,k]*s+j-o
+                                    y=(rhd.v[kk,k]-o)*s+j
                                     if y<j-40.0
                                         y=j-40.0
                                     elseif y>j+40.0
@@ -446,7 +446,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
     spike_num=han.spike
     s=han.scale[han.spike,1]
-    o=han.offset[han.spike,1]
+    o=han.offset[han.spike]
     reads=han.draws
 
     increment=div(500,han.wave_points)
@@ -455,12 +455,12 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
         if rhd.buf[i,spike_num].inds.start>0
         
-            @inbounds move_to(ctx,1,rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]*s+300-o)
+            @inbounds move_to(ctx,1,(rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]-o)*s+300)
             
             #draw line
             count=increment+1
             @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                y=rhd.v[k,spike_num]*s+300-o
+                y=(rhd.v[k,spike_num]-o)*s+300
                 if y<1.0
                     y=1.0
                 elseif y>600.0
@@ -471,12 +471,12 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
             end
 			
 	    count=(rhd.buf[i,spike_num].id-1)*100+10
-	    @inbounds move_to(ctx,count,round(Int16,rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]*.2*s+650-.2*o))
+	    @inbounds move_to(ctx,count,round(Int16,(rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]-o)*.2*s+650))
             
             #draw separted cluster
             count+=2
             @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                @inbounds line_to(ctx,count,rhd.v[k,spike_num]*.2*s+650-.2*o)              
+                @inbounds line_to(ctx,count,(rhd.v[k,spike_num]-o)*.2*s+650)              
                 count+=2
             end
 			

@@ -178,7 +178,7 @@ type Gui_Handles
     num::Int64 #currently selected spike out of 16
     num16::Int64 #currently selected 16 channels
     scale::Array{Float64,2}
-    offset::Array{Float64,2}
+    offset::Array{Int64,1}
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
     var1::Array{Int64,2} #saved variable 1 for each channel
@@ -202,6 +202,7 @@ type Gui_Handles
     rb1::Array{Gtk.GtkRadioButton,1}
     rb2::Array{Gtk.GtkRadioButton,1}
     scope::Array{Float64,2}
+    offbox::Gtk.GtkSpinButtonLeaf
 end
 
 #=

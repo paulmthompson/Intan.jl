@@ -15,7 +15,7 @@ function makegui(r::RHD2000)
 	
     frame_control=@Frame("Control")
     push!(vbox1_2,frame_control)
-    vbox_control = @ButtonBox(:v)
+    vbox_control = @Box(:v)
     push!(frame_control,vbox_control)
     
     button_init = @Button("Init")
@@ -29,14 +29,20 @@ function makegui(r::RHD2000)
     push!(vbox_control,button_cal)
 
     #GAIN
-    frame1_2=@Frame("Gain")
+    frame1_2=@Frame("Gain and Offset")
     push!(vbox1_2,frame1_2)
-    vbox1_2_1=@ButtonBox(:v)
+    vbox1_2_1=@Box(:v)
     push!(frame1_2,vbox1_2_1)
-    
+
+    push!(vbox1_2_1,@Label("Gain"))
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
     push!(vbox1_2_1,sb2)
+
+    push!(vbox1_2_1,@Label("Offset"))
+    sb_offset=@SpinButton(-1000:1000)
+    setproperty!(sb_offset,:value,0)
+    push!(vbox1_2_1,sb_offset)
     
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
@@ -44,12 +50,11 @@ function makegui(r::RHD2000)
     
     button_auto = @Button("Autoscale")
     push!(vbox1_2_1,button_auto)
-	
-	
+		
     #THRESHOLD
     frame1_3=@Frame("Threshold")
     push!(vbox1_2,frame1_3)
-    vbox1_3_1=@ButtonBox(:v)
+    vbox1_3_1=@Box(:v)
     push!(frame1_3,vbox1_3_1)
     
     sb=@SpinButton(-10000:10000)
@@ -289,9 +294,7 @@ end
 
     scales=ones(Float64,size(r.v,2),2)
     scales[:,2]=scales[:,2].*.2
-    offs=zeros(Float64,size(r.v,2),2)
-offs[:,1]=squeeze(mean(r.v,1),1)
-offs[:,2]=offs[:,1]*.2
+offs=zeros(Int64,size(r.v,2))
 
 scope_mat=ones(Float64,500,3)
 
@@ -302,7 +305,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -332,6 +335,7 @@ id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handle
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
+id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
@@ -461,8 +465,7 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     @inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
     @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
 
-    @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
-    @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
+    @inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
 
     nothing 
 end
@@ -629,11 +632,11 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
     ctx = getgc(han.c2)
 
     thres=rhd.s[han.spike].thres
-    move_to(ctx,1,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-    line_to(ctx,500,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    move_to(ctx,1,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    line_to(ctx,500,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
 
-    move_to(ctx,1,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-    line_to(ctx,500,-1*thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    move_to(ctx,1,-1*(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    line_to(ctx,500,-1*(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
 
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -646,8 +649,8 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
     ctx = getgc(han.c2)
 
     thres=rhd.s[han.spike].thres
-    move_to(ctx,1,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-    line_to(ctx,500,thres*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+    move_to(ctx,1,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    line_to(ctx,500,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
     
@@ -682,18 +685,32 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
         han.scale[:,2]=-.2*gainval/1000
-
-        @inbounds han.offset[:,1]=mean(gainval/1000.*rhd.v,1)
-        @inbounds han.offset[:,2]=han.offset[:,1].*.2
     else
         han.scale[han.spike,1]=-1*gainval/1000
         han.scale[han.spike,2]=-.2*gainval/1000
-
-        @inbounds han.offset[han.spike,1]=mean(han.scale[han.spike,1].*rhd.v[:,han.spike])
-        @inbounds han.offset[han.spike,2]=mean(han.scale[han.spike,2].*rhd.v[:,han.spike])
     end
 
     nothing
+end
+
+function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    mygain=getproperty(han.gain,:active,Bool)
+
+    offval=getproperty(han.offbox,:value,Int)
+
+    if mygain==true
+        for i=1:length(han.offset)
+            han.offset[i]=offval
+        end
+    else
+        han.offset[han.spike]=offval
+    end
+
+    nothing
+    
 end
 
 #=
@@ -762,7 +779,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         x1=indmin(abs(myx-han.mi[1]))
         x2=indmin(abs(myx-event.x))
         s=han.scale[han.spike,1]
-        o=han.offset[han.spike,1]
+        o=han.offset[han.spike]
         y1=(han.mi[2]-300+o)/s
         y2=(event.y-300+o)/s
     
@@ -847,8 +864,8 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             x2=(rhd.s[han.spike].c.win[i][j].x2-1)*increment+1
             y1=rhd.s[han.spike].c.win[i][j].y1
             y2=rhd.s[han.spike].c.win[i][j].y2
-            move_to(ctx,x1,y1*han.scale[han.spike,1]+300-han.offset[han.spike,1])
-            line_to(ctx,x2,y2*han.scale[han.spike,1]+300-han.offset[han.spike,1])
+            move_to(ctx,x1,(y1-han.offset[han.spike])*han.scale[han.spike,1]+300)
+            line_to(ctx,x2,(y2-han.offset[han.spike])*han.scale[han.spike,1]+300)
             set_line_width(ctx,5.0)
             select_color(ctx,i+1)
             stroke(ctx)
