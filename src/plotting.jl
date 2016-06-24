@@ -500,16 +500,15 @@ function clear_c(han::Gui_Handles)
 
     #paint it black
     ctx = getgc(han.c)
-    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
     if han.c_right_top==1
-        prepare_16(ctx,han.num16)
+        prepare_16(ctx,han)
     elseif han.c_right_top==2
-        prepare_32(ctx,han.num16)
+        prepare_32(ctx,han)
     elseif han.c_right_top==3
-        prepare_64(ctx,han.num16)
+        prepare_64(ctx,han)
     else
     end
 
@@ -526,7 +525,7 @@ function clear_c(han::Gui_Handles)
     nothing
 end
 
-function prepare_16(ctx::Cairo.CairoContext,num16)
+function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
 
     for x in [125, 250, 375]
 	move_to(ctx,x,1)
@@ -540,11 +539,17 @@ function prepare_16(ctx::Cairo.CairoContext,num16)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    k=16*num16-15
+    k=16*han.num16-15
     for x in [10, 135, 260, 385]
         for y in [10, 135, 260, 385]
-            move_to(ctx,x,y)
-            show_text(ctx,string(k))
+            if k<=length(han.enabled)
+                move_to(ctx,x,y)
+                if han.enabled[k] 
+                    show_text(ctx,string(k))
+                else
+                    show_text(ctx,string(k,"-DISABLED"))
+                end
+            end
             k+=1
         end
     end
@@ -552,7 +557,7 @@ function prepare_16(ctx::Cairo.CairoContext,num16)
     nothing
 end
 
-function prepare_32(ctx::Cairo.CairoContext,num16)
+function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
 
     for x in collect(84.0:83.0:450.0)
 	move_to(ctx,x,1)
@@ -566,11 +571,17 @@ function prepare_32(ctx::Cairo.CairoContext,num16)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    k=32*div(num16+1,2)-31
+    k=32*div(han.num16+1,2)-31
     for x in collect(10.0:83.0:450.0)
         for y in collect(10.0:83.0:450.0)
-            move_to(ctx,x,y)
-            show_text(ctx,string(k))
+            if k<=length(han.enabled)
+                move_to(ctx,x,y)
+                if han.enabled[k]
+                    show_text(ctx,string(k))
+                else
+                    show_text(ctx,string(k,"-DISABLED"))
+                end
+            end
             k+=1
         end
     end
@@ -578,7 +589,7 @@ function prepare_32(ctx::Cairo.CairoContext,num16)
     nothing
 end
 
-function prepare_64(ctx::Cairo.CairoContext,num16)
+function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
     
     for x in collect(35.0:72.0:467.0)
 	move_to(ctx,x,1)
@@ -592,11 +603,17 @@ function prepare_64(ctx::Cairo.CairoContext,num16)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    k=64*div(num16+3,4)-63
+    k=64*div(han.num16+3,4)-63
     for x in collect(45.0:72.0:405.0)
         for y in collect(10.0:72.0:731.0)
             move_to(ctx,x,y)
-            show_text(ctx,string(k))
+            if k<=length(han.enabled)
+                if han.enabled[k]
+                    show_text(ctx,string(k))
+                else
+                    show_text(ctx,string(k,"-DISABLED"))
+                end
+            end
             k+=1
         end
     end
