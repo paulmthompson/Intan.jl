@@ -43,102 +43,144 @@ function RHD2132(port::ASCIIString)
     end
 end
 
+getlibrary(fpgas::Array{FPGA,1})=map(getlibrary,fpgas)
+
+function getlibrary(fpga::FPGA)
+    fpga.lib=Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
+    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Void}, ())
+    nothing
+end
+
 function init_board!(rhd::RHD2000)
 
     if rhd.debug.state==false
-        open_board(rhd)
-        for fpga in rhd.fpga
-            uploadFpgaBitfile(fpga)
-        end
-    end
-    for fpga in rhd.fpga
-        
-        initialize_board(fpga,rhd.debug.state)
-
-        #For 64 channel need two data streams, and data will come in 
-        #on the rising AND falling edges of SCLK
-        stream=0
-        for i in fpga.amps
-            enableDataStream(fpga,stream,true)
-            setDataSource(fpga,stream,i)
-            stream+=1  
-        end
-
-        #Enable DAC
-        enableDac(fpga,0,true)
-
-        calculateDataBlockSizeInWords(fpga)
-        calculateDataBlockSizeInBytes(fpga)
-    
-        setSampleRate(fpga,rhd.sr,rhd.debug.state)
-        println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
-
-        #Now that we have set our sampling rate, we can set the MISO sampling delay
-        #which is dependent on the sample rate. We use a 6.0 foot cable
-
-        #TODO this should be automatically selected based on what is plugged in where TODO
-        setCableLengthFeet(fpga,"PortA", 3.0)
-
-        ledArray=[1,0,0,0,0,0,0,0]
-        setLedDisplay(fpga,ledArray)
-
-        #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
-        r=CreateRHD2000Registers(Float64(fpga.sampleRate))
-
-        #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
-        commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
-        uploadCommandList(fpga,commandList, "AuxCmd3", 0)
-
-        #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
-        commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
-        uploadCommandList(fpga,commandList, "AuxCmd3", 1)
-
-        selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
-
-        #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
-        selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 1);
-
-        setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
-        setContinuousRunMode(fpga,false)
-
-        if rhd.debug.state==false
-            runBoard(fpga)
-            while (isRunning(fpga))
+        map(open_board,rhd.fpga)
+        map(uploadFpgaBitfile,rhd.fpga)
+    else
+        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}}
+            map(getlibrary,rhd.fpga)
+        else
+            for fpga in rhd.fpga
+                getlibrary(fpga)
             end
-            flushBoard(fpga) 
         end
-     
-        selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 0)   
-        setContinuousRunMode(fpga,true)
     end
-    nothing  
+
+    if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}}
+        @sync for p in procs(rhd.fpga)
+            @async remotecall_fetch((d,sr,db)->init_board_helper(localpart(d),sr,db),p,rhd.fpga,rhd.sr,rhd.debug.state)
+        end
+    else     
+        init_board_helper(rhd.fpga,rhd.sr,rhd.debug.state)
+    end
+
+    nothing
 end
 
-function open_board(rhd::RHD2000)
+function init_board_helper(fpgas::Array{FPGA,1},sr,mydebug=false)
+    for fpga in fpgas
+        init_board_helper(fpga,sr,mydebug)
+    end
+    nothing
+end
 
-    board_num=1
-    for fpga in rhd.fpga
-        println("Scanning USB for Opal Kelly devices...")
-        nDevices=ccall((:okFrontPanel_GetDeviceCount,lib), Int, (Ptr{Void},), fpga.board) 
-        println("Found ", nDevices, " Opal Kelly device(s)")
-
-        #Get Serial Number
-        serial=Array(UInt8,11)
-        ccall((:okFrontPanel_GetDeviceListSerial,lib), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, board_num,serial)
-        serial[end]=0
-        serialnumber=bytestring(pointer(serial))
-        println("Serial number of device 0 is ", serialnumber)
+function init_board_helper(fpga::FPGA,sr,mydebug=false)
     
-        #Open by serial 
-        if (ccall((:okFrontPanel_OpenBySerial, lib), Cint, (Ptr{Void},Ptr{UInt8}),fpga.board,serialnumber)!=0)
-            println("Device could not be opened. Is one connected?")
-            return -2
+    initialize_board(fpga,mydebug)
+
+    #For 64 channel need two data streams, and data will come in 
+    #on the rising AND falling edges of SCLK
+    stream=0
+    for i in fpga.amps
+        enableDataStream(fpga,stream,true)
+        setDataSource(fpga,stream,i)
+        stream+=1  
+    end
+    
+    #Enable DAC
+    enableDac(fpga,0,true)
+    
+    calculateDataBlockSizeInWords(fpga)
+    calculateDataBlockSizeInBytes(fpga)
+    
+    setSampleRate(fpga,sr,mydebug)
+    println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
+    
+    #TODO this should be automatically selected based on what is plugged in where TODO
+    setCableLengthFeet(fpga,"PortA", 3.0)
+    
+    ledArray=[1,0,0,0,0,0,0,0]
+    setLedDisplay(fpga,ledArray)
+    
+    #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
+    r=CreateRHD2000Registers(Float64(fpga.sampleRate))
+    
+    #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
+    uploadCommandList(fpga,commandList, "AuxCmd3", 0)
+    
+    #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
+    uploadCommandList(fpga,commandList, "AuxCmd3", 1)
+    
+    selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
+    
+    #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
+    selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 1);
+    
+    setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
+    setContinuousRunMode(fpga,false)
+    
+    if mydebug==false
+        runBoard(fpga)
+        while (isRunning(fpga))
         end
-    
-        #configure on-board PLL
-        ccall((:okFrontPanel_LoadDefaultPLLConfiguration,lib), Cint, (Ptr{Void},),fpga.board)
+        flushBoard(fpga) 
+    end
+     
+    selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 0)   
+    setContinuousRunMode(fpga,true)
+    nothing
+end
 
-        board_num+=1
+function open_board(fpga::FPGA)
+
+    fpga.lib=Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
+    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Void}, ())
+    
+    println("Scanning USB for Opal Kelly devices...")
+    nDevices=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceCount), Int, (Ptr{Void},), fpga.board) 
+    println("Found ", nDevices, " Opal Kelly device(s)")
+
+    #Get Serial Number
+    serial=Array(UInt8,11)
+    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
+    serial[end]=0
+    serialnumber=bytestring(pointer(serial))
+    println("Serial number of device 0 is ", serialnumber)
+    
+    #Open by serial 
+    if (ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_OpenBySerial), Cint, (Ptr{Void},Ptr{UInt8}),fpga.board,serialnumber)!=0)
+        println("Device could not be opened. Is one connected?")
+        return -2
+    end
+    
+    #configure on-board PLL
+    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_LoadDefaultPLLConfiguration), Cint, (Ptr{Void},),fpga.board)
+
+    nothing
+end
+
+function open_board(fpgas::Array{FPGA,1})
+    for fpga in fpgas
+        open_board(fpga)
+    end
+    nothing
+end
+
+function uploadFpgaBitfile(fpgas::Array{FPGA,1})
+    for fpga in fpgas
+        uploadFpgaBitfile(fpga)
     end
     nothing
 end
@@ -146,7 +188,7 @@ end
 function uploadFpgaBitfile(rhd::FPGA)
 
     #upload configuration file
-    errorcode=ccall((:okFrontPanel_ConfigureFPGA,lib),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
+    errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
 
     if errorcode==0
         println("FPGA configuration loaded.")
@@ -155,7 +197,7 @@ function uploadFpgaBitfile(rhd::FPGA)
     end
       
     #Check if FrontPanel Support is enabled
-    ccall((:okFrontPanel_IsFrontPanelEnabled,lib),Bool,(Ptr{Void},),rhd.board)
+    ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_IsFrontPanelEnabled),Bool,(Ptr{Void},),rhd.board)
 
     UpdateWireOuts(rhd)
     
@@ -168,6 +210,13 @@ function uploadFpgaBitfile(rhd::FPGA)
     end
 
     nothing   
+end
+
+function initialize_board(fpgas::Array{FPGA,1})
+    for fpga in fpgas
+        initialize_board(fpga)
+    end
+    nothing
 end
 
 function initialize_board(rhd::FPGA,debug=false)
@@ -315,7 +364,9 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
     rhd.sampleRate=newSampleRate
 
     #Wait for DcmProgDone==1 before reprogramming clock synthesizer
-    while (isDcmProgDone(rhd,debug)==false)   
+    if !debug
+        while !isDcmProgDone(rhd) 
+        end
     end
    
     #Reprogram clock synthesizer
@@ -325,32 +376,26 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
     ActivateTriggerIn(rhd,TrigInDcmProg,0)
    
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
-    while (isDataClockLocked(rhd,debug) == false)
+    if !debug
+        while !isDataClockLocked(rhd)
+        end
     end
 
     nothing                
 end
 
-function isDcmProgDone(rhd::FPGA,debug::Bool)
+function isDcmProgDone(rhd::FPGA)
 
-    if debug==false
-        UpdateWireOuts(rhd)
-        value=GetWireOutValue(rhd,WireOutDataClkLocked)
-        return ((value & 0x0002) > 1)
-    else
-        return true
-    end
+    UpdateWireOuts(rhd)
+    value=GetWireOutValue(rhd,WireOutDataClkLocked)
+    return ((value & 0x0002) > 1)
 end
 
-function isDataClockLocked(rhd::FPGA,debug::Bool)
+function isDataClockLocked(rhd::FPGA)
 
-    if debug==false
-        UpdateWireOuts(rhd)
-        value=GetWireOutValue(rhd,WireOutDataClkLocked)
-        return ((value & 0x0001) > 0)
-    else
-        return true
-    end
+    UpdateWireOuts(rhd)
+    value=GetWireOutValue(rhd,WireOutDataClkLocked)
+    return ((value & 0x0001) > 0)
 end
 
 function uploadCommandList(rhd::FPGA,commandList, auxCommandSlot, bank)
@@ -767,6 +812,8 @@ function setLedDisplay(rhd::FPGA,ledArray)
     nothing   
 end
 
+runBoard(fpgas::Array{FPGA,1})=map(runBoard,fpgas)
+
 runBoard(rhd::FPGA)=ActivateTriggerIn(rhd,TrigInSpiStart,0)
 
 function isRunning(rhd::FPGA)
@@ -798,51 +845,79 @@ function numWordsInFifo(rhd::FPGA)
 
     UpdateWireOuts(rhd)
 
-    #Rhythm makes this a Uint32 (not sure that it matters)
     GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)   
+end
+
+function compareNumWords(fpgas::Array{FPGA,1})
+    out=false
+    for fpga in fpgas
+        out=out|compareNumWords(fpga)
+    end
+    out
+end
+
+compareNumWords(fpga::FPGA)=numWordsInFifo(fpga) < fpga.numWords
+
+function compareNumWords(fpgas::DArray{Intan.FPGA,1,Array{Intan.FPGA,1}})
+
+    out=false
+    
+    @sync for p in procs(fpgas)
+        @async out=out|remotecall_fetch((d)->compareNumWords(localpart(d)),p,fpgas)
+    end
+    out                                
 end
 
 function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
 
-    for fpga in rhd.fpga
-        if (numWordsInFifo(fpga) < fpga.numWords)
-            return false
-        end
+    if compareNumWords(rhd.fpga)
+        return false
     end
 
-    numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
-
+    #=
     if (numBytesToRead > USB_BUFFER_SIZE)
         println("USB buffer size exceeded")
         return false
     end
+    =#
 
     numRead=0
-    #this is where usbBuffer is filled from Fifo
-    #For multiple boards this should be done in parallel
-    if length(rhd.fpga)>1
-        for fpga in rhd.fpga
-            @spawn numRead=ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
+
+    if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
+
+        @sync for p in procs(rhd.fpga)
+            @async remotecall_wait((d)->ReadUsbBuffer(localpart(d)),p,rhd.fpga)
         end
+
     else
-        numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
+        if length(rhd.fpga)>1
+            for fpga in rhd.fpga
+                ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
+            end
+            numRead=numBytesToRead
+        else
+            numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        end  
     end
 
-    if numRead!=numBytesToRead
-        return false
-    end
-        
     for i=0:(numBlocks-1)
 
         #Move data from usbBuffer to v
-        fillFromUsbBuffer!(rhd,i)
+        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
+            @sync for p in procs(rhd.fpga)
+                @async remotecall_wait((d,ii,v)->fillFromUsbBuffer!(localpart(d),ii,v),p,rhd.fpga,i,rhd.v)
+            end
+        else
+            fillFromUsbBuffer!(rhd.fpga,i,rhd.v)
+        end
 
         #Filter
         #applyFilter(rhd)
 
         applySorting(rhd)       
     end
-
+                            
     return true 
 end
 
@@ -912,93 +987,94 @@ function checkUsbHeader(usbBuffer,index)
     return (header == RHD2000_HEADER_MAGIC_NUMBER)
 end
 
-function fillFromUsbBuffer!(rhd::RHD2000,blockIndex::Int64)
+function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v)
 
-    for fpga in rhd.fpga
-
-        index = blockIndex * fpga.numBytesPerBlock + 1
+    for fpga in fpgas
+    
+    index = blockIndex * fpga.numBytesPerBlock + 1
         
-        for t=1:SAMPLES_PER_DATA_BLOCK
+    for t=1:SAMPLES_PER_DATA_BLOCK
 
-	    #Header
-            if !checkUsbHeader(fpga.usbBuffer,index)
-                if t==1 #first header missing, we're fucked. creep ahead and see what you find
-                    #Add data
-
-                    lag=0
-                    newindex=index
-
-                    for i=2:fpga.numBytesPerBlock
-                        if checkUsbHeader(fpga.usbBuffer,i)
-                            lag=i-index
-                            newindex=i
-                            break
-                        end
-                    end
-
-                else #something is messed up, probably in the last sample. start incrementing backward until header is found
-                    lag=0
-                    newindex=index
-                    for i=(index-1):-1:1
-                        if checkUsbHeader(fpga.usbBuffer,i) #lag specifies number of bytes that are missing
-                            lag=index-i
-                            newindex=i
-                            break
-                        end
-                    end                
-                end
-
-                #get extra bytes
-
-                while (2*numWordsInFifo(fpga) < lag)
-                end
-
-                temp_array=zeros(UInt8,lag)
+	#Header
+        if !checkUsbHeader(fpga.usbBuffer,index)
+            if t==1 #first header missing, we're fucked. creep ahead and see what you find
+                #Add data
                 
-                ReadFromPipeOut(fpga,PipeOutData, convert(Clong, lag), temp_array)
-
-                count=1
-                for i=(fpga.numBytesPerBlock-lag+1):fpga.numBytesPerBlock
-                    fpga.usbBuffer[i]=temp_array[count]
-                    count+=1
+                lag=0
+                newindex=index
+                
+                for i=2:fpga.numBytesPerBlock
+                    if checkUsbHeader(fpga.usbBuffer,i)
+                        lag=i-index
+                        newindex=i
+                        break
+                    end
                 end
-
-                #start fresh
-                index=newindex
+                
+            else #something is messed up, probably in the last sample. start incrementing backward until header is found
+                lag=0
+                newindex=index
+                for i=(index-1):-1:1
+                    if checkUsbHeader(fpga.usbBuffer,i) #lag specifies number of bytes that are missing
+                        lag=index-i
+                        newindex=i
+                        break
+                    end
+                end                
             end
-		
-	    index+=8
-	    fpga.time[t]=convertUsbTimeStamp(fpga.usbBuffer,index)
-	    index+=4
-
-	    #Auxiliary results
-	    index += (2*3*fpga.numDataStreams)
-
-	    #Amplifier
-	    for i=1:32
-	        for j=1:fpga.numDataStreams
-		    @inbounds rhd.v[t,32*(j-1)+i+fpga.shift]=convertUsbWord(fpga.usbBuffer,index)
-		    index+=2
-	        end
-	    end
-
-	    #skip 36 filler word
-	    index += (2*fpga.numDataStreams)
-        
-	    #ADCs
-            for i=1:8
-                @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)     
-                index+=2
+            
+            #get extra bytes
+            
+            while (2*numWordsInFifo(fpga) < lag)
             end
-
-	    #TTL in
-            @inbounds fpga.ttlin[t]=convertUsbWordu(fpga.usbBuffer,index)
-            index += 2
-        
-            #TTL out
-            @inbounds fpga.ttlout[t]=convertUsbWordu(fpga.usbBuffer,index)
-	    index += 2	
+            
+            temp_array=zeros(UInt8,lag)
+            
+            ReadFromPipeOut(fpga,PipeOutData, convert(Clong, lag), temp_array)
+            
+            count=1
+            for i=(fpga.numBytesPerBlock-lag+1):fpga.numBytesPerBlock
+                fpga.usbBuffer[i]=temp_array[count]
+                count+=1
+            end
+            
+            #start fresh
+            index=newindex
         end
+	
+	index+=8
+	fpga.time[t]=convertUsbTimeStamp(fpga.usbBuffer,index)
+	index+=4
+        
+	#Auxiliary results
+	index += (2*3*fpga.numDataStreams)
+        
+	#Amplifier
+	for i=1:32
+	    for j=1:fpga.numDataStreams
+		@inbounds v[t,32*(j-1)+i+fpga.shift]=convertUsbWord(fpga.usbBuffer,index)
+		index+=2
+	    end
+	end
+        
+	#skip 36 filler word
+	index += (2*fpga.numDataStreams)
+        
+	#ADCs
+        for i=1:8
+            @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)     
+            index+=2
+        end
+        
+	#TTL in
+        @inbounds fpga.ttlin[t]=convertUsbWordu(fpga.usbBuffer,index)
+        index += 2
+        
+        #TTL out
+        @inbounds fpga.ttlout[t]=convertUsbWordu(fpga.usbBuffer,index)
+	index += 2	
+    end
+
     end
     nothing
 end
@@ -1094,27 +1170,34 @@ function convertUsbWordu(usbBuffer,index::Int64)
 end
 
 function SetWireInValue(rhd::FPGA, ep, val, mask = 0xffffffff)
-    er=ccall((:okFrontPanel_SetWireInValue,lib),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
+    er=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_SetWireInValue),Cint,(Ptr{Void},Int,Culong,Culong),rhd.board,ep, val, mask)
 end
 
 function UpdateWireIns(rhd::FPGA)
-    ccall((:okFrontPanel_UpdateWireIns,lib),Void,(Ptr{Void},),rhd.board)
+    ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_UpdateWireIns),Void,(Ptr{Void},),rhd.board)
     nothing
 end
 
 function UpdateWireOuts(rhd::FPGA)
-    ccall((:okFrontPanel_UpdateWireOuts,lib),Void,(Ptr{Void},),rhd.board)
+    ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_UpdateWireOuts),Void,(Ptr{Void},),rhd.board)
     nothing
 end
 
 function ActivateTriggerIn(rhd::FPGA,epAddr::UInt8,bit::Int)
-    er=ccall((:okFrontPanel_ActivateTriggerIn,lib),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
+    er=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ActivateTriggerIn),Cint,(Ptr{Void},Int32,Int32),rhd.board,epAddr,bit)
 end
 
 function GetWireOutValue(rhd::FPGA,epAddr::UInt8)
-    value = ccall((:okFrontPanel_GetWireOutValue,lib),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
+    value = ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_GetWireOutValue),Culong,(Ptr{Void},Int32),rhd.board,epAddr)
 end
 
 function ReadFromPipeOut(rhd::FPGA,epAddr::UInt8, length, data)
-    ccall((:okFrontPanel_ReadFromPipeOut,lib),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
+    ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ReadFromPipeOut),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
 end
+
+function ReadUsbBuffer(fpga::FPGA)
+    ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock), fpga.usbBuffer)
+    nothing
+end
+
+ReadUsbBuffer(fpgas::Array{FPGA,1})=map(ReadUsbBuffer,fpgas)

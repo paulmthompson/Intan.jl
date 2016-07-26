@@ -373,11 +373,8 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         ctx2 = getgc(han.c2)
         
 	if rhd.debug.state==false
-            for fpga in rhd.fpga
-                runBoard(fpga)
-            end
+            map(runBoard,rhd.fpga)
         end
-
         while getproperty(widget,:active,Bool)==true
            main_loop(rhd,han,ctx,ctx2) 
         end       
@@ -562,9 +559,18 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+function gettime(rhd::RHD2000,fpgas::DArray{Intan.FPGA,1,Array{Intan.FPGA,1}})
+    t=remotecall_fetch((d)->localpart(d)[1].time[1],2,fpgas)
+    convert(Int64,div(t,rhd.sr))
+end
+
+function gettime(rhd::RHD2000,fpgas::Array{FPGA,1})
+    convert(Int64,div(fpgas[1].time[1],fpgas[1].sampleRate))
+end
+
 function update_time(rhd::RHD2000,han::Gui_Handles)
 
-    total_seconds=convert(Int64,div(rhd.fpga[1].time[1],rhd.fpga[1].sampleRate))
+    total_seconds=gettime(rhd,rhd.fpga)
 
     this_h=div(total_seconds,3600)
 

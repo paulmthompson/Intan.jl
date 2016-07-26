@@ -89,20 +89,22 @@ Multi Core Data Structure
 myamp=RHD2132("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
-myfpga=FPGA(1,myamp)
-myrhd=makeRHD([myfpga],myt,debug=d,sav=mys,parallel=true);
+myfpga1=FPGA(1,myamp)
+myfpga2=FPGA(2,myamp)
+myrhd2=makeRHD([myfpga1,myfpga2],myt,debug=d,sav=mys,parallel=true);
 
 facts() do
-    @fact myrhd.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,32)
-    @fact length(myrhd.s) --> 32
-    @fact typeof(myrhd.s) --> DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
-    @fact typeof(myrhd.buf) --> SharedArray{SpikeSorting.Spike,2}
-    @fact size(myrhd.buf,2) --> 32
-    @fact myrhd.nums --> zeros(Int64,32)
+    @fact myrhd2.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
+    @fact length(myrhd2.s) --> 64
+    @fact typeof(myrhd2.s) --> DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
+    @fact typeof(myrhd2.buf) --> SharedArray{SpikeSorting.Spike,2}
+    @fact size(myrhd2.buf,2) --> 64
+    @fact myrhd2.nums --> zeros(Int64,64)
 end
 
-Intan.init_board!(myrhd)
+#Intan.init_board!(myrhd2)
 
+#=
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 1
     @fact myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0]
@@ -110,9 +112,22 @@ facts() do
     @fact myrhd.fpga[1].numWords --> 31200
     @fact myrhd.fpga[1].numBytesPerBlock --> 62400
 end
-
+=#
 #=
 Sample Rate Testing
+=#
+
+#=
+myamp=RHD2164("PortA1")
+myt=Task_NoTask()
+mys=SaveNone()
+d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
+
+myfpga=FPGA(1,myamp)
+
+myrhd=makeRHD([myfpga],myt,debug=d,sav=mys);
+
+Intan.init_board!(myrhd)
 =#
 
 facts() do
