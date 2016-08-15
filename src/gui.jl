@@ -483,6 +483,15 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
 
+    if rhd.refs[han.spike]>0
+        enableDac(rhd.fpga[1],1,true)
+        selectDacDataStream(rhd.fpga[1],1,div(rhd.refs[han.spike]-1,32))
+        selectDacDataChannel(rhd.fpga[1],1,rem(rhd.refs[han.spike]-1,32))
+    else
+        enableDac(rhd.fpga[1],1,false)
+    end
+        
+
     #Display Gain
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
@@ -517,6 +526,14 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     #Audio output
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
+
+    if rhd.refs[han.spike]>0
+        enableDac(rhd.fpga[1],1,true)
+        selectDacDataStream(rhd.fpga[1],1,div(rhd.refs[han.spike]-1,32))
+        selectDacDataChannel(rhd.fpga[1],1,rem(rhd.refs[han.spike]-1,32))
+    else
+        enableDac(rhd.fpga[1],1,false)
+    end
 
     #Display Gain
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
@@ -637,12 +654,12 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
 
     ctx = getgc(han.c2)
 
-    thres=rhd.s[han.spike].thres
-    move_to(ctx,1,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
-    line_to(ctx,500,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    thres=getproperty(han.sb,:value,Int)
+    move_to(ctx,1,300-thres)
+    line_to(ctx,500,300-thres)
 
-    move_to(ctx,1,-1*(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
-    line_to(ctx,500,-1*(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    move_to(ctx,1,300+thres)
+    line_to(ctx,500,300+thres)
 
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -654,9 +671,9 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 
     ctx = getgc(han.c2)
 
-    thres=rhd.s[han.spike].thres
-    move_to(ctx,1,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
-    line_to(ctx,500,(thres-han.offset[han.spike])*han.scale[han.spike,1]+300)
+    thres=getproperty(han.sb,:value,Int)
+    move_to(ctx,1,300-thres)
+    line_to(ctx,500,300-thres)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
     
@@ -671,10 +688,10 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     if getproperty(han.thres_all,:active,Bool)      
         @inbounds for i=1:length(rhd.s)
-            rhd.s[i].thres=mythres
+            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
         end    
     else
-        @inbounds rhd.s[han.spike].thres=mythres
+        @inbounds rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
 
     nothing
@@ -687,13 +704,18 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     mygain=getproperty(han.gain,:active,Bool)
 
     gainval=getproperty(han.gainbox,:value,Int)
+    mythres=getproperty(han.sb,:value,Int)
 
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
         han.scale[:,2]=-.2*gainval/1000
+        for i=1:length(han.offset)
+            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
+        end
     else
         han.scale[han.spike,1]=-1*gainval/1000
         han.scale[han.spike,2]=-.2*gainval/1000
+        rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
 
     nothing
@@ -706,13 +728,16 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     mygain=getproperty(han.gain,:active,Bool)
 
     offval=getproperty(han.offbox,:value,Int)
+    mythres=getproperty(han.sb,:value,Int)
 
     if mygain==true
         for i=1:length(han.offset)
             han.offset[i]=offval
+            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
         end
     else
         han.offset[han.spike]=offval
+        rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
 
     nothing

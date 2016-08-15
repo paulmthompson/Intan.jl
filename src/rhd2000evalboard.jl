@@ -912,6 +912,14 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
             fillFromUsbBuffer!(rhd.fpga,i,rhd.v)
         end
 
+        for j=1:size(rhd.v,2)
+            if rhd.refs[j]>0
+                for k=1:size(rhd.v,1)
+                    rhd.v[k,j]=rhd.v[k,j]-rhd.v[k,rhd.refs[j]]
+                end
+            end
+        end
+
         #Filter
         #applyFilter(rhd)
 

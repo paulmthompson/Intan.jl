@@ -92,11 +92,12 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts)
             save::$(typeof(sav))
             filts::$(typeof(filts))
             sr::Int64
+            refs::Array{Int64,1}
         end
 
         function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)))
             
-            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000)
+            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)))
         end
     end
 end
