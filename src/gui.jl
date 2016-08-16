@@ -565,12 +565,17 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         rhd.cal=0
     else
         rhd.cal=3
+    
+        @inbounds for i=1:length(rhd.s)
+            han.offset[i]=0.0
+            han.scale[i,1] = -.125
+            han.scale[i,2] = -.125*.25
+        end
 
-        #scale
-        han.scale[:,1]=-1.*abs(1./mean(rhd.v,1)')
-        han.scale[:,2]=.2*han.scale[:,1]
+        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+        
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
-        setproperty!(han.sb,:value,round(Int64,rhd.s[han.spike].thres)) #show threshold
+        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
     end
 
     nothing
