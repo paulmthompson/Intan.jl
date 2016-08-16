@@ -30,14 +30,15 @@ function SaveAll()
 
 @unix_only begin
     t=string("./",now())
-    SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
-
+    out=SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
 end
 
 @windows_only begin
 	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+    out=SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
 end
+
+out
 end
 
 type SaveNone <: SaveOpt
@@ -51,13 +52,15 @@ function SaveNone()
 
 @unix_only begin
     t=string("./",now())
-    SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+    out=SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
 end
 
 @windows_only begin
 	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+    out=SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
 end
+
+out
 end
 
 type FPGA
