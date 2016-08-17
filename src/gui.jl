@@ -438,14 +438,15 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
-	    clear_c(han)
+            if han.num16>0
+	        clear_c(han)
+            end
 	    clear_c2(han.c2,han.spike)
 
             #Display threshold if box checked
             if han.show_thres==true
                 plot_thres(han,rhd,rhd.s[1].d)
             end
-	    #highlight_channel(han,rhd)
 	end
 	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
@@ -473,22 +474,23 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
 
     if han.num16>0
+        
         han.spike=16*han.num16-16+han.num      
+
+        clear_c(han)
+        clear_c2(han.c2,han.spike)
+
+        #Audio output
+        set_audio(rhd,han)
+        
+        #Display Gain
+        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+
+        #Display Threshold
+        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+
     end
-    
-    clear_c(han)
-    clear_c2(han.c2,han.spike)
-
-    #Audio output
-    set_audio(rhd,han)
-
-    #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-    #Display Threshold
-    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-    setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
-    
     nothing    
 end
 
@@ -504,21 +506,24 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
     if han.num16>0
+        
         han.spike=16*han.num16-16+han.num
+
+
+        clear_c2(han.c2,han.spike)
+
+        #Audio output
+        set_audio(rhd,han)
+
+        #Display Gain
+        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+
+        #Display Threshold
+        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+
     end
-
-    clear_c2(han.c2,han.spike)
-
-    #Audio output
-    set_audio(rhd,han)
-
-    #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-    #Display Threshold
-    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-    setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
-    
+        
     nothing
 end
 
@@ -610,27 +615,6 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
 
     nothing
 
-end
-
-function highlight_channel(han::Gui_Handles,rhd::RHD2000)
-
-    ctx = getgc(han.c)
-    
-    if han.num16>0
-        myy=rem(han.num-1,4)*125+1
-        myx=div(han.num-1,4)*125+1
-		
-	move_to(ctx,myx,myy)
-	line_to(ctx,myx+124,myy)
-	line_to(ctx,myx+124,myy+124)
-	line_to(ctx,myx,myy+124)
-	line_to(ctx,myx,myy)
-        
-	set_source_rgb(ctx,1,0,0)
-	stroke(ctx)
-    end
-
-    nothing  
 end
 
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
