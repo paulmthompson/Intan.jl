@@ -57,7 +57,7 @@ function makegui(r::RHD2000)
     vbox1_3_1=@Box(:v)
     push!(frame1_3,vbox1_3_1)
     
-    sb=@SpinButton(-10000:10000)
+    sb=@SpinButton(-300:300)
     setproperty!(sb,:value,0)
     push!(vbox1_3_1,sb)
 
@@ -459,10 +459,10 @@ function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     
     #scale
-    @inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
-    @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
+    #inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
+    #@inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
 
-    @inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
+    #@inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
 
     nothing 
 end
@@ -480,25 +480,14 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     clear_c2(han.c2,han.spike)
 
     #Audio output
-    selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
-    selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
-
-    if rhd.refs[han.spike]>0
-        enableDac(rhd.fpga[1],1,true)
-        selectDacDataStream(rhd.fpga[1],1,div(rhd.refs[han.spike]-1,32))
-        selectDacDataChannel(rhd.fpga[1],1,rem(rhd.refs[han.spike]-1,32))
-    else
-        enableDac(rhd.fpga[1],1,false)
-    end
-        
+    set_audio(rhd,han)
 
     #Display Gain
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
-  
-
-    #Show which channel is highligted on 16 channel display
-    #highlight_channel(han,rhd)
+    #Display Threshold
+    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
     
     nothing    
 end
@@ -519,11 +508,22 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     end
 
     clear_c2(han.c2,han.spike)
-    
-    #update threshold
-    setproperty!(han.sb,:value,round(Int64,rhd.s[han.spike].thres))
 
     #Audio output
+    set_audio(rhd,han)
+
+    #Display Gain
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+
+    #Display Threshold
+    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+    
+    nothing
+end
+
+function set_audio(rhd::RHD2000,han::Gui_Handles)
+
     selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
     selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
 
@@ -534,13 +534,6 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     else
         enableDac(rhd.fpga[1],1,false)
     end
-
-    #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-    #Show which channel is highlighted on 16 channel display
-    #highlight_channel(han,rhd)
-    
     nothing
 end
 
@@ -685,6 +678,7 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
     nothing
 end
 
+#Threshold
 function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
@@ -702,6 +696,7 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+#Gain
 function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
@@ -726,6 +721,7 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+#Offset
 function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
@@ -746,7 +742,6 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     nothing
-    
 end
 
 #=
