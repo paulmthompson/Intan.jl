@@ -335,7 +335,7 @@ end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
-
+    #Paint over old line
     move_to(ctx,1.0,han.scope[1])
     for i=2:499
         line_to(ctx,i,han.scope[i,1])
@@ -345,7 +345,8 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     stroke(ctx)
    
     s=han.scale[han.spike,2]
-    
+
+    #Draw voltage trace from desired channel
     move_to(ctx,1.0,550.0+rhd.v[1,han.spike]*s)
     han.scope[1]=550.0+rhd.v[1,han.spike]*s
     scope_ind=2

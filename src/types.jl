@@ -228,6 +228,8 @@ type Gui_Handles
     rb2::Array{Gtk.GtkRadioButton,1}
     scope::Array{Float64,2}
     offbox::Gtk.GtkSpinButtonLeaf
+    adj_thres::Gtk.GtkAdjustmentLeaf
+    thres_slider::Gtk.GtkScaleLeaf
 end
 
 #=

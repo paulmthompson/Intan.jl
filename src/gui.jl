@@ -93,7 +93,21 @@ function makegui(r::RHD2000)
     push!(vbox1_3_2,button_sort2)
     push!(vbox1_3_2,button_sort3)
 
-    #COLUMN 2 - MAXIMIZED CHANNEL PLOTTING
+    #COLUMN 2 - Threshold slider
+    vbox_slider=@Paned(:v)
+    thres_slider = @Scale(true, -300,300,1)
+    adj_thres = @Adjustment(thres_slider)
+    setproperty!(adj_thres,:value,0)
+
+    Gtk.GAccessor.inverted(thres_slider,true)
+    Gtk.GAccessor.draw_value(thres_slider,false)
+    setindex!(vbox_slider,thres_slider,1,false,false)
+    setindex!(vbox_slider,@Canvas(10,190),2,false,false)
+    Gtk.GAccessor.position(vbox_slider,610)
+    grid[2,2]=vbox_slider
+    
+
+    #COLUMN 3 - MAXIMIZED CHANNEL PLOTTING
     
     #ROW 2
     c2=@Canvas(500,800)     
@@ -102,13 +116,13 @@ function makegui(r::RHD2000)
     clear_c2(c2,1)
     end
     show(c2)
-    grid[2,2]=c2
+    grid[3,2]=c2
 
     #ROW 3
     c2_slider=@Scale(false, 1:16)
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
-    grid[2,3]=c2_slider
+    grid[3,3]=c2_slider
  
     #COLUMN 3 - 16 CHANNEL DISPLAY
 
@@ -120,7 +134,7 @@ function makegui(r::RHD2000)
     mh_label=@Label(":")
 
     frame_time=@Frame("Time Elapsed")
-    grid[3,1]=frame_time
+    grid[4,1]=frame_time
     hbox_time=@ButtonBox(:h)
     push!(frame_time,hbox_time)
 
@@ -140,19 +154,19 @@ function makegui(r::RHD2000)
         paint(ctx)
     end
     show(c)   
-    grid[3,2]=c
+    grid[4,2]=c
 
     #ROW 3
     #Which 16 channels can be selected with a slider
     c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
     adj = @Adjustment(c_slider)
     setproperty!(adj,:value,1)
-    grid[3,3]=c_slider
+    grid[4,3]=c_slider
 
     #COLUMN 4
     #ROW 2
     vbox_42=@Box(:v)
-    grid[4,2]=vbox_42
+    grid[5,2]=vbox_42
     
     vbox_rb_upper=@Box(:v)
     push!(vbox_42,vbox_rb_upper)
@@ -244,7 +258,7 @@ push!(exmenu,export_mat_)
     push!(mb,sortopts)
     push!(mb,refopts)
     push!(mb,exopts) 
-    grid[2,1]=mb
+    grid[3,1]=mb
 
 
 #POPUP MENUS
@@ -305,7 +319,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -326,7 +340,7 @@ id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEvent
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
-    id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
+    #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
@@ -336,6 +350,7 @@ id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handle
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
+id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,r))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
@@ -488,7 +503,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
         #Display Threshold
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     end
     nothing    
@@ -509,7 +524,6 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         
         han.spike=16*han.num16-16+han.num
 
-
         clear_c2(han.c2,han.spike)
 
         #Audio output
@@ -520,7 +534,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
         #Display Threshold
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     end
         
@@ -573,7 +587,7 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
         
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
-        setproperty!(han.sb,:value,round(Int64,mythres)) #show threshold
+        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
     end
 
     nothing
@@ -636,7 +650,7 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
 
     ctx = getgc(han.c2)
 
-    thres=getproperty(han.sb,:value,Int)
+    thres=getproperty(han.adj_thres,:value,Int)
     move_to(ctx,1,300-thres)
     line_to(ctx,500,300-thres)
 
@@ -653,7 +667,7 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 
     ctx = getgc(han.c2)
 
-    thres=getproperty(han.sb,:value,Int)
+    thres=getproperty(han.adj_thres,:value,Int)
     move_to(ctx,1,300-thres)
     line_to(ctx,500,300-thres)
     set_source_rgb(ctx,1.0,1.0,1.0)
@@ -663,11 +677,11 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 end
 
 #Threshold
-function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    mythres=getproperty(han.sb,:value,Int)
+    mythres=getproperty(han.adj_thres,:value,Int)
     
     if getproperty(han.thres_all,:active,Bool)      
         @inbounds for i=1:length(rhd.s)
@@ -676,6 +690,8 @@ function sb_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     else
         @inbounds rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
+
+    setproperty!(han.sb,:value,mythres)
 
     nothing
 end
@@ -688,7 +704,7 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     mygain=getproperty(han.gain,:active,Bool)
 
     gainval=getproperty(han.gainbox,:value,Int)
-    mythres=getproperty(han.sb,:value,Int)
+    mythres=getproperty(han.adj_thres,:value,Int)
 
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
@@ -713,7 +729,7 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     mygain=getproperty(han.gain,:active,Bool)
 
     offval=getproperty(han.offbox,:value,Int)
-    mythres=getproperty(han.sb,:value,Int)
+    mythres=getproperty(han.adj_thres,:value,Int)
 
     if mygain==true
         for i=1:length(han.offset)
