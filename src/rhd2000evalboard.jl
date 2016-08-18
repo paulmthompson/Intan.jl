@@ -106,9 +106,6 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     setSampleRate(fpga,sr,mydebug)
     println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
     
-    #TODO this should be automatically selected based on what is plugged in where TODO
-    setCableLengthFeet(fpga,"PortA", 3.0)
-    
     ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(fpga,ledArray)
     
@@ -122,11 +119,15 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 1)
-    
+
     selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
-    
-    #Select RAM Bank 1 for AuxCmd3 initially, so the ADC is calibrated.
-    selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 1);
+
+    for port in ["PortA","PortB","PortC","PortD"]
+        if check_port_streams(fpga,port)>0
+            determine_delay(fpga,port)
+            selectAuxCommandBank(fpga,port, "AuxCmd3", 1)
+        end
+    end
     
     setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
     setContinuousRunMode(fpga,false)
@@ -137,8 +138,12 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
         end
         flushBoard(fpga) 
     end
-     
-    selectAuxCommandBank(fpga,"PortA", "AuxCmd3", 0)   
+
+   for port in ["PortA","PortB","PortC","PortD"]
+        if check_port_streams(fpga,port)>0
+            selectAuxCommandBank(fpga,port, "AuxCmd3", 0)
+        end
+    end
     setContinuousRunMode(fpga,true)
     nothing
 end
@@ -512,6 +517,17 @@ function setCableLengthMeters(rhd::FPGA,port, lengthInMeters::Float64)
 
     setCableDelay(rhd,port, delay)
     nothing
+end
+
+function approxCableLengthFeet(fpga,delay)
+
+    tStep=1.0 / (2800.0 * fpga.sampleRate)
+
+    timeDelay=(delay -0.5 -1.0) * tStep
+
+    distance = (timeDelay - ( xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime)) * cableVelocity
+
+    round(Int64, distance/2.0/.3048)
 end
 
 function setCableDelay(rhd::FPGA,port, delay)
@@ -1209,3 +1225,110 @@ function ReadUsbBuffer(fpga::FPGA)
 end
 
 ReadUsbBuffer(fpgas::Array{FPGA,1})=map(ReadUsbBuffer,fpgas)
+
+function determine_delay(fpga::FPGA,port)
+
+    setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
+    setContinuousRunMode(fpga,false)
+    selectAuxCommandBank(fpga,port,"AuxCmd3",0)
+
+    output_delay=falses(16)
+    
+    for delay=0:15
+
+        setCableDelay(fpga,port,delay)
+
+        runBoard(fpga)
+        
+        while isRunning(fpga)
+        end
+
+        ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * 1), fpga.usbBuffer)
+
+        index=1
+        output=zeros(UInt16,60,fpga.numDataStreams)
+        for t=1:60
+
+            index+=12
+
+            for j=1:3
+                for i=1:fpga.numDataStreams
+                    if j==3
+                        output[t,i]=convertUsbWordu(fpga.usbBuffer,index)
+                    end
+                    index+=2
+                end
+            end
+
+            #Amplifier
+	    for i=1:32
+	        for j=1:fpga.numDataStreams
+		    index+=2
+	        end
+	    end
+        
+	    #skip 36 filler word
+	    index += (2*fpga.numDataStreams)
+        
+	    #ADCs
+            for i=1:8
+                index+=2
+            end
+        
+	    #TTL
+	    index += 4
+        end
+        
+        if check_delay_output(fpga,port,output)
+            output_delay[delay+1]=true
+        end
+        
+    end
+
+    if all(!output_delay)
+        println("No delay setting produces optimum results")
+    else
+        setCableDelay(fpga,port,find(output_delay.==true)[1]-1)
+        println("Optimum delay on ", port, " is ", find(output_delay.==true)[1]-1)
+        println("Approx ", approxCableLengthFeet(fpga,find(output_delay.==true)[1]-1), " feet")
+    end
+
+    nothing
+end
+
+function check_port_streams(fpga::FPGA,port)
+
+    if port=="PortA"
+        streams=sum((fpga.amps.==0)|(fpga.amps.==1)|(fpga.amps.==8)|(fpga.amps.==9))
+    elseif port=="PortB"
+        streams=sum((fpga.amps.==2)|(fpga.amps.==3)|(fpga.amps.==10)|(fpga.amps.==11))
+    elseif port=="PortC"
+        streams=sum((fpga.amps.==4)|(fpga.amps.==5)|(fpga.amps.==12)|(fpga.amps.==13))
+    elseif port=="PortD"
+        streams=sum((fpga.amps.==6)|(fpga.amps.==7)|(fpga.amps.==14)|(fpga.amps.==15))
+    end
+    
+    streams
+end
+
+function check_delay_output(fpga::FPGA,port,output)
+
+    if port=="PortA"
+        data_stream_inds=find(fpga.dataStreamEnabled.==1)
+        outinds=find((data_stream_inds.==1)|(data_stream_inds.==2)|(data_stream_inds.==9)|(data_stream_inds.==10))
+    end
+
+    hits=0
+    for j in outinds
+        hits+=output[33,j]==UInt16("I"[1])
+        hits+=output[34,j]==UInt16("N"[1])
+        hits+=output[35,j]==UInt16("T"[1])
+        hits+=output[36,j]==UInt16("A"[1])
+        hits+=output[37,j]==UInt16("N"[1])
+        hits+=output[25,j]==UInt16("R"[1])
+        hits+=output[26,j]==UInt16("H"[1])
+        hits+=output[27,j]==UInt16("D"[1])
+    end
+
+    hits==length(outinds)*8
+end
