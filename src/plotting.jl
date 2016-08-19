@@ -743,15 +743,16 @@ function select_color(ctx,clus)
     nothing
 end
 
-function plot_new_color(ctx::Cairo.CairoContext,han::Intan.Gui_Handles,clus::Int64)
+#Replots spikes assigned to specified cluster 
+function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     increment=div(500,han.wave_points)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     
-    Intan.select_color(ctx,clus+1)
+    select_color(ctx,clus+1)
     
-    for i=1:han.buf_count
+    @inbounds for i=1:han.buf_count
 
         if han.buf_clus[i]==clus
             move_to(ctx,1,(han.spike_buf[1,i]-o)*s+300)
@@ -771,7 +772,7 @@ end
 #Finds all spikes in buffer that are selected by windows
 function window_cluster(han::Gui_Handles,clus::Int64)
 
-    for i=1:han.buf_count
+    @inbounds for i=1:han.buf_count
 
         hits=0
         for j=1:length(han.spike_win) #Loop over all windows

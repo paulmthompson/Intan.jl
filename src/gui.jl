@@ -635,6 +635,9 @@ function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mybuf==true
         han.buf_count=1
         han.buf_ind=1
+        for i=1:length(han.buf_clus)
+            han.buf_clus[i]=0
+        end
     else
         han.buf_count=0
     end
@@ -918,9 +921,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
 
             window_cluster(han,han.var1[han.spike,2])
-            
             plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
-
         end
     end
     
