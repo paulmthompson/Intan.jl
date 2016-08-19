@@ -10,27 +10,27 @@ function makegui(r::RHD2000)
     #ROW 1
 	
     #ROW 2
-    vbox1_2=@ButtonBox(:v)
+    vbox1_2=@Grid()
     grid[1,2]=vbox1_2
 	
     frame_control=@Frame("Control")
-    push!(vbox1_2,frame_control)
-    vbox_control = @Box(:v)
+    vbox1_2[1,1]=frame_control
+    vbox_control = @Grid()
     push!(frame_control,vbox_control)
     
     button_init = @Button("Init")
-    push!(vbox_control,button_init)
+    vbox_control[1,1]=button_init
     
     button_run = @ToggleButton("Run")
-    push!(vbox_control,button_run)
+    vbox_control[1,2]=button_run
     
     button_cal = @CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
-    push!(vbox_control,button_cal)
+    vbox_control[1,3]=button_cal
 
     #GAIN
     frame1_2=@Frame("Gain and Offset")
-    push!(vbox1_2,frame1_2)
+    vbox1_2[1,2]=frame1_2
     vbox1_2_1=@Box(:v)
     push!(frame1_2,vbox1_2_1)
 
@@ -53,7 +53,7 @@ function makegui(r::RHD2000)
 		
     #THRESHOLD
     frame1_3=@Frame("Threshold")
-    push!(vbox1_2,frame1_3)
+    vbox1_2[1,3]=frame1_3
     vbox1_3_1=@Box(:v)
     push!(frame1_3,vbox1_3_1)
     
@@ -68,10 +68,28 @@ function makegui(r::RHD2000)
     button_thres = @CheckButton("Show")
     setproperty!(button_thres,:active,false)
     push!(vbox1_3_1,button_thres)
+
+    #SPIKE
+    frame_hold=@Frame("Spike")
+    vbox1_2[1,4]=frame_hold
+    vbox_hold=@Grid()
+    push!(frame_hold,vbox_hold)
+
+    button_hold = @CheckButton("Hold on")
+    setproperty!(button_hold,:active,false)
+    vbox_hold[1,1]=button_hold
+
+    button_pause=@ToggleButton("Pause")
+    vbox_hold[1,2]=button_pause
+
+    button_buffer = @CheckButton("Buffer On")
+    setproperty!(button_buffer,:active,false)
+    vbox_hold[1,3]=button_buffer
+    
     
     #CLUSTER
     frame1_4=@Frame("Clustering")
-    push!(vbox1_2,frame1_4)
+    vbox1_2[1,5]=frame1_4
     vbox1_3_2=@ButtonBox(:v)
     push!(frame1_4,vbox1_3_2)
 
@@ -179,29 +197,29 @@ function makegui(r::RHD2000)
     rbs[3]=@RadioButton(rbs[2],"64 Channel")
     rbs[4]=@RadioButton(rbs[3],"64 Raster")
     rbs[5]=@RadioButton(rbs[4],"Blank")
-
+    
     push!(vbox_rb_upper,rbs[1])
     push!(vbox_rb_upper,rbs[2])
     push!(vbox_rb_upper,rbs[3])
     push!(vbox_rb_upper,rbs[4])
     push!(vbox_rb_upper,rbs[5])
-
+    
     c_rb=@Canvas(40,400)
-
+    
     push!(vbox_42,c_rb)
-
+    
     vbox_rb_lower=@Box(:v)
     push!(vbox_42,vbox_rb_lower)
     push!(vbox_rb_lower,@Label("Lower Panel"))
-
+    
     rbs2=Array(RadioButton,7)
     rbs2[1]=@RadioButton("Events",active=true)
     rbs2[2]=@RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=@RadioButton(rbs2[2],"32 Raster")
     rbs2[4]=@RadioButton(rbs2[3],"Soft Scope")
     rbs2[5]=@RadioButton(rbs2[4],"64 Channel")
-    rbs2[6]=@RadioButton(rbs2[5],"64 Raster")
-    rbs2[7]=@RadioButton(rbs2[6],"Nothing")
+rbs2[6]=@RadioButton(rbs2[5],"64 Raster")
+rbs2[7]=@RadioButton(rbs2[6],"Nothing")
 
     push!(vbox_rb_lower,rbs2[1])
     push!(vbox_rb_lower,rbs2[2])
@@ -250,7 +268,7 @@ function makegui(r::RHD2000)
     push!(exmenu,export_nwb_)
     export_jld_ = @MenuItem("JLD")
     push!(exmenu,export_jld_)
-    export_mat_ = @MenuItem("MAT")
+export_mat_ = @MenuItem("MAT")
 push!(exmenu,export_mat_)
     
     mb = @MenuBar()
@@ -319,18 +337,18 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,0,button_buffer,button_hold,false,zeros(Int64,500))
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
-        id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-        id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-        id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
-        id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
-        id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
-    elseif typeof(r.s[1].c)==ClusterTemplate
-	
-	end
+    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
+elseif typeof(r.s[1].c)==ClusterTemplate
+    
+end
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
@@ -351,6 +369,9 @@ id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handle
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,r))
+id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,r))
+id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,r))
+id = signal_connect(pause_cb,button_pause,"clicked",Void,(),false,(handles,r))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
@@ -445,7 +466,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             update_time(rhd,han)         
 	    reveal(han.c)
                 
-	    if han.num>0                     
+	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han,ctx2)
 	    end
 	end
@@ -456,8 +477,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             if han.num16>0
 	        clear_c(han)
             end
-	    clear_c2(han.c2,han.spike)
-
+            if (!han.hold)&(!han.pause)
+	        clear_c2(han.c2,han.spike)
+            end
             #Display threshold if box checked
             if han.show_thres==true
                 plot_thres(han,rhd,rhd.s[1].d)
@@ -505,6 +527,12 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
         setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
+        #Spike Buffer
+        if getproperty(han.buf_button,:active,Bool)
+            han.buf_ind=1
+            han.buf_count=1
+        end
+
     end
     nothing    
 end
@@ -535,6 +563,12 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         #Display Threshold
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
         setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+
+        #Spike Buffer
+        if getproperty(han.buf_button,:active,Bool)
+            han.buf_ind=1
+            han.buf_count=1
+        end
 
     end
         
@@ -588,6 +622,44 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
         setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+    end
+
+    nothing
+end
+
+function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han, rhd = user_data
+
+    mybuf=getproperty(han.buf_button,:active,Bool)
+
+    if mybuf==true
+        han.buf_count=1
+        han.buf_ind=1
+    else
+        han.buf_count=0
+    end
+
+    nothing
+end
+
+function hold_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han, rhd = user_data
+
+    han.hold=getproperty(han.hold_button,:active,Bool)
+
+    nothing
+end
+
+function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    widget = convert(ToggleButton, widgetptr)
+
+    if getproperty(widget,:active,Bool)
+        han.pause=true
+    else
+        han.pause=false
     end
 
     nothing
@@ -838,6 +910,14 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
             han.var2[han.spike,1]+=1
         else #replace old window
             rhd.s[han.spike].c.win[han.var1[han.spike,2]][han.var2[han.spike,2]]=SpikeSorting.mywin(x1,x2,y1,y2)
+        end
+
+        if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
+
+            window_cluster(rhd.s[han.spike].c,han,han.var1[han.spike,2])
+            
+            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+
         end
     end
     

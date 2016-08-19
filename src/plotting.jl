@@ -487,6 +487,22 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 	    set_line_width(ctx,0.5);
 	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
 	    stroke(ctx)
+
+            if han.buf_count > 0
+                mycount=1
+                for tt in rhd.buf[i,spike_num].inds
+                    han.spike_buf[mycount,han.buf_ind]=rhd.v[tt,spike_num]
+                    mycount+=1
+                end
+                han.buf_count+=1
+                han.buf_ind+=1
+                if han.buf_count>500
+                    han.buf_count=500
+                end
+                if han.buf_ind>500
+                    han.buf_ind=1
+                end
+            end
         end
     end
    
@@ -727,4 +743,52 @@ function select_color(ctx,clus)
     nothing
 end
 
+function plot_new_color(ctx::Cairo.CairoContext,han::Intan.Gui_Handles,clus::Int64)
 
+    increment=div(500,han.wave_points)
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+    
+    Intan.select_color(ctx,clus+1)
+    
+    for i=1:han.buf_count
+
+        if han.buf_clus[i]==clus
+            move_to(ctx,1,(han.spike_buf[1,i]-o)*s+300)
+            count=increment+1
+            for j=2:size(han.spike_buf,1)
+                line_to(ctx,count,(han.spike_buf[j,i]-o)*s+300)
+                count+=increment
+            end
+        end
+    end
+    stroke(ctx)
+    reveal(han.c2)
+
+    nothing
+end
+
+function window_cluster(c::ClusterWindow,han::Gui_Handles,clus::Int64)
+
+    for i=1:han.buf_count
+
+        hits=0
+        for j=1:length(c.win[clus]) #Loop over all windows for cluster
+            a1=c.win[clus][j].x1
+            a2=c.win[clus][j].x2
+            b1=c.win[clus][j].y1
+            b2=c.win[clus][j].y2
+            for k=(c.win[clus][j].x1-1):(c.win[clus][j].x2+1)
+                if SpikeSorting.intersect(a1,a2,k,k+1,b1,b2,han.spike_buf[k,i],han.spike_buf[k+1,i])
+                    hits+=1
+                    break
+                end
+            end
+        end
+        if hits==length(c.win[clus])
+            han.buf_clus[i]=clus
+        end
+    end
+
+    nothing
+end

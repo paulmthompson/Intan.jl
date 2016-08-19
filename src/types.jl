@@ -230,6 +230,14 @@ type Gui_Handles
     offbox::Gtk.GtkSpinButtonLeaf
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
+    hold::Bool
+    spike_buf::Array{Int16,2}
+    buf_ind::Int64
+    buf_count::Int64
+    buf_button::Gtk.GtkCheckButtonLeaf
+    hold_button::Gtk.GtkCheckButtonLeaf
+    pause::Bool
+    buf_clus::Array{Int64,1}
 end
 
 #=
