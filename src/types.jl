@@ -238,6 +238,7 @@ type Gui_Handles
     hold_button::Gtk.GtkCheckButtonLeaf
     pause::Bool
     buf_clus::Array{Int64,1}
+    spike_win::Array{SpikeSorting.mywin,1}
 end
 
 #=

@@ -768,24 +768,25 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Intan.Gui_Handles,clus::Int
     nothing
 end
 
-function window_cluster(c::ClusterWindow,han::Gui_Handles,clus::Int64)
+#Finds all spikes in buffer that are selected by windows
+function window_cluster(han::Gui_Handles,clus::Int64)
 
     for i=1:han.buf_count
 
         hits=0
-        for j=1:length(c.win[clus]) #Loop over all windows for cluster
-            a1=c.win[clus][j].x1
-            a2=c.win[clus][j].x2
-            b1=c.win[clus][j].y1
-            b2=c.win[clus][j].y2
-            for k=(c.win[clus][j].x1-1):(c.win[clus][j].x2+1)
+        for j=1:length(han.spike_win) #Loop over all windows
+            a1=han.spike_win[j].x1
+            a2=han.spike_win[j].x2
+            b1=han.spike_win[j].y1
+            b2=han.spike_win[j].y2
+            for k=(han.spike_win[j].x1-1):(han.spike_win[j].x2+1)
                 if SpikeSorting.intersect(a1,a2,k,k+1,b1,b2,han.spike_buf[k,i],han.spike_buf[k+1,i])
                     hits+=1
                     break
                 end
             end
         end
-        if hits==length(c.win[clus])
+        if hits==length(han.spike_win)
             han.buf_clus[i]=clus
         end
     end

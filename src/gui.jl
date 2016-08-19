@@ -337,7 +337,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,0,button_buffer,button_hold,false,zeros(Int64,500))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,0,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0))
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -905,16 +905,19 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
             push!(rhd.s[han.spike].c.hits,0)
             han.var1[han.spike,1]+=1
             han.var2[han.spike,1]+=1
+            han.spike_win=rhd.s[han.spike].c.win[end]
         elseif length(rhd.s[han.spike].c.win[han.var1[han.spike,2]]) < han.var2[han.spike,2] #new window
             push!(rhd.s[han.spike].c.win[han.var1[han.spike,2]],SpikeSorting.mywin(x1,x2,y1,y2))
             han.var2[han.spike,1]+=1
+            han.spike_win=rhd.s[han.spike].c.win[han.var1[han.spike,2]]
         else #replace old window
             rhd.s[han.spike].c.win[han.var1[han.spike,2]][han.var2[han.spike,2]]=SpikeSorting.mywin(x1,x2,y1,y2)
+            han.spike_win=rhd.s[han.spike].c.win[han.var1[han.spike,2]]
         end
 
         if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
 
-            window_cluster(rhd.s[han.spike].c,han,han.var1[han.spike,2])
+            window_cluster(han,han.var1[han.spike,2])
             
             plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
 
