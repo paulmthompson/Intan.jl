@@ -422,15 +422,33 @@ end
 function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     #get spikes and sort
     if rhd.debug.state==false
-        myread=readDataBlocks(rhd,1)
+        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
+
+            if rhd.cal<3
+                @sync for p in procs(rhd.fpga)
+                    @async remotecall_wait((f,s,v,b,n,c)->readDataBlocks_cal(localpart(f),localpart(s),v,b,n,c),p,rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+                end
+            else
+                @sync for p in procs(rhd.fpga)
+                    @async remotecall_wait((f,s,v,b,n,c)->readDataBlocks_on(localpart(f),localpart(s),v,b,n),p,rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums)
+                end
+            end
+
+            cal_update(rhd)
+        else
+            myread=readDataBlocks(rhd,1)
+        end
+        
     else
         myread=readDataBlocks(rhd)
     end
 
+    #=
     if myread
         rhd.ttl_state = !rhd.ttl_state
         sendTimePulse(rhd.fpga[1],rhd.ttl_state)
     end
+    =#
     
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)

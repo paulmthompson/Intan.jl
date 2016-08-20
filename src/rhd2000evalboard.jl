@@ -887,14 +887,59 @@ end
 
 compareNumWords(fpga::FPGA)=numWordsInFifo(fpga) < fpga.numWords
 
-function compareNumWords(fpgas::DArray{Intan.FPGA,1,Array{Intan.FPGA,1}})
+function readDataBlocks_cal(fpga::Array{FPGA,1},s::Array{Sorting,1},v::SharedArray{Int16,2},buf,nums,calnum)
 
-    out=false
-    
-    @sync for p in procs(fpgas)
-        @async out=out|remotecall_fetch((d)->compareNumWords(localpart(d)),p,fpgas)
+    #block until there are enough words
+    while !compareNumWords(fpga)
     end
-    out                                
+
+    ReadFromPipeOut(fpga[1],PipeOutData,convert(CLong,fpga[1].numBytesPerBlock),fpga[1].usbBuffer)
+
+    fillFromUsbBuffer(fpga,0,v)
+
+    #Reference Channels
+
+    cal!(s,v,buf,nums,calnum)
+
+    nothing
+end
+
+function readDataBlocks_on(fpga::Array{FPGA,1},s::Array{Sorting,1},v::SharedArray{Int16,2},buf,nums)
+
+    #block until there are enough words
+    while !compareNumWords(fpga)
+    end
+
+    ReadFromPipeOut(fpga[1],PipeOutData,convert(CLong,fpga[1].numBytesPerBlock),fpga[1].usbBuffer)
+
+    fillFromUsbBuffer(fpga,0,v)
+
+    #Reference Channels
+
+    onlinesort!(s,v,buf,nums)
+
+    nothing
+end
+
+function cal_update(rhd::RHD2000)
+
+    if rhd.cal==0
+
+        rhd.cal=1
+                      
+    elseif rhd.cal<3
+
+        if rhd.reads>20
+            rhd.cal=2
+        end
+        
+    elseif rhd.cal==3
+
+    end
+
+    rhd.reads+=1
+
+    nothing
 end
 
 function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
@@ -912,34 +957,22 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
 
     numRead=0
 
-    if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
-
-        @sync for p in procs(rhd.fpga)
-            @async remotecall_wait((d)->ReadUsbBuffer(localpart(d)),p,rhd.fpga)
+    numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
+    if length(rhd.fpga)>1
+        for fpga in rhd.fpga
+            ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
         end
-
+        numRead=numBytesToRead
     else
-        numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
-        if length(rhd.fpga)>1
-            for fpga in rhd.fpga
-                ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
-            end
-            numRead=numBytesToRead
-        else
-            numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
-        end  
-    end
+        numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+    end  
+
 
     for i=0:(numBlocks-1)
 
         #Move data from usbBuffer to v
-        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
-            @sync for p in procs(rhd.fpga)
-                @async remotecall_wait((d,ii,v)->fillFromUsbBuffer!(localpart(d),ii,v),p,rhd.fpga,i,rhd.v)
-            end
-        else
-            fillFromUsbBuffer!(rhd.fpga,i,rhd.v)
-        end
+
+        fillFromUsbBuffer!(rhd.fpga,i,rhd.v)
 
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0
