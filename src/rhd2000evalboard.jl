@@ -813,6 +813,19 @@ function setTtlOut(rhd::FPGA,ttlOutArray)
     nothing
 end
 
+function sendTimePulse(fpga::FPGA,val::Bool)
+
+    if val==true
+        fpga.ttloutput += (1 << (16-1))
+    else
+        fpga.ttloutput -= (1 << (16-1))
+    end
+
+    SetWireInValue(fpga,WireInTtlOut,fpga.ttloutput)
+    UpdateWireIns(fpga)
+    nothing
+end
+
 function setLedDisplay(rhd::FPGA,ledArray)
 
     ledOut=0

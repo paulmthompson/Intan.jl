@@ -426,7 +426,12 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     else
         myread=readDataBlocks(rhd)
     end
-            
+
+    if myread
+        rhd.ttl_state = !rhd.ttl_state
+        sendTimePulse(rhd.fpga[1],rhd.ttl_state)
+    end
+    
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)
 
