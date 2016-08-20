@@ -425,16 +425,13 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
 
             if rhd.cal<3
-                @sync for p in procs(rhd.fpga)
-                    @async remotecall_wait((f,s,v,b,n,c)->readDataBlocks_cal(localpart(f),localpart(s),v,b,n,c),p,rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
-                end
+                calibrate_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
             else
-                @sync for p in procs(rhd.fpga)
-                    @async remotecall_wait((f,s,v,b,n,c)->readDataBlocks_on(localpart(f),localpart(s),v,b,n),p,rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums)
-                end
+                onlinesort_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums)
             end
 
             cal_update(rhd)
+		myread=true
         else
             myread=readDataBlocks(rhd,1)
         end

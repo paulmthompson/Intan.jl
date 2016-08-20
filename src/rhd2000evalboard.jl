@@ -887,15 +887,41 @@ end
 
 compareNumWords(fpga::FPGA)=numWordsInFifo(fpga) < fpga.numWords
 
-function readDataBlocks_cal(fpga::Array{FPGA,1},s::Array{Sorting,1},v::SharedArray{Int16,2},buf,nums,calnum)
+function calibrate_parallel(fpga,s,v,buf,nums,calnum)
+
+	@sync for p in procs(fpga)
+        	@spawnat p begin
+            	readDataBlocks_cal(localpart(fpga),localpart(s),v,buf,nums,calnum)
+        	end 
+    	end
+	nothing
+end
+
+function onlinesort_parallel(fpga,s,v,buf,nums)
+
+	@sync for p in procs(fpga)
+        	@spawnat p begin
+            	readDataBlocks_on(localpart(fpga),localpart(s),v,buf,nums)
+        	end 
+    	end
+	nothing
+end
+
+function readDataBlocks_cal(fpgas::Array{FPGA,1},s,v,buf,nums,calnum)
+
+	readDataBlocks_cal(fpgas[1],s,v,buf,nums,calnum)
+	nothing
+end
+
+function readDataBlocks_cal(fpga::FPGA,s,v,buf,nums,calnum)
 
     #block until there are enough words
-    while !compareNumWords(fpga)
+    while compareNumWords(fpga)
     end
 
-    ReadFromPipeOut(fpga[1],PipeOutData,convert(CLong,fpga[1].numBytesPerBlock),fpga[1].usbBuffer)
+    ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
 
-    fillFromUsbBuffer(fpga,0,v)
+    fillFromUsbBuffer!(fpga,0,v)
 
     #Reference Channels
 
@@ -904,15 +930,21 @@ function readDataBlocks_cal(fpga::Array{FPGA,1},s::Array{Sorting,1},v::SharedArr
     nothing
 end
 
-function readDataBlocks_on(fpga::Array{FPGA,1},s::Array{Sorting,1},v::SharedArray{Int16,2},buf,nums)
+function readDataBlocks_on(fpgas::Array{FPGA,1},s,v,buf,nums)
+
+	readDataBlocks_on(fpgas[1],s,v,buf,nums)
+	nothing
+end
+
+function readDataBlocks_on(fpga::FPGA,s,v,buf,nums)
 
     #block until there are enough words
-    while !compareNumWords(fpga)
+    while compareNumWords(fpga)
     end
 
-    ReadFromPipeOut(fpga[1],PipeOutData,convert(CLong,fpga[1].numBytesPerBlock),fpga[1].usbBuffer)
+    ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
 
-    fillFromUsbBuffer(fpga,0,v)
+    fillFromUsbBuffer!(fpga,0,v)
 
     #Reference Channels
 
@@ -1059,7 +1091,13 @@ end
 
 function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v)
 
-    for fpga in fpgas
+	for fpga in fpgas
+		fillFromUsbBuffer!(fpga,blockIndex,v)
+	end
+	nothing
+end
+
+function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v)
     
     index = blockIndex * fpga.numBytesPerBlock + 1
         
@@ -1145,7 +1183,6 @@ function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v)
 	index += 2	
     end
 
-    end
     nothing
 end
 
@@ -1359,10 +1396,16 @@ end
 
 function check_delay_output(fpga::FPGA,port,output)
 
+	data_stream_inds=find(fpga.dataStreamEnabled.==1)
     if port=="PortA"
-        data_stream_inds=find(fpga.dataStreamEnabled.==1)
         outinds=find((data_stream_inds.==1)|(data_stream_inds.==2)|(data_stream_inds.==9)|(data_stream_inds.==10))
-    end
+    elseif port=="PortB"
+outinds=find((data_stream_inds.==3)|(data_stream_inds.==4)|(data_stream_inds.==11)|(data_stream_inds.==12))
+elseif port=="PortC"
+outinds=find((data_stream_inds.==5)|(data_stream_inds.==6)|(data_stream_inds.==13)|(data_stream_inds.==14))
+elseif port=="PortD"
+outinds=find((data_stream_inds.==7)|(data_stream_inds.==8)|(data_stream_inds.==15)|(data_stream_inds.==16))
+end
 
     hits=0
     for j in outinds

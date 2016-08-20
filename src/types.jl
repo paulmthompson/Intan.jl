@@ -160,7 +160,7 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
     else
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
-        s=create_multi(params...,numchannels,1:1,wave_points)
+        s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
         fpga=distribute(fpga)
     end
