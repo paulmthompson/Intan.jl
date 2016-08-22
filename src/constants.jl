@@ -17,13 +17,19 @@ end
 	
 const bit = string(base_path,"main.bit")
 const usb3bit = string(base_path,"XEM6310_512ch.bit")
-
+#const usb3bit = string(base_path,"rhd2000_usb3.bit")
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
 const MAX_NUM_DATA_STREAMS = 8
 const FIFO_CAPACITY_WORDS = 67108864
-const SAMPLES_PER_DATA_BLOCK = 600
+
+#const SAMPLES_PER_DATA_BLOCK = 600
+const SAMPLES_PER_DATA_BLOCK = 512
+const USB3_BLOCK_SIZE = 1024
+
+const DDR_BURST_LENGTH = 64
+
 const RHD2000_HEADER_MAGIC_NUMBER = 0xc691199927021942
 
 const WireInResetRun = 0x00
@@ -66,6 +72,7 @@ const TrigInDacThresh = 0x43
 const TrigInDacHpf = 0x44
 const TrigInExtFastSettle = 0x45
 const TrigInExtDigOut = 0x46
+const TrigInSetParam = 0x47
 
 const WireOutNumWordsLsb = 0x20
 const WireOutNumWordsMsb = 0x21

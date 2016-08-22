@@ -122,11 +122,13 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
 
     selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
 
+    if mydebug==false
     for port in ["PortA","PortB","PortC","PortD"]
         if check_port_streams(fpga,port)>0
             determine_delay(fpga,port)
             selectAuxCommandBank(fpga,port, "AuxCmd3", 1)
         end
+    end
     end
     
     setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
@@ -194,7 +196,7 @@ function uploadFpgaBitfile(rhd::FPGA)
 
     #upload configuration file
     if rhd.usb3
-        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb4bit)
+        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit)
     else
         errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
     end
@@ -309,6 +311,17 @@ function resetBoard(rhd::FPGA)
     UpdateWireIns(rhd)
     SetWireInValue(rhd,WireInResetRun, 0x00, 0x01)
     UpdateWireIns(rhd)
+
+
+    if rhd.usb3
+       SetWireInValue(rhd,WireInMultiUse, div(USB3_BLOCK_SIZE,4))
+       UpdateWireIns(rhd)
+       ActivateTriggerIn(rhd,TrigInSetParam,0)
+
+       SetWireInValue(rhd,WireInMultiUse, DDR_BURST_LENGTH)
+       UpdateWireIns(rhd)
+       ActivateTriggerIn(rhd,TrigInSetParam,1)
+    end	
 
     nothing   
 end
@@ -862,6 +875,7 @@ end
 
 function flushBoard(rhd::FPGA)
 
+if !rhd.usb3
     while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
     end
@@ -869,7 +883,15 @@ function flushBoard(rhd::FPGA)
     while (numWordsInFifo(rhd) > 0)
         ReadFromPipeOut(rhd,PipeOutData, (2 * numWordsInFifo(rhd)), rhd.usbBuffer)
     end
-
+else
+    SetWireInValue(rhd,WireInResetRun, 1<<4, 1<<4)
+    UpdateWireIns(rhd)
+    while (numWordsInFifo(rhd) > 0)
+        ReadFromBlockPipeOut(rhd,PipeOutData, USB3_BLOCK_SIZE, rhd.usbBuffer)
+    end
+    SetWireInValue(rhd,WireInResetRun,0, 1<<4)
+    UpdateWireIns(rhd)
+end
     nothing
 end
 
@@ -999,9 +1021,12 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         end
         numRead=numBytesToRead
     else
+    if rhd.fpga[1].usb3
+    numRead=ReadFromBlockPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+else
         numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+	end
     end  
-
 
     for i=0:(numBlocks-1)
 
@@ -1307,6 +1332,10 @@ function ReadFromPipeOut(rhd::FPGA,epAddr::UInt8, length, data)
     ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ReadFromPipeOut),Clong,(Ptr{Void},Int32,Clong,Ptr{UInt8}),rhd.board,epAddr,length,data)
 end
 
+function ReadFromBlockPipeOut(fpga::FPGA,epAddr::UInt8,length,data)
+ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_ReadFromBlockPipeOut),Clong,(Ptr{Void},Int32,Int32,Clong,Ptr{UInt8}),fpga.board,epAddr,USB3_BLOCK_SIZE,length,data)
+end
+
 function ReadUsbBuffer(fpga::FPGA)
     ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock), fpga.usbBuffer)
     nothing
@@ -1326,13 +1355,22 @@ function determine_delay(fpga::FPGA,port)
 
         setCableDelay(fpga,port,delay)
 
+	flushBoard(fpga)
+
         runBoard(fpga)
         
         while isRunning(fpga)
         end
 
-        ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * 1), fpga.usbBuffer)
-
+	if fpga.usb3
+	SetWireInValue(fpga,WireInResetRun, 1 << 4, 1 << 4)
+	UpdateWireIns(fpga)
+	   ReadFromBlockPipeOut(fpga,PipeOutData,2*convert(Clong,fpga.numWords),fpga.usbBuffer)
+	   SetWireInValue(fpga,WireInResetRun, 0, 1 << 4);
+	   UpdateWireIns(fpga)
+	else
+		ReadFromPipeOut(fpga,PipeOutData, 2*convert(Clong, fpga.numWords * 1), fpga.usbBuffer)
+	end
         index=1
         output=zeros(UInt16,60,fpga.numDataStreams)
         for t=1:60
@@ -1366,11 +1404,10 @@ function determine_delay(fpga::FPGA,port)
 	    #TTL
 	    index += 4
         end
-        
+
         if check_delay_output(fpga,port,output)
             output_delay[delay+1]=true
-        end
-        
+        end       
     end
 
     if all(!output_delay)
