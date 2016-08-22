@@ -16,7 +16,7 @@ end
 end
 	
 const bit = string(base_path,"main.bit")
-
+const usb3bit = string(base_path,"XEM6310_512ch.bit")
 
 
 const USB_BUFFER_SIZE = 2400000

@@ -28,17 +28,16 @@ end
 
 function SaveAll()
 
-@unix_only begin
-    t=string("./",now())
-    out=SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
-end
+    @unix_only begin
+        t=string("./",now())
+        out=SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+    end
 
-@windows_only begin
-	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    out=SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
-end
-
-out
+    @windows_only begin
+        t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+        out=SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+    end
+    out
 end
 
 type SaveNone <: SaveOpt
@@ -50,17 +49,16 @@ end
 
 function SaveNone()
 
-@unix_only begin
-    t=string("./",now())
-    out=SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
-end
+    @unix_only begin
+        t=string("./",now())
+        out=SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+    end
 
-@windows_only begin
+    @windows_only begin
 	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    out=SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
-end
-
-out
+        out=SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+    end
+    out
 end
 
 type FPGA
@@ -79,15 +77,16 @@ type FPGA
     ttlin::Array{UInt16,1}
     ttlout::Array{UInt16,1}
     ttloutput::UInt16
+    usb3::Bool
 end
 
 function FPGA(board_id::Int64,amps::Array{Int64,1})
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false)
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false)
     end
 end
 
@@ -132,7 +131,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
+function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -158,11 +157,21 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
         mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
+        if usb3==true
+            for myfpga in fpga
+                myfpga.usb3=true
+            end
+        end
     else
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
+        if usb3==true
+            for myfpga in fpga
+                myfpga.usb3=true
+            end
+        end
         fpga=distribute(fpga)
         mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
         mytime=convert(SharedArray{UInt32,2},mytime)

@@ -193,8 +193,11 @@ end
 function uploadFpgaBitfile(rhd::FPGA)
 
     #upload configuration file
-    errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
-
+    if rhd.usb3
+        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb4bit)
+    else
+        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
+    end
     if errorcode==0
         println("FPGA configuration loaded.")
     else
