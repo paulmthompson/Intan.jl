@@ -49,7 +49,6 @@ facts() do
     @fact myfpga.numDataStreams --> 0
     @fact myfpga.dataStreamEnabled --> zeros(Int64,1,Intan.MAX_NUM_DATA_STREAMS)
     @fact myfpga.amps --> [0,8]
-    @fact myfpga.time --> zeros(Int32,Intan.SAMPLES_PER_DATA_BLOCK)
 end
 
 #=
@@ -71,6 +70,7 @@ facts() do
     @fact typeof(myrhd.buf) --> Array{SpikeSorting.Spike,2}
     @fact size(myrhd.buf,2) --> 64
     @fact myrhd.nums --> zeros(Int64,64)
+    @fact myrhd.time --> zeros(UInt32,Intan.SAMPLES_PER_DATA_BLOCK,1)
 end
 
 Intan.init_board!(myrhd)
@@ -117,7 +117,7 @@ end
 Sample Rate Testing
 =#
 
-#=
+
 myamp=RHD2164("PortA1")
 myt=Task_NoTask()
 mys=SaveNone()
@@ -128,7 +128,7 @@ myfpga=FPGA(1,myamp)
 myrhd=makeRHD([myfpga],myt,debug=d,sav=mys);
 
 Intan.init_board!(myrhd)
-=#
+
 
 facts() do
 

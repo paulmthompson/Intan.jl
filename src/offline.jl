@@ -29,13 +29,13 @@ end
 
 function fillFromOffline!(rhd::RHD2000)
 
-    toff=rhd.fpga[1].time[end]
+    toff=rhd.time[end,rhd.fpga[1].id]
     for j=1:SAMPLES_PER_DATA_BLOCK
         for i=1:size(rhd.v,2)  
             rhd.v[j,i]=round(Int16,rhd.debug.data[rhd.debug.ind])
         end
         rhd.debug.ind+=1
-        rhd.fpga[1].time[j]=toff+j
+        rhd.time[j,rhd.fpga[1].id]=toff+j
     end
 
     if rhd.debug.ind>=rhd.debug.maxind

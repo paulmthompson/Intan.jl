@@ -425,13 +425,12 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
 
             if rhd.cal<3
-                calibrate_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+                calibrate_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
             else
-                onlinesort_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums)
+                onlinesort_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.time)
             end
-
             cal_update(rhd)
-		myread=true
+	    myread=true
         else
             myread=readDataBlocks(rhd,1)
         end
@@ -440,12 +439,12 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         myread=readDataBlocks(rhd)
     end
 
-    #=
+
     if myread
         rhd.ttl_state = !rhd.ttl_state
         sendTimePulse(rhd.fpga[1],rhd.ttl_state)
     end
-    =#
+
     
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)
@@ -688,18 +687,9 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function gettime(rhd::RHD2000,fpgas::DArray{Intan.FPGA,1,Array{Intan.FPGA,1}})
-    t=remotecall_fetch((d)->localpart(d)[1].time[1],2,fpgas)
-    convert(Int64,div(t,rhd.sr))
-end
-
-function gettime(rhd::RHD2000,fpgas::Array{FPGA,1})
-    convert(Int64,div(fpgas[1].time[1],fpgas[1].sampleRate))
-end
-
 function update_time(rhd::RHD2000,han::Gui_Handles)
 
-    total_seconds=gettime(rhd,rhd.fpga)
+    total_seconds=convert(Int64,div(rhd.time[1,1],rhd.sr))
 
     this_h=div(total_seconds,3600)
 
@@ -723,7 +713,6 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
     end
 
     nothing
-
 end
 
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})

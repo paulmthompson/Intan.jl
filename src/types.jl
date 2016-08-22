@@ -75,7 +75,6 @@ type FPGA
     numWords::Int64
     numBytesPerBlock::Int64
     amps::Array{Int64,1}
-    time::Array{UInt32,1}
     adc::Array{UInt16,2}
     ttlin::Array{UInt16,1}
     ttlout::Array{UInt16,1}
@@ -86,13 +85,13 @@ function FPGA(board_id::Int64,amps::Array{Int64,1})
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt32,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0)
     end
 end
 
-function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts)
+function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
 
     global num_rhd::Int64
     num_rhd+=1
@@ -115,11 +114,12 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts)
             sr::Int64
             refs::Array{Int64,1}
             ttl_state::Bool
+            time::$(typeof(mytime))
         end
 
-        function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)))
+        function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)),mytime::$(typeof(mytime)))
             
-            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false)
+            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime)
         end
     end
 end
@@ -156,16 +156,19 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
         v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
         prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
         s=create_multi(params...,numchannels,wave_points)
-        (buf,nums)=output_buffer(numchannels)      
+        (buf,nums)=output_buffer(numchannels)
+        mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
     else
         v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
         prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
         fpga=distribute(fpga)
+        mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
+        mytime=convert(SharedArray{UInt32,2},mytime)
     end
-    gen_rhd(fpga,v,prev,s,buf,nums,mytask,sav,notches)
-    rhd=make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches)
+    gen_rhd(fpga,v,prev,s,buf,nums,mytask,sav,notches,mytime)
+    rhd=make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches,mytime)
 
     rhd.sr=sr
 
