@@ -1156,7 +1156,21 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
                         newindex=i
                         break
                     end
-                end                
+                end
+		
+                if lag>=(fpga.numBytesPerBlock/SAMPLES_PER_DATA_BLOCK) #somehow an extra byte popped up? will want to move forward instead
+		lag=0
+                newindex=index
+                
+                for i=(index+1):fpga.numBytesPerBlock
+                    if checkUsbHeader(fpga.usbBuffer,i)
+                        lag=i-index
+                        newindex=i
+                        break
+                    end
+                end
+
+		end
             end
             
             #get extra bytes
@@ -1167,12 +1181,21 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
             temp_array=zeros(UInt8,lag)
             
             ReadFromPipeOut(fpga,PipeOutData, convert(Clong, lag), temp_array)
-            
-            count=1
-            for i=(fpga.numBytesPerBlock-lag+1):fpga.numBytesPerBlock
-                fpga.usbBuffer[i]=temp_array[count]
-                count+=1
-            end
+
+	    if t==1 #moved forward, so bytes should be added to the end
+	       count=1
+	       for i=(fpga.numBytesPerBlock+1):(fpga.numBytesPerBlock+lag)
+	       	   fpga.usbBuffer[i]=temp_array[count]
+		   count+=1
+	       end
+	    else #moved backward, so skip everything in bad block, then start
+	    	 count=1
+	       for i=(fpga.numBytesPerBlock+1):(fpga.numBytesPerBlock+lag)
+	       	   fpga.usbBuffer[i]=temp_array[count]
+		   count+=1
+	       end
+	       t=t-1 #refill last block
+	    end	               
             
             #start fresh
             index=newindex
