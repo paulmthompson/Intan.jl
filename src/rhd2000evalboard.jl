@@ -944,8 +944,11 @@ function readDataBlocks_cal(fpga::FPGA,s,v,buf,nums,mytime,calnum)
     while compareNumWords(fpga)
     end
 
-    ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
-
+    if fpga.usb3
+       ReadFromBlockPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+    else
+	ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+    end
     fillFromUsbBuffer!(fpga,0,v,mytime)
 
     #Reference Channels
@@ -967,7 +970,11 @@ function readDataBlocks_on(fpga::FPGA,s,v,buf,nums,mytime)
     while compareNumWords(fpga)
     end
 
-    ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+    if fpga.usb3
+       ReadFromBlockPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+    else
+	ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+    end
 
     fillFromUsbBuffer!(fpga,0,v,mytime)
 
