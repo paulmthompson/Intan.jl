@@ -253,10 +253,10 @@ function initialize_board(rhd::FPGA,debug=false)
     
     setMaxTimeStep(rhd,4294967295) #4294967395 == (2^32 - 1)
 
-    setCableLengthFeet(rhd,"PortA", 3.0)  # assume 3 ft cables
-    setCableLengthFeet(rhd,"PortB", 3.0)
-    setCableLengthFeet(rhd,"PortC", 3.0)
-    setCableLengthFeet(rhd,"PortD", 3.0)
+    setCableLengthFeet(rhd,"PortA", 6.0)  # assume 6 ft cables
+    setCableLengthFeet(rhd,"PortB", 6.0)
+    setCableLengthFeet(rhd,"PortC", 6.0)
+    setCableLengthFeet(rhd,"PortD", 6.0)
 
     setDspSettle(rhd,false)
 
@@ -606,6 +606,30 @@ function setDataSource(rhd::FPGA,stream, dataSource)
     elseif stream==7
         endPoint=WireInDataStreamSel5678
         bitShift=12
+elseif stream==8
+	endPoint=WireInDataStreamSel1234
+	bitShift=16
+elseif stream==9
+	endPoint=WireInDataStreamSel1234
+	bitShift=20
+elseif stream==10
+	endPoint=WireInDataStreamSel1234
+	bitShift=24
+elseif stream==11
+	endPoint=WireInDataStreamSel1234
+	bitShift=28
+elseif stream==12
+	endPoint=WireInDataStreamSel5678
+	bitShift=16
+elseif stream==13
+	endPoint=WireInDataStreamSel5678
+	bitShift=20
+elseif stream==14
+	endPoint=WireInDataStreamSel5678
+	bitShift=24
+elseif stream==15
+	endPoint=WireInDataStreamSel5678
+	bitShift=28
     end
 
     bitShift=convert(Int32,bitShift)
@@ -1446,6 +1470,7 @@ function determine_delay(fpga::FPGA,port)
 
     if all(!output_delay)
         println("No delay setting produces optimum results")
+	setCableLengthFeet(fpga,port, 6.0)
     else
         setCableDelay(fpga,port,find(output_delay.==true)[1]-1)
         println("Optimum delay on ", port, " is ", find(output_delay.==true)[1]-1)

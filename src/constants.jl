@@ -21,7 +21,7 @@ const usb3bit = string(base_path,"XEM6310_512ch.bit")
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
-const MAX_NUM_DATA_STREAMS = 8
+const MAX_NUM_DATA_STREAMS = 16
 const FIFO_CAPACITY_WORDS = 67108864
 
 #const SAMPLES_PER_DATA_BLOCK = 600
