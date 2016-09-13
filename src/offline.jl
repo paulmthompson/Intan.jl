@@ -4,7 +4,7 @@ Methods for offline testing
 
 =#
 
-function Debug(filepath::ASCIIString, filetype::ASCIIString)
+function Debug(filepath::AbstractString, filetype::AbstractString)
 
     if filetype=="qq"
 

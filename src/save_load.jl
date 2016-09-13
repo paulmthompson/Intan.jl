@@ -525,7 +525,7 @@ function PL_DataBlockHeader(t,num,unit,wave_size)
     PL_DataBlockHeader(1,0,t,num,unit,1,wave_size)
 end
 
-function write_plex(out_name::ASCIIString,vname="v.bin",tsname="ts.bin",tmin=0)
+function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",tmin=0)
 
     v_header=read_v_header(vname)
     ts_header=read_stamp_header(tsname)

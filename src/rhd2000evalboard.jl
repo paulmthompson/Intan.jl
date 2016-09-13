@@ -1,5 +1,5 @@
 
-function RHD2164(port::ASCIIString)
+function RHD2164(port::AbstractString)
     if port=="PortA1"
         ports=[PortA1,PortA1Ddr]
     elseif port=="PortA2"
@@ -21,7 +21,7 @@ function RHD2164(port::ASCIIString)
     end
 end
 
-function RHD2132(port::ASCIIString)
+function RHD2132(port::AbstractString)
     if port=="PortA1"
         ports=[PortA1]
     elseif port=="PortA2"

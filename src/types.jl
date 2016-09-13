@@ -9,7 +9,7 @@ global num_rhd = 0
 
 type Debug
     state::Bool
-    m::ASCIIString
+    m::String
     data::Array{Float64,1}
     ind::Int64
     maxind::Int64
@@ -19,21 +19,21 @@ type SaveWave <: SaveOpt
 end
 
 type SaveAll <: SaveOpt
-    v::ASCIIString
-    ts::ASCIIString
-    adc::ASCIIString
-    ttl::ASCIIString
-    folder::ASCIIString
+    v::String
+    ts::String
+    adc::String
+    ttl::String
+    folder::String
 end
 
 function SaveAll()
 
-    @unix_only begin
+    @static if is_unix()
         t=string("./",now())
         out=SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
     end
 
-    @windows_only begin
+    @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
         out=SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
     end
@@ -41,20 +41,20 @@ function SaveAll()
 end
 
 type SaveNone <: SaveOpt
-    ts::ASCIIString
-    adc::ASCIIString
-    ttl::ASCIIString
-    folder::ASCIIString
+    ts::String
+    adc::String
+    ttl::String
+    folder::String
 end
 
 function SaveNone()
 
-    @unix_only begin
+    @static if is_unix()
         t=string("./",now())
         out=SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
     end
 
-    @windows_only begin
+    @static if is_windows()
 	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
         out=SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
     end
@@ -99,7 +99,8 @@ end
 
 function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
 
-    global num_rhd::Int64
+    #global num_rhd::Int64
+    typeassert(num_rhd,Int64)
     num_rhd+=1
     k=num_rhd
     
