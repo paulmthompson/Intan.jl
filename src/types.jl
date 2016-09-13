@@ -99,8 +99,8 @@ end
 
 function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
 
-    #global num_rhd::Int64
-    typeassert(num_rhd,Int64)
+    global num_rhd
+
     num_rhd+=1
     k=num_rhd
     
