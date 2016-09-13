@@ -111,3 +111,7 @@ const xilinxLvdsInputDelay=1.4e-9
 const rhd2000Delay=9.0e-9
 const misoSettleTime=6.7e-9
 const cableVelocity=.555*speedOfLight
+
+#Wireless
+const udpsock = UDPSocket()
+const wifi_v = convert(SharedArray{Int16,3},zeros(Int16,SAMPLES_PER_DATA_BLOCK,21,2))

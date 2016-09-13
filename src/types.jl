@@ -61,6 +61,13 @@ function SaveNone()
     out
 end
 
+type WIFI
+    enabled::Bool
+    buff::Int64
+end
+
+WIFI()=WIFI(false,1)
+
 type FPGA
     id::Int64
     board::Ptr{Void}
@@ -114,11 +121,12 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
             refs::Array{Int64,1}
             ttl_state::Bool
             time::$(typeof(mytime))
+            wifi::WIFI
         end
 
         function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)),mytime::$(typeof(mytime)))
             
-            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime)
+            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime,WIFI())
         end
     end
 end
@@ -131,7 +139,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false)
+function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false,wifi=false)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -176,10 +184,18 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
         mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
         mytime=convert(SharedArray{UInt32,2},mytime)
     end
+
+    
     gen_rhd(fpga,v,prev,s,buf,nums,mytask,sav,notches,mytime)
     rhd=make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches,mytime)
 
     rhd.sr=sr
+
+    if wifi==true
+        #Spawn a UDP listener thread to receive wireless packets
+        udp_listener()
+        rhd.wifi.enabled=true
+    end
 
     rhd
 end

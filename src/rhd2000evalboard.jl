@@ -1028,10 +1028,10 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         end
         numRead=numBytesToRead
     else
-    if rhd.fpga[1].usb3
-    numRead=ReadFromBlockPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
-else
-        numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        if rhd.fpga[1].usb3
+            numRead=ReadFromBlockPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        else
+            numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
 	end
     end  
 
@@ -1040,6 +1040,10 @@ else
         #Move data from usbBuffer to v
 
         fillFromUsbBuffer!(rhd.fpga,i,rhd.v,rhd.time)
+
+        if rhd.wifi.enabled==true
+            
+        end
 
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0

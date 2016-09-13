@@ -351,7 +351,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     han.scope[1]=550.0+rhd.v[1,han.spike]*s
     scope_ind=2
     count=2.0
-    for i=3:2:600
+    for i=3:2:size(rhd.v,1)
         y=550.0+rhd.v[i,han.spike]*s
         line_to(ctx,count,y)
         han.scope[scope_ind,1]=y
