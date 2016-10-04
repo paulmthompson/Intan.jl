@@ -301,7 +301,7 @@ end
 
 function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},sr=30000,tmin=0.0)
 
-    spikes=Dict{ASCIIString,Array{Float64,1}}()
+    spikes=Dict{String,Array{Float64,1}}()
 
     for i=1:length(numcells)
         for j=1:numcells[i]

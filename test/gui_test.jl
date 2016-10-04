@@ -28,7 +28,7 @@ Intan.init_cb(handles.init.handle,(handles,myrhd))
 
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 2
-    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0]
+    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 end
 
 

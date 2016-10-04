@@ -77,7 +77,7 @@ Intan.init_board!(myrhd)
 
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 2
-    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0]
+    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
     @fact myrhd.fpga[1].sampleRate --> 30000
     @fact myrhd.fpga[1].numWords --> 52800
     @fact myrhd.fpga[1].numBytesPerBlock --> 105600
@@ -107,7 +107,7 @@ end
 #=
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 1
-    @fact myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0]
+    @fact myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
     @fact myrhd.fpga[1].sampleRate --> 30000
     @fact myrhd.fpga[1].numWords --> 31200
     @fact myrhd.fpga[1].numBytesPerBlock --> 62400

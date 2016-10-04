@@ -105,7 +105,7 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
     k=num_rhd
     
     @eval begin
-        type $(symbol("RHD200$k")) <: RHD2000
+        type $(Symbol("RHD200$k")) <: RHD2000
             fpga::$(typeof(fpga))
             v::$(typeof(v))
             prev::$(typeof(prev))
@@ -127,7 +127,7 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
 
         function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)),mytime::$(typeof(mytime)))
             
-            $(symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime,WIFI())
+            $(Symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime,WIFI())
         end
     end
 end
