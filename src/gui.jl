@@ -82,9 +82,12 @@ function makegui(r::RHD2000)
     button_pause=@ToggleButton("Pause")
     vbox_hold[1,2]=button_pause
 
+    button_clear=@Button("Refresh")
+    vbox_hold[1,3]=button_clear
+
     button_buffer = @CheckButton("Buffer On")
     setproperty!(button_buffer,:active,false)
-    vbox_hold[1,3]=button_buffer
+    vbox_hold[1,4]=button_buffer
     
     
     #CLUSTER
@@ -377,6 +380,7 @@ id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles
 id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,r))
 id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,r))
 id = signal_connect(pause_cb,button_pause,"clicked",Void,(),false,(handles,r))
+id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,r))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
@@ -597,6 +601,16 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     end
         
     nothing
+end
+
+function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    clear_c2(han.c2,han.spike)
+
+    nothing
+    
 end
 
 function set_audio(rhd::RHD2000,han::Gui_Handles)
