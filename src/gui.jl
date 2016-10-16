@@ -90,7 +90,7 @@ function makegui(r::RHD2000)
     #CLUSTER
     frame1_4=@Frame("Clustering")
     vbox1_2[1,5]=frame1_4
-    vbox1_3_2=@ButtonBox(:v)
+    vbox1_3_2=@Grid()
     push!(frame1_4,vbox1_3_2)
 
     if typeof(r.s[1].c)==ClusterWindow 
@@ -100,16 +100,21 @@ function makegui(r::RHD2000)
         tb1=@Label("text1")
         tb2=@Label("text2")
     end
-    push!(vbox1_3_2,tb1)
-    push!(vbox1_3_2,tb2)
+    vbox1_3_2[1,1]=tb1
+    vbox1_3_2[1,2]=tb2
     
     button_sort1 = @Button("Delete Cluster")
     button_sort2 = @Button("Delete Window")
     button_sort3 = @Button("Show Windows")
+
+    button_sort4 = @Button("Select Cluster")
+    button_sort5 = @Button("Select Window")
     
-    push!(vbox1_3_2,button_sort1)
-    push!(vbox1_3_2,button_sort2)
-    push!(vbox1_3_2,button_sort3)
+    vbox1_3_2[1,3]=button_sort1
+    vbox1_3_2[1,4]=button_sort2
+    vbox1_3_2[1,5]=button_sort3
+    vbox1_3_2[1,6]=button_sort4
+    vbox1_3_2[1,7]=button_sort5
 
     #COLUMN 2 - Threshold slider
     vbox_slider=@Paned(:v)

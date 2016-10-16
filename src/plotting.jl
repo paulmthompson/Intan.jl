@@ -699,11 +699,13 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     set_dash(ctx, dashes, 0.0)
     
     for y = [100, 200, 300, 400, 500]
+    #for y in 50:50:550
         move_to(ctx,1,y)
         line_to(ctx,500,y)
     end
 
     for x = [100, 200, 300, 400]
+    #for x in 50:50:450
         move_to(ctx,x,1)
         line_to(ctx,x,600)
     end
@@ -716,6 +718,10 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     move_to(ctx,1,600)
     line_to(ctx,500,600)
     set_source_rgb(ctx,1.0,1.0,1.0)
+    stroke(ctx)
+
+    move_to(ctx,1,300)
+    line_to(ctx,500,300)
     stroke(ctx)
 
     move_to(ctx,10,10)
