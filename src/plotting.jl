@@ -542,6 +542,26 @@ function clear_c(han::Gui_Handles)
     nothing
 end
 
+function check16(mytest)
+    count=1
+    x1=1
+    x2=1
+    y1=1
+    y2=1
+    for x in [1, 125, 250, 375]
+        for y in [1, 125, 250, 375]
+            if count == (((mytest-1) % 16) + 1)
+                x1 = x
+                y1 = y
+                x2 = x + 124
+                y2 = y + 124
+            end
+            count += 1
+        end            
+    end
+    (x1,x2,y1,y2)
+end
+
 function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
 
     for x in [125, 250, 375]
@@ -571,6 +591,16 @@ function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
         end
     end
 
+    (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
+    move_to(ctx,x1_f,y1_f)
+    line_to(ctx,x2_f,y1_f)
+    line_to(ctx,x2_f,y2_f)
+    line_to(ctx,x1_f,y2_f)
+    line_to(ctx,x1_f,y1_f)
+    set_source_rgb(ctx,1.0,0.0,1.0)
+    set_line_width(ctx,1.0)
+    stroke(ctx)
+    
     nothing
 end
 

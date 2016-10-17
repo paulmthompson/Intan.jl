@@ -577,6 +577,8 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
     if han.num16>0
+
+        old_spike=han.spike
         
         han.spike=16*han.num16-16+han.num
 
@@ -598,6 +600,9 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
             han.buf_count=1
         end
 
+        #Highlight channel
+        highlight_channel(han,old_spike)
+
     end
         
     nothing
@@ -611,6 +616,61 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     nothing
     
+end
+
+
+function highlight_channel(han::Gui_Handles,old_spike)
+
+    x1_i=1
+    x2_i=1
+    y1_i=1
+    y2_i=1
+
+    x1_f=1
+    x2_f=1
+    y1_f=1
+    y2_f=1
+
+    ctx = getgc(han.c)
+    
+    if han.c_right_top==1
+
+        (x1_i,x2_i,y1_i,y2_i)=check16(old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
+        
+    elseif han.c_right_top==2  
+    elseif han.c_right_top==3
+    end
+
+    #erase old
+    move_to(ctx,x1_i,y1_i)
+    line_to(ctx,x2_i,y1_i)
+    line_to(ctx,x2_i,y2_i)
+    line_to(ctx,x1_i,y2_i)
+    line_to(ctx,x1_i,y1_i)
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    set_line_width(ctx,2.0)
+    stroke(ctx)
+
+    move_to(ctx,x1_i,y1_i)
+    line_to(ctx,x2_i,y1_i)
+    line_to(ctx,x2_i,y2_i)
+    line_to(ctx,x1_i,y2_i)
+    line_to(ctx,x1_i,y1_i)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    set_line_width(ctx,1.0)
+    stroke(ctx)
+
+    move_to(ctx,x1_f,y1_f)
+    line_to(ctx,x2_f,y1_f)
+    line_to(ctx,x2_f,y2_f)
+    line_to(ctx,x1_f,y2_f)
+    line_to(ctx,x1_f,y1_f)
+    set_source_rgb(ctx,1.0,0.0,1.0)
+    set_line_width(ctx,1.0)
+    stroke(ctx)
+
+    nothing
 end
 
 function set_audio(rhd::RHD2000,han::Gui_Handles)
