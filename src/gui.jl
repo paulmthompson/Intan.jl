@@ -942,44 +942,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
         rubberband_start(han.c2,event.x,event.y)
-    elseif event.button == 2 #middle click cycles through clusters
-        #go to next cluster
-        clus=han.var1[han.spike,2]+1
-
-        if clus==han.var1[han.spike,1]+2
-            han.var1[han.spike,2]=0
-            han.var2[han.spike,1]=0
-        elseif clus==han.var1[han.spike,1]+1
-            #create new cluster
-            han.var1[han.spike,2]=clus
-            han.var2[han.spike,1]=0
-        else
-            han.var1[han.spike,2]=clus
-            han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
-        end
-            
-        #reset currently selected window to zero
-        han.var2[han.spike,2]=0
-
-        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-        setproperty!(han.tb2,:label,"Window: 0")
-        
-        #get number of windows from cluster
-    elseif event.button == 3 #right click cycles through windows in given cluster
-        #go to next window
-        win=han.var2[han.spike,2]+1
-
-        if win==han.var2[han.spike,1]+2
-            han.var2[han.spike,2]=0
-        elseif win==han.var1[han.spike,1]+1
-            #create new window
-            han.var2[han.spike,2]=win
-        else
-            han.var2[han.spike,2]=win
-        end
-        
-        setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
-    end  
+    end
     nothing
 end
 
