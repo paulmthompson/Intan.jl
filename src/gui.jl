@@ -86,7 +86,7 @@ function makegui(r::RHD2000)
     vbox_hold[1,3]=button_clear
 
     button_buffer = @CheckButton("Buffer On")
-    setproperty!(button_buffer,:active,false)
+    setproperty!(button_buffer,:active,true)
     vbox_hold[1,4]=button_buffer
     
     
