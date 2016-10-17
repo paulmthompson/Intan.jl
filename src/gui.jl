@@ -771,8 +771,21 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
     ctx = getgc(han.c2)
 
     thres=getproperty(han.adj_thres,:value,Int)
+
+    move_to(ctx,1,300-thres+2)
+    line_to(ctx,500,300-thres+2)
+
+    move_to(ctx,1,300-thres-2)
+    line_to(ctx,500,300-thres-2)
+
+    set_line_width(ctx,5.0)
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    stroke(ctx)
+
+    
     move_to(ctx,1,300-thres)
     line_to(ctx,500,300-thres)
+    set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
     
@@ -795,6 +808,10 @@ function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     setproperty!(han.sb,:value,mythres)
+
+    if han.show_thres==true
+        plot_thres(han,rhd,rhd.s[1].d)
+    end
 
     nothing
 end
