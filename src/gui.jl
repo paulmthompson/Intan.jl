@@ -946,6 +946,29 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     nothing
 end
 
+function coordinate_transform(han::Gui_Handles,event)
+    #Convert canvas coordinates to voltage vs time coordinates
+    increment=div(500,han.wave_points)
+    myx=collect(1:increment:500)
+    x1=indmin(abs(myx-han.mi[1]))
+    x2=indmin(abs(myx-event.x))
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+    y1=(han.mi[2]-300+o)/s
+    y2=(event.y-300+o)/s
+    
+    #ensure that left most point is first
+    if x1>x2
+        x=x1
+        x1=x2
+        x2=x
+        y=y1
+        y1=y2
+        y2=y
+    end
+    (x1,x2,y1,y2)
+end
+
 function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
 
     event = unsafe_load(param_tuple)
@@ -953,25 +976,7 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         han, rhd = user_data
         event = unsafe_load(param_tuple)
     
-        #Convert canvas coordinates to voltage vs time coordinates
-        increment=div(500,han.wave_points)
-        myx=collect(1:increment:500)
-        x1=indmin(abs(myx-han.mi[1]))
-        x2=indmin(abs(myx-event.x))
-        s=han.scale[han.spike,1]
-        o=han.offset[han.spike]
-        y1=(han.mi[2]-300+o)/s
-        y2=(event.y-300+o)/s
-    
-        #ensure that left most point is first
-        if x1>x2
-            x=x1
-            x1=x2
-            x2=x
-            y=y1
-            y1=y2
-            y2=y
-        end
+        (x1,x2,y1,y2)=coordinate_transform(han,event)
 
         #If this is distributed, it is going to be *really* slow
         #because it will be sending over the entire DArray from whatever processor
