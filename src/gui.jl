@@ -1464,6 +1464,14 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
             end
         end
     end
+
+    if han.c_right_top == 1
+        setproperty!(han.adj2,:upper,16)
+    elseif han.c_right_top==2
+        setproperty!(han.adj2,:upper,32)
+    elseif han.c_right_top==3
+    end
+    
     clear_c(han)
     nothing
 end
