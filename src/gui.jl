@@ -354,6 +354,8 @@ if typeof(r.s[1].c)==ClusterWindow
     id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
     id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
     id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b4_cb_win,button_sort4,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b5_cb_win,button_sort5,"clicked",Void,(),false,(handles,r))
 elseif typeof(r.s[1].c)==ClusterTemplate
     
 end
@@ -1499,5 +1501,56 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     end
 
     clear_c(han)
+    nothing
+end
+
+#Select Cluster
+function b4_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    #go to next cluster
+    clus=han.var1[han.spike,2]+1
+
+    if clus==han.var1[han.spike,1]+2
+        han.var1[han.spike,2]=0
+        han.var2[han.spike,1]=0
+    elseif clus==han.var1[han.spike,1]+1
+        #create new cluster
+        han.var1[han.spike,2]=clus
+        han.var2[han.spike,1]=0
+    else
+        han.var1[han.spike,2]=clus
+        han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
+    end
+            
+    #reset currently selected window to zero
+    han.var2[han.spike,2]=0
+
+    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+    setproperty!(han.tb2,:label,"Window: 0")
+        
+    nothing
+end
+
+#Select Window
+function b5_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    #go to next window
+    win=han.var2[han.spike,2]+1
+
+    if win==han.var2[han.spike,1]+2
+        han.var2[han.spike,2]=0
+    elseif win==han.var1[han.spike,1]+1
+        #create new window
+        han.var2[han.spike,2]=win
+    else
+        han.var2[han.spike,2]=win
+    end
+        
+    setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
+
     nothing
 end
