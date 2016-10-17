@@ -640,7 +640,11 @@ function highlight_channel(han::Gui_Handles,old_spike)
         (x1_i,x2_i,y1_i,y2_i)=check16(old_spike)
         (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
         
-    elseif han.c_right_top==2  
+    elseif han.c_right_top==2
+
+        (x1_i,x2_i,y1_i,y2_i)=check32(old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=check32(han.spike)
+        
     elseif han.c_right_top==3
     end
 
