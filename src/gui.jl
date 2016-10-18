@@ -96,22 +96,18 @@ function makegui(r::RHD2000)
     vbox1_3_2=@Grid()
     push!(frame1_4,vbox1_3_2)
 
-    if typeof(r.s[1].c)==ClusterWindow 
-        tb1=@Label("Cluster")
-        tb2=@Label("Window")
-    else
-        tb1=@Label("text1")
-        tb2=@Label("text2")
-    end
+    tb1=@Label("text1")
+    tb2=@Label("text2")
+
     vbox1_3_2[1,1]=tb1
     vbox1_3_2[1,2]=tb2
     
-    button_sort1 = @Button("Delete Cluster")
-    button_sort2 = @Button("Delete Window")
-    button_sort3 = @Button("Show Windows")
+    button_sort1 = @Button("Sort 1")
+    button_sort2 = @Button("Sort 2")
+    button_sort3 = @Button("Sort 3")
 
-    button_sort4 = @Button("Select Cluster")
-    button_sort5 = @Button("Select Window")
+    button_sort4 = @Button("Sort 4")
+    button_sort5 = @Button("Sort 5")
     
     vbox1_3_2[1,3]=button_sort1
     vbox1_3_2[1,4]=button_sort2
@@ -352,15 +348,29 @@ if typeof(r.s[1].c)==ClusterWindow
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort1,:label,"Delete Cluster")
     id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort2,:label,"Delete Window")
     id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort3,:label,"Show Windows")
     id = signal_connect(b4_cb_win,button_sort4,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort3,:label,"Select Cluster")
     id = signal_connect(b5_cb_win,button_sort5,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort3,:label,"Select Window")
+
+    setproperty!(tb1,:label,"Cluster: ")
+    setproperty!(tb2,:label,"Window: ")
+    
 elseif typeof(r.s[1].c)==ClusterTemplate
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,r))
-    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort1,:label,"Delete Cluster")
+    id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort2,:label,"Cycle Clusters")
+
+    setproperty!(tb1,:label,"Cluster: ")
+    setproperty!(tb2,:label,"")
 end
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
@@ -1139,7 +1149,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         elseif (rhd.s[han.spike].c.num < han.var1[han.spike,2]) #new cluster
 
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
-            
+            han.var1[han.spike,1] += 1
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
 
         else #replace old cluster
@@ -1168,13 +1178,12 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         han.var1[han.spike,1]-= 1
         han.var1[han.spike,2] = 0
         setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-        #setproperty!(han.tb2,:label,"Window: 0")
     end
     nothing
 end
 
 #Select Cluster
-function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
     
@@ -1183,19 +1192,16 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if clus==han.var1[han.spike,1]+2
         han.var1[han.spike,2]=0
-        #han.var2[han.spike,1]=0
+        
     elseif clus==han.var1[han.spike,1]+1
         #create new cluster
-        han.var1[han.spike,1]+=1
+        #han.var1[han.spike,1]+=1
         han.var1[han.spike,2]=clus
-        #han.var2[han.spike,1]=0
     else
         han.var1[han.spike,2]=clus
-        #han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
     end
 
     setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-    setproperty!(han.tb2,:label,"Window: 0")
         
     nothing
 end
