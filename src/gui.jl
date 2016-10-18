@@ -345,7 +345,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,0,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0))
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -357,7 +357,10 @@ if typeof(r.s[1].c)==ClusterWindow
     id = signal_connect(b4_cb_win,button_sort4,"clicked",Void,(),false,(handles,r))
     id = signal_connect(b5_cb_win,button_sort5,"clicked",Void,(),false,(handles,r))
 elseif typeof(r.s[1].c)==ClusterTemplate
-    
+    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
 end
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
@@ -617,9 +620,7 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     clear_c2(han.c2,han.spike)
 
     nothing
-    
 end
-
 
 function highlight_channel(han::Gui_Handles,old_spike)
 
@@ -848,7 +849,6 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
     set_source_rgb(ctx,0.0,0.0,0.0)
     stroke(ctx)
 
-    
     move_to(ctx,1,300-thres)
     line_to(ctx,500,300-thres)
     set_line_width(ctx,1.0)
@@ -972,10 +972,9 @@ end
 function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
 
     event = unsafe_load(param_tuple)
+    han, rhd = user_data
     if event.button==1
-        han, rhd = user_data
-        event = unsafe_load(param_tuple)
-    
+        
         (x1,x2,y1,y2)=coordinate_transform(han,event)
 
         #If this is distributed, it is going to be *really* slow
@@ -1026,6 +1025,7 @@ function b1_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+#Delete Window
 function b2_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data 
@@ -1070,6 +1070,222 @@ function b3_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     nothing
 end
+
+#Select Cluster
+function b4_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    #go to next cluster
+    clus=han.var1[han.spike,2]+1
+
+    if clus==han.var1[han.spike,1]+2
+        han.var1[han.spike,2]=0
+        han.var2[han.spike,1]=0
+    elseif clus==han.var1[han.spike,1]+1
+        #create new cluster
+        han.var1[han.spike,2]=clus
+        han.var2[han.spike,1]=0
+    else
+        han.var1[han.spike,2]=clus
+        han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
+    end
+            
+    #reset currently selected window to zero
+    han.var2[han.spike,2]=0
+
+    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+    setproperty!(han.tb2,:label,"Window: 0")
+        
+    nothing
+end
+
+#Select Window
+function b5_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    #go to next window
+    win=han.var2[han.spike,2]+1
+
+    if win==han.var2[han.spike,1]+2
+        han.var2[han.spike,2]=0
+    elseif win==han.var1[han.spike,1]+1
+        #create new window
+        han.var2[han.spike,2]=win
+    else
+        han.var2[han.spike,2]=win
+    end
+        
+    setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
+
+    nothing
+end
+
+#=
+Template Matching Spike Sorting
+=#
+
+function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    event = unsafe_load(param_tuple)
+    
+    if event.button==1
+        
+        (x1,x2,y1,y2)=coordinate_transform(han,event)
+
+        if (han.var1[han.spike,2]==0) #do nothing if zeroth cluster    
+        elseif (rhd.s[han.spike].c.num < han.var1[han.spike,2]) #new cluster
+
+            (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
+            
+            add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
+
+        else #replace old cluster
+            (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
+            change_cluster(rhd.s[han.spike].c,mymean,mystd,han.var1[han.spike,2])
+        end
+
+        if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
+
+            #window_cluster(han,han.var1[han.spike,2])
+            #plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+        end
+    end
+    
+    nothing
+end
+
+#Delete clusters
+function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+
+    if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
+    else
+        delete_cluster(rhd.s[han.spike].c,han.var1[han.spike,2])
+        han.var1[han.spike,1]-= 1
+        han.var1[han.spike,2] = 0
+        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+        #setproperty!(han.tb2,:label,"Window: 0")
+    end
+    nothing
+end
+
+#Select Cluster
+function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han, rhd = user_data
+    
+    #go to next cluster
+    clus=han.var1[han.spike,2]+1
+
+    if clus==han.var1[han.spike,1]+2
+        han.var1[han.spike,2]=0
+        #han.var2[han.spike,1]=0
+    elseif clus==han.var1[han.spike,1]+1
+        #create new cluster
+        han.var1[han.spike,1]+=1
+        han.var1[han.spike,2]=clus
+        #han.var2[han.spike,1]=0
+    else
+        han.var1[han.spike,2]=clus
+        #han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
+    end
+
+    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+    setproperty!(han.tb2,:label,"Window: 0")
+        
+    nothing
+end
+
+function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,1})
+    
+    c.num += 1
+
+    for i=1:length(mymean)
+        c.templates[i,c.num] = mymean[i]
+        c.sigmas[i,c.num]= mystd[i]
+    end
+
+    nothing
+end
+
+function change_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,1},n::Int64)
+
+    for i=1:length(mymean)
+        c.templates[i,n] = mymean[i]
+        c.sigmas[i,n] = mystd[i]
+    end
+
+    nothing
+end
+
+function delete_cluster(c::ClusterTemplate,n::Int64)
+
+    for i=1:size(c.templates,1)
+        c.templates[i,n] = 0.0
+        c.sigmas[i,n] = 0.0
+    end
+    
+    if n == c.num
+        c.num -= 1
+    else
+        for i=n:(c.num-1)
+            for j=1:size(c.templates,1) 
+                c.templates[j,i]=c.templates[j,i+1]
+                c.sigmas[j,i]=c.sigmas[j,i+1]
+            end
+        end
+        c.num -= 1
+    end
+    
+    nothing
+end
+
+function make_cluster(input,x1,y1,x2,y2,nn)
+    
+    hits=0
+    mymean=zeros(Float64,size(input,1)-1)
+    mysum=zeros(Int64,size(input,1)-1)
+    mysquares=zeros(Int64,size(input,1)-1)
+    mystd=zeros(Float64,size(input,1)-1)
+
+    if x1<3
+        x1=2
+    end
+    if x2>(size(input,1)-3)
+        x2=size(input,1)-3
+    end
+    
+    for i=1:nn
+        for j=(x1-1):(x2+1)
+            if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i])
+                hits+=1
+                for ii=1:length(mymean)
+                    mysum[ii] += input[ii,i]
+                    mysquares[ii] += input[ii,i]*input[ii,i]
+                end
+                break
+            end
+        end
+    end
+
+    if hits==0
+        hits=1
+    end
+    
+    for i=1:length(mymean)
+        mymean[i] = mysum[i]/hits
+        mystd[i] = sqrt(abs(mysquares[i]- (mysum[i]*mysum[i])/hits)/hits)/2
+    end
+
+    mystd[:]=std(mymean)
+    
+    (mymean,mystd)
+end
+
 
 #=
 Export Callbacks
@@ -1476,53 +1692,5 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     nothing
 end
 
-#Select Cluster
-function b4_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, rhd = user_data
-    
-    #go to next cluster
-    clus=han.var1[han.spike,2]+1
 
-    if clus==han.var1[han.spike,1]+2
-        han.var1[han.spike,2]=0
-        han.var2[han.spike,1]=0
-    elseif clus==han.var1[han.spike,1]+1
-        #create new cluster
-        han.var1[han.spike,2]=clus
-        han.var2[han.spike,1]=0
-    else
-        han.var1[han.spike,2]=clus
-        han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
-    end
-            
-    #reset currently selected window to zero
-    han.var2[han.spike,2]=0
-
-    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-    setproperty!(han.tb2,:label,"Window: 0")
-        
-    nothing
-end
-
-#Select Window
-function b5_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-    
-    #go to next window
-    win=han.var2[han.spike,2]+1
-
-    if win==han.var2[han.spike,1]+2
-        han.var2[han.spike,2]=0
-    elseif win==han.var1[han.spike,1]+1
-        #create new window
-        han.var2[han.spike,2]=win
-    else
-        han.var2[han.spike,2]=win
-    end
-        
-    setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
-
-    nothing
-end
