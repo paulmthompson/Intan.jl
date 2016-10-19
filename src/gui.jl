@@ -372,6 +372,8 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     setproperty!(button_sort3,:label,"Increase Tolerance")
     id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort4,:label,"Decrease Tolerance")
+    id = signal_connect(b5_cb_template,button_sort5,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort5,:label,"Show Template")
 
     setproperty!(tb1,:label,"Cluster: ")
     setproperty!(tb2,:label,"")
@@ -1231,6 +1233,61 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         for i=1:size(rhd.s[han.spike].c.sigmas,1)
             rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-=10.0
         end
+    end
+
+    nothing
+end
+
+function b5_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    ctx = getgc(han.c2)
+
+    if han.var1[han.spike,2]>0
+        s=han.scale[han.spike,1]
+        o=han.scale[han.spike]
+        increment=div(500,han.wave_points)
+
+        
+        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[1,han.var1[han.spike,2]]-o)*s+300)
+
+        count=increment+1
+        for i=2:size(rhd.s[han.spike].c.sigmas,1)
+            y=(rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o)*s+300
+            if y<1.0
+                y=1.0
+            elseif y>600.0
+                y=600.0
+            end
+            line_to(ctx,count,y)
+            count+=increment
+        end
+
+        count-=increment
+        y=(rhd.s[han.spike].c.templates[end,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[end,han.var1[han.spike,2]]-o)*s+300
+        
+        line_to(ctx,count,y)
+
+        count-=increment
+        for i=(size(rhd.s[han.spike].c.sigmas,1)-1):-1:1
+            y=(rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o)*s+300
+            if y<1.0
+                y=1.0
+            elseif y>600.0
+                y=600.0
+            end
+            line_to(ctx,count,y)
+            count-=increment
+        end
+
+        close_path(ctx)
+        
+        select_color(ctx,han.var1[han.spike,2]+1)
+        set_line_width(ctx,3.0)
+        stroke_preserve(ctx)
+
+        select_color(ctx,han.var1[han.spike,2]+1,.5)
+        fill(ctx)
     end
 
     nothing

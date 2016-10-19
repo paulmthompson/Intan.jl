@@ -790,20 +790,20 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     nothing
 end
 
-function select_color(ctx,clus)
+function select_color(ctx,clus,alpha=1.0)
 
     if clus==1
-        set_source_rgb(ctx,1.0,1.0,1.0) # white
+        set_source_rgba(ctx,1.0,1.0,1.0,alpha) # white
     elseif clus==2
-        set_source_rgb(ctx,1.0,1.0,0.0) #Yellow
+        set_source_rgba(ctx,1.0,1.0,0.0,alpha) #Yellow
     elseif clus==3
-        set_source_rgb(ctx,0.0,1.0,0.0) #Green
+        set_source_rgba(ctx,0.0,1.0,0.0,alpha) #Green
     elseif clus==4
-        set_source_rgb(ctx,0.0,0.0,1.0) #Blue
+        set_source_rgba(ctx,0.0,0.0,1.0,alpha) #Blue
     elseif clus==5
-        set_source_rgb(ctx,1.0,0.0,0.0) #Red
+        set_source_rgba(ctx,1.0,0.0,0.0,alpha) #Red
     else
-        set_source_rgb(ctx,1.0,1.0,0.0)
+        set_source_rgba(ctx,1.0,1.0,0.0,alpha)
     end
     
     nothing
