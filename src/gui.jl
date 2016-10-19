@@ -368,6 +368,10 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     setproperty!(button_sort1,:label,"Delete Cluster")
     id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort2,:label,"Cycle Clusters")
+    id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort3,:label,"Increase Tolerance")
+    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort4,:label,"Decrease Tolerance")
 
     setproperty!(tb1,:label,"Cluster: ")
     setproperty!(tb2,:label,"")
@@ -1203,6 +1207,32 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
         
+    nothing
+end
+
+function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    if han.var1[han.spike,2]>0
+        for i=1:size(rhd.s[han.spike].c.sigmas,1)
+            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]+=10.0
+        end
+    end
+
+    nothing
+end
+
+function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    if han.var1[han.spike,2]>0
+        for i=1:size(rhd.s[han.spike].c.sigmas,1)
+            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-=10.0
+        end
+    end
+
     nothing
 end
 
