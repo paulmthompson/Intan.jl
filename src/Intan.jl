@@ -18,6 +18,10 @@ include("save_load.jl")
 include("benchmark.jl")
 include("wifi.jl")
 
+#Spike Sorting
+include("sorting/windows.jl")
+include("sorting/templates.jl")
+
 #Graphics
 include("graphics_help/cairo.jl")
 
