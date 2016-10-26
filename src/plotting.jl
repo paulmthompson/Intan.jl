@@ -450,27 +450,22 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     o=han.offset[han.spike]
     reads=han.draws
 
-    increment=div(500,han.wave_points)
+    Cairo.translate(ctx,0.0,300.0)
+    scale(ctx,500/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
 
-        if rhd.buf[i,spike_num].inds.start>0
+        kk=rhd.buf[i,spike_num].inds.start
+        if kk>0
         
-            @inbounds move_to(ctx,1,(rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]-o)*s+300)
+            move_to(ctx,1,rhd.v[kk,spike_num]-o)
             
-            #draw line
-            count=increment+1
-            @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                y=(rhd.v[k,spike_num]-o)*s+300
-                if y<1.0
-                    y=1.0
-                elseif y>600.0
-                    y=600.0
-                end
-                @inbounds line_to(ctx,count,y)
-                count+=increment
+            for k=2:han.wave_points
+                @inbounds y=rhd.v[kk+k-1,spike_num]-o
+                line_to(ctx,k,y)
             end
-			
+
+	    #=
 	    count=(rhd.buf[i,spike_num].id-1)*100+10
 	    @inbounds move_to(ctx,count,round(Int16,(rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]-o)*.2*s+650))
             
@@ -483,6 +478,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 			
 	    @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20.0+700.0)
 	    @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20.0+720.0)
+
+            =#
 			
 	    set_line_width(ctx,0.5);
 	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
@@ -505,9 +502,13 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
             end
         end
     end
-   
+
+    identity_matrix(ctx)
+    
     nothing
 end
+
+identity_matrix(ctx)=ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Void, (Ptr{Void},), ctx.ptr)
 
 #=
 Reset Canvas
@@ -759,13 +760,11 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     set_dash(ctx, dashes, 0.0)
     
     for y = [100, 200, 300, 400, 500]
-    #for y in 50:50:550
         move_to(ctx,1,y)
         line_to(ctx,500,y)
     end
 
     for x = [100, 200, 300, 400]
-    #for x in 50:50:450
         move_to(ctx,x,1)
         line_to(ctx,x,600)
     end
