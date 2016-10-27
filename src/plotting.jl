@@ -7,50 +7,31 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     k=16*han.num16-15
     xbounds=1.0:124.0:375.0
     ybounds=75.0:125.0:450.0
-
-    maxid=1
     increment=div(125,han.wave_points)*2
 
-    #first ID
-    @inbounds for i in xbounds
-        for j in ybounds
-            if han.enabled[k]
-                for g=1:rhd.nums[k] #plotting every spike, do we need to do that?
-                    if rhd.buf[g,k].inds.start>0
-                        if rhd.buf[g,k].id==1
-                            s=han.scale[k,2]
-                            o=han.offset[k]
-                            y=(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j
-                            move_to(ctx,1+i,y)
-                            count=increment+1
-                            for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                y=(rhd.v[kk,k]-o)*s+j
-                                if y<j-65
-                                    y=j-65.0
-                                elseif y>j+65.0
-                                    y=j+65.0
-                                end  
-                                line_to(ctx,count+i,y)
-                                count+=increment
-                            end
-                        elseif rhd.buf[g,k].id>maxid
-                            maxid=rhd.buf[g,k].id
-                        end
-                    end        
-                end
-            end
-            k+=1
-        end
-    end
+    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,65.0)
+    nothing
+end
+
+function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     
-    set_line_width(ctx,0.5);
-    @inbounds select_color(ctx,1)
-    stroke(ctx)
+    k=32*div(han.num16+1,2)-31
+    xbounds=1.0:83.0:416.0
+    ybounds=41.0:83.0:456.0
+
+    increment=div(83,han.wave_points)*2
+
+    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,40.0)
+    nothing
+end
+
+function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in,xbounds,ybounds,increment,b_width)
+
+    maxid=find_max_id(rhd,han,ctx,k_in,length(xbounds)*length(ybounds))
 
     #subsequent IDs
-    @inbounds for thisid=2:maxid
-        k=16*han.num16-15
-        
+    @inbounds for thisid=1:maxid
+        k=k_in
         for i in xbounds
             for j in ybounds
                 if han.enabled[k]
@@ -63,10 +44,10 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                                 count=increment+1
                                 for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
                                     y=(rhd.v[kk,k]-o)*s+j
-                                    if y<j-65.0
-                                        y=j-65.0
-                                    elseif y>j+65.0
-                                        y=j+65.0
+                                    if y<j-b_width
+                                        y=j-b_width
+                                    elseif y>j+b_width
+                                        y=j+b_width
                                     end  
                                     line_to(ctx,count+i,y)
                                     count+=increment
@@ -86,117 +67,27 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     nothing
 end
 
-function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-
-    k=32*div(han.num16+1,2)-31
-    xbounds=1.0:83.0:416.0
-    ybounds=41.0:83.0:456.0
+function find_max_id(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,num)
 
     maxid=1
-    increment=div(83,han.wave_points)*2
-
-    #first ID
-    @inbounds for i in xbounds
-        for j in ybounds
-            if han.enabled[k]
-                for g=1:rhd.nums[k] #plotting every spike, do we need to do that?
-                    if rhd.buf[g,k].inds.start>0
-                        if rhd.buf[g,k].id==1
-                            s=han.scale[k,1]/6
-                            o=han.offset[k]
-                            y=(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j
-                            move_to(ctx,1+i,y)
-                            count=increment+1
-                            for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                y=(rhd.v[kk,k]-o)*s+j
-                                if y<j-40.0
-                                    y=j-40.0
-                                elseif y>j+40.0
-                                    y=j+40.0
-                                end  
-                                line_to(ctx,count+i,y)
-                                count+=increment
-                            end
-                        elseif rhd.buf[g,k].id>maxid
-                            maxid=rhd.buf[g,k].id
-                        end
-                    end        
-                end
-            end
-            k+=1
-        end
-    end
     
-    set_line_width(ctx,0.5);
-    @inbounds select_color(ctx,1)
-    stroke(ctx)
-
-    #subsequent IDs
-    @inbounds for thisid=2:maxid
-        k=32*div(han.num16+1,2)-31
-        
-        for i in xbounds
-            for j in ybounds
-                if han.enabled[k]
-                    for g=1:rhd.nums[k]
-                        if rhd.buf[g,k].inds.start>0
-                            if rhd.buf[g,k].id==thisid
-                                s=han.scale[k,1]/6
-                                o=han.offset[k]
-                                move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
-                                count=increment+1
-                                for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                    y=(rhd.v[kk,k]-o)*s+j
-                                    if y<j-40.0
-                                        y=j-40.0
-                                    elseif y>j+40.0
-                                        y=j+40.0
-                                    end  
-                                    line_to(ctx,count+i,y)
-                                    count+=increment
-                                end
-                            end
-                        end        
-                    end
+    for i=k:(k+num-1)
+        if han.enabled[k]
+            for g=1:rhd.nums[k]
+                if rhd.buf[g,k].id>maxid
+                    maxid=rhd.buf[g,k].id
                 end
-                k+=1
             end
         end
-        set_line_width(ctx,0.5);
-        @inbounds select_color(ctx,thisid)
-        stroke(ctx)
     end
-
-    nothing
+    maxid
 end
 
 function draw_raster_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,k_itr,ctx_step,myoff)
 
-    maxid=1
+    maxid=find_max_id(rhd,han,ctx,k,k_itr+1)
 
-    #first ID
-    count=1
-    for i=k:(k+k_itr)
-        if han.enabled[i]
-            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
-                if rhd.buf[g,i].id==1
-                    offset=myoff+ctx_step*(count-1)
-                    move_to(ctx,han.draws,offset)
-                    line_to(ctx,han.draws,offset+ctx_step-3.0)
-                elseif rhd.buf[g,i].id>maxid
-                    maxid=rhd.buf[g,i].id
-                end    
-            end
-        end
-        count+=1
-    end
-    
-    set_line_width(ctx,0.5);
-    @inbounds select_color(ctx,1)
-    stroke(ctx)
-
-    #subsequent IDs
-    @inbounds for thisid=2:maxid
+    @inbounds for thisid=1:maxid
         count=1
         for i=k:(k+k_itr)
             if han.enabled[i]
