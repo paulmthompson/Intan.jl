@@ -170,21 +170,19 @@ function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     nothing
 end
 
-function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-
-    k=16*han.num16-15
+function draw_raster_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,k_itr,ctx_step,myoff)
 
     maxid=1
 
     #first ID
     count=1
-    for i=k:(k+15)
+    for i=k:(k+k_itr)
         if han.enabled[i]
             for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
                 if rhd.buf[g,i].id==1
-                    offset=500.0+18.0*(count-1)
+                    offset=myoff+ctx_step*(count-1)
                     move_to(ctx,han.draws,offset)
-                    line_to(ctx,han.draws,offset+15.0)
+                    line_to(ctx,han.draws,offset+ctx_step-3.0)
                 elseif rhd.buf[g,i].id>maxid
                     maxid=rhd.buf[g,i].id
                 end    
@@ -199,15 +197,14 @@ function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
     #subsequent IDs
     @inbounds for thisid=2:maxid
-        k=16*han.num16-15
         count=1
-        for i=k:(k+15)
+        for i=k:(k+k_itr)
             if han.enabled[i]
                 for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
                     if rhd.buf[g,i].id==thisid
-                        offset=500.0+18.0*(count-1)
+                        offset=myoff+ctx_step*(count-1)
                         move_to(ctx,han.draws,offset)
-                        line_to(ctx,han.draws,offset+15.0)
+                        line_to(ctx,han.draws,offset+ctx_step-3.0)
                     end    
                 end
             end
@@ -220,113 +217,18 @@ function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     end
 
     nothing
-    
+end
+
+function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+    draw_raster_n(rhd,han,ctx,16*han.num16-15,15,18.0,500.0)
 end
 
 function draw_raster32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-
-    k=32*div(han.num16+1,2)-31
-
-    maxid=1
-
-    #first ID
-    count=1
-    for i=k:(k+31)
-        if han.enabled[i]
-            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
-                if rhd.buf[g,i].id==1
-                    offset=500.0+9.0*(count-1)
-                    move_to(ctx,han.draws,offset)
-                    line_to(ctx,han.draws,offset+6.0)
-                elseif rhd.buf[g,i].id>maxid
-                    maxid=rhd.buf[g,i].id
-                end    
-            end
-        end
-        count+=1
-    end
-    
-    set_line_width(ctx,0.5);
-    @inbounds select_color(ctx,1)
-    stroke(ctx)
-
-    #subsequent IDs
-    @inbounds for thisid=2:maxid
-        k=32*div(han.num16+1,2)-31
-        count=1
-        for i=k:(k+31)
-            if han.enabled[i]
-                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
-                    if rhd.buf[g,i].id==thisid
-                        offset=500.0+9.0*(count-1)
-                        move_to(ctx,han.draws,offset)
-                        line_to(ctx,han.draws,offset+6.0)
-                    end    
-                end
-            end
-            count+=1
-        end
-    
-        set_line_width(ctx,0.5);
-        @inbounds select_color(ctx,thisid)
-        stroke(ctx)
-    end
-
-    nothing
-    
+    draw_raster_n(rhd,han,ctx,32*div(han.num16+1,2)-31,31,9.0,500.0)
 end
 
 function draw_raster64(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-
-    k=64*div(han.num16+3,4)-63
-
-    maxid=1
-
-    #first ID
-    count=1
-    for i=k:(k+63)
-        if han.enabled[i]
-            for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
-                if rhd.buf[g,i].id==1
-                    offset=12.0*(count-1)
-                    move_to(ctx,han.draws,offset)
-                    line_to(ctx,han.draws,offset+10.0)
-                elseif rhd.buf[g,i].id>maxid
-                    maxid=rhd.buf[g,i].id
-                end    
-            end
-        end
-        count+=1
-    end
-    
-    set_line_width(ctx,0.5);
-    @inbounds select_color(ctx,1)
-    stroke(ctx)
-
-    #subsequent IDs
-    @inbounds for thisid=2:maxid
-        k=64*div(han.num16+3,4)-63
-        count=1
-        for i=k:(k+63)
-            if han.enabled[i]
-                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
-                    if rhd.buf[g,i].id==thisid
-                        offset=12.0*(count-1)
-                        move_to(ctx,han.draws,offset)
-                        line_to(ctx,han.draws,offset+10.0)
-                    end    
-                end
-            end
-            count+=1
-        end
-    
-        set_line_width(ctx,0.5);
-        @inbounds select_color(ctx,thisid)
-        stroke(ctx)
-    end
-
-    
-    nothing
+    draw_raster_n(rhd,han,ctx,64*div(han.num16+3,4)-63,63,12.0,0.0)
 end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
