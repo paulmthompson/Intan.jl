@@ -16,8 +16,9 @@ end
 
 function coordinate_transform(han::Gui_Handles,event)
     #Convert canvas coordinates to voltage vs time coordinates
-    increment=div(500,han.wave_points)
-    myx=collect(1:increment:500)
+    #increment=div(500,han.wave_points)
+    myx=[1.0;collect(2:han.wave_points).*(500/han.wave_points)]
+    #myx=collect(1:increment:500)
     x1=indmin(abs(myx-han.mi[1]))
     x2=indmin(abs(myx-event.x))
     s=han.scale[han.spike,1]

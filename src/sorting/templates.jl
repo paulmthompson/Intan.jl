@@ -110,38 +110,24 @@ function b5_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if han.var1[han.spike,2]>0
         s=han.scale[han.spike,1]
         o=han.scale[han.spike]
-        increment=div(500,han.wave_points)
 
+        Cairo.translate(ctx,0.0,300.0)
+        scale(ctx,500/han.wave_points,s)
         
-        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[1,han.var1[han.spike,2]]-o)*s+300)
+        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[1,han.var1[han.spike,2]]-o))
 
-        count=increment+1
         for i=2:size(rhd.s[han.spike].c.sigmas,1)
-            y=(rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o)*s+300
-            if y<1.0
-                y=1.0
-            elseif y>600.0
-                y=600.0
-            end
-            line_to(ctx,count,y)
-            count+=increment
+            y=rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o
+            line_to(ctx,i,y)
         end
 
-        count-=increment
-        y=(rhd.s[han.spike].c.templates[end,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[end,han.var1[han.spike,2]]-o)*s+300
+        y=rhd.s[han.spike].c.templates[end,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[end,han.var1[han.spike,2]]-o
         
-        line_to(ctx,count,y)
+        line_to(ctx,size(rhd.s[han.spike].c.sigmas,1),y)
 
-        count-=increment
         for i=(size(rhd.s[han.spike].c.sigmas,1)-1):-1:1
-            y=(rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o)*s+300
-            if y<1.0
-                y=1.0
-            elseif y>600.0
-                y=600.0
-            end
-            line_to(ctx,count,y)
-            count-=increment
+            y=rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o
+            line_to(ctx,i,y)
         end
 
         close_path(ctx)

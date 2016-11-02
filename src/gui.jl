@@ -1136,7 +1136,6 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
-
             end
 
         elseif han.c_right_top==2 #disable enable 32
@@ -1144,7 +1143,6 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             if event.button == 1 #left click
 
                 (inmulti,channel_num)=check_multi32(event.x,event.y)
-
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han,rhd)
@@ -1153,15 +1151,11 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
-
             end
             
         elseif han.c_right_top==3 #disable enable 64
-
         elseif han.c_right_top==4 #64 channel raster - nothing
-
         else
-
         end
         
     else #bottom
@@ -1173,20 +1167,13 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             end
 
         elseif han.c_right_bottom==2 #16 raster - nothing
-
         elseif han.c_right_bottom==3 #32 raster - nothing
-
         elseif han.c_right_bottom==4 #select scope channels
-
         elseif han.c_right_bottom==5 #disable enable 64
-
         elseif han.c_right_bottom==6 #64 channel raster - nothing
-
         else
-
         end            
     end
-    
     nothing
 end
 
