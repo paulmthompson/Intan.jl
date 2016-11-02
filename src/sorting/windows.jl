@@ -10,6 +10,11 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
         rubberband_start(han.c2,event.x,event.y)
+    elseif event.button == 3 #right click refreshes window
+        clear_c2(han.c2,han.spike)
+        if han.show_thres==true
+            plot_thres(han,rhd,rhd.s[1].d)
+        end
     end
     nothing
 end

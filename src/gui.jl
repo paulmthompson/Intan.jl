@@ -1140,7 +1140,6 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
                 popup(han.popup_ed,event)
             end
-
         elseif han.c_right_top==2 #disable enable 32
 
             if event.button == 1 #left click
@@ -1160,7 +1159,6 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
         elseif han.c_right_top==4 #64 channel raster - nothing
         else
         end
-        
     else #bottom
 
         if han.c_right_bottom==1 #event select
