@@ -623,7 +623,6 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
         #Highlight channel
         highlight_channel(han,old_spike)
-
     end
         
     nothing
@@ -633,6 +632,10 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
     clear_c2(han.c2,han.spike)
+    if han.show_thres==true
+        plot_thres(han,rhd,rhd.s[1].d)
+    end
+    
     nothing
 end
 
