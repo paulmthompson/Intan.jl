@@ -6,6 +6,8 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
     han, rhd = user_data
     event = unsafe_load(param_tuple)
+
+    clus=han.var1[han.spike,2]
     
     if event.button==1
         
@@ -17,10 +19,13 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
             han.var1[han.spike,1] += 1
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
-
+            mytol=rhd.s[han.spike].c.sigmas[1,clus]
+            setproperty!(han.adj_sort, :value, div(mytol,10))
         else #replace old cluster
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,han.var1[han.spike,2])
+            mytol=rhd.s[han.spike].c.sigmas[1,clus]
+            setproperty!(han.adj_sort, :value, div(mytol,10))
         end
 
         if (han.var1[han.spike,2]>0)&((han.buf_count>0)&(han.pause))
@@ -55,6 +60,7 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #go to next cluster
     clus=han.var1[han.spike,2]+1
 
+    #Cycle back to beginning
     if clus==han.var1[han.spike,1]+2
         han.var1[han.spike,2]=0
         
@@ -62,8 +68,13 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         #create new cluster
         #han.var1[han.spike,1]+=1
         han.var1[han.spike,2]=clus
+        setproperty!(han.adj_sort, :value, 50)
     else
         han.var1[han.spike,2]=clus
+        if clus>0
+            mytol=rhd.s[han.spike].c.sigmas[1,clus]
+            setproperty!(han.adj_sort, :value, div(mytol,10))
+        end
     end
 
     setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
@@ -71,35 +82,7 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-
 function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    if han.var1[han.spike,2]>0
-        for i=1:size(rhd.s[han.spike].c.sigmas,1)
-            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]+=10.0
-        end
-    end
-
-    nothing
-end
-
-function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    if han.var1[han.spike,2]>0
-        for i=1:size(rhd.s[han.spike].c.sigmas,1)
-            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-=10.0
-        end
-    end
-
-    nothing
-end
-
-
-function b5_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
     ctx = getgc(han.c2)
@@ -142,6 +125,19 @@ function b5_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    
+    han,rhd = user_data
+
+    myval=getproperty(han.adj_sort, :value, Int64) # primary display
+
+    if han.var1[han.spike,2]>0
+        for i=1:size(rhd.s[han.spike].c.sigmas,1)
+            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]=10.0*myval
+        end
+    end
+
+end
 
 function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,1})
     
