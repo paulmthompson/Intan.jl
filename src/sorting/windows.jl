@@ -199,7 +199,7 @@ end
 #Finds all spikes in buffer that are selected by windows
 function window_cluster(han::Gui_Handles,clus::Int64)
 
-    @inbounds for i=1:han.buf_count
+    @inbounds for i=1:han.buf_ind
 
         hits=0
         for j=1:length(han.spike_win) #Loop over all windows

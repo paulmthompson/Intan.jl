@@ -600,24 +600,27 @@ end
 #Replots spikes assigned to specified cluster 
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
-    increment=div(500,han.wave_points)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     
     select_color(ctx,clus+1)
+
+    Cairo.translate(ctx,0.0,300.0)
+    scale(ctx,500/han.wave_points,s)
     
-    @inbounds for i=1:han.buf_count
+    @inbounds for i=1:han.buf_ind
 
         if han.buf_clus[i]==clus
-            move_to(ctx,1,(han.spike_buf[1,i]-o)*s+300)
-            count=increment+1
+            move_to(ctx,1,(han.spike_buf[1,i]-o))
             for j=2:size(han.spike_buf,1)
-                line_to(ctx,count,(han.spike_buf[j,i]-o)*s+300)
-                count+=increment
+                line_to(ctx,j,han.spike_buf[j,i]-o)
             end
         end
     end
     stroke(ctx)
+
+    identity_matrix(ctx)
+    
     reveal(han.c2)
 
     nothing

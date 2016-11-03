@@ -23,17 +23,14 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             change_cluster(rhd.s[han.spike].c,mymean,mystd,han.var1[han.spike,2])
         end
 
-        if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
-
-            #window_cluster(han,han.var1[han.spike,2])
-            #plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+        if (han.var1[han.spike,2]>0)&((han.buf_count>0)&(han.pause))
+            template_cluster(han,han.var1[han.spike,2],mymean,mystd)
+            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
         end
     end
     
     nothing
 end
-
-
 
 #Delete clusters
 function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
@@ -140,6 +137,8 @@ function b5_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         fill(ctx)
     end
 
+    identity_matrix(ctx)
+
     nothing
 end
 
@@ -188,7 +187,6 @@ function delete_cluster(c::ClusterTemplate,n::Int64)
     nothing
 end
 
-
 function make_cluster(input,x1,y1,x2,y2,nn)
     
     hits=0
@@ -223,10 +221,32 @@ function make_cluster(input,x1,y1,x2,y2,nn)
     
     for i=1:length(mymean)
         mymean[i] = mysum[i]/hits
-        mystd[i] = sqrt(abs(mysquares[i]- (mysum[i]*mysum[i])/hits)/hits)/2
+        mystd[i] = sqrt(abs(mysquares[i]- (mysum[i]*mysum[i])/hits)/hits)
     end
 
     mystd[:]=std(mymean)
     
     (mymean,mystd)
+end
+
+function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},mystd::Array{Float64,1})
+
+    @inbounds for i=1:han.buf_ind
+
+        mymisses=0
+        for j=1:size(han.spike_buf,1)
+            if (han.spike_buf[j,i]<(mymean[j]-mystd[j]))|(han.spike_buf[j,i]>(mymean[j]+mystd[j]))
+                mymisses+=1
+                if mymisses>5
+                    break
+                end
+            end
+        end
+        if mymisses<5
+            han.buf_clus[i]=clus
+        end
+        
+    end
+
+    nothing
 end
