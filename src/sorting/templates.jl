@@ -134,12 +134,18 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     myval=getproperty(han.adj_sort, :value, Int64) # primary display
 
-    if han.var1[han.spike,2]>0
-        for i=1:size(rhd.s[han.spike].c.sigmas,1)
-            rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]=10.0*myval
+    if han.var1[han.spike,2]<=han.var1[han.spike,1]
+        if han.var1[han.spike,2]>0
+            for i=1:size(rhd.s[han.spike].c.sigmas,1)
+                rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]=10.0*myval
+            end
+        end
+
+        if (han.var1[han.spike,2]>0)&((han.buf_count>0)&(han.pause))
+            template_cluster(han,han.var1[han.spike,2],rhd.s[han.spike].c.templates[:,han.var1[han.spike,2]],rhd.s[han.spike].c.sigmas[:,han.var1[han.spike,2]])
+            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
         end
     end
-
 end
 
 function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,1})
@@ -241,8 +247,10 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
                 end
             end
         end
-        if mymisses<5
+        if mymisses<5 #If passes template matching, set as unit
             han.buf_clus[i]=clus
+        elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
+            han.buf_clus[i]=0
         end
         
     end

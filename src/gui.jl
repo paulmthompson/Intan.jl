@@ -115,7 +115,7 @@ function makegui(r::RHD2000)
     slider_sort_label=@Label("Slider Label")
 
     sort_list=@ListStore(Int32)
-    push!(sort_list,(1,))
+    push!(sort_list,(0,))
     sort_tv=@TreeView(TreeModel(sort_list))
     sort_r1=@CellRendererText()
     sort_c1=@TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
@@ -157,8 +157,8 @@ function makegui(r::RHD2000)
     #ROW 2
     c2=@Canvas(500,800)     
     @guarded draw(c2) do widget
-    ctx = getgc(c2)
-    clear_c2(c2,1)
+        ctx = getgc(c2)
+        clear_c2(c2,1)
     end
     show(c2)
     grid[4,2]=c2

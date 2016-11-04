@@ -227,7 +227,6 @@ function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,va
     nothing
 end
 
-
 #=
 Single maximized channel plotting
 =#
@@ -280,6 +279,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                     han.spike_buf[mycount,han.buf_ind]=rhd.v[tt,spike_num]
                     mycount+=1
                 end
+                han.buf_clus[han.buf_ind]=rhd.buf[i,spike_num].id-1
                 han.buf_count+=1
                 han.buf_ind+=1
                 if han.buf_count>500
@@ -602,11 +602,25 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    
-    select_color(ctx,clus+1)
 
     Cairo.translate(ctx,0.0,300.0)
     scale(ctx,500/han.wave_points,s)
+
+    #Plot Noise
+    select_color(ctx,1)
+    @inbounds for i=1:han.buf_ind
+
+        if han.buf_clus[i]==0
+            move_to(ctx,1,(han.spike_buf[1,i]-o))
+            for j=2:size(han.spike_buf,1)
+                line_to(ctx,j,han.spike_buf[j,i]-o)
+            end
+        end
+    end
+    stroke(ctx)
+
+    #Plot New color
+    select_color(ctx,clus+1)
     
     @inbounds for i=1:han.buf_ind
 
