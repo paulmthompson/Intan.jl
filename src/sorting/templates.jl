@@ -21,6 +21,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
             mytol=rhd.s[han.spike].c.sigmas[1,clus]
             setproperty!(han.adj_sort, :value, div(mytol,10))
+             push!(han.sort_list,(clus,))
         else #replace old cluster
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,han.var1[han.spike,2])
@@ -45,9 +46,11 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
     else
         delete_cluster(rhd.s[han.spike].c,han.var1[han.spike,2])
+        deleteat!(han.sort_list,han.var1[han.spike,2])
         han.var1[han.spike,1]-= 1
         han.var1[han.spike,2] = 0
         setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+        
     end
     nothing
 end
@@ -66,9 +69,9 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         
     elseif clus==han.var1[han.spike,1]+1
         #create new cluster
-        #han.var1[han.spike,1]+=1
         han.var1[han.spike,2]=clus
         setproperty!(han.adj_sort, :value, 50)
+       
     else
         han.var1[han.spike,2]=clus
         if clus>0

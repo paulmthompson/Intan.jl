@@ -276,7 +276,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
             if han.buf_count > 0
                 mycount=1
-                for tt in rhd.buf[i,spike_num].inds
+                for tt=kk:(kk+han.wave_points-1)
                     han.spike_buf[mycount,han.buf_ind]=rhd.v[tt,spike_num]
                     mycount+=1
                 end

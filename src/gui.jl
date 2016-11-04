@@ -14,7 +14,7 @@ function makegui(r::RHD2000)
     grid[1,2]=vbox1_2
 	
     frame_control=@Frame("Control")
-    vbox1_2[1,1]=frame_control
+    grid[1,1]=frame_control
     vbox_control = @Grid()
     push!(frame_control,vbox_control)
     
@@ -92,7 +92,7 @@ function makegui(r::RHD2000)
     
     #CLUSTER
     frame1_4=@Frame("Clustering")
-    vbox1_2[1,5]=frame1_4
+    
     vbox1_3_2=@Grid()
     push!(frame1_4,vbox1_3_2)
 
@@ -113,6 +113,14 @@ function makegui(r::RHD2000)
     adj_sort = @Adjustment(slider_sort)
     setproperty!(adj_sort,:value,50)
     slider_sort_label=@Label("Slider Label")
+
+    sort_list=@ListStore(Int32)
+    push!(sort_list,(1,))
+    sort_tv=@TreeView(TreeModel(sort_list))
+    sort_r1=@CellRendererText()
+    sort_c1=@TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
+    
+    push!(sort_tv,sort_c1)
     
     vbox1_3_2[1,3]=button_sort1
     vbox1_3_2[1,4]=button_sort2
@@ -121,6 +129,14 @@ function makegui(r::RHD2000)
     vbox1_3_2[1,7]=button_sort5
     vbox1_3_2[1,8]=slider_sort
     vbox1_3_2[1,9]=slider_sort_label
+
+    myscroll=@ScrolledWindow()
+    Gtk.GAccessor.min_content_height(myscroll,100)
+    Gtk.GAccessor.min_content_width(myscroll,100)
+    push!(myscroll,sort_tv)
+    vbox1_3_2[1,10]=myscroll
+
+    vbox1_2[1,5]=frame1_4 |> showall
 
     #COLUMN 2 - Threshold slider
     vbox_slider=@Paned(:v)
@@ -133,7 +149,7 @@ function makegui(r::RHD2000)
     setindex!(vbox_slider,thres_slider,1,false,false)
     setindex!(vbox_slider,@Canvas(10,190),2,false,false)
     Gtk.GAccessor.position(vbox_slider,610)
-    grid[2,2]=vbox_slider
+    grid[3,2]=vbox_slider
     
 
     #COLUMN 3 - MAXIMIZED CHANNEL PLOTTING
@@ -145,13 +161,13 @@ function makegui(r::RHD2000)
     clear_c2(c2,1)
     end
     show(c2)
-    grid[3,2]=c2
+    grid[4,2]=c2
 
     #ROW 3
     c2_slider=@Scale(false, 1:16)
     adj2 = @Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
-    grid[3,3]=c2_slider
+    grid[4,3]=c2_slider
  
     #COLUMN 3 - 16 CHANNEL DISPLAY
 
@@ -163,7 +179,7 @@ function makegui(r::RHD2000)
     mh_label=@Label(":")
 
     frame_time=@Frame("Time Elapsed")
-    grid[4,1]=frame_time
+    grid[5,1]=frame_time
     hbox_time=@ButtonBox(:h)
     push!(frame_time,hbox_time)
 
@@ -183,19 +199,19 @@ function makegui(r::RHD2000)
         paint(ctx)
     end
     show(c)   
-    grid[4,2]=c
+    grid[5,2]=c
 
     #ROW 3
     #Which 16 channels can be selected with a slider
     c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
     adj = @Adjustment(c_slider)
     setproperty!(adj,:value,1)
-    grid[4,3]=c_slider
+    grid[5,3]=c_slider
 
     #COLUMN 4
     #ROW 2
     vbox_42=@Box(:v)
-    grid[5,2]=vbox_42
+    grid[6,2]=vbox_42
     
     vbox_rb_upper=@Box(:v)
     push!(vbox_42,vbox_rb_upper)
@@ -287,7 +303,7 @@ push!(exmenu,export_mat_)
     push!(mb,sortopts)
     push!(mb,refopts)
     push!(mb,exopts) 
-    grid[3,1]=mb
+    grid[4,1]=mb
 
 
 #POPUP MENUS
@@ -319,8 +335,8 @@ showall(popup_event)
     
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
-    win = @Window(grid, "Intan.jl GUI")
-showall(win)
+    win = @Window(grid, "Intan.jl GUI") |> showall
+#showall(win)
 
 #Prepare saving headers
 
@@ -348,7 +364,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow

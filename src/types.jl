@@ -272,6 +272,7 @@ type Gui_Handles
     spike_win::Array{SpikeSorting.mywin,1}
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
+    sort_list::Gtk.GtkListStoreLeaf
 end
 
 #=
