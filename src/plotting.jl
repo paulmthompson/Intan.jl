@@ -634,7 +634,6 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     stroke(ctx)
 
     identity_matrix(ctx)
-    
     reveal(han.c2)
 
     nothing

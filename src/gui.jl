@@ -125,8 +125,8 @@ function makegui(r::RHD2000)
     vbox1_3_2[1,3]=button_sort1
     vbox1_3_2[1,4]=button_sort2
     vbox1_3_2[1,5]=button_sort3
-    vbox1_3_2[1,6]=button_sort4
-    vbox1_3_2[1,7]=button_sort5
+    #vbox1_3_2[1,6]=button_sort4
+    #vbox1_3_2[1,7]=button_sort5
     vbox1_3_2[1,8]=slider_sort
     vbox1_3_2[1,9]=slider_sort_label
 
@@ -364,7 +364,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -399,6 +399,8 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     setproperty!(slider_sort_label,:label,"Tolerance")
 
     id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,r))
+
+    id = signal_connect(template_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,r))
 end
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))

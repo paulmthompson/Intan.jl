@@ -252,8 +252,22 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
         elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
             han.buf_clus[i]=0
         end
-        
     end
 
     nothing
+end
+
+function template_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data  
+    get_cluster_id(han)
+    
+    nothing
+end
+
+function get_cluster_id(han::Gui_Handles)
+    selmodel=Gtk.GAccessor.selection(han.sort_tv)
+    iter=Gtk.selected(selmodel)
+
+    myind=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.sort_list), iter))
 end

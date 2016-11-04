@@ -273,6 +273,7 @@ type Gui_Handles
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
     sort_list::Gtk.GtkListStoreLeaf
+    sort_tv::Gtk.GtkTreeViewLeaf
 end
 
 #=
