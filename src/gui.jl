@@ -109,7 +109,7 @@ function makegui(r::RHD2000)
     button_sort4 = @Button("Sort 4")
     button_sort5 = @Button("Sort 5")
 
-    slider_sort = @Scale(false, 1, 100,1)
+    slider_sort = @Scale(false, 0, 100,1)
     adj_sort = @Adjustment(slider_sort)
     setproperty!(adj_sort,:value,50)
     slider_sort_label=@Label("Slider Label")
@@ -388,9 +388,9 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort1,:label,"Delete Cluster")
+    setproperty!(button_sort1,:label,"Delete Unit")
     id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort2,:label,"Cycle Clusters")
+    setproperty!(button_sort2,:label,"Add Unit")
     id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort3,:label,"Show Template")
 
@@ -399,9 +399,9 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     setproperty!(slider_sort_label,:label,"Tolerance")
 
     id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,r))
-
-    id = signal_connect(template_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,r))
 end
+
+    id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,r))
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
@@ -1362,5 +1362,25 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     nothing
 end
 
+function unit_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tuple{Gui_Handles,RHD2000})
 
+    han,rhd = user_data  
+    clus=get_cluster_id(han)
 
+    han.var1[han.spike,2]=clus
+    if clus>0
+        mytol=rhd.s[han.spike].c.sigmas[1,clus]
+        setproperty!(han.adj_sort, :value, div(mytol,10))
+    end
+
+    setproperty!(han.tb1,:label,string("Cluster: ",clus))
+        
+    nothing
+end
+
+function get_cluster_id(han::Gui_Handles)
+    selmodel=Gtk.GAccessor.selection(han.sort_tv)
+    iter=Gtk.selected(selmodel)
+
+    myind=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.sort_list), iter))
+end

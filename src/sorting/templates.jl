@@ -13,25 +13,23 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         
         (x1,x2,y1,y2)=coordinate_transform(han,event)
 
-        if (han.var1[han.spike,2]==0) #do nothing if zeroth cluster    
-        elseif (rhd.s[han.spike].c.num < han.var1[han.spike,2]) #new cluster
+        if (clus==0) #do nothing if zeroth cluster    
+        elseif (rhd.s[han.spike].c.num < clus) #new cluster
 
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
-            han.var1[han.spike,1] += 1
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
             mytol=rhd.s[han.spike].c.sigmas[1,clus]
             setproperty!(han.adj_sort, :value, div(mytol,10))
-             push!(han.sort_list,(clus,))
         else #replace old cluster
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
-            change_cluster(rhd.s[han.spike].c,mymean,mystd,han.var1[han.spike,2])
+            change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
             mytol=rhd.s[han.spike].c.sigmas[1,clus]
             setproperty!(han.adj_sort, :value, div(mytol,10))
         end
 
-        if (han.var1[han.spike,2]>0)&((han.buf_count>0)&(han.pause))
-            template_cluster(han,han.var1[han.spike,2],mymean,mystd)
-            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+        if (clus>0)&((han.buf_count>0)&(han.pause))
+            template_cluster(han,clus,mymean,mystd)
+            plot_new_color(getgc(han.c2),han,clus)
         end
     end
     
@@ -42,46 +40,35 @@ end
 function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
+    clus=han.var1[han.spike,2]
 
-    if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
+    if (clus==0) #do nothing if zeroth cluster selected      
     else
-        delete_cluster(rhd.s[han.spike].c,han.var1[han.spike,2])
-        deleteat!(han.sort_list,han.var1[han.spike,2])
+        delete_cluster(rhd.s[han.spike].c,clus)
+        deleteat!(han.sort_list,han.var1[han.spike,1]+1)
         han.var1[han.spike,1]-= 1
         han.var1[han.spike,2] = 0
-        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-        
+        selmodel=Gtk.GAccessor.selection(han.sort_tv)
+        select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
     end
     nothing
 end
 
-#Select Cluster
+#Add Unit
 function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
     
-    #go to next cluster
-    clus=han.var1[han.spike,2]+1
+    #Add total number of units and go to that unit
+    han.var1[han.spike,1]+=1
+    han.var1[han.spike,2]=han.var1[han.spike,1]
+    push!(han.sort_list,(han.var1[han.spike,1],))
 
-    #Cycle back to beginning
-    if clus==han.var1[han.spike,1]+2
-        han.var1[han.spike,2]=0
-        
-    elseif clus==han.var1[han.spike,1]+1
-        #create new cluster
-        han.var1[han.spike,2]=clus
-        setproperty!(han.adj_sort, :value, 50)
-       
-    else
-        han.var1[han.spike,2]=clus
-        if clus>0
-            mytol=rhd.s[han.spike].c.sigmas[1,clus]
-            setproperty!(han.adj_sort, :value, div(mytol,10))
-        end
-    end
+    setproperty!(han.adj_sort, :value, 0)
 
-    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-        
+    selmodel=Gtk.GAccessor.selection(han.sort_tv)
+    select!(selmodel, Gtk.iter_from_index(han.sort_list, han.var1[han.spike,1]+1))
+    
     nothing
 end
 
@@ -90,36 +77,38 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     ctx = getgc(han.c2)
 
-    if han.var1[han.spike,2]>0
+    clus=han.var1[han.spike,2]
+
+    if clus>0
         s=han.scale[han.spike,1]
         o=han.scale[han.spike]
 
         Cairo.translate(ctx,0.0,300.0)
         scale(ctx,500/han.wave_points,s)
         
-        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[1,han.var1[han.spike,2]]-o))
+        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,clus]+rhd.s[han.spike].c.sigmas[1,clus]-o))
 
         for i=2:size(rhd.s[han.spike].c.sigmas,1)
-            y=rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]+rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o
+            y=rhd.s[han.spike].c.templates[i,clus]+rhd.s[han.spike].c.sigmas[i,clus]-o
             line_to(ctx,i,y)
         end
 
-        y=rhd.s[han.spike].c.templates[end,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[end,han.var1[han.spike,2]]-o
+        y=rhd.s[han.spike].c.templates[end,clus]-rhd.s[han.spike].c.sigmas[end,clus]-o
         
         line_to(ctx,size(rhd.s[han.spike].c.sigmas,1),y)
 
         for i=(size(rhd.s[han.spike].c.sigmas,1)-1):-1:1
-            y=rhd.s[han.spike].c.templates[i,han.var1[han.spike,2]]-rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]-o
+            y=rhd.s[han.spike].c.templates[i,clus]-rhd.s[han.spike].c.sigmas[i,clus]-o
             line_to(ctx,i,y)
         end
 
         close_path(ctx)
         
-        select_color(ctx,han.var1[han.spike,2]+1)
+        select_color(ctx,clus+1)
         set_line_width(ctx,3.0)
         stroke_preserve(ctx)
 
-        select_color(ctx,han.var1[han.spike,2]+1,.5)
+        select_color(ctx,clus+1,.5)
         fill(ctx)
     end
 
@@ -134,16 +123,16 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     myval=getproperty(han.adj_sort, :value, Int64) # primary display
 
-    if han.var1[han.spike,2]<=han.var1[han.spike,1]
-        if han.var1[han.spike,2]>0
-            for i=1:size(rhd.s[han.spike].c.sigmas,1)
-                rhd.s[han.spike].c.sigmas[i,han.var1[han.spike,2]]=10.0*myval
-            end
+    clus=han.var1[han.spike,2] #selected cluster
+    
+    if clus>0
+        for i=1:size(rhd.s[han.spike].c.sigmas,1)
+            rhd.s[han.spike].c.sigmas[i,clus]=10.0*myval
         end
-
-        if (han.var1[han.spike,2]>0)&((han.buf_count>0)&(han.pause))
-            template_cluster(han,han.var1[han.spike,2],rhd.s[han.spike].c.templates[:,han.var1[han.spike,2]],rhd.s[han.spike].c.sigmas[:,han.var1[han.spike,2]])
-            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+        
+        if ((han.buf_count>0)&(han.pause))
+            template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sigmas[:,clus])
+            plot_new_color(getgc(han.c2),han,clus)
         end
     end
 end
@@ -255,19 +244,4 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
     end
 
     nothing
-end
-
-function template_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han,rhd = user_data  
-    get_cluster_id(han)
-    
-    nothing
-end
-
-function get_cluster_id(han::Gui_Handles)
-    selmodel=Gtk.GAccessor.selection(han.sort_tv)
-    iter=Gtk.selected(selmodel)
-
-    myind=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.sort_list), iter))
 end
