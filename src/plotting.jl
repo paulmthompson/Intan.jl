@@ -252,22 +252,6 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                 @inbounds y=rhd.v[kk+k-1,spike_num]-o
                 line_to(ctx,k,y)
             end
-
-	    #=
-	    count=(rhd.buf[i,spike_num].id-1)*100+10
-	    @inbounds move_to(ctx,count,round(Int16,(rhd.v[rhd.buf[i,spike_num].inds.start,spike_num]-o)*.2*s+650))
-            
-            #draw separted cluster
-            count+=2
-            @inbounds for k=rhd.buf[i,spike_num].inds.start+1:rhd.buf[i,spike_num].inds.stop
-                @inbounds line_to(ctx,count,(rhd.v[k,spike_num]-o)*.2*s+650)              
-                count+=2
-            end
-			
-	    @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20.0+700.0)
-	    @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*20.0+720.0)
-
-            =#
 			
 	    set_line_width(ctx,0.5);
 	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
@@ -530,7 +514,6 @@ function prepare_scope(ctx,han)
     stroke(ctx)
 
     nothing
-    
 end
     
 function clear_c2(myc::Gtk.GtkCanvas,num)
@@ -649,3 +632,21 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     nothing
 end
 
+function draw_c3(rhd::RHD2000,han::Gui_Handles)
+
+    ctx=Cairo.getgc(han.c3)
+
+    spike_num=han.spike
+    reads=han.draws
+
+    for i=1:rhd.nums[spike_num]
+    
+        @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+150.0)
+        @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+160.0)
+        set_line_width(ctx,0.5);
+	@inbounds select_color(ctx,rhd.buf[i,spike_num].id)
+	stroke(ctx)
+    end
+
+    nothing
+end

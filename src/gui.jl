@@ -555,6 +555,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han,ctx2)
 	    end
+            draw_c3(rhd,han)
 	end
 	reveal(han.c2)
         reveal(han.c3)
@@ -567,6 +568,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             if (!han.hold)&(!han.pause)
 	        clear_c2(han.c2,han.spike)
             end
+            clear_c3(han.c3,han.spike)
             #Display threshold if box checked
             if han.show_thres==true
                 plot_thres(han,rhd,rhd.s[1].d)
