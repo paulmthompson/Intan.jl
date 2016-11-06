@@ -578,6 +578,16 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     nothing
 end
 
+function clear_c3(c3,num)
+
+    ctx = getgc(c3)
+
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    paint(ctx)
+    
+    nothing
+end
+
 function select_color(ctx,clus,alpha=1.0)
 
     if clus==1

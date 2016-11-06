@@ -274,6 +274,7 @@ type Gui_Handles
     adj_sort::Gtk.GtkAdjustmentLeaf
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
+    c3::Gtk.GtkCanvasLeaf
 end
 
 #=

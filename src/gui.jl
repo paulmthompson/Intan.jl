@@ -155,13 +155,26 @@ function makegui(r::RHD2000)
     #COLUMN 3 - MAXIMIZED CHANNEL PLOTTING
     
     #ROW 2
-    c2=@Canvas(500,800)     
+    c_grid=@Grid()
+    
+    c2=@Canvas(500,600)     
     @guarded draw(c2) do widget
         ctx = getgc(c2)
         clear_c2(c2,1)
     end
     show(c2)
-    grid[4,2]=c2
+    c_grid[1,1]=c2
+
+    #ROW 2
+    c3=@Canvas(500,200)     
+    @guarded draw(c3) do widget
+        ctx = getgc(c3)
+        clear_c3(c3,1)
+    end
+    show(c3)
+    c_grid[1,2]=c3
+
+    grid[4,2]=c_grid
 
     #ROW 3
     c2_slider=@Scale(false, 1:16)
@@ -364,7 +377,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -544,6 +557,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    end
 	end
 	reveal(han.c2)
+        reveal(han.c3)
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
