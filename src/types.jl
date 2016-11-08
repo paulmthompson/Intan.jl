@@ -237,7 +237,8 @@ type Gui_Handles
     offset::Array{Int64,1}
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
-    var1::Array{Int64,2} #saved variable 1 for each channel
+    clus::Int64
+    total_clus::Array{Int64,1}
     var2::Array{Int64,2} #saved variable 2 for each channel
     sb::Gtk.GtkSpinButtonLeaf
     tb1::Gtk.GtkLabelLeaf

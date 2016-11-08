@@ -7,7 +7,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     han, rhd = user_data
     event = unsafe_load(param_tuple)
 
-    clus=han.var1[han.spike,2]
+    clus=han.clus
     
     if event.button==1
         
@@ -40,14 +40,14 @@ end
 function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
-    clus=han.var1[han.spike,2]
+    clus=han.clus
 
     if (clus==0) #do nothing if zeroth cluster selected      
     else
         delete_cluster(rhd.s[han.spike].c,clus)
-        deleteat!(han.sort_list,han.var1[han.spike,1]+1)
-        han.var1[han.spike,1]-= 1
-        han.var1[han.spike,2] = 0
+        deleteat!(han.sort_list,han.total_clus[han.spike]+1)
+        han.total_clus[han.spike] -= 1
+        han.clus = 0
         selmodel=Gtk.GAccessor.selection(han.sort_tv)
         select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
     end
@@ -60,14 +60,14 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     
     #Add total number of units and go to that unit
-    han.var1[han.spike,1]+=1
-    han.var1[han.spike,2]=han.var1[han.spike,1]
-    push!(han.sort_list,(han.var1[han.spike,1],))
+    han.total_clus[han.spike] += 1
+    han.clus = han.total_clus[han.spike]
+    push!(han.sort_list,(han.total_clus[han.spike],))
 
     setproperty!(han.adj_sort, :value, 0)
 
     selmodel=Gtk.GAccessor.selection(han.sort_tv)
-    select!(selmodel, Gtk.iter_from_index(han.sort_list, han.var1[han.spike,1]+1))
+    select!(selmodel, Gtk.iter_from_index(han.sort_list, han.total_clus[han.spike]+1))
     
     nothing
 end
@@ -77,7 +77,7 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     ctx = getgc(han.c2)
 
-    clus=han.var1[han.spike,2]
+    clus=han.clus
 
     if clus>0
         s=han.scale[han.spike,1]
@@ -123,7 +123,7 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     myval=getproperty(han.adj_sort, :value, Int64) # primary display
 
-    clus=han.var1[han.spike,2] #selected cluster
+    clus=han.clus
     
     if clus>0
         for i=1:size(rhd.s[han.spike].c.sigmas,1)

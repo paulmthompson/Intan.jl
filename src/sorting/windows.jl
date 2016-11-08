@@ -54,26 +54,26 @@ function canvas_release_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles
         #If this is distributed, it is going to be *really* slow
         #because it will be sending over the entire DArray from whatever processor
         #Change this so it is just communicating with the cluster part; JNeuron does something similar
-        if (han.var1[han.spike,2]==0)||(han.var2[han.spike,2]==0) #do nothing if zeroth cluster or window      
-        elseif (length(rhd.s[han.spike].c.win) < han.var1[han.spike,2]) #new cluster
+        if (han.clus==0)||(han.var2[han.spike,2]==0) #do nothing if zeroth cluster or window      
+        elseif (length(rhd.s[han.spike].c.win) < han.clus) #new cluster
             push!(rhd.s[han.spike].c.win,[SpikeSorting.mywin(x1,x2,y1,y2)])
             push!(rhd.s[han.spike].c.hits,0)
-            han.var1[han.spike,1]+=1
+            han.total_clus[han.spike] += 1
             han.var2[han.spike,1]+=1
             han.spike_win=rhd.s[han.spike].c.win[end]
-        elseif length(rhd.s[han.spike].c.win[han.var1[han.spike,2]]) < han.var2[han.spike,2] #new window
-            push!(rhd.s[han.spike].c.win[han.var1[han.spike,2]],SpikeSorting.mywin(x1,x2,y1,y2))
+        elseif length(rhd.s[han.spike].c.win[han.clus]) < han.var2[han.spike,2] #new window
+            push!(rhd.s[han.spike].c.win[han.clus],SpikeSorting.mywin(x1,x2,y1,y2))
             han.var2[han.spike,1]+=1
-            han.spike_win=rhd.s[han.spike].c.win[han.var1[han.spike,2]]
+            han.spike_win=rhd.s[han.spike].c.win[han.clus]
         else #replace old window
-            rhd.s[han.spike].c.win[han.var1[han.spike,2]][han.var2[han.spike,2]]=SpikeSorting.mywin(x1,x2,y1,y2)
-            han.spike_win=rhd.s[han.spike].c.win[han.var1[han.spike,2]]
+            rhd.s[han.spike].c.win[han.clus][han.var2[han.spike,2]]=SpikeSorting.mywin(x1,x2,y1,y2)
+            han.spike_win=rhd.s[han.spike].c.win[han.clus]
         end
 
-        if ((han.var1[han.spike,2]>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
+        if ((han.clus>0)&(han.var2[han.spike,2]>0))&((han.buf_count>0)&(han.pause))
 
-            window_cluster(han,han.var1[han.spike,2])
-            plot_new_color(getgc(han.c2),han,han.var1[han.spike,2])
+            window_cluster(han,han.clus)
+            plot_new_color(getgc(han.c2),han,han.clus)
         end
     end
     
@@ -85,12 +85,12 @@ function b1_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    if (han.var1[han.spike,2]==0)||(han.var1[han.spike,2]>han.var1[han.spike,1]) #do nothing if zeroth cluster selected      
+    if (han.clus==0)||(han.clus>han.total_clus[han.spike]) #do nothing if zeroth cluster selected      
     else
-        deleteat!(rhd.s[han.spike].c.win,han.var1[han.spike,2])
+        deleteat!(rhd.s[han.spike].c.win,han.clus)
         pop!(rhd.s[han.spike].c.hits)
-        han.var1[han.spike,1]-= 1
-        han.var1[han.spike,2] = 0
+        han.total_clus[han.spike] -= 1
+        han.clus = 0
         han.var2[han.spike,1] = 0
         han.var2[han.spike,2] = 0
         setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
@@ -106,7 +106,7 @@ function b2_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if (han.var2[han.spike,2]==0)||(han.var2[han.spike,2]>han.var2[han.spike,1]) #do nothing if zeroth window
     else
-        deleteat!(rhd.s[han.spike].c.win[han.var1[han.spike,2]],han.var2[han.spike,2])
+        deleteat!(rhd.s[han.spike].c.win[han.clus],han.var2[han.spike,2])
         han.var2[han.spike,1]-= 1
         han.var2[han.spike,2] = 0
         setproperty!(han.tb2,:label,"Window: 0")
@@ -151,24 +151,24 @@ function b4_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     
     #go to next cluster
-    clus=han.var1[han.spike,2]+1
+    clus=han.clus+1
 
-    if clus==han.var1[han.spike,1]+2
-        han.var1[han.spike,2]=0
+    if clus==han.total_clus[han.spike]+2
+        han.clus=0
         han.var2[han.spike,1]=0
-    elseif clus==han.var1[han.spike,1]+1
+    elseif clus==han.total_clus[han.spike]+1
         #create new cluster
-        han.var1[han.spike,2]=clus
+        han.clus=clus
         han.var2[han.spike,1]=0
     else
-        han.var1[han.spike,2]=clus
+        han.clus=clus
         han.var2[han.spike,1]=length(rhd.s[han.spike].c.win)
     end
             
     #reset currently selected window to zero
     han.var2[han.spike,2]=0
 
-    setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+    setproperty!(han.tb1,:label,string("Cluster: ",han.clus))
     setproperty!(han.tb2,:label,"Window: 0")
         
     nothing

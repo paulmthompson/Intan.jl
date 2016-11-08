@@ -377,7 +377,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums),2),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -528,8 +528,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             elseif han.c_right_top==3
             elseif han.c_right_top==4
             elseif han.c_right_top==5
-            else
-                
+            else   
             end
 
             #bottom right
@@ -542,11 +541,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             elseif han.c_right_bottom==4
                 draw_scope(rhd,han,ctx)
             elseif han.c_right_bottom==5
-
             elseif han.c_right_bottom==6
                 draw_raster64(rhd,han,ctx)
-            else
-                
+            else 
             end
 
             update_time(rhd,han)         
@@ -1383,7 +1380,7 @@ function unit_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tupl
     han,rhd = user_data  
     clus=get_cluster_id(han)
 
-    han.var1[han.spike,2]=clus
+    han.clus=clus
     if clus>0
         mytol=rhd.s[han.spike].c.sigmas[1,clus]
         setproperty!(han.adj_sort, :value, div(mytol,10))
