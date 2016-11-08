@@ -9,7 +9,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
     clus=han.clus
     
-    if event.button==1
+    if event.button==1 #Left click
         
         (x1,x2,y1,y2)=coordinate_transform(han,event)
 
