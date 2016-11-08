@@ -132,7 +132,7 @@ function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
     end
 end
 
-default_sort=Algorithm[DetectNeg(),ClusterWindow(),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
+default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
 debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 

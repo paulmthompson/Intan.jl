@@ -119,6 +119,7 @@ function makegui(r::RHD2000)
     sort_tv=@TreeView(TreeModel(sort_list))
     sort_r1=@CellRendererText()
     sort_c1=@TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
+    Gtk.GAccessor.activate_on_single_click(sort_tv,1)
     
     push!(sort_tv,sort_c1)
     
