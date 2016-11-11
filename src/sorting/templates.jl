@@ -75,6 +75,38 @@ end
 function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
+
+    mybutton = convert(Button, widget)
+
+    if han.pause
+        Gtk.GAccessor.active(han.pause_button,false)
+    end
+    
+    if !han.hold
+        clear_c2(han.c2,han.spike)
+    
+        if getproperty(han.buf_button,:active,Bool)
+            han.buf_ind=1
+            han.buf_count=1
+        end
+        if han.show_thres==true
+            plot_thres(han,rhd,rhd.s[1].d)
+        end
+        han.hold=true
+        han.pause=false
+        setproperty!(mybutton,:label,"Stop Collection")
+    else
+        
+        Gtk.GAccessor.active(han.pause_button,true)
+        setproperty!(mybutton,:label,"Collect Templates")
+    end
+    
+    nothing
+end
+
+function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
     ctx = getgc(han.c2)
 
     clus=han.clus

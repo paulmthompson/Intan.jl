@@ -48,8 +48,8 @@ function makegui(r::RHD2000)
     setproperty!(button_gain,:active,false)
     push!(vbox1_2_1,button_gain)
     
-    button_auto = @Button("Autoscale")
-    push!(vbox1_2_1,button_auto)
+    #button_auto = @Button("Autoscale")
+    #push!(vbox1_2_1,button_auto)
 		
     #THRESHOLD
     frame1_3=@Frame("Threshold")
@@ -126,16 +126,17 @@ function makegui(r::RHD2000)
     vbox1_3_2[1,3]=button_sort1
     vbox1_3_2[1,4]=button_sort2
     vbox1_3_2[1,5]=button_sort3
-    #vbox1_3_2[1,6]=button_sort4
+    vbox1_3_2[1,6]=button_sort4
     #vbox1_3_2[1,7]=button_sort5
     vbox1_3_2[1,8]=slider_sort
     vbox1_3_2[1,9]=slider_sort_label
-
+    
     myscroll=@ScrolledWindow()
-    Gtk.GAccessor.min_content_height(myscroll,100)
+    Gtk.GAccessor.min_content_height(myscroll,150)
     Gtk.GAccessor.min_content_width(myscroll,100)
     push!(myscroll,sort_tv)
     vbox1_3_2[1,10]=myscroll
+    vbox1_3_2[1,11]=@Canvas(150,10)
 
     vbox1_2[1,5]=frame1_4 |> showall
 
@@ -378,7 +379,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -406,7 +407,9 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort2,:label,"Add Unit")
     id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort3,:label,"Show Template")
+    setproperty!(button_sort3,:label,"Collect Templates")
+    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
+    setproperty!(button_sort4,:label,"Show Template")
 
     setproperty!(tb1,:label,"Cluster: ")
     setproperty!(tb2,:label,"")
@@ -420,7 +423,7 @@ end
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
-    id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
+    #id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
@@ -438,7 +441,7 @@ id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,r))
 id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,r))
 id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,r))
-id = signal_connect(pause_cb,button_pause,"clicked",Void,(),false,(handles,r))
+id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,r))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,r))
 
 for i=1:8
@@ -502,21 +505,18 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         else
             myread=readDataBlocks(rhd,1)
         end
-        
     else
         myread=readDataBlocks(rhd)
     end
-
     #=
     if myread
         rhd.ttl_state = !rhd.ttl_state
         sendTimePulse(rhd.fpga[1],rhd.ttl_state)
     end
     =#
-  
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)
-
+    
     #plot spikes    
     if myread
 	if han.num16>0
@@ -579,18 +579,15 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
     nothing
 end
 
+#=
 function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
     han, rhd = user_data
-    
-    #scale
-    #inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
-    #@inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
-
-    #@inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
-
+    @inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
+    @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
+    @inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
     nothing 
 end
+=#
 
 function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
@@ -820,8 +817,11 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if getproperty(widget,:active,Bool)
         han.pause=true
+        setproperty!(widget,:label,"Resume")
     else
         han.pause=false
+        setproperty!(widget,:label,"Pause")
+        han.hold=getproperty(han.hold_button,:active,Bool)
     end
 
     nothing
@@ -984,12 +984,9 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-
-
 #=
 Export Callbacks
 =#
-
 function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data

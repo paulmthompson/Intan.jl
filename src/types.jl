@@ -276,6 +276,7 @@ type Gui_Handles
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
     c3::Gtk.GtkCanvasLeaf
+    pause_button::Gtk.GtkToggleButtonLeaf
 end
 
 #=
