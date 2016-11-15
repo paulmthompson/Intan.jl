@@ -700,34 +700,22 @@ function highlight_channel(han::Gui_Handles,old_spike)
     elseif han.c_right_top==3
     end
 
-    #erase old
-    move_to(ctx,x1_i,y1_i)
-    line_to(ctx,x2_i,y1_i)
-    line_to(ctx,x2_i,y2_i)
-    line_to(ctx,x1_i,y2_i)
-    line_to(ctx,x1_i,y1_i)
-    set_source_rgb(ctx,0.0,0.0,0.0)
-    set_line_width(ctx,2.0)
-    stroke(ctx)
+    draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
+    draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
+    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
 
-    move_to(ctx,x1_i,y1_i)
-    line_to(ctx,x2_i,y1_i)
-    line_to(ctx,x2_i,y2_i)
-    line_to(ctx,x1_i,y2_i)
-    line_to(ctx,x1_i,y1_i)
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
+    nothing
+end
 
-    move_to(ctx,x1_f,y1_f)
-    line_to(ctx,x2_f,y1_f)
-    line_to(ctx,x2_f,y2_f)
-    line_to(ctx,x1_f,y2_f)
-    line_to(ctx,x1_f,y1_f)
-    set_source_rgb(ctx,1.0,0.0,1.0)
-    set_line_width(ctx,1.0)
+function draw_box(x1,y1,x2,y2,mycolor,linewidth,ctx)
+    move_to(ctx,x1,y1)
+    line_to(ctx,x2,y1)
+    line_to(ctx,x2,y2)
+    line_to(ctx,x1,y2)
+    line_to(ctx,x1,y1)
+    set_source_rgb(ctx,mycolor[1],mycolor[2],mycolor[3])
+    set_line_width(ctx,linewidth)
     stroke(ctx)
-
     nothing
 end
 
