@@ -575,6 +575,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
         queueToFile(rhd,rhd.save)
     end
     sleep(.00001)
+    #sleep(.02) #debug
     nothing
 end
 
@@ -656,8 +657,27 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
         #Highlight channel
         highlight_channel(han,old_spike)
+
+        #Update treeview
+        update_treeview(rhd,han)
     end
         
+    nothing
+end
+
+function update_treeview(rhd::RHD2000,han::Gui_Handles)
+
+    for i=length(han.sort_list):-1:2
+        deleteat!(han.sort_list,i)
+    end
+
+    for i=1:han.total_clus[han.spike]
+        push!(han.sort_list,(i,))
+    end
+
+    selmodel=Gtk.GAccessor.selection(han.sort_tv)
+    select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
+    
     nothing
 end
 
