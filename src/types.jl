@@ -282,6 +282,7 @@ type Gui_Handles
     isi_clus_ID::Array{Int64,1}
     isi_last_time::Array{UInt32,1}
     isi::Array{UInt32,1}
+    isi_hist::Array{Int64,1}
 end
 
 #=

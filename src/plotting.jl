@@ -311,7 +311,6 @@ function update_isi(rhd::RHD2000,han::Gui_Handles,i)
         han.isi_count=500
     end
     
-
     nothing
 end
 
@@ -329,13 +328,40 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
                    myviolation += 1
                 end
                 mycount+=1
+
+                ind=1
+                this_isi = han.isi[j]/rhd.sr
+                for k=.001:.001:.049
+                    if (this_isi > k - .001)&(this_isi < k)
+                        han.isi_hist[ind]+=1
+                    end
+                    ind+=1
+                end
             end
         end
         
         set_source_rgb(ctx,1.0,1.0,1.0)
-        move_to(ctx,(i-1)*100+1,100)
+        move_to(ctx,(i-1)*100+1,10)
         show_text(ctx,string(round(myviolation/mycount*100,2)))
-        
+
+        move_to(ctx,(i-1)*100+21,130)
+        line_to(ctx,(i-1)*100+21,80)
+        move_to(ctx,(i-1)*100+21,130)
+        line_to(ctx,(i-1)*100+71,130)
+
+        stroke(ctx)
+
+        select_color(ctx,i+1)
+        move_to(ctx,(i-1)*100+21,130)
+        line_to(ctx,(i-1)*100+21,130-han.isi_hist[1]*6)
+        han.isi_hist[1]=0
+
+        for j=2:length(han.isi_hist)
+            move_to(ctx,(i-1)*100+j+20,130)
+            line_to(ctx,(i-1)*100+j+20,130-han.isi_hist[j]*6)
+            han.isi_hist[j]=0
+        end
+        stroke(ctx)
     end
     
     nothing
