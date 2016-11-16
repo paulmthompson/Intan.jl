@@ -276,7 +276,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                 end
             end
 
-            
+            update_isi(rhd,han,i)
         end
     end
 
@@ -286,6 +286,60 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 end
 
 identity_matrix(ctx)=ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Void, (Ptr{Void},), ctx.ptr)
+
+function update_isi(rhd::RHD2000,han::Gui_Handles,i)
+
+    spike_num=han.spike
+    clus=rhd.buf[i,spike_num].id
+    mytime=rhd.time[rhd.buf[i,spike_num].inds.start,1]
+
+    my_isi = mytime - han.isi_last_time[clus]
+
+    han.isi_last_time[clus] = mytime
+
+    han.isi[han.isi_ind] = my_isi
+
+    han.isi_clus_ID[han.isi_ind] = clus
+
+    han.isi_ind+=1
+    if han.isi_ind>500
+        han.isi_ind=1
+    end
+
+    han.isi_count+=1
+    if han.isi_count>500
+        han.isi_count=500
+    end
+    
+
+    nothing
+end
+
+function draw_isi(rhd::RHD2000,han::Gui_Handles)
+
+    ctx=Cairo.getgc(han.c3)
+    
+    for i=1:han.total_clus[han.spike]        
+
+        mycount=0
+        myviolation=0
+        for j=1:han.isi_count
+            if han.isi_clus_ID[j] == i+1
+                if han.isi[j]/rhd.sr < .0025
+                   myviolation += 1
+                end
+                mycount+=1
+            end
+        end
+        
+        set_source_rgb(ctx,1.0,1.0,1.0)
+        move_to(ctx,(i-1)*100+1,100)
+        show_text(ctx,string(round(myviolation/mycount*100,2)))
+        
+    end
+    
+    nothing
+end
 
 #=
 Reset Canvas
@@ -654,6 +708,7 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
     if reads==1
         draw_templates(rhd,han)
+        draw_isi(rhd,han)
     end
 
     nothing

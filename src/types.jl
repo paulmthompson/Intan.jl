@@ -277,6 +277,11 @@ type Gui_Handles
     sort_tv::Gtk.GtkTreeViewLeaf
     c3::Gtk.GtkCanvasLeaf
     pause_button::Gtk.GtkToggleButtonLeaf
+    isi_ind::Int64
+    isi_count::Int64
+    isi_clus_ID::Array{Int64,1}
+    isi_last_time::Array{UInt32,1}
+    isi::Array{UInt32,1}
 end
 
 #=
