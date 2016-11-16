@@ -20,11 +20,13 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
             mytol=rhd.s[han.spike].c.sigmas[1,clus]
             setproperty!(han.adj_sort, :value, div(mytol,10))
+            draw_templates(rhd,han)
         else #replace old cluster
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
             mytol=rhd.s[han.spike].c.sigmas[1,clus]
             setproperty!(han.adj_sort, :value, div(mytol,10))
+            draw_templates(rhd,han)
         end
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
@@ -275,5 +277,37 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
         end
     end
 
+    nothing
+end
+
+function draw_templates(rhd::RHD2000,han::Gui_Handles)
+
+    ctx=Cairo.getgc(han.c3)
+    
+    myoff=1.0
+    for clus = 1:han.total_clus[han.spike]
+
+        s=han.scale[han.spike,1]*.25
+        o=han.scale[han.spike]
+
+        Cairo.translate(ctx,0.0,50.0)
+        scale(ctx,2.0,s)
+        
+        move_to(ctx,1.0+myoff,rhd.s[han.spike].c.templates[1,clus]-o)
+
+        for i=2:size(rhd.s[han.spike].c.sigmas,1)
+            y=rhd.s[han.spike].c.templates[i,clus]-o
+            line_to(ctx,i+myoff,y)
+        end
+        
+        select_color(ctx,clus+1)
+        set_line_width(ctx,1.0)
+        stroke(ctx)
+
+        identity_matrix(ctx)
+
+        myoff += han.wave_points+5
+    end
+    
     nothing
 end

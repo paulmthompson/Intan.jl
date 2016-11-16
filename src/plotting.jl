@@ -652,5 +652,9 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
 	stroke(ctx)
     end
 
+    if reads==1
+        draw_templates(rhd,han)
+    end
+
     nothing
 end
