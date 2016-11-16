@@ -32,31 +32,32 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in
     #subsequent IDs
     @inbounds for thisid=1:maxid
         k=k_in
-        for i in xbounds
-            for j in ybounds
-                if han.enabled[k]
-                    for g=1:rhd.nums[k]
-                        if rhd.buf[g,k].inds.start>0
-                            if rhd.buf[g,k].id==thisid
-                                s=han.scale[k,2]
-                                o=han.offset[k]
-                                move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
-                                count=increment+1
-                                for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                    y=(rhd.v[kk,k]-o)*s+j
-                                    if y<j-b_width
-                                        y=j-b_width
-                                    elseif y>j+b_width
-                                        y=j+b_width
-                                    end  
-                                    line_to(ctx,count+i,y)
-                                    count+=increment
-                                end
+        for i in xbounds, j in ybounds
+            if han.enabled[k]
+                for g=1:rhd.nums[k]
+                    if rhd.buf[g,k].inds.start>0
+                        if rhd.buf[g,k].id==thisid
+                            s=han.scale[k,2]
+                            o=han.offset[k]
+                            move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
+                            count=increment+1
+                            for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
+                                y=(rhd.v[kk,k]-o)*s+j
+                                if y<j-b_width
+                                    y=j-b_width
+                                elseif y>j+b_width
+                                    y=j+b_width
+                                end  
+                                line_to(ctx,count+i,y)
+                                count+=increment
                             end
-                        end        
-                    end
+                        end
+                    end        
                 end
-                k+=1
+            end
+            k+=1
+            if k>length(han.enabled)
+                break
             end
         end
         set_line_width(ctx,0.5);
@@ -257,6 +258,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
 	    stroke(ctx)
 
+            #Add spike to buffer
             if han.buf_count > 0
                 mycount=1
                 for tt=kk:(kk+han.wave_points-1)
@@ -273,6 +275,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
                     han.buf_ind=1
                 end
             end
+
+            
         end
     end
 

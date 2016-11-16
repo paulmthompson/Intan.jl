@@ -351,7 +351,6 @@ showall(popup_event)
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI") |> showall
-#showall(win)
 
 #Prepare saving headers
 
