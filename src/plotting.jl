@@ -35,7 +35,7 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in
         for i in xbounds, j in ybounds
             if han.enabled[k]
                 for g=1:rhd.nums[k]
-                    if rhd.buf[g,k].inds.start>0
+                    if (rhd.buf[g,k].inds.start>0)&(rhd.buf[g,k].inds.stop<size(rhd.v,1))
                         if rhd.buf[g,k].id==thisid
                             s=han.scale[k,2]
                             o=han.offset[k]
