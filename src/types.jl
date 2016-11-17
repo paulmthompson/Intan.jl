@@ -284,6 +284,8 @@ type Gui_Handles
     isi::Array{UInt32,1}
     isi_hist::Array{Int64,1}
     ref_win::Gtk.GtkWindowLeaf
+    ref_tv1::Gtk.GtkTreeViewLeaf
+    ref_tv2::Gtk.GtkTreeViewLeaf
 end
 
 #=
