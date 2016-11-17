@@ -245,12 +245,13 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     for i=1:rhd.nums[spike_num]
 
         kk=rhd.buf[i,spike_num].inds.start
-        if kk>0
+        k_end=rhd.buf[i,spike_num].inds.stop
+        if (kk>0) & (k_end<size(rhd.v,1))
         
             move_to(ctx,1,rhd.v[kk,spike_num]-o)
             
             for k=2:han.wave_points
-                @inbounds y=rhd.v[kk+k-1,spike_num]-o
+                y = rhd.v[kk+k-1,spike_num]-o
                 line_to(ctx,k,y)
             end
 			
@@ -261,11 +262,11 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
             #Add spike to buffer
             if han.buf_count > 0
                 mycount=1
-                for tt=kk:(kk+han.wave_points-1)
-                    han.spike_buf[mycount,han.buf_ind]=rhd.v[tt,spike_num]
+                for k=1:han.wave_points
+                    han.spike_buf[mycount,han.buf_ind] = rhd.v[kk+k-1,spike_num]
                     mycount+=1
                 end
-                han.buf_clus[han.buf_ind]=rhd.buf[i,spike_num].id-1
+                han.buf_clus[han.buf_ind] = rhd.buf[i,spike_num].id-1
                 han.buf_count+=1
                 han.buf_ind+=1
                 if han.buf_count>500
@@ -339,11 +340,17 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
                 end
             end
         end
-        
-        set_source_rgb(ctx,1.0,1.0,1.0)
-        move_to(ctx,(i-1)*100+1,10)
-        show_text(ctx,string(round(myviolation/mycount*100,2)))
 
+        isi_f=round(myviolation/mycount*100,2)
+        if isi_f>5.0
+            set_source_rgb(ctx,1.0,0.0,0.0)
+        else
+            set_source_rgb(ctx,1.0,1.0,1.0)
+        end
+        move_to(ctx,(i-1)*100+1,10)
+        show_text(ctx,string(isi_f))
+
+        set_source_rgb(ctx,1.0,1.0,1.0)
         move_to(ctx,(i-1)*100+21,130)
         line_to(ctx,(i-1)*100+21,80)
         move_to(ctx,(i-1)*100+21,130)
