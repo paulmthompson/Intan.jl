@@ -283,6 +283,7 @@ type Gui_Handles
     isi_last_time::Array{UInt32,1}
     isi::Array{UInt32,1}
     isi_hist::Array{Int64,1}
+    ref_win::Gtk.GtkWindowLeaf
 end
 
 #=

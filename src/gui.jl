@@ -318,7 +318,12 @@ push!(exmenu,export_mat_)
     push!(mb,sortopts)
     push!(mb,refopts)
     push!(mb,exopts) 
-    grid[4,1]=mb
+grid[4,1]=mb
+
+# Reference popup
+c_ref=@Canvas()
+ref_win=@Window(c_ref)
+showall(ref_win)
 
 
 #POPUP MENUS
@@ -378,7 +383,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50))
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -460,6 +465,8 @@ end
 for i=1:7
     id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,r,i))
 end
+
+id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 
 handles  
 end
@@ -1038,6 +1045,15 @@ function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     close(file)
 
+    nothing
+end
+
+function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    #popup(han.ref_win)
+    
     nothing
 end
 
