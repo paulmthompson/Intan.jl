@@ -434,7 +434,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -523,6 +523,7 @@ id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 
 id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,r))
 id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,r))
+id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
 handles  
 end
@@ -1495,4 +1496,22 @@ function ref_b2_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     selectall!(selmodel)
 
     nothing
+end
+
+function ref_b3_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    for i=1:size(rhd.v,2)
+        println(is_selected(han.ref_list2,han.ref_tv2,i-1))
+    end
+
+    nothing
+end
+
+function is_selected(store,tv,ind)
+    iter=Gtk.iter_from_string_index(store,string(ind))
+    selection=Gtk.GAccessor.selection(tv)
+    ccall((:gtk_tree_selection_iter_is_selected, Gtk.libgtk),Bool,
+    (Ptr{Gtk.GObject}, Ptr{Gtk.GtkTreeIter}),selection, Gtk.mutable(iter))
 end
