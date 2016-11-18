@@ -332,7 +332,7 @@ ref_r1=@CellRendererText()
 ref_c1=@TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
 
 ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
-Gtk.GAccessor.mode(ref_tv1_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
+#Gtk.GAccessor.mode(ref_tv1_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
     
 push!(ref_tv1,ref_c1)
     
@@ -359,13 +359,13 @@ Gtk.GAccessor.min_content_height(ref_scroll2,350)
 Gtk.GAccessor.min_content_width(ref_scroll2,175)
 push!(ref_scroll2,ref_tv2)
 
-ref_button1=@Button("Select All/None")
+#ref_button1=@Button("Select All/None")
 ref_button2=@Button("Select All/None")
 
 ref_button3=@Button("Apply")
 
 ref_grid[1,1]=ref_scroll1
-ref_grid[1,2]=ref_button1
+#ref_grid[1,2]=ref_button1
 ref_grid[2,1]=@Canvas(50,350)
 ref_grid[3,1]=ref_scroll2
 ref_grid[3,2]=ref_button2
@@ -521,7 +521,7 @@ id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 
 #Reference
 
-id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,r))
+#id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,r))
 id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,r))
 id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
@@ -1502,8 +1502,19 @@ function ref_b3_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
+    #Left
+    selmodel=Gtk.GAccessor.selection(han.ref_tv1)
+    myref=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.ref_list1), Gtk.selected(selmodel)))+1
+    
+    #Right
     for i=1:size(rhd.v,2)
-        println(is_selected(han.ref_list2,han.ref_tv2,i-1))
+        if is_selected(han.ref_list2,han.ref_tv2,i-1)
+            if i==myref
+                rhd.refs[i]=0
+            else
+                rhd.refs[i]=myref
+            end
+        end
     end
 
     nothing

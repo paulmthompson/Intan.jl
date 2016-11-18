@@ -1154,10 +1154,10 @@ end
 
 function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v,mytime)
 
-	for fpga in fpgas
-		fillFromUsbBuffer!(fpga,blockIndex,v,mytime)
-	end
-	nothing
+    for fpga in fpgas
+	fillFromUsbBuffer!(fpga,blockIndex,v,mytime)
+    end
+    nothing
 end
 
 function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
@@ -1421,13 +1421,13 @@ function determine_delay(fpga::FPGA,port)
         end
 
 	if fpga.usb3
-	SetWireInValue(fpga,WireInResetRun, 1 << 4, 1 << 4)
-	UpdateWireIns(fpga)
-	   ReadFromBlockPipeOut(fpga,PipeOutData,2*convert(Clong,fpga.numWords),fpga.usbBuffer)
-	   SetWireInValue(fpga,WireInResetRun, 0, 1 << 4);
-	   UpdateWireIns(fpga)
+	    SetWireInValue(fpga,WireInResetRun, 1 << 4, 1 << 4)
+	    UpdateWireIns(fpga)
+	    ReadFromBlockPipeOut(fpga,PipeOutData,2*convert(Clong,fpga.numWords),fpga.usbBuffer)
+	    SetWireInValue(fpga,WireInResetRun, 0, 1 << 4);
+	    UpdateWireIns(fpga)
 	else
-		ReadFromPipeOut(fpga,PipeOutData, 2*convert(Clong, fpga.numWords * 1), fpga.usbBuffer)
+	    ReadFromPipeOut(fpga,PipeOutData, 2*convert(Clong, fpga.numWords * 1), fpga.usbBuffer)
 	end
         index=1
         output=zeros(UInt16,60,fpga.numDataStreams)
