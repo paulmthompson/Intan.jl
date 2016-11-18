@@ -288,6 +288,7 @@ type Gui_Handles
     ref_tv2::Gtk.GtkTreeViewLeaf
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
+    gain_multiply::Gtk.GtkCheckButtonLeaf
 end
 
 #=
