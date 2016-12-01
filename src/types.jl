@@ -289,6 +289,7 @@ type Gui_Handles
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
     gain_multiply::Gtk.GtkCheckButtonLeaf
+    sort_cb::Bool
 end
 
 #=

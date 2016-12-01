@@ -151,6 +151,52 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+function check_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    
+    mycheck=convert(CheckButton,widget)
+
+    if getproperty(mycheck,:active,Bool)
+        han.sort_cb=true
+    else
+        han.sort_cb=false
+    end
+
+    if han.sort_cb
+        draw_templates(rhd.s[han.spike].c,han)
+    end
+    
+    nothing
+end
+
+function draw_templates(c::ClusterTemplate,han::Gui_Handles)
+
+    ctx = getgc(han.c2)
+
+    s=han.scale[han.spike,1]
+    o=han.scale[han.spike]
+    
+    Cairo.translate(ctx,0.0,300.0)
+    scale(ctx,500/han.wave_points,s)
+    
+    for clus=1:han.total_clus[han.spike]
+        
+        move_to(ctx,1.0,(c.templates[1,clus])-o)
+        
+        for i=2:size(c.sigmas,1)
+            y=c.templates[i,clus]-o
+            line_to(ctx,i,y)
+        end
+        
+        select_color(ctx,clus+1)
+        set_line_width(ctx,3.0)
+        stroke(ctx)
+    end
+    identity_matrix(ctx)
+    nothing
+end
+
 function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han,rhd = user_data

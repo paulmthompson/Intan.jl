@@ -92,7 +92,6 @@ function makegui(r::RHD2000)
     setproperty!(button_buffer,:active,true)
     vbox_hold[1,2]=button_buffer
     
-    
     #CLUSTER
     frame1_4=@Frame("Clustering")
     
@@ -112,6 +111,8 @@ function makegui(r::RHD2000)
     button_sort4 = @Button("Sort 4")
     button_sort5 = @Button("Sort 5")
 
+    check_sort1 = @CheckButton()
+
     slider_sort = @Scale(false, 0, 100,1)
     adj_sort = @Adjustment(slider_sort)
     setproperty!(adj_sort,:value,50)
@@ -126,13 +127,14 @@ function makegui(r::RHD2000)
     
     push!(sort_tv,sort_c1)
     
-    vbox1_3_2[1,3]=button_sort1
-    vbox1_3_2[1,4]=button_sort2
-    vbox1_3_2[1,5]=button_sort3
-    vbox1_3_2[1,6]=button_sort4
+    vbox1_3_2[1,3] = button_sort1
+    vbox1_3_2[1,4] = button_sort2
+    vbox1_3_2[1,5] = button_sort3
+    vbox1_3_2[1,6] = button_sort4
+    vbox1_3_2[1,7] = check_sort1
     #vbox1_3_2[1,7]=button_sort5
-    vbox1_3_2[1,8]=slider_sort
-    vbox1_3_2[1,9]=slider_sort_label
+    vbox1_3_2[1,8] = slider_sort
+    vbox1_3_2[1,9] = slider_sort_label
     
     myscroll=@ScrolledWindow()
     Gtk.GAccessor.min_content_height(myscroll,150)
@@ -437,7 +439,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,gain_checkbox)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,gain_checkbox,false)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -467,7 +469,10 @@ elseif typeof(r.s[1].c)==ClusterTemplate
     id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort3,:label,"Collect Templates")
     id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort4,:label,"Show Template")
+    setproperty!(button_sort4,:label,"Show Template Bounds")
+
+    setproperty!(check_sort1,:label,"Show Template")
+    id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,r))
 
     setproperty!(tb1,:label,"Cluster: ")
     setproperty!(tb2,:label,"")
@@ -644,6 +649,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             if han.show_thres==true
                 plot_thres(han,rhd,rhd.s[1].d)
             end
+            #Sort Button
+            if han.sort_cb
+                draw_templates(rhd.s[han.spike].c,han)
+            end
 	end
 	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
@@ -734,6 +743,11 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
         #Update treeview
         update_treeview(rhd,han)
+
+        #Sort Button
+        if han.sort_cb
+            draw_templates(rhd.s[han.spike].c,han)
+        end
     end
         
     nothing
@@ -761,6 +775,10 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     clear_c2(han.c2,han.spike)
     if han.show_thres==true
         plot_thres(han,rhd,rhd.s[1].d)
+    end
+    #Sort Button
+    if han.sort_cb
+        draw_templates(rhd.s[han.spike].c,han)
     end
     
     nothing
@@ -1135,9 +1153,6 @@ function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     visible(han.ref_win,true)
-
-    
-    
     nothing
 end
 
@@ -1550,4 +1565,51 @@ function is_selected(store,tv,ind)
     selection=Gtk.GAccessor.selection(tv)
     ccall((:gtk_tree_selection_iter_is_selected, Gtk.libgtk),Bool,
     (Ptr{Gtk.GObject}, Ptr{Gtk.GtkTreeIter}),selection, Gtk.mutable(iter))
+end
+
+
+function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    event = unsafe_load(param_tuple)
+    
+    if event.button == 1 #left click captures window
+        han.mi=(event.x,event.y)
+        rubberband_start(han.c2,event.x,event.y)
+    elseif event.button == 3 #right click refreshes window
+        clear_c2(han.c2,han.spike)
+        if getproperty(han.buf_button,:active,Bool)
+            han.buf_ind=1
+            han.buf_count=1
+        end
+        if han.show_thres==true
+            plot_thres(han,rhd,rhd.s[1].d)
+        end
+        if han.sort_cb
+            draw_templates(rhd.s[han.spike].c,han)
+        end
+    end
+    nothing
+end
+
+function coordinate_transform(han::Gui_Handles,event)
+    #Convert canvas coordinates to voltage vs time coordinates
+    myx=[1.0;collect(2:han.wave_points).*(500/han.wave_points)]
+    x1=indmin(abs(myx-han.mi[1]))
+    x2=indmin(abs(myx-event.x))
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+    y1=(han.mi[2]-300+o)/s
+    y2=(event.y-300+o)/s
+    
+    #ensure that left most point is first
+    if x1>x2
+        x=x1
+        x1=x2
+        x2=x
+        y=y1
+        y1=y2
+        y2=y
+    end
+    (x1,x2,y1,y2)
 end
