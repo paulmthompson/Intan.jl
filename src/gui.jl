@@ -530,6 +530,11 @@ id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
 id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,r))
 
+signal_connect(ref_win, :delete_event) do widget, event
+    visible(ref_win, false)
+    true
+end
+
 handles  
 end
 
@@ -643,8 +648,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
     end
-    sleep(.00001)
-    #sleep(.02) #debug
+    #sleep(.00001)
+    sleep(.02) #debug
     nothing
 end
 
