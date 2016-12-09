@@ -93,7 +93,7 @@ function CreateRHD2000Registers(sampleRate)
     r.twosComp=0
     r.absMode=0
     enableDsp(true,r)
-    setDspCutoffFreq(1.0,r)
+    setDspCutoffFreq(300.0,r)
 
     #Register 5 variables
     r.zcheckDacPower=0
