@@ -413,6 +413,26 @@ showall(popup_event)
     setproperty!(grid, :row_spacing, 15) 
     win = @Window(grid, "Intan.jl GUI") |> showall
 
+#Soft Scope
+
+popupmenu_scope = @Menu()
+popupmenu_voltage=@MenuItem("Voltage Scale")
+popupmenu_time=@MenuItem("Time Scale")
+push!(popupmenu_scope,popupmenu_voltage)
+push!(popupmenu_scope,popupmenu_time)
+
+
+popupmenu_voltage_select=@Menu(popupmenu_voltage)
+scope_handles=Array(Gtk.GtkMenuItemLeaf,0)
+voltage_scales=[1, 50, 100, 200, 500]
+for i=1:5
+    push!(scope_handles,@MenuItem(string(voltage_scales[i]))) 
+    push!(popupmenu_voltage_select,scope_handles[i])
+end
+
+showall(popupmenu_scope)   
+
+
 #Prepare saving headers
 
 mkdir(r.save.folder)
@@ -439,7 +459,7 @@ for i=1:500
 end
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,gain_checkbox,false)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),popupmenu_scope)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -526,6 +546,10 @@ for i=1:7
 end
 
 id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
+
+for i=1:5
+    signal_connect(scope_popup_cb,scope_handles[i],"activate",Void,(),false,(handles,r,i-1))
+end
 
 #Reference
 
@@ -1326,6 +1350,11 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
         elseif han.c_right_bottom==2 #16 raster - nothing
         elseif han.c_right_bottom==3 #32 raster - nothing
         elseif han.c_right_bottom==4 #select scope channels
+
+            if event.button == 3 #right click
+                popup(han.popup_scope,event)
+            end
+            
         elseif han.c_right_bottom==5 #disable enable 64
         elseif han.c_right_bottom==6 #64 channel raster - nothing
         else
@@ -1612,4 +1641,26 @@ function coordinate_transform(han::Gui_Handles,event)
         y2=y
     end
     (x1,x2,y1,y2)
+end
+
+function scope_popup_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
+    
+    if event_id==0
+        han.soft.v_div=1.0
+    elseif event_id==1
+        han.soft.v_div=50.0
+    elseif event_id==2
+        han.soft.v_div=100.0
+    elseif event_id==3
+        han.soft.v_div=200.0
+    elseif event_id==4
+        han.soft.v_div=500.0
+    end
+
+    han.soft.v_div /= 1000.0
+    
+
+    nothing
 end

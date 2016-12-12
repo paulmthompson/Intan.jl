@@ -218,7 +218,19 @@ type mytime
     s::Int8
     s_l::Gtk.GtkLabelLeaf
 end
-    
+
+type SoftScope
+    v::Array{Float64,1}
+    ind::Int64
+    last::Array{Float64,1}
+    v_div::Float64
+    t_div::Float64
+end
+
+function SoftScope(sr)
+    SoftScope(zeros(Float64,sr),1,zeros(Float64,512),1.0/1000,1.0)
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -290,6 +302,8 @@ type Gui_Handles
     ref_list2::Gtk.GtkListStoreLeaf
     gain_multiply::Gtk.GtkCheckButtonLeaf
     sort_cb::Bool
+    soft::SoftScope
+    popup_scope::Gtk.GtkMenuLeaf
 end
 
 #=
