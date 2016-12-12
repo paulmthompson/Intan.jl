@@ -299,10 +299,6 @@ rbs2[7]=@RadioButton(rbs2[6],"Nothing")
     refmenu = @Menu(refopts)
     define_ref_ = @MenuItem("Define Reference Configuration")
     push!(refmenu,define_ref_)
-    save_ref_ = @MenuItem("Save Current Configuration")
-    push!(refmenu,save_ref_)
-    load_ref_ = @MenuItem("Load Configuration")
-    push!(refmenu,load_ref_)
 	
     #Export
     exopts = @MenuItem("_Export")
