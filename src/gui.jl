@@ -1240,9 +1240,9 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         for i=1:length(refs)
             rhd.refs[i]=refs[i]
         end
-
-        
     end
+
+    update_treeview(rhd,han)
 
     nothing
 end
