@@ -1172,12 +1172,19 @@ function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     filepath=save_dialog("Save configuration",han.win)
 
+    if filepath[end-3:end]==".jld"
+    else
+        filepath=string(filepath,".jld")
+    end
+    
     file = jldopen(filepath, "w")
     
     write(file, "Gain", han.scale)
     write(file, "Offset", han.offset)
     write(file, "Sorting", rhd.s)
+    write(file, "total_clus",han.total_clus)
     write(file, "Enabled", han.enabled)
+    write(file, "Reference",rhd.refs)
 
     close(file)
 
@@ -1217,11 +1224,24 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             rhd.s[i]=s[i]
         end
 
+        total_clus=read(file,"total_clus")
+        for i=1:length(total_clus)
+            han.total_clus[i]=total_clus[i]
+        end
+
         e=read(file,"Enabled")
 
         for i=1:length(e)
             han.enabled[i]=e[i]
         end
+
+        refs=read(file,"Reference")
+
+        for i=1:length(refs)
+            rhd.refs[i]=refs[i]
+        end
+
+        
     end
 
     nothing
