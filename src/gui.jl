@@ -1244,6 +1244,28 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     update_treeview(rhd,han)
 
+    update_ref(rhd,han)
+
+    nothing
+end
+
+function update_ref(rhd::RHD2000,han::Gui_Handles)
+
+    selmodel_l=Gtk.GAccessor.selection(han.ref_tv1)
+    selmodel_r=Gtk.GAccessor.selection(han.ref_tv2)
+    
+    for i=1:size(rhd.v,2)
+
+        myref=rhd.refs[i]
+
+        if myref!=0
+
+            select!(selmodel_l,Gtk.iter_from_index(han.ref_list1,myref))
+            select!(selmodel_r,Gtk.iter_from_index(han.ref_list2,i))
+            
+        end
+    end
+
     nothing
 end
 
