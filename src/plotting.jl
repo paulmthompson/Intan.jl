@@ -125,32 +125,51 @@ end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
-    #Paint over old line
-    move_to(ctx,1.0,han.soft.last[1])
-    for i=2:499
-        line_to(ctx,i,han.soft.last[i])
-    end
-    set_source_rgb(ctx,0.0,0.0,0.0)
-    set_line_width(ctx,2.0)
-    stroke(ctx)
-   
-    s=han.soft.v_div
+    if han.soft.draws>9
 
-    #Draw voltage trace from desired channel
-    move_to(ctx,1.0,650.0+rhd.v[1,han.spike]*s)
-    han.soft.last[1]=650.0+rhd.v[1,han.spike]*s
-    scope_ind=2
-    count=2.0
-    for i=2:512
-        y=650.0+rhd.v[i,han.spike]*s
-        line_to(ctx,count,y)
-        han.soft.last[scope_ind]=y
-        scope_ind+=1
-        count+=1.0
+        startind=512*(han.soft.draws-1)+1
+        for i=1:512
+            han.soft.v[startind]=rhd.v[i,han.spike]
+            startind+=1
+        end
+        
+        #Paint over old line
+        move_to(ctx,1.0,han.soft.last[1])
+        for i=2:499
+            line_to(ctx,i,han.soft.last[i])
+        end
+        set_source_rgb(ctx,0.0,0.0,0.0)
+        set_line_width(ctx,2.0)
+        stroke(ctx)
+        
+        s=han.soft.v_div
+        
+        #Draw voltage trace from desired channel
+        move_to(ctx,1.0,650.0+han.soft.v[1]*s)
+        han.soft.last[1]=650.0+han.soft.v[1]*s
+
+        t_iter=round(Int64,han.soft.t_div)
+        
+        scope_ind=1+t_iter
+        for i=2:512
+            y=650.0+han.soft.v[scope_ind]*s
+            line_to(ctx,i,y)
+            han.soft.last[i]=y
+            scope_ind+=t_iter
+        end
+        set_source_rgb(ctx,1.0,1.0,1.0)
+        set_line_width(ctx,0.5)
+        stroke(ctx)
+        
+        han.soft.draws=1
+    else
+        startind=512*(han.soft.draws-1)+1
+        for i=1:512
+            han.soft.v[startind]=rhd.v[i,han.spike]
+            startind+=1
+        end
+        han.soft.draws+=1
     end
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    set_line_width(ctx,0.5)
-    stroke(ctx)
 
     nothing
 end

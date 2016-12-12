@@ -423,11 +423,19 @@ push!(popupmenu_scope,popupmenu_time)
 
 
 popupmenu_voltage_select=@Menu(popupmenu_voltage)
-scope_handles=Array(Gtk.GtkMenuItemLeaf,0)
+scope_v_handles=Array(Gtk.GtkMenuItemLeaf,0)
 voltage_scales=[1, 50, 100, 200, 500]
 for i=1:5
-    push!(scope_handles,@MenuItem(string(voltage_scales[i]))) 
-    push!(popupmenu_voltage_select,scope_handles[i])
+    push!(scope_v_handles,@MenuItem(string(voltage_scales[i]))) 
+    push!(popupmenu_voltage_select,scope_v_handles[i])
+end
+
+popupmenu_time_select=@Menu(popupmenu_time)
+scope_t_handles=Array(Gtk.GtkMenuItemLeaf,0)
+time_scales=[1, 2, 3, 5, 10]
+for i=1:5
+    push!(scope_t_handles,@MenuItem(string(time_scales[i]))) 
+    push!(popupmenu_time_select,scope_t_handles[i])
 end
 
 showall(popupmenu_scope)   
@@ -548,7 +556,11 @@ end
 id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 
 for i=1:5
-    signal_connect(scope_popup_cb,scope_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    signal_connect(scope_popup_v_cb,scope_v_handles[i],"activate",Void,(),false,(handles,r,i-1))
+end
+
+for i=1:5
+    signal_connect(scope_popup_t_cb,scope_t_handles[i],"activate",Void,(),false,(handles,r,i-1))
 end
 
 #Reference
@@ -1643,7 +1655,7 @@ function coordinate_transform(han::Gui_Handles,event)
     (x1,x2,y1,y2)
 end
 
-function scope_popup_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
 
     han, rhd, event_id = user_data
     
@@ -1660,7 +1672,25 @@ function scope_popup_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int6
     end
 
     han.soft.v_div /= 1000.0
+
+    nothing
+end
+
+function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
     
+    if event_id==0
+        han.soft.t_div=1.0
+    elseif event_id==1
+        han.soft.t_div=2.0
+    elseif event_id==2
+        han.soft.t_div=3.0
+    elseif event_id==3
+        han.soft.t_div=5.0
+    elseif event_id==4
+        han.soft.t_div=10.0
+    end
 
     nothing
 end

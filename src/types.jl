@@ -225,10 +225,11 @@ type SoftScope
     last::Array{Float64,1}
     v_div::Float64
     t_div::Float64
+    draws::Int64
 end
 
 function SoftScope(sr)
-    SoftScope(zeros(Float64,sr),1,zeros(Float64,512),1.0/1000,1.0)
+    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1)
 end
 
 type Gui_Handles
