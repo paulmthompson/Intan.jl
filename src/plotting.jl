@@ -184,7 +184,10 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         han.soft.prev_num_spikes=spike_ind-1
         han.soft.num_spikes=0
         
-        #draw threshold 
+        #draw threshold
+
+        plot_thres_scope(han,rhd,rhd.s[1].d,ctx)
+
         han.soft.draws=1
     else
         #copy voltage
@@ -203,6 +206,29 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         han.soft.draws+=1
     end
 
+    nothing
+end
+
+function plot_thres_scope(han,rhd,d::DetectNeg,ctx)
+
+    thres=rhd.s[han.spike].thres*han.soft.v_div
+
+    move_to(ctx,1,650-thres+2)
+    line_to(ctx,500,650-thres+2)
+
+    move_to(ctx,1,650-thres-2)
+    line_to(ctx,500,650-thres-2)
+
+    set_line_width(ctx,5.0)
+    set_source_rgb(ctx,0.0,0.0,0.0)
+    stroke(ctx)
+
+    move_to(ctx,1,650-thres)
+    line_to(ctx,500,650-thres)
+    set_line_width(ctx,1.0)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    stroke(ctx)
+    
     nothing
 end
 
