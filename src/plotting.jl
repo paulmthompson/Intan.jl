@@ -138,36 +138,68 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         for i=2:499
             line_to(ctx,i,han.soft.last[i])
         end
-        set_source_rgb(ctx,0.0,0.0,0.0)
-        set_line_width(ctx,2.0)
-        stroke(ctx)
+
+        #Paint over old asterisks
+        move_to(ctx,1.0,796.0)
+        line_to(ctx,512.0,796.0)
+        move_to(ctx,1.0,793.0)
+        line_to(ctx,512.0,793.0)
         
-        s=han.soft.v_div
+        set_source_rgb(ctx,0.0,0.0,0.0)
+        set_line_width(ctx,4.0)
+        stroke(ctx)  
+
+        s=han.soft.v_div*-1
         
         #Draw voltage trace from desired channel
         move_to(ctx,1.0,650.0+han.soft.v[1]*s)
         han.soft.last[1]=650.0+han.soft.v[1]*s
 
         t_iter=round(Int64,han.soft.t_div)
+
+        spike_ind=1
         
         scope_ind=1+t_iter
         for i=2:512
             y=650.0+han.soft.v[scope_ind]*s
             line_to(ctx,i,y)
             han.soft.last[i]=y
+            
+            if scope_ind>han.soft.spikes[spike_ind]
+                han.soft.prev_spikes[spike_ind]=i
+                spike_ind+=1
+            end
+
             scope_ind+=t_iter
         end
         set_source_rgb(ctx,1.0,1.0,1.0)
-        set_line_width(ctx,0.5)
+        set_line_width(ctx,0.5)      
         stroke(ctx)
+
+        #reset spikes
+        for i=1:(spike_ind-1)
+            move_to(ctx,han.soft.prev_spikes[i],800)
+            show_text(ctx,"*")
+        end
+        han.soft.prev_num_spikes=spike_ind-1
+        han.soft.num_spikes=0
         
+        #draw threshold 
         han.soft.draws=1
     else
+        #copy voltage
         startind=512*(han.soft.draws-1)+1
         for i=1:512
             han.soft.v[startind]=rhd.v[i,han.spike]
             startind+=1
         end
+
+        #get spikes
+        for g=1:rhd.nums[han.spike]
+            han.soft.num_spikes+=1
+            han.soft.spikes[han.soft.num_spikes]=rhd.buf[g,han.spike].inds.start+512*(han.soft.draws-1)+1
+        end
+  
         han.soft.draws+=1
     end
 
