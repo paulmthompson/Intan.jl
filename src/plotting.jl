@@ -186,7 +186,9 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         
         #draw threshold
 
-        plot_thres_scope(han,rhd,rhd.s[1].d,ctx)
+        if han.soft.thres_on
+            plot_thres_scope(han,rhd,rhd.s[1].d,ctx)
+        end
 
         han.soft.draws=1
     else

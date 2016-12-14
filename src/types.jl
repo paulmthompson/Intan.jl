@@ -230,10 +230,11 @@ type SoftScope
     num_spikes::Int64
     prev_spikes::Array{Int64,1}
     prev_num_spikes::Int64
+    thres_on::Bool
 end
 
 function SoftScope(sr)
-    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,100),0,zeros(Int64,100),0)
+    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,100),0,zeros(Int64,100),0,false)
 end
 
 type Gui_Handles

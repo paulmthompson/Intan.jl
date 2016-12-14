@@ -414,8 +414,10 @@ showall(popup_event)
 popupmenu_scope = @Menu()
 popupmenu_voltage=@MenuItem("Voltage Scale")
 popupmenu_time=@MenuItem("Time Scale")
+popupmenu_thres=@MenuItem("Threshold")
 push!(popupmenu_scope,popupmenu_voltage)
 push!(popupmenu_scope,popupmenu_time)
+push!(popupmenu_scope,popupmenu_thres)
 
 
 popupmenu_voltage_select=@Menu(popupmenu_voltage)
@@ -433,6 +435,13 @@ for i=1:5
     push!(scope_t_handles,@MenuItem(string(time_scales[i]))) 
     push!(popupmenu_time_select,scope_t_handles[i])
 end
+
+popupmenu_thres_select=@Menu(popupmenu_thres)
+scope_thres_handles=Array(Gtk.GtkMenuItemLeaf,0)
+push!(scope_thres_handles,@MenuItem("On"))
+push!(popupmenu_thres_select,scope_thres_handles[1])
+push!(scope_thres_handles,@MenuItem("Off"))
+push!(popupmenu_thres_select,scope_thres_handles[2])
 
 showall(popupmenu_scope)   
 
@@ -557,6 +566,10 @@ end
 
 for i=1:5
     signal_connect(scope_popup_t_cb,scope_t_handles[i],"activate",Void,(),false,(handles,r,i-1))
+end
+
+for i=1:2
+    signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,r,i-1))
 end
 
 #Reference
@@ -1728,6 +1741,19 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,In
         han.soft.t_div=5.0
     elseif event_id==4
         han.soft.t_div=10.0
+    end
+
+    nothing
+end
+
+function scope_popup_thres_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+
+    han, rhd, event_id = user_data
+
+    if event_id==0
+        han.soft.thres_on=true
+    else
+        han.soft.thres_on=false
     end
 
     nothing
