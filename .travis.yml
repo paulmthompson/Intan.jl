@@ -12,7 +12,10 @@ addons:
       packages:
          - xvfb
          - xauth
-         - libgtk-3-0
+         
+before_install:
+	- sudo apt-get update
+	- sudo apt-get install -qq libgtk-3-dev
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia ./test/install_SS.jl
