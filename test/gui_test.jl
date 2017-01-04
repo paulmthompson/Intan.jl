@@ -98,4 +98,6 @@ facts() do
     @fact length(mys_m) --> length(mys_j)
 end
 
+#destroy(handles.win)
+
 end
