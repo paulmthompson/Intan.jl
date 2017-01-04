@@ -116,6 +116,28 @@ setproperty!(handles.sort_widgets.check,:active,true)
 
 sleep(1.0)
 
-#
+#Collect Templates
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sort_widgets.b3),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.sort_widgets.b3,"clicked",Bool,press)
+
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sort_widgets.b3),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.sort_widgets.b3,"clicked",Bool,press)
+
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c2),Int8(0),UInt32(0),156.0,293.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c2,"button-release-event",Bool,press)
+
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.pause_button),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.pause_button,"clicked",Bool,press)
+
+sleep(1.0)
+
+
+
 
 end
