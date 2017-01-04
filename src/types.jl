@@ -252,6 +252,13 @@ type Thres_Widgets
 	show::Gtk.GtkCheckButtonLeaf
 end
 
+type Gain_Widgets
+	gainbox::Gtk.GtkSpinButtonLeaf
+	offbox::Gtk.GtkSpinButtonLeaf
+	multiply::Gtk.GtkCheckButtonLeaf
+	all::Gtk.GtkCheckButtonLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -327,6 +334,7 @@ type Gui_Handles
     popup_scope::Gtk.GtkMenuLeaf
     sort_widgets::Sort_Widgets
     thres_widgets::Thres_Widgets
+    gain_widgets::Gain_Widgets
 end
 
 #=

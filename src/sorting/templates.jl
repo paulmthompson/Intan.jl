@@ -308,7 +308,7 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
     @inbounds for i=1:han.buf_ind
 
         mymisses=0
-        for j=1:size(han.spike_buf,1)
+        for j=1:length(mymean)
             if (han.spike_buf[j,i]<(mymean[j]-mystd[j]))|(han.spike_buf[j,i]>(mymean[j]+mystd[j]))
                 mymisses+=1
                 if mymisses>5
