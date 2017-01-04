@@ -137,6 +137,12 @@ signal_emit(handles.pause_button,"clicked",Bool,press)
 
 sleep(1.0)
 
+facts() do
+
+	@fact handles.total_clus[1] --> 2
+	@fact handles.total_clus[2] --> 0
+
+end
 
 
 

@@ -245,6 +245,13 @@ type Sort_Widgets
    check::Gtk.GtkCheckButtonLeaf
 end
 
+type Thres_Widgets
+	slider::Gtk.GtkScaleLeaf
+	adj::Gtk.GtkAdjustmentLeaf
+	all::Gtk.GtkCheckButtonLeaf
+	show::Gtk.GtkCheckButtonLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -319,6 +326,7 @@ type Gui_Handles
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
     sort_widgets::Sort_Widgets
+    thres_widgets::Thres_Widgets
 end
 
 #=
