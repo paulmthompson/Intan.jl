@@ -90,6 +90,47 @@ signal_emit(handles.thres_widgets.show,"clicked",Bool,press)
 sleep(5.0)
 
 #=
+Spike Button Tests
+=#
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.spike_widgets.refresh),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.spike_widgets.refresh,"clicked",Bool,press)
+
+sleep(1.0)
+
+#=
+Gain Button Tests
+=#
+
+
+
+#=
+Right canvas callbacks
+=#
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),1.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+
+sleep(1.0)
+
+facts() do
+
+	@fact handles.spike --> 49
+
+end
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),200.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+
+sleep(1.0)
+
+facts() do
+
+	@fact handles.spike --> 53
+
+end
+
+#=
 SAVE LOAD Test
 =#
 
