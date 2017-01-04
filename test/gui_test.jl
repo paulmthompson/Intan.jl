@@ -108,27 +108,46 @@ Gain Button Tests
 Right canvas callbacks
 =#
 
+#16 Channel Select
+
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),1.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.c,"button-press-event",Bool,press)
-
 sleep(1.0)
 
 facts() do
-
 	@fact handles.spike --> 49
-
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),200.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.c,"button-press-event",Bool,press)
-
 sleep(1.0)
 
 facts() do
-
 	@fact handles.spike --> 53
-
 end
+
+#32 Channel Select
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.rb1[2],"clicked",Bool,press)
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),1.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+sleep(1.0)
+
+facts() do
+	@fact handles.spike --> 33
+end
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),150.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+sleep(1.0)
+
+facts() do
+	@fact handles.spike --> 39
+end
+
 
 #=
 RadioButtons
@@ -162,13 +181,18 @@ end
 Intan.scope_popup_v_cb(handles.run.handle,(handles,myrhd,2))
 sleep(1.0)
 
-for i=1:4
+for i=0:4
 	Intan.scope_popup_t_cb(handles.run.handle,(handles,myrhd,i))
 	sleep(1.0)
 end
 
 Intan.scope_popup_t_cb(handles.run.handle,(handles,myrhd,2))
 sleep(1.0)
+
+for i=0:1
+	Intan.scope_popup_thres_cb(handles.run.handle,(handles,myrhd,i))
+	sleep(1.0)
+end
 
 #=
 SAVE LOAD Test
