@@ -259,6 +259,13 @@ type Gain_Widgets
 	all::Gtk.GtkCheckButtonLeaf
 end
 
+type Spike_Widgets
+	hold::Gtk.GtkCheckButtonLeaf
+	buf::Gtk.GtkCheckButtonLeaf
+	refresh::Gtk.GtkButtonLeaf
+	pause::Gtk.GtkToggleButtonLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -335,6 +342,7 @@ type Gui_Handles
     sort_widgets::Sort_Widgets
     thres_widgets::Thres_Widgets
     gain_widgets::Gain_Widgets
+    spike_widgets::Spike_Widgets
 end
 
 #=
