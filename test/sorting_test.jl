@@ -111,4 +111,11 @@ Intan.b4_cb_template(handles.run.handle,(handles,myrhd))
 
 sleep(1.0)
 
+#Set draw template checkbox
+setproperty!(handles.sort_widgets.check,:active,true)
+
+sleep(1.0)
+
+#
+
 end

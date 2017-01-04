@@ -237,6 +237,14 @@ function SoftScope(sr)
     SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,100),0,zeros(Int64,100),0,false)
 end
 
+type Sort_Widgets
+   b1::Gtk.GtkButtonLeaf
+   b2::Gtk.GtkButtonLeaf
+   b3::Gtk.GtkButtonLeaf
+   b4::Gtk.GtkButtonLeaf
+   check::Gtk.GtkCheckButtonLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     run::Gtk.GtkToggleButtonLeaf
@@ -310,6 +318,7 @@ type Gui_Handles
     sort_cb::Bool
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
+    sort_widgets::Sort_Widgets
 end
 
 #=
