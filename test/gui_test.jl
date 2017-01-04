@@ -133,55 +133,41 @@ end
 #=
 RadioButtons
 =#
+for i=2:5
+	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+	signal_emit(handles.rb1[i],"clicked",Bool,press)
+	sleep(1.0)
+end
 
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb1[2],"clicked",Bool,press)
+for i=1:6
+	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+	signal_emit(handles.rb2[i],"clicked",Bool,press)
+	sleep(1.0)
+end
 
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[3]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb1[3],"clicked",Bool,press)
-
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[4]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb1[4],"clicked",Bool,press)
-
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[5]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb1[5],"clicked",Bool,press)
-
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[1]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb1[1],"clicked",Bool,press)
-
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb2[2],"clicked",Bool,press)
-
-sleep(1.0)
-
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[3]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb2[3],"clicked",Bool,press)
-
-sleep(1.0)
+#=
+Soft Scope
+=#
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[4]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.rb2[4],"clicked",Bool,press)
 
 sleep(1.0)
 
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[5]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb2[5],"clicked",Bool,press)
+for i=0:4
+	Intan.scope_popup_v_cb(handles.run.handle,(handles,myrhd,i))
+	sleep(1.0)
+end
 
+Intan.scope_popup_v_cb(handles.run.handle,(handles,myrhd,2))
 sleep(1.0)
 
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[6]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.rb2[6],"clicked",Bool,press)
+for i=1:4
+	Intan.scope_popup_t_cb(handles.run.handle,(handles,myrhd,i))
+	sleep(1.0)
+end
 
+Intan.scope_popup_t_cb(handles.run.handle,(handles,myrhd,2))
 sleep(1.0)
 
 #=
