@@ -156,12 +156,18 @@ for i=2:5
 	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 	signal_emit(handles.rb1[i],"clicked",Bool,press)
 	sleep(1.0)
+	facts() do
+		@fact handles.c_right_top --> i
+	end
 end
 
 for i=1:6
 	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 	signal_emit(handles.rb2[i],"clicked",Bool,press)
 	sleep(1.0)
+	facts() do
+		@fact handles.c_right_bottom --> i
+	end
 end
 
 #=
