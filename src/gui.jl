@@ -745,7 +745,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         set_audio(rhd,han)
         
         #Display Gain
-        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-100))
+        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
         #Display Threshold
         mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
