@@ -15,7 +15,7 @@ end
 
 function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     
-    k=32*div(han.num16+1,2)-31
+    k=32*han.num16-31
     xbounds=1.0:83.0:416.0
     ybounds=41.0:83.0:456.0
 
@@ -116,11 +116,11 @@ function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 end
 
 function draw_raster32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-    draw_raster_n(rhd,han,ctx,32*div(han.num16+1,2)-31,31,9.0,500.0)
+    draw_raster_n(rhd,han,ctx,32*han.num16-31,31,9.0,500.0)
 end
 
 function draw_raster64(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-    draw_raster_n(rhd,han,ctx,64*div(han.num16+3,4)-63,63,12.0,0.0)
+    draw_raster_n(rhd,han,ctx,64*han.num16-63,63,12.0,0.0)
 end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
@@ -582,7 +582,7 @@ function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    k=32*div(han.num16+1,2)-31
+    k=32*han.num16-31
     for x in collect(10.0:83.0:450.0)
         for y in collect(10.0:83.0:450.0)
             if k<=length(han.enabled)
@@ -624,7 +624,7 @@ function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    k=64*div(han.num16+3,4)-63
+    k=64*han.num16-63
     for x in collect(45.0:72.0:405.0)
         for y in collect(10.0:72.0:731.0)
             move_to(ctx,x,y)

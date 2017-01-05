@@ -277,9 +277,9 @@ type Gui_Handles
     adj2::Gtk.GtkAdjustmentLeaf
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
-    spike::Int64 #currently selected spike out of total
-    num::Int64 #currently selected spike out of 16
-    num16::Int64 #currently selected 16 channels
+    spike::Int64 #currently selected spike of all spikes
+    num::Int64 #currently selected spike from multi display
+    num16::Int64 #currently selected group of spikes in multi display
     scale::Array{Float64,2}
     offset::Array{Int64,1}
     mi::NTuple{2,Float64} #saved x,y position of mouse input

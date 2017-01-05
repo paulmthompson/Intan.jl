@@ -733,10 +733,11 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data 
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
+    chan_per_display = getproperty(han.adj2,:upper,Int64)
 
     if han.num16>0
         
-        han.spike=16*han.num16-16+han.num      
+        han.spike=chan_per_display*han.num16-chan_per_display+han.num      
 
         clear_c(han)
         clear_c2(han.c2,han.spike)
@@ -770,12 +771,13 @@ end
 function update_c2(han::Gui_Handles,rhd::RHD2000)
     
     han.num=getproperty(han.adj2, :value, Int64) # primary display
+    chan_per_display = getproperty(han.adj2,:upper,Int64)
 
     if han.num16>0
 
         old_spike=han.spike
         
-        han.spike=16*han.num16-16+han.num
+        han.spike=chan_per_display*han.num16-chan_per_display+han.num
 
         clear_c2(han.c2,han.spike)
 
@@ -1482,7 +1484,7 @@ function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         if han.c_right_top==1 #16 channel
             han.enabled[16*han.num16-16+count]=true
         elseif han.c_right_top==2 #32 channel
-            han.enabled[32*div(han.num16+1,2)-32+count]=true
+            han.enabled[32*han.num16-32+count]=true
         else #64 channel
             
         end
@@ -1507,7 +1509,7 @@ function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         if han.c_right_top==1 #16 channel
             han.enabled[16*han.num16-16+count]=false
         elseif han.c_right_top==2 #32 channel
-             han.enabled[32*div(han.num16+1,2)-32+count]=false
+             han.enabled[32*han.num16-32+count]=false
         else #64 channel
             
         end
@@ -1563,10 +1565,26 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     end
 
     if han.c_right_top == 1
+	han.num16=div(han.spike-1,16)+1
+	han.num=rem(han.spike-1,16)+1
         setproperty!(han.adj2,:upper,16)
+	setproperty!(han.adj,:upper,div(length(han.enabled),16))
+	setproperty!(han.adj, :value, han.num16)
+	setproperty!(han.adj2, :value, han.num)
     elseif han.c_right_top==2
+	han.num16=div(han.spike-1,32)+1
+	han.num=rem(han.spike-1,32)+1
         setproperty!(han.adj2,:upper,32)
-    elseif han.c_right_top==3
+	setproperty!(han.adj,:upper,div(length(han.enabled),32))
+	setproperty!(han.adj, :value, han.num16)
+	setproperty!(han.adj2, :value, han.num)
+    elseif (han.c_right_top==3)|(han.c_right_top==4)
+	han.num16=div(han.spike-1,64)+1
+	han.num=rem(han.spike-1,64)+1
+        setproperty!(han.adj2,:upper,64)
+	setproperty!(han.adj,:upper,div(length(han.enabled),64))
+	setproperty!(han.adj, :value, han.num16)
+	setproperty!(han.adj2, :value, han.num)
     end
     
     clear_c(han)
