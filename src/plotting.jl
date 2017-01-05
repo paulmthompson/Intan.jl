@@ -9,7 +9,7 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
     ybounds=75.0:125.0:450.0
     increment=div(125,han.wave_points)*2
 
-    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,65.0)
+    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,65.0,16)
     nothing
 end
 
@@ -21,13 +21,13 @@ function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
     increment=div(83,han.wave_points)*2
 
-    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,40.0)
+    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,40.0,32)
     nothing
 end
 
-function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in,xbounds,ybounds,increment,b_width)
+function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in,xbounds,ybounds,increment,b_width,num_chan)
 
-    maxid=find_max_id(rhd,han,ctx,k_in,length(xbounds)*length(ybounds))
+    maxid=find_max_id(rhd,han,ctx,k_in,num_chan)
 
     #subsequent IDs
     @inbounds for thisid=1:maxid
@@ -73,10 +73,10 @@ function find_max_id(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,num
     maxid=1
     
     for i=k:(k+num-1)
-        if han.enabled[k]
-            for g=1:rhd.nums[k]
-                if rhd.buf[g,k].id>maxid
-                    maxid=rhd.buf[g,k].id
+        if han.enabled[i]
+            for g=1:rhd.nums[i]
+                if rhd.buf[g,i].id>maxid
+                    maxid=rhd.buf[g,i].id
                 end
             end
         end
