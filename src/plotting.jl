@@ -155,7 +155,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
         move_to(ctx,1.0,650.0+han.soft.v[1]*s)
         han.soft.last[1]=650.0+han.soft.v[1]*s
 
-        t_iter=round(Int64,han.soft.t_div)
+        t_iter=floor(Int64,han.soft.t_div)
 
         spike_ind=1
         

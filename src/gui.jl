@@ -430,7 +430,7 @@ end
 
 popupmenu_time_select=@Menu(popupmenu_time)
 scope_t_handles=Array(Gtk.GtkMenuItemLeaf,0)
-time_scales=[1, 2, 3, 5, 10]
+time_scales=[1, 2, 3, 4, 5]
 for i=1:5
     push!(scope_t_handles,@MenuItem(string(time_scales[i]))) 
     push!(popupmenu_time_select,scope_t_handles[i])
@@ -1771,9 +1771,9 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,In
     elseif event_id==2
         han.soft.t_div=3.0
     elseif event_id==3
-        han.soft.t_div=5.0
+        han.soft.t_div=4.0
     elseif event_id==4
-        han.soft.t_div=10.0
+        han.soft.t_div=5.0
     end
 
     nothing
