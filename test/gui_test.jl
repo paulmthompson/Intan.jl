@@ -202,6 +202,52 @@ for i=0:1
 end
 
 #=
+Popup Tests
+=#
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[1]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.rb1[1],"clicked",Bool,press)
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),1.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+sleep(1.0)
+
+Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
+
+facts() do
+	@fact handles.enabled[handles.spike] --> true
+end
+
+Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
+
+facts() do
+	@fact handles.enabled[handles.spike] --> false
+end
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.rb1[2],"clicked",Bool,press)
+sleep(1.0)
+
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),1.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.c,"button-press-event",Bool,press)
+sleep(1.0)
+
+Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
+
+facts() do
+	@fact handles.enabled[handles.spike] --> true
+end
+
+Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
+
+facts() do
+	@fact handles.enabled[handles.spike] --> false
+end
+
+
+
+#=
 SAVE LOAD Test
 =#
 
