@@ -757,6 +757,9 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             han.buf_ind=1
             han.buf_count=1
         end
+
+	#Update treeview
+        update_treeview(rhd,han)
     end
     nothing    
 end
