@@ -915,8 +915,6 @@ function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data       
     init_board!(rhd)
-
-    #Initialize Task
     init_task(rhd.task,rhd)
 
     nothing
@@ -1055,21 +1053,22 @@ end
 function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 
     ctx = getgc(han.c2)
+    mywidth=width(ctx)
 
     thres=getproperty(han.adj_thres,:value,Int)
 
     move_to(ctx,1,300-thres+2)
-    line_to(ctx,500,300-thres+2)
+    line_to(ctx,mywidth,300-thres+2)
 
     move_to(ctx,1,300-thres-2)
-    line_to(ctx,500,300-thres-2)
+    line_to(ctx,mywidth,300-thres-2)
 
     set_line_width(ctx,5.0)
     set_source_rgb(ctx,0.0,0.0,0.0)
     stroke(ctx)
 
     move_to(ctx,1,300-thres)
-    line_to(ctx,500,300-thres)
+    line_to(ctx,mywidth,300-thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
