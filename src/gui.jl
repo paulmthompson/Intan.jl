@@ -666,6 +666,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             elseif han.c_right_top==2
                 draw_spike32(rhd,han)
             elseif han.c_right_top==3
+		draw_spike64(rhd,han)
             elseif han.c_right_top==4
             elseif han.c_right_top==5
             else   
@@ -681,6 +682,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             elseif han.c_right_bottom==4
                 draw_scope(rhd,han)
             elseif han.c_right_bottom==5
+		draw_spike64(rhd,han)
             elseif han.c_right_bottom==6
                 draw_raster64(rhd,han)
             else 

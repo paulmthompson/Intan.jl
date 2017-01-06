@@ -578,15 +578,8 @@ function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
     end
 
     (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
-    move_to(ctx,x1_f,y1_f)
-    line_to(ctx,x2_f,y1_f)
-    line_to(ctx,x2_f,y2_f)
-    line_to(ctx,x1_f,y2_f)
-    line_to(ctx,x1_f,y1_f)
-    set_source_rgb(ctx,1.0,0.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
-    
+    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
+
     nothing
 end
 
@@ -625,14 +618,7 @@ function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
     end
 
     (x1_f,x2_f,y1_f,y2_f)=check32(han.spike)
-    move_to(ctx,x1_f,y1_f)
-    line_to(ctx,x2_f,y1_f)
-    line_to(ctx,x2_f,y2_f)
-    line_to(ctx,x1_f,y2_f)
-    line_to(ctx,x1_f,y1_f)
-    set_source_rgb(ctx,1.0,0.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
+    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
 
     nothing
 end
