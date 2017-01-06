@@ -2,22 +2,11 @@
 Plots detected spike on canvas for multiple channels
 =#
 
-function draw_spike16(rhd::RHD2000,han::Gui_Handles)
+draw_spike16(rhd::RHD2000,han::Gui_Handles)=draw_spike_n(rhd,han,4,4,16)
 
-    draw_spike_n(rhd,han,4,4,16)
-    nothing
-end
+draw_spike32(rhd::RHD2000,han::Gui_Handles)=draw_spike_n(rhd,han,6,6,32)
 
-function draw_spike32(rhd::RHD2000,han::Gui_Handles)
-    
-    draw_spike_n(rhd,han,6,6,32)
-    nothing
-end
-
-function draw_spike64(rhd::RHD2000,han::Gui_Handles)
-    draw_spike_n(rhd,han,6,11,64)
-    nothing
-end
+draw_spike64(rhd::RHD2000,han::Gui_Handles)=draw_spike_n(rhd,han,6,11,64)
 
 function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
 
@@ -36,22 +25,31 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
     #subsequent IDs
     @inbounds for thisid=1:maxid
 	for chan=k_in:(k_in+num_chan-1)
-		if han.enabled[chan]
-	    for g=1:rhd.nums[chan]
+	    if han.enabled[chan]
+	        for g=1:rhd.nums[chan]
                     if (rhd.buf[g,chan].inds.start>0)&(rhd.buf[g,chan].inds.stop<size(rhd.v,1))
                         if rhd.buf[g,chan].id==thisid
+
+                            #Gain and offset for channel
                             s=han.scale[chan,2]
                             o=han.offset[chan]
+
+                            #x and y position for channel location
 			    startx=div(rem(chan-1,num_chan),n_row)*han.wave_points/2+1
 			    starty=yheight/n_row*(rem(rem(chan-1,num_chan),n_row))+yheight/n_row/2
-			    y=(rhd.v[rhd.buf[g,chan].inds.start,chan]-o)*s+starty
-			    ymax=starty+yheight/n_row/2
+
+                            #Max and min extents for line to stay within bounding box
+                            ymax=starty+yheight/n_row/2
 			    ymin=starty-yheight/n_row/2
+
+                            y=(rhd.v[rhd.buf[g,chan].inds.start,chan]-o)*s+starty
+			    
 			    if (y<ymin)
                                y=ymin
                             elseif (y>ymax)
                                y=ymax
                             end
+                            
                             move_to(ctx,startx,y)
                             for kk=rhd.buf[g,chan].inds.start+2:2:rhd.buf[g,chan].inds.stop
                                 y=(rhd.v[kk,chan]-o)*s+starty
@@ -71,7 +69,7 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
                 break
             end
 	end
-	set_line_width(ctx,0.5);
+	set_line_width(ctx,0.25);
         @inbounds select_color(ctx,thisid)
         stroke(ctx)
     end
@@ -124,17 +122,11 @@ function draw_raster_n(rhd::RHD2000,han::Gui_Handles,k,k_itr,ctx_step,myoff)
     nothing
 end
 
-function draw_raster16(rhd::RHD2000,han::Gui_Handles)
-    draw_raster_n(rhd,han,16*han.num16-15,15,18.0,500.0)
-end
+draw_raster16(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,16*han.num16-15,15,18.0,500.0)
 
-function draw_raster32(rhd::RHD2000,han::Gui_Handles)
-    draw_raster_n(rhd,han,32*han.num16-31,31,9.0,500.0)
-end
+draw_raster32(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,32*han.num16-31,31,9.0,500.0)
 
-function draw_raster64(rhd::RHD2000,han::Gui_Handles)
-    draw_raster_n(rhd,han,64*han.num16-63,63,12.0,0.0)
-end
+draw_raster64(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,64*han.num16-63,63,12.0,0.0)
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
@@ -543,6 +535,28 @@ function check32(mytest)
     (x1,x2,y1,y2)
 end
 
+function check64(mytest)
+    count=1
+    myheight=800
+    mywidth=500
+    x1=1
+    x2=1
+    y1=1
+    y2=1
+    for x in linspace(0,mywidth,7)
+        for y in linspace(0,myheight,12)
+            if count == (((mytest-1) % 64) + 1)
+                x1 = x
+                y1 = y
+                x2 = x + 83
+                y2 = y + 83
+            end
+            count += 1
+        end            
+    end
+    (x1,x2,y1,y2)
+end
+
 function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
     
     mywidth=width(ctx)
@@ -691,19 +705,6 @@ function prepare_events(ctx,han)
 end
 
 function prepare_scope(ctx,han)
-
-    #=
-    for y in [600, 700]
-	move_to(ctx,1.0,y)
-	line_to(ctx,500.0,y)
-    end
-
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
-    =#
-
-    nothing
 end
     
 function clear_c2(myc::Gtk.GtkCanvas,num)
@@ -714,12 +715,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
-    dashes = [10.0,  # ink 
-          10.0,  # skip
-          10.0,  # ink 
-          10.0   # skip
-              ];
-    
+    dashes = [10.0,10.0,10.0]
     set_dash(ctx, dashes, 0.0)
     
     for y = [100, 200, 300, 400, 500]
