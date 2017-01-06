@@ -313,7 +313,12 @@ rbs2[7]=@RadioButton(rbs2[6],"Nothing")
     push!(exmenu,export_jld_)
 export_mat_ = @MenuItem("MAT")
 push!(exmenu,export_mat_)
+
+    #Options
+    opopts = @MenuItem("_Options")
+    opmenu = @Menu(opopts)
     
+  
     mb = @MenuBar()
     push!(mb,saveopts)
     push!(mb,sortopts)
@@ -609,23 +614,19 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         
         #unpack tuple
         han, rhd = user_data
-        
-        #get context
-        ctx = getgc(han.c)
-        ctx2 = getgc(han.c2)
-        
+              
 	if rhd.debug.state==false
             map(runBoard,rhd.fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop(rhd,han,ctx,ctx2) 
+           main_loop(rhd,han) 
         end       
     end
         
     nothing
 end
 
-function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
+function main_loop(rhd::RHD2000,han::Gui_Handles)
     #get spikes and sort
     if rhd.debug.state==false
         if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
@@ -658,9 +659,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 
             #top right
             if han.c_right_top==1
-                draw_spike16(rhd,han,ctx)
+                draw_spike16(rhd,han)
             elseif han.c_right_top==2
-                draw_spike32(rhd,han,ctx)
+                draw_spike32(rhd,han)
             elseif han.c_right_top==3
             elseif han.c_right_top==4
             elseif han.c_right_top==5
@@ -671,14 +672,14 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
             if han.c_right_bottom==1
 	        plot_events(rhd,han,han.draws)
             elseif han.c_right_bottom==2
-                draw_raster16(rhd,han,ctx)
+                draw_raster16(rhd,han)
             elseif han.c_right_bottom==3
-                draw_raster32(rhd,han,ctx)
+                draw_raster32(rhd,han)
             elseif han.c_right_bottom==4
-                draw_scope(rhd,han,ctx)
+                draw_scope(rhd,han)
             elseif han.c_right_bottom==5
             elseif han.c_right_bottom==6
-                draw_raster64(rhd,han,ctx)
+                draw_raster64(rhd,han)
             else 
             end
 
@@ -686,7 +687,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,ctx,ctx2)
 	    reveal(han.c)
                 
 	    if (han.num>0)&(!han.pause)                     
-		draw_spike(rhd,han,ctx2)
+		draw_spike(rhd,han)
 	    end
             draw_c3(rhd,han)
 	end

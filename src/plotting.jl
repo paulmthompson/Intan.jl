@@ -2,18 +2,20 @@
 Plots detected spike on canvas for multiple channels
 =#
 
-function draw_spike16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+function draw_spike16(rhd::RHD2000,han::Gui_Handles)
 
+    ctx=getgc(han.c)
     k=16*han.num16-15
     xbounds=1.0:124.0:375.0
     ybounds=75.0:125.0:450.0
     increment=div(125,han.wave_points)*2
 
-    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,65.0,16)
+    draw_spike_n(rhd,han,k,xbounds,ybounds,increment,65.0,16)
     nothing
 end
 
-function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+function draw_spike32(rhd::RHD2000,han::Gui_Handles)
+    
     
     k=32*han.num16-31
     xbounds=1.0:83.0:416.0
@@ -21,13 +23,14 @@ function draw_spike32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
 
     increment=div(83,han.wave_points)*2
 
-    draw_spike_n(rhd,han,ctx,k,xbounds,ybounds,increment,40.0,32)
+    draw_spike_n(rhd,han,k,xbounds,ybounds,increment,40.0,32)
     nothing
 end
 
-function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in,xbounds,ybounds,increment,b_width,num_chan)
+function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,xbounds,ybounds,increment,b_width,num_chan)
 
-    maxid=find_max_id(rhd,han,ctx,k_in,num_chan)
+    maxid=find_max_id(rhd,han,k_in,num_chan)
+    ctx=getgc(han.c)
 
     #subsequent IDs
     @inbounds for thisid=1:maxid
@@ -68,7 +71,7 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k_in
     nothing
 end
 
-function find_max_id(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,num)
+function find_max_id(rhd::RHD2000,han::Gui_Handles,k,num)
 
     maxid=1
     
@@ -84,9 +87,10 @@ function find_max_id(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,num
     maxid
 end
 
-function draw_raster_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,k_itr,ctx_step,myoff)
+function draw_raster_n(rhd::RHD2000,han::Gui_Handles,k,k_itr,ctx_step,myoff)
 
-    maxid=find_max_id(rhd,han,ctx,k,k_itr+1)
+    maxid=find_max_id(rhd,han,k,k_itr+1)
+    ctx=getgc(han.c)
 
     @inbounds for thisid=1:maxid
         count=1
@@ -111,19 +115,21 @@ function draw_raster_n(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext,k,k
     nothing
 end
 
-function draw_raster16(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-    draw_raster_n(rhd,han,ctx,16*han.num16-15,15,18.0,500.0)
+function draw_raster16(rhd::RHD2000,han::Gui_Handles)
+    draw_raster_n(rhd,han,16*han.num16-15,15,18.0,500.0)
 end
 
-function draw_raster32(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-    draw_raster_n(rhd,han,ctx,32*han.num16-31,31,9.0,500.0)
+function draw_raster32(rhd::RHD2000,han::Gui_Handles)
+    draw_raster_n(rhd,han,32*han.num16-31,31,9.0,500.0)
 end
 
-function draw_raster64(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
-    draw_raster_n(rhd,han,ctx,64*han.num16-63,63,12.0,0.0)
+function draw_raster64(rhd::RHD2000,han::Gui_Handles)
+    draw_raster_n(rhd,han,64*han.num16-63,63,12.0,0.0)
 end
 
-function draw_scope(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+function draw_scope(rhd::RHD2000,han::Gui_Handles)
+
+    ctx=getgc(han.c)
 
     if han.soft.draws>9
 
@@ -311,13 +317,14 @@ end
 Single maximized channel plotting
 =#
 
-function draw_spike(rhd::RHD2000,han::Gui_Handles,ctx::Cairo.CairoContext)
+function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     spike_num=han.spike
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     reads=han.draws
 
+    ctx=getgc(han.c2)
     Cairo.translate(ctx,0.0,300.0)
     scale(ctx,500/han.wave_points,s)
     
