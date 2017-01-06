@@ -4,24 +4,24 @@ Plots detected spike on canvas for multiple channels
 
 function draw_spike16(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.c)
-    k=16*han.num16-15
-
-    draw_spike_n(rhd,han,k,4,4,16)
+    draw_spike_n(rhd,han,4,4,16)
     nothing
 end
 
 function draw_spike32(rhd::RHD2000,han::Gui_Handles)
     
-    ctx=getgc(han.c)
-    k=32*han.num16-31
-
-    draw_spike_n(rhd,han,k,6,6,32)
+    draw_spike_n(rhd,han,6,6,32)
     nothing
 end
 
-function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,n_col,n_row,num_chan)
+function draw_spike64(rhd::RHD2000,han::Gui_Handles)
+    draw_spike_n(rhd,han,6,11,64)
+    nothing
+end
 
+function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
+
+    k_in=num_chan*(han.num16)-num_chan+1
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
     xwidth=width(ctx)
@@ -42,8 +42,8 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,n_col,n_row,num_chan)
                         if rhd.buf[g,chan].id==thisid
                             s=han.scale[chan,2]
                             o=han.offset[chan]
-			    startx=div(chan-1,n_row)*han.wave_points/2+1
-			    starty=yheight/n_row*(rem(chan-1,n_row))+yheight/n_row/2
+			    startx=div(rem(chan-1,num_chan),n_row)*han.wave_points/2+1
+			    starty=yheight/n_row*(rem(rem(chan-1,num_chan),n_row))+yheight/n_row/2
 			    y=(rhd.v[rhd.buf[g,chan].inds.start,chan]-o)*s+starty
 			    ymax=starty+yheight/n_row/2
 			    ymin=starty-yheight/n_row/2
@@ -78,7 +78,6 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,n_col,n_row,num_chan)
     
     identity_matrix(ctx)
     nothing
-
 end
 
 function find_max_id(rhd::RHD2000,han::Gui_Handles,k,num)
@@ -545,24 +544,29 @@ function check32(mytest)
 end
 
 function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
+    
+    mywidth=width(ctx)
+    myheight=500
 
-    for x in [125, 250, 375]
+    for x in linspace(0,mywidth,5)
 	move_to(ctx,x,1)
-	line_to(ctx,x,500)
+	line_to(ctx,x,myheight)
     end
-    for y in [125,250,375,500]
+    for y in linspace(0,myheight,5)
 	move_to(ctx,1,y)
-	line_to(ctx,500,y)
+	line_to(ctx,mywidth,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
+    xwidth=mywidth/4
+    ywidth=myheight/4
     k=16*han.num16-15
-    for x in [10, 135, 260, 385]
-        for y in [10, 135, 260, 385]
+    for x in 0.0:xwidth:(3*xwidth)
+        for y in 0.0:ywidth:(3*ywidth)
             if k<=length(han.enabled)
-                move_to(ctx,x,y)
+                move_to(ctx,x+10.0,y+10.0)
                 if han.enabled[k] 
                     show_text(ctx,string(k))
                 else
@@ -588,24 +592,29 @@ end
 
 function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
 
-    for x in collect(84.0:83.0:450.0)
+    mywidth=width(ctx)
+    myheight=500
+
+    for x in linspace(0,mywidth,7)
 	move_to(ctx,x,1)
-	line_to(ctx,x,500.0)
+	line_to(ctx,x,myheight)
     end
-    for y in collect(84.0:83.0:499.0)
-	move_to(ctx,1.0,y)
-	line_to(ctx,500.0,y)
+    for y in linspace(0,myheight,7)
+	move_to(ctx,1,y)
+	line_to(ctx,mywidth,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
+    xwidth=mywidth/6
+    ywidth=myheight/6
     k=32*han.num16-31
-    for x in collect(10.0:83.0:450.0)
-        for y in collect(10.0:83.0:450.0)
+    for x in 0.0:xwidth:(5*xwidth)
+        for y in 0.0:ywidth:(5*ywidth)
             if k<=length(han.enabled)
-                move_to(ctx,x,y)
-                if han.enabled[k]
+                move_to(ctx,x+10.0,y+10.0)
+                if han.enabled[k] 
                     show_text(ctx,string(k))
                 else
                     show_text(ctx,string(k,"-DISABLED"))
@@ -630,24 +639,29 @@ end
 
 function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
     
-    for x in collect(35.0:72.0:467.0)
+    mywidth=width(ctx)
+    myheight=800
+
+    for x in linspace(0,mywidth,7)
 	move_to(ctx,x,1)
-	line_to(ctx,x,793.0)
+	line_to(ctx,x,myheight)
     end
-    for y in collect(73.0:72.0:793.0)
-	move_to(ctx,35.0,y)
-	line_to(ctx,467.0,y)
+    for y in linspace(0,myheight,12)
+	move_to(ctx,1,y)
+	line_to(ctx,mywidth,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
+    xwidth=mywidth/6
+    ywidth=myheight/11
     k=64*han.num16-63
-    for x in collect(45.0:72.0:405.0)
-        for y in collect(10.0:72.0:731.0)
-            move_to(ctx,x,y)
+    for x in 0.0:xwidth:(5*xwidth)
+        for y in 0.0:ywidth:(10*ywidth)
             if k<=length(han.enabled)
-                if han.enabled[k]
+                move_to(ctx,x+10.0,y+10.0)
+                if han.enabled[k] 
                     show_text(ctx,string(k))
                 else
                     show_text(ctx,string(k,"-DISABLED"))
