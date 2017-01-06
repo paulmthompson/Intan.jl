@@ -1036,13 +1036,14 @@ end
 function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
 
     ctx = getgc(han.c2)
+    mywidth=width(ctx)
 
     thres=getproperty(han.adj_thres,:value,Int)
     move_to(ctx,1,300-thres)
-    line_to(ctx,500,300-thres)
+    line_to(ctx,mywidth,300-thres)
 
     move_to(ctx,1,300+thres)
-    line_to(ctx,500,300+thres)
+    line_to(ctx,mywidth,300+thres)
 
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)

@@ -6,69 +6,79 @@ function draw_spike16(rhd::RHD2000,han::Gui_Handles)
 
     ctx=getgc(han.c)
     k=16*han.num16-15
-    xbounds=1.0:124.0:375.0
-    ybounds=75.0:125.0:450.0
-    increment=div(125,han.wave_points)*2
 
-    draw_spike_n(rhd,han,k,xbounds,ybounds,increment,65.0,16)
+    draw_spike_n(rhd,han,k,4,4,16)
     nothing
 end
 
 function draw_spike32(rhd::RHD2000,han::Gui_Handles)
     
-    
+    ctx=getgc(han.c)
     k=32*han.num16-31
-    xbounds=1.0:83.0:416.0
-    ybounds=41.0:83.0:456.0
 
-    increment=div(83,han.wave_points)*2
-
-    draw_spike_n(rhd,han,k,xbounds,ybounds,increment,40.0,32)
+    draw_spike_n(rhd,han,k,6,6,32)
     nothing
 end
 
-function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,xbounds,ybounds,increment,b_width,num_chan)
+function draw_spike_n(rhd::RHD2000,han::Gui_Handles,k_in,n_col,n_row,num_chan)
 
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
+    xwidth=width(ctx)
+    if num_chan<64
+      yheight=500
+    else
+      yheight=800
+    end
+
+    scale(ctx,xwidth/(han.wave_points/2*n_col),1)
 
     #subsequent IDs
     @inbounds for thisid=1:maxid
-        k=k_in
-        for i in xbounds, j in ybounds
-            if han.enabled[k]
-                for g=1:rhd.nums[k]
-                    if (rhd.buf[g,k].inds.start>0)&(rhd.buf[g,k].inds.stop<size(rhd.v,1))
-                        if rhd.buf[g,k].id==thisid
-                            s=han.scale[k,2]
-                            o=han.offset[k]
-                            move_to(ctx,1+i,(rhd.v[rhd.buf[g,k].inds.start,k]-o)*s+j)
-                            count=increment+1
-                            for kk=rhd.buf[g,k].inds.start+2:2:rhd.buf[g,k].inds.stop
-                                y=(rhd.v[kk,k]-o)*s+j
-                                if y<j-b_width
-                                    y=j-b_width
-                                elseif y>j+b_width
-                                    y=j+b_width
-                                end  
-                                line_to(ctx,count+i,y)
-                                count+=increment
+	for chan=k_in:(k_in+num_chan-1)
+		if han.enabled[chan]
+	    for g=1:rhd.nums[chan]
+                    if (rhd.buf[g,chan].inds.start>0)&(rhd.buf[g,chan].inds.stop<size(rhd.v,1))
+                        if rhd.buf[g,chan].id==thisid
+                            s=han.scale[chan,2]
+                            o=han.offset[chan]
+			    startx=div(chan-1,n_row)*han.wave_points/2+1
+			    starty=yheight/n_row*(rem(chan-1,n_row))+yheight/n_row/2
+			    y=(rhd.v[rhd.buf[g,chan].inds.start,chan]-o)*s+starty
+			    ymax=starty+yheight/n_row/2
+			    ymin=starty-yheight/n_row/2
+			    if (y<ymin)
+                               y=ymin
+                            elseif (y>ymax)
+                               y=ymax
+                            end
+                            move_to(ctx,startx,y)
+                            for kk=rhd.buf[g,chan].inds.start+2:2:rhd.buf[g,chan].inds.stop
+                                y=(rhd.v[kk,chan]-o)*s+starty
+                                if (y<ymin)
+                                   y=ymin
+                                elseif (y>ymax)
+                                   y=ymax
+                                end
+                                line_to(ctx,startx,y)
+                                startx+=1
                             end
                         end
                     end        
                 end
-            end
-            k+=1
-            if k>length(han.enabled)
+	    end
+            if chan>length(han.enabled)
                 break
             end
-        end
-        set_line_width(ctx,0.5);
+	end
+	set_line_width(ctx,0.5);
         @inbounds select_color(ctx,thisid)
         stroke(ctx)
     end
-
+    
+    identity_matrix(ctx)
     nothing
+
 end
 
 function find_max_id(rhd::RHD2000,han::Gui_Handles,k,num)
