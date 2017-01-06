@@ -14,10 +14,11 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
     xwidth=width(ctx)
+    myheight=height(ctx)
     if num_chan<64
-      yheight=500
+      yheight=myheight-300
     else
-      yheight=800
+      yheight=myheight
     end
 
     scale(ctx,xwidth/(han.wave_points/2*n_col),1)
@@ -94,14 +95,28 @@ function find_max_id(rhd::RHD2000,han::Gui_Handles,k,num)
     maxid
 end
 
-function draw_raster_n(rhd::RHD2000,han::Gui_Handles,k,k_itr,ctx_step,myoff)
+function draw_raster_n(rhd::RHD2000,han::Gui_Handles,num_chan::Int64)
 
-    maxid=find_max_id(rhd,han,k,k_itr+1)
+    k_in=num_chan*(han.num16)-num_chan+1
+    
+    maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
 
+    xwidth=width(ctx)
+    myheight=height(ctx)
+    if num_chan<64
+        yheight=300
+        myoff=myheight-300.0
+    else
+        yheight=myheight
+        myoff=0.0
+    end
+
+    ctx_step=yheight/num_chan
+    
     @inbounds for thisid=1:maxid
         count=1
-        for i=k:(k+k_itr)
+        for i=k_in:(k_in+num_chan-1)
             if han.enabled[i]
                 for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
                     if rhd.buf[g,i].id==thisid
@@ -122,15 +137,16 @@ function draw_raster_n(rhd::RHD2000,han::Gui_Handles,k,k_itr,ctx_step,myoff)
     nothing
 end
 
-draw_raster16(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,16*han.num16-15,15,18.0,500.0)
+draw_raster16(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,16)
 
-draw_raster32(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,32*han.num16-31,31,9.0,500.0)
+draw_raster32(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,32)
 
-draw_raster64(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,64*han.num16-63,63,12.0,0.0)
+draw_raster64(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,64)
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
     ctx=getgc(han.c)
+    myheight=height(ctx)
 
     if han.soft.draws>9
 
@@ -147,10 +163,10 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         end
 
         #Paint over old asterisks
-        move_to(ctx,1.0,796.0)
-        line_to(ctx,512.0,796.0)
-        move_to(ctx,1.0,793.0)
-        line_to(ctx,512.0,793.0)
+        move_to(ctx,1.0,myheight-4.0)
+        line_to(ctx,512.0,myheight-4.0)
+        move_to(ctx,1.0,myheight-7.0)
+        line_to(ctx,512.0,myheight-7.0)
         
         set_source_rgb(ctx,0.0,0.0,0.0)
         set_line_width(ctx,4.0)
@@ -159,8 +175,8 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         s=han.soft.v_div*-1
         
         #Draw voltage trace from desired channel
-        move_to(ctx,1.0,650.0+han.soft.v[1]*s)
-        han.soft.last[1]=650.0+han.soft.v[1]*s
+        move_to(ctx,1.0,myheight-150.0+han.soft.v[1]*s)
+        han.soft.last[1]=myheight-150.0+han.soft.v[1]*s
 
         t_iter=floor(Int64,han.soft.t_div)
 
@@ -168,7 +184,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         
         scope_ind=1+t_iter
         for i=2:512
-            y=650.0+han.soft.v[scope_ind]*s
+            y=myheight-150.0+han.soft.v[scope_ind]*s
             line_to(ctx,i,y)
             han.soft.last[i]=y
             
@@ -185,7 +201,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
         #reset spikes
         for i=1:(spike_ind-1)
-            move_to(ctx,han.soft.prev_spikes[i],800)
+            move_to(ctx,han.soft.prev_spikes[i],myheight)
             show_text(ctx,"*")
         end
         han.soft.prev_num_spikes=spike_ind-1
@@ -220,20 +236,22 @@ end
 
 function plot_thres_scope(han,rhd,d::DetectNeg,ctx)
 
+    myheight=height(ctx)
+    
     thres=rhd.s[han.spike].thres*han.soft.v_div
 
-    move_to(ctx,1,650-thres+2)
-    line_to(ctx,500,650-thres+2)
+    move_to(ctx,1,myheight-150-thres+2)
+    line_to(ctx,500,myheight-150-thres+2)
 
-    move_to(ctx,1,650-thres-2)
-    line_to(ctx,500,650-thres-2)
+    move_to(ctx,1,myheight-150-thres-2)
+    line_to(ctx,500,myheight-150-thres-2)
 
     set_line_width(ctx,5.0)
     set_source_rgb(ctx,0.0,0.0,0.0)
     stroke(ctx)
 
-    move_to(ctx,1,650-thres)
-    line_to(ctx,500,650-thres)
+    move_to(ctx,1,myheight-150-thres)
+    line_to(ctx,500,myheight-150-thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -273,9 +291,10 @@ end
 function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
 
     ctx=getgc(han.c)
+    myheight=height(ctx)
     
-    move_to(ctx,myreads-1,540+(channel-1)*50-val)
-    line_to(ctx,myreads,540+(channel-1)*50-val)
+    move_to(ctx,myreads-1,myheight-260 + (channel-1)*50-val)
+    line_to(ctx,myreads,myheight-260 + (channel-1)*50-val)
     set_source_rgb(ctx,1.0,1.0,0.0)
     stroke(ctx)
     
@@ -306,8 +325,8 @@ function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,va
 	offset=30
     end
     
-    move_to(ctx,myreads-1,540+(channel-1)*50-offset)
-    line_to(ctx,myreads,540+(channel-1)*50-offset)
+    move_to(ctx,myreads-1,myheight-260+(channel-1)*50-offset)
+    line_to(ctx,myreads,myheight-260+(channel-1)*50-offset)
     set_source_rgb(ctx,1.0,1.0,0.0)
     stroke(ctx)
     
@@ -327,7 +346,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     ctx=getgc(han.c2)
     mywidth=width(ctx)
-    Cairo.translate(ctx,0.0,300.0)
+    myheight=height(ctx)
+    Cairo.translate(ctx,0.0,myheight/2)
     scale(ctx,mywidth/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
@@ -560,7 +580,7 @@ end
 function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
     
     mywidth=width(ctx)
-    myheight=500
+    myheight=height(ctx)-300
 
     for x in linspace(0,mywidth,5)
 	move_to(ctx,x,1)
@@ -600,7 +620,7 @@ end
 function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
 
     mywidth=width(ctx)
-    myheight=500
+    myheight=height(ctx)-300
 
     for x in linspace(0,mywidth,7)
 	move_to(ctx,x,1)
@@ -640,7 +660,7 @@ end
 function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
     
     mywidth=width(ctx)
-    myheight=800
+    myheight=height(ctx)
 
     for x in linspace(0,mywidth,7)
 	move_to(ctx,x,1)
@@ -682,7 +702,9 @@ end
 
 function prepare_events(ctx,han)
 
-    for y in collect(550.0:50.0:750.0)
+    myheight=height(ctx)
+
+    for y in collect((myheight-250.0):50.0:(myheight-50.0))
 	move_to(ctx,1.0,y)
 	line_to(ctx,500.0,y)
     end
@@ -692,7 +714,7 @@ function prepare_events(ctx,han)
 
     for i=1:6
 	if han.events[i]>-1
-            move_to(ctx,10,460+i*50)
+            move_to(ctx,10,(myheight-340)+i*50)
 	    if han.events[i]<8 #analog
 		show_text(ctx,string("A",han.events[i]))
 	    else
@@ -711,6 +733,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
     mywidth=width(ctx)
+    myheight=height(ctx)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
@@ -718,14 +741,14 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     dashes = [10.0,10.0,10.0]
     set_dash(ctx, dashes, 0.0)
     
-    for y = [100, 200, 300, 400, 500]
+    for y = [myheight/6, myheight/3, myheight/2, myheight/6*4, myheight/6*5]
         move_to(ctx,1,y)
         line_to(ctx,mywidth,y)
     end
 
     for x = [.2*mywidth, .4*mywidth, .6*mywidth, .8*mywidth]
         move_to(ctx,x,1)
-        line_to(ctx,x,600)
+        line_to(ctx,x,myheight)
     end
 
     set_source_rgba(ctx,1.0,1.0,1.0,.5)
@@ -733,13 +756,13 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     
     set_dash(ctx,Float64[])
     
-    move_to(ctx,1,600)
-    line_to(ctx,mywidth,600)
+    move_to(ctx,1,myheight)
+    line_to(ctx,mywidth,myheight)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
-    move_to(ctx,1,300)
-    line_to(ctx,mywidth,300)
+    move_to(ctx,1,myheight/2)
+    line_to(ctx,mywidth,myheight/2)
     stroke(ctx)
 
     move_to(ctx,10,10)
@@ -783,8 +806,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     mywidth=width(ctx)
+    myheight=height(ctx)
 
-    Cairo.translate(ctx,0.0,300.0)
+    Cairo.translate(ctx,0.0,myheight/2)
     scale(ctx,mywidth/han.wave_points,s)
 
     #Plot Noise

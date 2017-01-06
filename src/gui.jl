@@ -22,11 +22,11 @@ function makegui(r::RHD2000)
     vbox_control[1,1]=button_init
     
     button_run = @ToggleButton("Run")
-    vbox_control[1,2]=button_run
+    vbox_control[2,1]=button_run
     
     button_cal = @CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
-    vbox_control[1,3]=button_cal
+    vbox_control[1,2]=button_cal
 
     #GAIN
     frame1_2=@Frame("Gain and Offset")
@@ -42,10 +42,10 @@ function makegui(r::RHD2000)
     gain_checkbox=@CheckButton(" x 10 ")
     push!(vbox1_2_1,gain_checkbox)
 
-    push!(vbox1_2_1,@Label("Offset"))
+    #push!(vbox1_2_1,@Label("Offset"))
     sb_offset=@SpinButton(-1000:1000)
     setproperty!(sb_offset,:value,0)
-    push!(vbox1_2_1,sb_offset)
+    #push!(vbox1_2_1,sb_offset)
     
     button_gain = @CheckButton("All Channels")
     setproperty!(button_gain,:active,false)
@@ -80,17 +80,17 @@ function makegui(r::RHD2000)
 
     button_hold = @CheckButton("Hold on")
     setproperty!(button_hold,:active,false)
-    vbox_hold[1,1]=button_hold
+    #vbox_hold[1,1]=button_hold
 
     button_pause=@ToggleButton("Pause")
-    vbox_hold[1,4]=button_pause
+    vbox_hold[2,2]=button_pause
 
     button_clear=@Button("Refresh")
-    vbox_hold[1,3]=button_clear
+    vbox_hold[1,2]=button_clear
 
     button_buffer = @CheckButton("Buffer On")
     setproperty!(button_buffer,:active,true)
-    vbox_hold[1,2]=button_buffer
+    #vbox_hold[1,1]=button_buffer
     
     #CLUSTER
     frame1_4=@Frame("Clustering")
@@ -154,7 +154,7 @@ function makegui(r::RHD2000)
     Gtk.GAccessor.inverted(thres_slider,true)
     Gtk.GAccessor.draw_value(thres_slider,false)
     setindex!(vbox_slider,thres_slider,1,false,false)
-    setindex!(vbox_slider,@Canvas(10,190),2,false,false)
+    setindex!(vbox_slider,@Canvas(10),2,false,false)
     Gtk.GAccessor.position(vbox_slider,610)
     grid[3,2]=vbox_slider
     
@@ -164,7 +164,8 @@ function makegui(r::RHD2000)
     #ROW 2
     c_grid=@Grid()
     
-    c2=@Canvas(500,600)     
+    c2=@Canvas(500,600)
+    #c2=@Canvas()
     @guarded draw(c2) do widget
         ctx = getgc(c2)
         clear_c2(c2,1)
@@ -172,6 +173,7 @@ function makegui(r::RHD2000)
     show(c2)
     c_grid[1,1]=c2
     setproperty!(c2,:hexpand,true)
+    setproperty!(c2,:vexpand,true)
 
     #ROW 2
     c3=@Canvas(500,200)     
@@ -213,7 +215,8 @@ function makegui(r::RHD2000)
     
     
     #ROW 2
-    c=@Canvas(500,800)  
+#c=@Canvas(500,800)
+c=@Canvas(500)
     @guarded draw(c) do widget
         ctx = getgc(c)
         set_source_rgb(ctx,0.0,0.0,0.0)
@@ -222,7 +225,7 @@ function makegui(r::RHD2000)
     end
     show(c)   
     grid[5,2]=c
-    #setproperty!(c,:hexpand,true)
+    setproperty!(c,:vexpand,true)
 
     #ROW 3
     #Which 16 channels can be selected with a slider
@@ -254,7 +257,8 @@ function makegui(r::RHD2000)
     push!(vbox_rb_upper,rbs[4])
     push!(vbox_rb_upper,rbs[5])
     
-    c_rb=@Canvas(40,400)
+c_rb=@Canvas(40,400)
+setproperty!(c_rb,:vexpand,true)
     
     push!(vbox_42,c_rb)
     
@@ -346,7 +350,7 @@ ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
 push!(ref_tv1,ref_c1)
     
 ref_scroll1=@ScrolledWindow()
-Gtk.GAccessor.min_content_height(ref_scroll1,350)
+Gtk.GAccessor.min_content_height(ref_scroll1,150)
 Gtk.GAccessor.min_content_width(ref_scroll1,175)
 push!(ref_scroll1,ref_tv1)
 
@@ -485,12 +489,12 @@ gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,1,1,1,
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,1,1,1,
 scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
 adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
-zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,c3,button_pause,1,1,
+zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
 gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets)
 
@@ -724,16 +728,6 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
     #sleep(.02) #debug
     nothing
 end
-
-#=
-function auto_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    han, rhd = user_data
-    @inbounds han.scale[han.spike,1]=-1*abs(1./mean(rhd.v[:,han.spike]))
-    @inbounds han.scale[han.spike,2]=.2*han.scale[han.spike,1]
-    @inbounds han.offset[han.spike]=div(sum(rhd.v[:,han.spike]),size(rhd.v,1))
-    nothing 
-end
-=#
 
 function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
@@ -1057,21 +1051,22 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 
     ctx = getgc(han.c2)
     mywidth=width(ctx)
+    myheight=height(ctx)
 
     thres=getproperty(han.adj_thres,:value,Int)
 
-    move_to(ctx,1,300-thres+2)
-    line_to(ctx,mywidth,300-thres+2)
+    move_to(ctx,1,myheight/2-thres+2)
+    line_to(ctx,mywidth,myheight/2-thres+2)
 
-    move_to(ctx,1,300-thres-2)
-    line_to(ctx,mywidth,300-thres-2)
+    move_to(ctx,1,myheight/2-thres-2)
+    line_to(ctx,mywidth,myheight/2-thres-2)
 
     set_line_width(ctx,5.0)
     set_source_rgb(ctx,0.0,0.0,0.0)
     stroke(ctx)
 
-    move_to(ctx,1,300-thres)
-    line_to(ctx,mywidth,300-thres)
+    move_to(ctx,1,myheight/2-thres)
+    line_to(ctx,mywidth,myheight/2-thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -1727,6 +1722,7 @@ function coordinate_transform(han::Gui_Handles,event)
 
     ctx=getgc(han.c2)
     mywidth=width(ctx)
+    myheight=height(ctx)
 
     #Convert canvas coordinates to voltage vs time coordinates
     myx=[1.0;collect(2:han.wave_points).*(mywidth/han.wave_points)]
@@ -1734,8 +1730,8 @@ function coordinate_transform(han::Gui_Handles,event)
     x2=indmin(abs(myx-event.x))
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    y1=(han.mi[2]-300+o)/s
-    y2=(event.y-300+o)/s
+    y1=(han.mi[2]-myheight/2+o)/s
+    y2=(event.y-myheight/2+o)/s
     
     #ensure that left most point is first
     if x1>x2

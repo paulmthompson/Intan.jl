@@ -268,77 +268,112 @@ end
 
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
+    
     run::Gtk.GtkToggleButtonLeaf
     init::Gtk.GtkButtonLeaf
     cal::Gtk.GtkCheckButtonLeaf
+    
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
     slider2::Gtk.GtkScaleLeaf
     adj2::Gtk.GtkAdjustmentLeaf
+    
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
+    c3::Gtk.GtkCanvasLeaf
+    
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
     num16::Int64 #currently selected group of spikes in multi display
+    
     scale::Array{Float64,2}
     offset::Array{Int64,1}
+    
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
+    
     clus::Int64
     total_clus::Array{Int64,1}
+    
     var2::Array{Int64,2} #saved variable 2 for each channel
+    
     sb::Gtk.GtkSpinButtonLeaf
     tb1::Gtk.GtkLabelLeaf
     tb2::Gtk.GtkLabelLeaf
+    
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf
+    
     draws::Int64 #how many displays have occured since the last refresh
+    
     thres_all::Gtk.GtkCheckButtonLeaf
+    
     events::Array{Int64,1}
+    
     enabled::Array{Bool,1}
+    
     show_thres::Bool
+    
     time::mytime
+    
     wave_points::Int64
+    
     c_right_top::UInt8 #flag to indicate the drawing method to be displayed on top part of right display
     c_right_bottom::UInt8 #flag to indicate the drawing method to be displayed on the bottom part of right display
+    
     popup_ed::Gtk.GtkMenuLeaf
     popup_event::Gtk.GtkMenuLeaf
+    
     rb1::Array{Gtk.GtkRadioButton,1}
     rb2::Array{Gtk.GtkRadioButton,1}
+    
     scope::Array{Float64,2}
+    
     offbox::Gtk.GtkSpinButtonLeaf
+    
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
+    
     hold::Bool
+    
     spike_buf::Array{Int16,2}
     buf_ind::Int64
     buf_count::Int64
+    
     buf_button::Gtk.GtkCheckButtonLeaf
     hold_button::Gtk.GtkCheckButtonLeaf
     pause::Bool
+    
     buf_clus::Array{Int64,1}
     spike_win::Array{SpikeSorting.mywin,1}
+    
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
+    
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
-    c3::Gtk.GtkCanvasLeaf
+    
     pause_button::Gtk.GtkToggleButtonLeaf
+    
     isi_ind::Int64
     isi_count::Int64
     isi_clus_ID::Array{Int64,1}
     isi_last_time::Array{UInt32,1}
     isi::Array{UInt32,1}
     isi_hist::Array{Int64,1}
+    
     ref_win::Gtk.GtkWindowLeaf
     ref_tv1::Gtk.GtkTreeViewLeaf
     ref_tv2::Gtk.GtkTreeViewLeaf
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
+    
     gain_multiply::Gtk.GtkCheckButtonLeaf
+    
     sort_cb::Bool
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
+    
     sort_widgets::Sort_Widgets
     thres_widgets::Thres_Widgets
     gain_widgets::Gain_Widgets

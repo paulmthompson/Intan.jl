@@ -111,6 +111,7 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     ctx = getgc(han.c2)
     mywidth=width(ctx)
+    myheight=height(ctx)
 
     clus=han.clus
 
@@ -118,7 +119,7 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         s=han.scale[han.spike,1]
         o=han.scale[han.spike]
 
-        Cairo.translate(ctx,0.0,300.0)
+        Cairo.translate(ctx,0.0,myheight/2)
         scale(ctx,mywidth/han.wave_points,s)
         
         move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,clus]+rhd.s[han.spike].c.sigmas[1,clus]-o))
@@ -175,11 +176,12 @@ function draw_templates(c::ClusterTemplate,han::Gui_Handles)
 
     ctx = getgc(han.c2)
     mywidth=width(ctx)
+    myheight=height(ctx)
 
     s=han.scale[han.spike,1]
     o=han.scale[han.spike]
     
-    Cairo.translate(ctx,0.0,300.0)
+    Cairo.translate(ctx,0.0,myheight/2)
     scale(ctx,mywidth/han.wave_points,s)
     
     for clus=1:han.total_clus[han.spike]
