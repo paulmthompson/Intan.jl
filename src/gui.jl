@@ -171,6 +171,7 @@ function makegui(r::RHD2000)
     end
     show(c2)
     c_grid[1,1]=c2
+    setproperty!(c2,:hexpand,true)
 
     #ROW 2
     c3=@Canvas(500,200)     
@@ -180,6 +181,7 @@ function makegui(r::RHD2000)
     end
     show(c3)
     c_grid[1,2]=c3
+    #setproperty!(c3,:hexpand,true)
 
     grid[4,2]=c_grid
 
@@ -220,6 +222,7 @@ function makegui(r::RHD2000)
     end
     show(c)   
     grid[5,2]=c
+    #setproperty!(c,:hexpand,true)
 
     #ROW 3
     #Which 16 channels can be selected with a slider

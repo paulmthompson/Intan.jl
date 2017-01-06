@@ -325,8 +325,9 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     reads=han.draws
 
     ctx=getgc(han.c2)
+    mywidth=width(ctx)
     Cairo.translate(ctx,0.0,300.0)
-    scale(ctx,500/han.wave_points,s)
+    scale(ctx,mywidth/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
 
@@ -698,6 +699,7 @@ end
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
+    mywidth=width(ctx)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
@@ -712,10 +714,10 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     
     for y = [100, 200, 300, 400, 500]
         move_to(ctx,1,y)
-        line_to(ctx,500,y)
+        line_to(ctx,mywidth,y)
     end
 
-    for x = [100, 200, 300, 400]
+    for x = [.2*mywidth, .4*mywidth, .6*mywidth, .8*mywidth]
         move_to(ctx,x,1)
         line_to(ctx,x,600)
     end
@@ -731,7 +733,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     stroke(ctx)
 
     move_to(ctx,1,300)
-    line_to(ctx,500,300)
+    line_to(ctx,mywidth,300)
     stroke(ctx)
 
     move_to(ctx,10,10)
