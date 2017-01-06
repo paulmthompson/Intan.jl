@@ -1722,8 +1722,12 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
 end
 
 function coordinate_transform(han::Gui_Handles,event)
+
+    ctx=getgc(han.c2)
+    mywidth=width(ctx)
+
     #Convert canvas coordinates to voltage vs time coordinates
-    myx=[1.0;collect(2:han.wave_points).*(500/han.wave_points)]
+    myx=[1.0;collect(2:han.wave_points).*(mywidth/han.wave_points)]
     x1=indmin(abs(myx-han.mi[1]))
     x2=indmin(abs(myx-event.x))
     s=han.scale[han.spike,1]

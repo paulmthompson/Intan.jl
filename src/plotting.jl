@@ -728,7 +728,7 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     set_dash(ctx,Float64[])
     
     move_to(ctx,1,600)
-    line_to(ctx,500,600)
+    line_to(ctx,mywidth,600)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
@@ -776,9 +776,10 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
+    mywidth=width(ctx)
 
     Cairo.translate(ctx,0.0,300.0)
-    scale(ctx,500/han.wave_points,s)
+    scale(ctx,mywidth/han.wave_points,s)
 
     #Plot Noise
     select_color(ctx,1)
