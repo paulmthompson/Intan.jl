@@ -772,14 +772,13 @@ function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 end
 
 function update_c2(han::Gui_Handles,rhd::RHD2000)
-    
+
     han.num=getproperty(han.adj2, :value, Int64) # primary display
     chan_per_display = getproperty(han.adj2,:upper,Int64)
 
     if han.num16>0
 
-        old_spike=han.spike
-        
+        old_spike=rem(han.spike-1,chan_per_display)+1
         han.spike=chan_per_display*han.num16-chan_per_display+han.num
 
         clear_c2(han.c2,han.spike)
@@ -848,29 +847,21 @@ end
 
 function highlight_channel(han::Gui_Handles,old_spike)
 
-    x1_i=1
-    x2_i=1
-    y1_i=1
-    y2_i=1
-
-    x1_f=1
-    x2_f=1
-    y1_f=1
-    y2_f=1
-
     ctx = getgc(han.c)
     
     if han.c_right_top==1
 
-        (x1_i,x2_i,y1_i,y2_i)=check16(old_spike)
-        (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,4,4,16,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,4,4,16,han.num)
         
     elseif han.c_right_top==2
 
-        (x1_i,x2_i,y1_i,y2_i)=check32(old_spike)
-        (x1_f,x2_f,y1_f,y2_f)=check32(han.spike)
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,6,32,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,6,32,han.num)
         
     elseif han.c_right_top==3
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,11,64,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
     end
 
     draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
@@ -1288,11 +1279,9 @@ function update_ref(rhd::RHD2000,han::Gui_Handles)
         if myref!=0
 
             select!(selmodel_l,Gtk.iter_from_index(han.ref_list1,myref))
-            select!(selmodel_r,Gtk.iter_from_index(han.ref_list2,i))
-            
+            select!(selmodel_r,Gtk.iter_from_index(han.ref_list2,i))         
         end
     end
-
     nothing
 end
 
@@ -1382,9 +1371,12 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
     han, rhd = user_data
     event = unsafe_load(param_tuple)
 
+    ctx=getgc(han.c)
+    myheight=height(ctx)
+
     han.mim=(event.x,event.y)
 
-    if event.y<500 #top
+    if event.y<(myheight-300) #top
 
         if han.c_right_top==1 #disable enable 16
 
@@ -1417,6 +1409,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             end
             
         elseif han.c_right_top==3 #disable enable 64
+            
             if event.button == 1 #left click
 
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
@@ -1429,6 +1422,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
                 popup(han.popup_ed,event)
             end
+            
         elseif han.c_right_top==4 #64 channel raster - nothing
         else
         end
@@ -1449,6 +1443,20 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             end
             
         elseif han.c_right_bottom==5 #disable enable 64
+            
+            if event.button == 1 #left click
+
+                (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
+                if inmulti
+                    setproperty!(han.adj2,:value,channel_num)
+                    update_c2(han,rhd)
+                end
+                
+            elseif event.button == 3 #right click
+
+                popup(han.popup_ed,event)
+            end
+            
         elseif han.c_right_bottom==6 #64 channel raster - nothing
         else
         end            
@@ -1457,6 +1465,23 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 end
 
 function check_multi(han::Gui_Handles,n_row::Int64,n_col::Int64,num_chan::Int64,x,y)
+
+    (xbounds,ybounds)=get_multi_bounds(han,n_col,n_row,num_chan)
+
+    count=1
+    inmulti=false
+    for j=2:length(xbounds), i=2:length(ybounds)
+        if (x<xbounds[j])&(y<ybounds[i])
+            inmulti=true
+            break
+        end
+        count+=1
+    end
+
+    (inmulti,count)
+end
+
+function get_multi_bounds(han::Gui_Handles,n_col,n_row,num_chan)
 
     ctx=getgc(han.c)
 
@@ -1470,17 +1495,17 @@ function check_multi(han::Gui_Handles,n_row::Int64,n_col::Int64,num_chan::Int64,
     xbounds=linspace(0.0,mywidth,n_col+1)
     ybounds=linspace(0.0,myheight,n_row+1)
 
-    count=1
-    inmulti=false
-    for j in xbounds[2:end], i in ybounds[2:end]
-        if (x<j)&(y<i)
-            inmulti=true
-            break
-        end
-        count+=1
-    end
+    (xbounds,ybounds)
+end
 
-    (inmulti,count)
+function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
+
+    (xbounds,ybounds)=get_multi_bounds(han,n_col,n_row,num_chan)
+
+    y=rem(rem(spike-1,num_chan),n_row)+1
+    x=div(rem(spike-1,num_chan),n_row)+1
+    
+    (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
 end
 
 function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
@@ -1573,13 +1598,13 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
 
     if han.c_right_top == 1
 	set_slider(han,16)
-    elseif han.c_right_top==2
+    elseif han.c_right_top == 2
 	set_slider(han,32)
-    elseif (han.c_right_top==3)|(han.c_right_top==4)
+    elseif (han.c_right_top == 3)|(han.c_right_top == 4)
 	set_slider(han,64)
     end
     
-    clear_c(han)
+    #clear_c(han)
     nothing
 end
 
@@ -1588,8 +1613,8 @@ function set_slider(han::Gui_Handles,chan_num::Int64)
     han.num=rem(han.spike-1,chan_num)+1
     setproperty!(han.adj2,:upper,chan_num)
     setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
-    setproperty!(han.adj, :value, han.num16)
     setproperty!(han.adj2, :value, han.num)
+    setproperty!(han.adj, :value, han.num16)
     nothing
 end
 
@@ -1645,7 +1670,6 @@ end
 function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
-
     selmodel=Gtk.GAccessor.selection(han.ref_tv1)
     selectall!(selmodel)
 
@@ -1655,7 +1679,6 @@ end
 function ref_b2_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
-
     selmodel=Gtk.GAccessor.selection(han.ref_tv2)
     selectall!(selmodel)
 

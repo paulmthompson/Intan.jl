@@ -515,68 +515,6 @@ function clear_c(han::Gui_Handles)
     nothing
 end
 
-function check16(mytest)
-    count=1
-    x1=1
-    x2=1
-    y1=1
-    y2=1
-    for x in [1, 125, 250, 375]
-        for y in [1, 125, 250, 375]
-            if count == (((mytest-1) % 16) + 1)
-                x1 = x
-                y1 = y
-                x2 = x + 124
-                y2 = y + 124
-            end
-            count += 1
-        end            
-    end
-    (x1,x2,y1,y2)
-end
-
-function check32(mytest)
-    count=1
-    x1=1
-    x2=1
-    y1=1
-    y2=1
-    for x in collect(1:83:450)
-        for y in collect(1:83:450)
-            if count == (((mytest-1) % 32) + 1)
-                x1 = x
-                y1 = y
-                x2 = x + 83
-                y2 = y + 83
-            end
-            count += 1
-        end            
-    end
-    (x1,x2,y1,y2)
-end
-
-function check64(mytest)
-    count=1
-    myheight=800
-    mywidth=500
-    x1=1
-    x2=1
-    y1=1
-    y2=1
-    for x in linspace(0,mywidth,7)
-        for y in linspace(0,myheight,12)
-            if count == (((mytest-1) % 64) + 1)
-                x1 = x
-                y1 = y
-                x2 = x + 83
-                y2 = y + 83
-            end
-            count += 1
-        end            
-    end
-    (x1,x2,y1,y2)
-end
-
 function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
     
     mywidth=width(ctx)
@@ -611,7 +549,7 @@ function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
         end
     end
 
-    (x1_f,x2_f,y1_f,y2_f)=check16(han.spike)
+    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,4,4,16,han.num)
     draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
 
     nothing
@@ -651,7 +589,7 @@ function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
         end
     end
 
-    (x1_f,x2_f,y1_f,y2_f)=check32(han.spike)
+    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,6,32,han.num)
     draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
 
     nothing
@@ -690,6 +628,9 @@ function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
             k+=1
         end
     end
+
+    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
+    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
 
     nothing
 end
