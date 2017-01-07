@@ -1390,7 +1390,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
             if event.button == 1 #left click
 
-                (inmulti,channel_num)=check_multi16(event.x,event.y)
+                (inmulti,channel_num)=check_multi(han,4,4,16,event.x,event.y)
 
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
@@ -1405,7 +1405,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
             if event.button == 1 #left click
 
-                (inmulti,channel_num)=check_multi32(event.x,event.y)
+                (inmulti,channel_num)=check_multi(han,6,6,32,event.x,event.y)
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han,rhd)
@@ -1417,6 +1417,18 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
             end
             
         elseif han.c_right_top==3 #disable enable 64
+            if event.button == 1 #left click
+
+                (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
+                if inmulti
+                    setproperty!(han.adj2,:value,channel_num)
+                    update_c2(han,rhd)
+                end
+                
+            elseif event.button == 3 #right click
+
+                popup(han.popup_ed,event)
+            end
         elseif han.c_right_top==4 #64 channel raster - nothing
         else
         end
@@ -1444,55 +1456,37 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
     nothing
 end
 
-function check_multi16(x,y)
+function check_multi(han::Gui_Handles,n_row::Int64,n_col::Int64,num_chan::Int64,x,y)
+
+    ctx=getgc(han.c)
+
+    mywidth=width(ctx)
+    if num_chan<64
+        myheight=height(ctx)-300.0
+    else
+        myheight=height(ctx)
+    end
+
+    xbounds=linspace(0.0,mywidth,n_col+1)
+    ybounds=linspace(0.0,myheight,n_row+1)
 
     count=1
     inmulti=false
-    for i in 125:125:500, j in 125:125:500 #x
-        if (x<i)&(y<j)
+    for j in xbounds[2:end], i in ybounds[2:end]
+        if (x<j)&(y<i)
             inmulti=true
             break
         end
         count+=1
     end
-    (inmulti,count)
-end
 
-function check_multi32(x,y)
-
-    count=1
-    inmulti=false
-    for i in 84:83:499, j in 84:83:499
-        if (x<i)&(y<j)
-            inmulti=true
-            break
-        end
-        count+=1
-    end
     (inmulti,count)
 end
 
 function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
-
-    if han.c_right_top==1 #16 channel
-        (inmulti,count)=check_multi16(han.mim[1],han.mim[2])
-    elseif han.c_right_top==2 # 32 channel
-        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
-    else #64 channel
-        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
-    end
-
-    if inmulti
-        if han.c_right_top==1 #16 channel
-            han.enabled[16*han.num16-16+count]=true
-        elseif han.c_right_top==2 #32 channel
-            han.enabled[32*han.num16-32+count]=true
-        else #64 channel
-            
-        end
-    end
+    enable_disable(han,true)
 
     nothing
 end
@@ -1500,22 +1494,28 @@ end
 function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data
+    enable_disable(han,false)
+
+    nothing
+end
+
+function enable_disable(han::Gui_Handles,en::Bool)
 
     if han.c_right_top==1 #16 channel
-        (inmulti,count)=check_multi16(han.mim[1],han.mim[2])
+        (inmulti,count)=check_multi(han,4,4,16,han.mim[1],han.mim[2])
     elseif han.c_right_top==2 # 32 channel
-        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+        (inmulti,count)=check_multi(han,6,6,32,han.mim[1],han.mim[2])
     else #64 channel
-        (inmulti,count)=check_multi32(han.mim[1],han.mim[2])
+        (inmulti,count)=check_multi(han,11,6,64,han.mim[1],han.mim[2])
     end
 
     if inmulti
         if han.c_right_top==1 #16 channel
-            han.enabled[16*han.num16-16+count]=false
+            han.enabled[16*han.num16-16+count]=en
         elseif han.c_right_top==2 #32 channel
-             han.enabled[32*han.num16-32+count]=false
+            han.enabled[32*han.num16-32+count]=en
         else #64 channel
-            
+            han.enabled[64*han.num16-64+count]=en
         end
     end
 
@@ -1526,16 +1526,19 @@ function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int6
 
     han, rhd, event_id = user_data
 
+    ctx=getgc(han.c)
+    myheight=height(ctx)
+
     chan_id=1
-    if han.mim[2]<550
+    if han.mim[2]<(myheight-250)
         chan_id=1
-    elseif han.mim[2]<600
+    elseif han.mim[2]<(myheight-200)
         chan_id=2
-    elseif han.mim[2]<650
+    elseif han.mim[2]<(myheight-150)
         chan_id=3
-    elseif han.mim[2]<700
+    elseif han.mim[2]<(myheight-100)
         chan_id=4
-    elseif han.mim[2]<750
+    elseif han.mim[2]<(myheight-50)
         chan_id=5
     else
         chan_id=6
@@ -1569,29 +1572,24 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     end
 
     if han.c_right_top == 1
-	han.num16=div(han.spike-1,16)+1
-	han.num=rem(han.spike-1,16)+1
-        setproperty!(han.adj2,:upper,16)
-	setproperty!(han.adj,:upper,div(length(han.enabled),16))
-	setproperty!(han.adj, :value, han.num16)
-	setproperty!(han.adj2, :value, han.num)
+	set_slider(han,16)
     elseif han.c_right_top==2
-	han.num16=div(han.spike-1,32)+1
-	han.num=rem(han.spike-1,32)+1
-        setproperty!(han.adj2,:upper,32)
-	setproperty!(han.adj,:upper,div(length(han.enabled),32))
-	setproperty!(han.adj, :value, han.num16)
-	setproperty!(han.adj2, :value, han.num)
+	set_slider(han,32)
     elseif (han.c_right_top==3)|(han.c_right_top==4)
-	han.num16=div(han.spike-1,64)+1
-	han.num=rem(han.spike-1,64)+1
-        setproperty!(han.adj2,:upper,64)
-	setproperty!(han.adj,:upper,div(length(han.enabled),64))
-	setproperty!(han.adj, :value, han.num16)
-	setproperty!(han.adj2, :value, han.num)
+	set_slider(han,64)
     end
     
     clear_c(han)
+    nothing
+end
+
+function set_slider(han::Gui_Handles,chan_num::Int64)
+    han.num16=div(han.spike-1,chan_num)+1
+    han.num=rem(han.spike-1,chan_num)+1
+    setproperty!(han.adj2,:upper,chan_num)
+    setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
+    setproperty!(han.adj, :value, han.num16)
+    setproperty!(han.adj2, :value, han.num)
     nothing
 end
 
