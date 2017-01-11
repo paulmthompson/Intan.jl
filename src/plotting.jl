@@ -319,6 +319,7 @@ end
 function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
 
     ctx=getgc(han.c)
+    myheight=height(ctx)
 
     offset=0
     if val==true
@@ -515,96 +516,26 @@ function clear_c(han::Gui_Handles)
     nothing
 end
 
-function prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)
+get_bounds(mydim,divs)=linspace(0.0,mydim,divs)
+
+function draw_multi_chan(ctx::Cairo.CairoContext,han::Gui_Handles,k,n_row,n_col,chan_num)
+
+    mywidth=width(ctx)
+
+    if chan_num<64
+        myheight=height(ctx)-300.0
+    else
+        myheight=height(ctx)
+    end
     
-    mywidth=width(ctx)
-    myheight=height(ctx)-300
-
-    for x in linspace(0,mywidth,5)
-	move_to(ctx,x,1)
-	line_to(ctx,x,myheight)
-    end
-    for y in linspace(0,myheight,5)
-	move_to(ctx,1,y)
-	line_to(ctx,mywidth,y)
-    end
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
-
-    xwidth=mywidth/4
-    ywidth=myheight/4
-    k=16*han.num16-15
-    for x in 0.0:xwidth:(3*xwidth)
-        for y in 0.0:ywidth:(3*ywidth)
-            if k<=length(han.enabled)
-                move_to(ctx,x+10.0,y+10.0)
-                if han.enabled[k] 
-                    show_text(ctx,string(k))
-                else
-                    show_text(ctx,string(k,"-DISABLED"))
-                end
-            end
-            k+=1
-        end
-    end
-
-    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,4,4,16,han.num)
-    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
-
-    nothing
-end
-
-function prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)
-
-    mywidth=width(ctx)
-    myheight=height(ctx)-300
-
-    for x in linspace(0,mywidth,7)
-	move_to(ctx,x,1)
-	line_to(ctx,x,myheight)
-    end
-    for y in linspace(0,myheight,7)
-	move_to(ctx,1,y)
-	line_to(ctx,mywidth,y)
-    end
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    set_line_width(ctx,1.0)
-    stroke(ctx)
-
-    xwidth=mywidth/6
-    ywidth=myheight/6
-    k=32*han.num16-31
-    for x in 0.0:xwidth:(5*xwidth)
-        for y in 0.0:ywidth:(5*ywidth)
-            if k<=length(han.enabled)
-                move_to(ctx,x+10.0,y+10.0)
-                if han.enabled[k] 
-                    show_text(ctx,string(k))
-                else
-                    show_text(ctx,string(k,"-DISABLED"))
-                end
-            end
-            k+=1
-        end
-    end
-
-    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,6,32,han.num)
-    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
-
-    nothing
-end
-
-function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
+    xbounds=get_bounds(mywidth,n_col+1)
+    ybounds=get_bounds(myheight,n_row+1)
     
-    mywidth=width(ctx)
-    myheight=height(ctx)
-
-    for x in linspace(0,mywidth,7)
+    for x in xbounds
 	move_to(ctx,x,1)
 	line_to(ctx,x,myheight)
     end
-    for y in linspace(0,myheight,12)
+    for y in ybounds
 	move_to(ctx,1,y)
 	line_to(ctx,mywidth,y)
     end
@@ -612,13 +543,10 @@ function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
     set_line_width(ctx,1.0)
     stroke(ctx)
 
-    xwidth=mywidth/6
-    ywidth=myheight/11
-    k=64*han.num16-63
-    for x in 0.0:xwidth:(5*xwidth)
-        for y in 0.0:ywidth:(10*ywidth)
+    for x=1:n_col
+        for y=1:n_row
             if k<=length(han.enabled)
-                move_to(ctx,x+10.0,y+10.0)
+                move_to(ctx,xbounds[x]+10.0,ybounds[y]+10.0)
                 if han.enabled[k] 
                     show_text(ctx,string(k))
                 else
@@ -628,12 +556,16 @@ function prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)
             k+=1
         end
     end
-
-    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
+    (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,n_col,n_row,chan_num,han.num)
     draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
-
     nothing
 end
+
+prepare_16(ctx::Cairo.CairoContext,han::Gui_Handles)=draw_multi_chan(ctx,han,16*han.num16-15,4,4,16)
+
+prepare_32(ctx::Cairo.CairoContext,han::Gui_Handles)=draw_multi_chan(ctx,han,32*han.num16-31,6,6,32)
+
+prepare_64(ctx::Cairo.CairoContext,han::Gui_Handles)=draw_multi_chan(ctx,han,64*han.num16-63,11,6,64)
 
 function prepare_raster16(ctx)
 end

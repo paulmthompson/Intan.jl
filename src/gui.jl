@@ -146,7 +146,6 @@ function makegui(r::RHD2000)
     vbox1_2[1,5]=frame1_4 |> showall
 
     #COLUMN 2 - Threshold slider
-    #vbox_slider=@Paned(:v)
     vbox_slider=@Box(:v)
     thres_slider = @Scale(true, -300,300,1)
     adj_thres = @Adjustment(thres_slider)
@@ -157,9 +156,7 @@ function makegui(r::RHD2000)
     
     Gtk.GAccessor.inverted(thres_slider,true)
     Gtk.GAccessor.draw_value(thres_slider,false)
-    #setindex!(vbox_slider,thres_slider,1,false,false)
-    #setindex!(vbox_slider,c_thres,2,false,false)
-    #Gtk.GAccessor.position(vbox_slider,610)
+
     setproperty!(thres_slider,:vexpand,true)
     push!(vbox_slider,thres_slider)
     push!(vbox_slider,c_thres)
