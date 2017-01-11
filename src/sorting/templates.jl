@@ -96,11 +96,11 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         end
         han.hold=true
         han.pause=false
-        setproperty!(mybutton,:label,"Stop Collection")
+        change_button_label(mybutton,"Stop Collection")
     else
         
         Gtk.GAccessor.active(han.pause_button,true)
-        setproperty!(mybutton,:label,"Collect Templates")
+        change_button_label(mybutton,"Collect Templates")
     end
     
     nothing

@@ -298,8 +298,6 @@ type Gui_Handles
     var2::Array{Int64,2} #saved variable 2 for each channel
     
     sb::Gtk.GtkSpinButtonLeaf
-    tb1::Gtk.GtkLabelLeaf
-    tb2::Gtk.GtkLabelLeaf
     
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf

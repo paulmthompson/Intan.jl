@@ -82,10 +82,12 @@ function makegui(r::RHD2000)
     setproperty!(button_hold,:active,false)
     #vbox_hold[1,1]=button_hold
 
-    button_pause=@ToggleButton("Pause")
+    button_pause=@ToggleButton()
+    add_button_label(button_pause,"Pause")
     vbox_hold[2,2]=button_pause
 
-    button_clear=@Button("Refresh")
+    button_clear=@Button()
+    add_button_label(button_clear,"Refresh")
     vbox_hold[1,2]=button_clear
 
     button_buffer = @CheckButton("Buffer On")
@@ -98,18 +100,18 @@ function makegui(r::RHD2000)
     vbox1_3_2=@Grid()
     push!(frame1_4,vbox1_3_2)
 
-    tb1=@Label("text1")
-    tb2=@Label("text2")
+    #tb1=@Label("text1")
+    #tb2=@Label("text2")
 
-    vbox1_3_2[1,1]=tb1
-    vbox1_3_2[1,2]=tb2
+    #vbox1_3_2[1,1]=tb1
+    #vbox1_3_2[1,2]=tb2
     
-    button_sort1 = @Button("Sort 1")
-    button_sort2 = @Button("Sort 2")
-    button_sort3 = @Button("Sort 3")
+    button_sort1 = @Button()
+    button_sort2 = @Button()
+    button_sort3 = @Button()
 
-    button_sort4 = @Button("Sort 4")
-    button_sort5 = @Button("Sort 5")
+    button_sort4 = @Button()
+    button_sort5 = @Button()
 
     check_sort1 = @CheckButton()
 
@@ -494,7 +496,7 @@ spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,1,1,1,
-scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,tb1,tb2,
+scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
 adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
@@ -517,26 +519,28 @@ if typeof(r.s[1].c)==ClusterWindow
     id = signal_connect(b5_cb_win,button_sort5,"clicked",Void,(),false,(handles,r))
     setproperty!(button_sort3,:label,"Select Window")
 
-    setproperty!(tb1,:label,"Cluster: ")
-    setproperty!(tb2,:label,"Window: ")
+    #setproperty!(tb1,:label,"Cluster: ")
+    #setproperty!(tb2,:label,"Window: ")
     
 elseif typeof(r.s[1].c)==ClusterTemplate
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort1,:label,"Delete Unit")
+    add_button_label(button_sort1,"Delete Unit")
+    
     id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort2,:label,"Add Unit")
+    add_button_label(button_sort2,"Add Unit")
+    
     id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort3,:label,"Collect Templates")
+    add_button_label(button_sort3,"Collect Templates")
+    
     id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort4,:label,"Show Template Bounds")
-
+    add_button_label(button_sort4,"Show Template Bounds")
+    
     setproperty!(check_sort1,:label,"Show Template")
     id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,r))
 
-    setproperty!(tb1,:label,"Cluster: ")
-    setproperty!(tb2,:label,"")
     setproperty!(slider_sort_label,:label,"Tolerance")
 
     id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,r))
@@ -777,6 +781,19 @@ function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
+function add_button_label(button,mylabel)
+    b_label=@Label(mylabel)
+    Gtk.GAccessor.markup(b_label, string("""<span size="x-small">""",mylabel,"</span>"))
+    push!(button,b_label)
+    show(b_label)
+end
+
+function change_button_label(button,mylabel)
+    hi=Gtk.GAccessor.child(button)
+    Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
+end
+
+
 function update_c2(han::Gui_Handles,rhd::RHD2000)
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
@@ -973,10 +990,10 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if getproperty(widget,:active,Bool)
         han.pause=true
-        setproperty!(widget,:label,"Resume")
+        change_button_label(widget,"Resume")
     else
         han.pause=false
-        setproperty!(widget,:label,"Pause")
+        change_button_label(widget,"Pause")
         han.hold=getproperty(han.hold_button,:active,Bool)
     end
 
