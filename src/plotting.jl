@@ -695,6 +695,7 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
             end
         end
     end
+    set_line_width(ctx,0.5);
     stroke(ctx)
 
     #Plot New color
@@ -709,6 +710,7 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
             end
         end
     end
+    set_line_width(ctx,0.5);
     stroke(ctx)
 
     identity_matrix(ctx)

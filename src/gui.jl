@@ -333,6 +333,9 @@ push!(op_align_menu,op_align_min)
 op_align_cross = @MenuItem("Threshold Crossing")
 push!(op_align_menu,op_align_cross)
 
+
+#Autosort
+
     
     mb = @MenuBar()
     push!(mb,saveopts)
@@ -1697,8 +1700,6 @@ function unit_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tupl
         mytol=rhd.s[han.spike].c.sigmas[1,clus]
         setproperty!(han.adj_sort, :value, div(mytol,10))
     end
-
-    setproperty!(han.tb1,:label,string("Cluster: ",clus))
         
     nothing
 end

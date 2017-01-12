@@ -44,7 +44,7 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
     clus=han.clus
 
-    if (clus==0) #do nothing if zeroth cluster selected      
+    if (clus<1) #do nothing if zeroth cluster selected      
     else
         delete_cluster(rhd.s[han.spike].c,clus)
         deleteat!(han.sort_list,han.total_clus[han.spike]+1)
