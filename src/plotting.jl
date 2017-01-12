@@ -688,11 +688,12 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     select_color(ctx,1)
     @inbounds for i=1:han.buf_ind
 
-        if han.buf_clus[i]==0
+        if han.buf_clus[i]==-1
             move_to(ctx,1,(han.spike_buf[1,i]-o))
             for j=2:size(han.spike_buf,1)
                 line_to(ctx,j,han.spike_buf[j,i]-o)
             end
+            han.buf_clus[i]=0
         end
     end
     set_line_width(ctx,0.5);

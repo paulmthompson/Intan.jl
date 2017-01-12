@@ -323,7 +323,8 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
         if mymisses<5 #If passes template matching, set as unit
             han.buf_clus[i]=clus
         elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
-            han.buf_clus[i]=0
+            #han.buf_clus[i]=0
+            han.buf_clus[i]=-1
         end
     end
 
