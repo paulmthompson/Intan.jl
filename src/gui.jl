@@ -18,10 +18,12 @@ function makegui(r::RHD2000)
     vbox_control = @Grid()
     push!(frame_control,vbox_control)
     
-    button_init = @Button("Init")
+    button_init = @Button()
+    add_button_label(button_init,"Init")
     vbox_control[1,1]=button_init
     
-    button_run = @ToggleButton("Run")
+    button_run = @ToggleButton()
+    add_button_label(button_run,"Run")
     vbox_control[2,1]=button_run
     
     button_cal = @CheckButton("Calibrate")
@@ -29,30 +31,27 @@ function makegui(r::RHD2000)
     vbox_control[1,2]=button_cal
 
     #GAIN
-    frame1_2=@Frame("Gain and Offset")
+    frame1_2=@Frame("Gain")
     vbox1_2[1,2]=frame1_2
     vbox1_2_1=@Box(:v)
     push!(frame1_2,vbox1_2_1)
 
-    push!(vbox1_2_1,@Label("Gain"))
     sb2=@SpinButton(1:1000)
     setproperty!(sb2,:value,1)
     push!(vbox1_2_1,sb2)
 
-    gain_checkbox=@CheckButton(" x 10 ")
+    gain_checkbox=@CheckButton()
+    add_button_label(gain_checkbox," x 10")
     push!(vbox1_2_1,gain_checkbox)
 
-    #push!(vbox1_2_1,@Label("Offset"))
     sb_offset=@SpinButton(-1000:1000)
     setproperty!(sb_offset,:value,0)
-    #push!(vbox1_2_1,sb_offset)
-    
-    button_gain = @CheckButton("All Channels")
+
+    button_gain = @CheckButton()
+    add_button_label(button_gain,"All Channels")
     setproperty!(button_gain,:active,false)
     push!(vbox1_2_1,button_gain)
     
-    #button_auto = @Button("Autoscale")
-    #push!(vbox1_2_1,button_auto)
 		
     #THRESHOLD
     frame1_3=@Frame("Threshold")
@@ -64,11 +63,13 @@ function makegui(r::RHD2000)
     setproperty!(sb,:value,0)
     push!(vbox1_3_1,sb)
 
-    button_thres_all = @CheckButton("All Channels")
+    button_thres_all = @CheckButton()
+    add_button_label(button_thres_all,"All Channels")
     setproperty!(button_thres_all,:active,false)
     push!(vbox1_3_1,button_thres_all)
     
-    button_thres = @CheckButton("Show")
+    button_thres = @CheckButton()
+    add_button_label(button_thres,"Show")
     setproperty!(button_thres,:active,false)
     push!(vbox1_3_1,button_thres)
 
@@ -92,7 +93,6 @@ function makegui(r::RHD2000)
 
     button_buffer = @CheckButton("Buffer On")
     setproperty!(button_buffer,:active,true)
-    #vbox_hold[1,1]=button_buffer
     
     #CLUSTER
     frame1_4=@Frame("Clustering")
@@ -100,12 +100,6 @@ function makegui(r::RHD2000)
     vbox1_3_2=@Grid()
     push!(frame1_4,vbox1_3_2)
 
-    #tb1=@Label("text1")
-    #tb2=@Label("text2")
-
-    #vbox1_3_2[1,1]=tb1
-    #vbox1_3_2[1,2]=tb2
-    
     button_sort1 = @Button()
     button_sort2 = @Button()
     button_sort3 = @Button()
@@ -329,14 +323,23 @@ push!(exmenu,export_mat_)
 
     #Options
     opopts = @MenuItem("_Options")
-    opmenu = @Menu(opopts)
+opmenu = @Menu(opopts)
+
+op_align = @MenuItem("Alignment")
+push!(opmenu,op_align)
+op_align_menu = @Menu(op_align)
+op_align_min = @MenuItem("Minimum")
+push!(op_align_menu,op_align_min)
+op_align_cross = @MenuItem("Threshold Crossing")
+push!(op_align_menu,op_align_cross)
+
     
-  
     mb = @MenuBar()
     push!(mb,saveopts)
     push!(mb,sortopts)
     push!(mb,refopts)
-    push!(mb,exopts) 
+push!(mb,exopts)
+push!(mb,opopts)
 grid[4,1]=mb
 
 # Reference popup
@@ -831,6 +834,10 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         #Sort Button
         if han.sort_cb
             draw_templates(rhd.s[han.spike].c,han)
+        end
+
+        if han.show_thres==true
+            plot_thres(han,rhd,rhd.s[1].d)
         end
     end
         
