@@ -467,22 +467,16 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
         move_to(ctx,startx,10)
         show_text(ctx,string(isi_f))
 
-        #set_source_rgb(ctx,1.0,1.0,1.0)
-        #move_to(ctx,(i-1)*100+21,130)
-        #line_to(ctx,(i-1)*100+21,80)
-        #move_to(ctx,(i-1)*100+21,130)
-        #line_to(ctx,(i-1)*100+71,130)
-
-        #stroke(ctx)
-
         select_color(ctx,i+1)
         move_to(ctx,startx,130)
         line_to(ctx,startx,130-han.isi_hist[1]*6)
         han.isi_hist[1]=0
 
         for j=2:length(han.isi_hist)
-            move_to(ctx,startx+j,130)
-            line_to(ctx,startx+j,130-han.isi_hist[j]*6)
+            if j < han.wave_points
+                move_to(ctx,startx+j,130)
+                line_to(ctx,startx+j,130-han.isi_hist[j]*6)
+            end
             han.isi_hist[j]=0
         end
         stroke(ctx)
