@@ -346,6 +346,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     reads=han.draws
 
     ctx=getgc(han.c2)
+    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     mywidth=width(ctx)
     myheight=height(ctx)
     Cairo.translate(ctx,0.0,myheight/2)
@@ -426,7 +427,12 @@ end
 
 function draw_isi(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=Cairo.getgc(han.c3)
+    ctx=getgc(han.c3)
+
+    myheight=height(ctx)
+    mywidth=width(ctx)
+
+    total_clus = max(han.total_clus[han.spike]+1,5)
     
     for i=1:han.total_clus[han.spike]        
 
@@ -456,28 +462,32 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
         else
             set_source_rgb(ctx,1.0,1.0,1.0)
         end
-        move_to(ctx,(i-1)*100+1,10)
+        startx=(i-1)*(han.wave_points)+1
+        scale(ctx,mywidth/(han.wave_points*total_clus),1)
+        move_to(ctx,startx,10)
         show_text(ctx,string(isi_f))
 
-        set_source_rgb(ctx,1.0,1.0,1.0)
-        move_to(ctx,(i-1)*100+21,130)
-        line_to(ctx,(i-1)*100+21,80)
-        move_to(ctx,(i-1)*100+21,130)
-        line_to(ctx,(i-1)*100+71,130)
+        #set_source_rgb(ctx,1.0,1.0,1.0)
+        #move_to(ctx,(i-1)*100+21,130)
+        #line_to(ctx,(i-1)*100+21,80)
+        #move_to(ctx,(i-1)*100+21,130)
+        #line_to(ctx,(i-1)*100+71,130)
 
-        stroke(ctx)
+        #stroke(ctx)
 
         select_color(ctx,i+1)
-        move_to(ctx,(i-1)*100+21,130)
-        line_to(ctx,(i-1)*100+21,130-han.isi_hist[1]*6)
+        move_to(ctx,startx,130)
+        line_to(ctx,startx,130-han.isi_hist[1]*6)
         han.isi_hist[1]=0
 
         for j=2:length(han.isi_hist)
-            move_to(ctx,(i-1)*100+j+20,130)
-            line_to(ctx,(i-1)*100+j+20,130-han.isi_hist[j]*6)
+            move_to(ctx,startx+j,130)
+            line_to(ctx,startx+j,130-han.isi_hist[j]*6)
             han.isi_hist[j]=0
         end
         stroke(ctx)
+
+        identity_matrix(ctx)
     end
     
     nothing
@@ -676,6 +686,7 @@ end
 #Replots spikes assigned to specified cluster 
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
+    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     mywidth=width(ctx)
@@ -685,7 +696,7 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     scale(ctx,mywidth/han.wave_points,s)
 
     #Plot Noise
-    select_color(ctx,1)
+    #select_color(ctx,1)
     @inbounds for i=1:han.buf_ind
 
         if han.buf_clus[i]==-1
@@ -697,6 +708,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
         end
     end
     set_line_width(ctx,0.5);
+    set_source_rgba(ctx,0.0,0.0,0.0,1.0)
+    stroke_preserve(ctx)
+    select_color(ctx,1)
     stroke(ctx)
 
     #Plot New color
@@ -737,9 +751,40 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
     end
 
     if reads==1
+        prepare_c3(rhd,han)
         draw_templates(rhd,han)
         draw_isi(rhd,han)
     end
+
+    nothing
+end
+
+function prepare_c3(rhd::RHD2000,han::Gui_Handles)
+
+    ctx=getgc(han.c3)
+
+    myheight=height(ctx)
+    mywidth=width(ctx)
+
+    total_clus = max(han.total_clus[han.spike]+1,5)
+
+    move_to(ctx,0,130)
+    line_to(ctx,mywidth,130)
+    set_source_rgb(ctx,1.0,1.0,1.0)
+    stroke(ctx)
+
+    scale(ctx,mywidth/(han.wave_points*total_clus),1)
+
+    for i=1:total_clus
+
+        move_to(ctx,i*han.wave_points,0)
+        line_to(ctx,i*han.wave_points,130)
+        set_source_rgb(ctx,1.0,1.0,1.0)
+        stroke(ctx)
+
+    end
+
+    identity_matrix(ctx)
 
     nothing
 end

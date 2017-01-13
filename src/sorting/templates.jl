@@ -333,22 +333,27 @@ end
 
 function draw_templates(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=Cairo.getgc(han.c3)
-    
-    myoff=1.0
+    ctx=getgc(han.c3)
+
+    myheight=height(ctx)
+    mywidth=width(ctx)
+
+    total_clus = max(han.total_clus[han.spike]+1,5)
+
     for clus = 1:han.total_clus[han.spike]
 
         s=han.scale[han.spike,1]*.25
         o=han.scale[han.spike]
 
         Cairo.translate(ctx,0.0,50.0)
-        scale(ctx,2.0,s)
-        
-        move_to(ctx,1.0+myoff,rhd.s[han.spike].c.templates[1,clus]-o)
+        scale(ctx,mywidth/(han.wave_points*total_clus),s)
+
+        startx=(clus-1)*(han.wave_points)+1
+        move_to(ctx,1.0+startx,rhd.s[han.spike].c.templates[1,clus]-o)
 
         for i=2:size(rhd.s[han.spike].c.sigmas,1)
             y=rhd.s[han.spike].c.templates[i,clus]-o
-            line_to(ctx,i+myoff,y)
+            line_to(ctx,i+startx,y)
         end
         
         select_color(ctx,clus+1)
@@ -356,8 +361,6 @@ function draw_templates(rhd::RHD2000,han::Gui_Handles)
         stroke(ctx)
 
         identity_matrix(ctx)
-
-        myoff += han.wave_points+5
     end
     
     nothing
