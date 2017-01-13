@@ -309,11 +309,7 @@ function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
         y=y|(rhd.fpga[1].ttlin[i]&(2^(chan-1)))
     end
     
-    if y>0
-        return true
-    else
-        return false
-    end
+    y>0
 end
 
 function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
@@ -680,7 +676,6 @@ end
 #Replots spikes assigned to specified cluster 
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
-    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
     mywidth=width(ctx)
@@ -690,7 +685,6 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     scale(ctx,mywidth/han.wave_points,s)
 
     #Plot Noise
-    #select_color(ctx,1)
     @inbounds for i=1:han.buf_ind
 
         if han.buf_clus[i]==-1
@@ -779,6 +773,11 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
     end
 
     identity_matrix(ctx)
+
+    if han.clus>0
+        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.clus)
+        draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
+    end
 
     nothing
 end

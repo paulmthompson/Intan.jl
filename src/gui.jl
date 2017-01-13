@@ -558,6 +558,7 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
     #id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
@@ -1554,21 +1555,9 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
 end
 
-function popup_enable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    
-    han, rhd = user_data
-    enable_disable(han,true)
+popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],true)
 
-    nothing
-end
-
-function popup_disable_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    
-    han, rhd = user_data
-    enable_disable(han,false)
-
-    nothing
-end
+popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],false)
 
 function enable_disable(han::Gui_Handles,en::Bool)
 
@@ -1693,12 +1682,31 @@ end
 function unit_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data  
+    select_unit(rhd,han)
+end
+
+function select_unit(rhd::RHD2000,han::Gui_Handles)
     clus=get_cluster_id(han)
+    
+    old_clus=han.clus
 
     han.clus=clus
     if clus>0
         mytol=rhd.s[han.spike].c.sigmas[1,clus]
         setproperty!(han.adj_sort, :value, div(mytol,10))
+    end
+
+    ctx=getgc(han.c3)
+
+    if old_clus>0
+        (x1_i,x2_i,y1_i,y2_i)=get_template_dims(han,old_clus)
+        draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
+        draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
+    end
+
+    if han.clus>0
+        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.clus)
+        draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
     end
         
     nothing
@@ -1850,8 +1858,8 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,In
     nothing
 end
 
-function scope_popup_thres_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
-
+function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+    
     han, rhd, event_id = user_data
 
     if event_id==0
@@ -1861,4 +1869,50 @@ function scope_popup_thres_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD200
     end
 
     nothing
+end
+
+function c3_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    event = unsafe_load(param_tuple)
+    
+    if event.button == 1 #left click captures window
+        check_c3_click(rhd,han,event.x,event.y)
+    elseif event.button == 3 #right click refreshes window
+    end
+    nothing
+end
+
+function check_c3_click(rhd::RHD2000,han::Gui_Handles,x,y)
+
+    total_clus = max(han.total_clus[han.spike]+1,5)
+
+    xbounds=linspace(0.0,500.0,total_clus+1)
+
+    count=1
+    inmulti=false
+    if y<130
+        for j=2:length(xbounds)
+            if (x<xbounds[j])
+                inmulti=true
+                break
+            end
+            count+=1
+        end
+    end
+    if (inmulti)&(count<han.total_clus[han.spike]+1)
+        selmodel=Gtk.GAccessor.selection(han.sort_tv)
+        select!(selmodel, Gtk.iter_from_index(han.sort_list,count+1))
+        select_unit(rhd,han)
+    end
+    nothing
+end
+
+function get_template_dims(han::Gui_Handles,clus)
+
+    total_clus = max(han.total_clus[han.spike]+1,5)
+    
+    xbounds=linspace(0.0,500.0,total_clus+1)
+
+    (xbounds[clus],xbounds[clus+1],0.0,130.0)
 end
