@@ -1679,7 +1679,7 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
     nothing
 end
 
-function unit_select_cb(widgetptr::Ptr,param_tuple1,param_tuple2,user_data::Tuple{Gui_Handles,RHD2000})
+function unit_select_cb(w::Ptr,p1,p2,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data  
     select_unit(rhd,han)
@@ -1885,9 +1885,12 @@ end
 
 function check_c3_click(rhd::RHD2000,han::Gui_Handles,x,y)
 
+    ctx=getgc(han.c3)
+    mywidth=width(ctx)
+    
     total_clus = max(han.total_clus[han.spike]+1,5)
 
-    xbounds=linspace(0.0,500.0,total_clus+1)
+    xbounds=linspace(0.0,mywidth,total_clus+1)
 
     count=1
     inmulti=false
@@ -1910,9 +1913,12 @@ end
 
 function get_template_dims(han::Gui_Handles,clus)
 
+    ctx=getgc(han.c3)
+    mywidth=width(ctx)
+
     total_clus = max(han.total_clus[han.spike]+1,5)
     
-    xbounds=linspace(0.0,500.0,total_clus+1)
+    xbounds=linspace(0.0,mywidth,total_clus+1)
 
     (xbounds[clus],xbounds[clus+1],0.0,130.0)
 end

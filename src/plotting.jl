@@ -725,9 +725,12 @@ end
 function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
     ctx=Cairo.getgc(han.c3)
+    mywidth=width(ctx)
 
     spike_num=han.spike
     reads=han.draws
+
+    scale(ctx,mywidth/500.0,1.0)
 
     for i=1:rhd.nums[spike_num]
     
@@ -737,6 +740,8 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
 	@inbounds select_color(ctx,rhd.buf[i,spike_num].id)
 	stroke(ctx)
     end
+
+    identity_matrix(ctx)
 
     if reads==1
         prepare_c3(rhd,han)
