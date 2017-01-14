@@ -205,11 +205,11 @@ function makegui(r::RHD2000)
     frame_time=@Frame("Time Elapsed")
     grid[5,1]=frame_time
     hbox_time=@ButtonBox(:h)
-    push!(frame_time,hbox_time)
+push!(frame_time,hbox_time)
 
     push!(hbox_time,h_label)
     push!(hbox_time,mh_label)
-    push!(hbox_time,m_label)
+push!(hbox_time,m_label)
     push!(hbox_time,sm_label)
     push!(hbox_time,s_label)
     
@@ -308,7 +308,7 @@ rbs2[7]=@RadioButton(rbs2[6],"Nothing")
     push!(refmenu,define_ref_)
 	
     #Export
-    exopts = @MenuItem("_Export")
+exopts = @MenuItem("_Export")
     exmenu = @Menu(exopts)
     export_plex_ = @MenuItem("Plexon")
     push!(exmenu,export_plex_)
@@ -340,7 +340,7 @@ push!(op_align_menu,op_align_cross)
     mb = @MenuBar()
     push!(mb,saveopts)
     push!(mb,sortopts)
-    push!(mb,refopts)
+push!(mb,refopts)
 push!(mb,exopts)
 push!(mb,opopts)
 grid[4,1]=mb
@@ -357,7 +357,6 @@ ref_r1=@CellRendererText()
 ref_c1=@TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
 
 ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
-#Gtk.GAccessor.mode(ref_tv1_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
     
 push!(ref_tv1,ref_c1)
     
@@ -384,13 +383,10 @@ Gtk.GAccessor.min_content_height(ref_scroll2,350)
 Gtk.GAccessor.min_content_width(ref_scroll2,175)
 push!(ref_scroll2,ref_tv2)
 
-#ref_button1=@Button("Select All/None")
 ref_button2=@Button("Select All/None")
-
 ref_button3=@Button("Apply")
 
 ref_grid[1,1]=ref_scroll1
-#ref_grid[1,2]=ref_button1
 ref_grid[2,1]=@Canvas(50,350)
 ref_grid[3,1]=ref_scroll2
 ref_grid[3,2]=ref_button2
@@ -1692,8 +1688,8 @@ function select_unit(rhd::RHD2000,han::Gui_Handles)
 
     han.clus=clus
     if clus>0
-        mytol=rhd.s[han.spike].c.sigmas[1,clus]
-        setproperty!(han.adj_sort, :value, div(mytol,10))
+        mytol=rhd.s[han.spike].c.tol[clus]
+        setproperty!(han.adj_sort, :value, mytol*50)
     end
 
     ctx=getgc(han.c3)

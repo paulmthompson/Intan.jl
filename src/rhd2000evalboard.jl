@@ -1522,3 +1522,9 @@ function check_delay_output(fpga::FPGA,port,output)
 
     hits==length(outinds)*8
 end
+
+function Intan_GUI(myconfig_path="Intan_config.jl")
+
+    include(myconfig_path)
+    
+end

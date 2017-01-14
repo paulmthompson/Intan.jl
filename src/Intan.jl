@@ -3,7 +3,7 @@ module Intan
 
 using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
 
-export makeRHD, RHD2164, RHD2132,  makegui, Debug
+export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
 
 include("types.jl")
 include("constants.jl")
