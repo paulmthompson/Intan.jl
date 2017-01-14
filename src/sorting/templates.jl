@@ -23,13 +23,12 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         else #replace old cluster
             (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
-            #mytol=rhd.s[han.spike].c.tol
-            #setproperty!(han.adj_sort, :value, mytol*50)
+            setproperty!(han.adj_sort, :value, 50)
             draw_templates(rhd,han)
         end
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
-            template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1])
+            template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
             plot_new_color(getgc(han.c2),han,clus)
         end
     end
@@ -121,19 +120,19 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         Cairo.translate(ctx,0.0,myheight/2)
         scale(ctx,mywidth/han.wave_points,s)
         
-        move_to(ctx,1.0,(rhd.s[han.spike].c.templates[1,clus]+rhd.s[han.spike].c.sig_max[1,clus])*rhd.s[han.spike].c.tol[clus]-o)
+        move_to(ctx,1.0,rhd.s[han.spike].c.templates[1,clus]+(rhd.s[han.spike].c.sig_max[1,clus]*rhd.s[han.spike].c.tol[clus])-o)
 
         for i=2:size(rhd.s[han.spike].c.templates,1)
-            y=(rhd.s[han.spike].c.templates[i,clus]+rhd.s[han.spike].c.sig_max[i,clus])*rhd.s[han.spike].c.tol[clus]-o
+            y=rhd.s[han.spike].c.templates[i,clus]+(rhd.s[han.spike].c.sig_max[i,clus]*rhd.s[han.spike].c.tol[clus])-o
             line_to(ctx,i,y)
         end
 
-        y=(rhd.s[han.spike].c.templates[end,clus]-rhd.s[han.spike].c.sig_min[end,clus])*rhd.s[han.spike].c.tol[clus]-o
+        y=rhd.s[han.spike].c.templates[end,clus]-(rhd.s[han.spike].c.sig_min[end,clus]*rhd.s[han.spike].c.tol[clus])-o
         
         line_to(ctx,size(rhd.s[han.spike].c.templates,1),y)
 
         for i=(size(rhd.s[han.spike].c.templates,1)-1):-1:1
-            y=(rhd.s[han.spike].c.templates[i,clus]-rhd.s[han.spike].c.sig_min[i,clus])*rhd.s[han.spike].c.tol[clus]-o
+            y=rhd.s[han.spike].c.templates[i,clus]-(rhd.s[han.spike].c.sig_min[i,clus]*rhd.s[han.spike].c.tol[clus])-o
             line_to(ctx,i,y)
         end
 
@@ -213,7 +212,7 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         rhd.s[han.spike].c.tol[clus] = myval/50.0
 
         if ((han.buf_count>0)&(han.pause))
-            template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sig_min[:,clus],rhd.s[han.spike].c.sig_max[:,clus])
+            template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sig_min[:,clus],rhd.s[han.spike].c.sig_max[:,clus],rhd.s[han.spike].c.tol[clus])
             plot_new_color(getgc(han.c2),han,clus)
         end
     end
@@ -321,13 +320,13 @@ function make_cluster(input,x1,y1,x2,y2,nn)
     (mymean,mybounds)
 end
 
-function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},mymin::Array{Float64,1},mymax::Array{Float64,1})
+function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},mymin::Array{Float64,1},mymax::Array{Float64,1},tol::Float64)
 
     @inbounds for i=1:han.buf_ind
 
         mymisses=0
         for j=1:length(mymean)
-            if (han.spike_buf[j,i]<(mymean[j]-mymin[j]))|(han.spike_buf[j,i]>(mymean[j]+mymax[j]))
+            if (han.spike_buf[j,i]<(mymean[j]-(mymin[j]*tol)))|(han.spike_buf[j,i]>(mymean[j]+(mymax[j]*tol)))
                 mymisses+=1
                 if mymisses>5
                     break
