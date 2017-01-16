@@ -335,7 +335,11 @@ push!(op_align_menu,op_align_cross)
 
 
 #Autosort
+    svopts = @MenuItem("_Sorting")
+svmenu = @Menu(svopts)
 
+sv_open = @MenuItem("Sort Viewer")
+push!(svmenu,sv_open)
     
     mb = @MenuBar()
     push!(mb,saveopts)
@@ -343,6 +347,7 @@ push!(op_align_menu,op_align_cross)
 push!(mb,refopts)
 push!(mb,exopts)
 push!(mb,opopts)
+push!(mb,svopts)
 grid[4,1]=mb
 
 # Reference popup
@@ -397,6 +402,11 @@ setproperty!(ref_win, :title, "Reference Channel Select")
 
 showall(ref_win)
 visible(ref_win,false)
+
+#SortView
+
+sortview_handles = SpikeSorting.sort_gui()
+visible(sortview_handles.win,false)
 
 #POPUP MENUS
 
@@ -504,7 +514,7 @@ mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs
 adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
 zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
-gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets)
+gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -619,6 +629,15 @@ id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handl
 
 signal_connect(ref_win, :delete_event) do widget, event
     visible(ref_win, false)
+    true
+end
+
+#SortView
+
+id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,r))
+
+signal_connect(sortview_handles.win, :delete_event) do widget, event
+    visible(sortview_handles.win, false)
     true
 end
 
@@ -1192,6 +1211,20 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
 
+    nothing
+end
+
+#=
+SortView Callbacks
+=#
+
+function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+    han.sortview_widgets.spike_buf=han.spike_buf
+    han.sortview_widgets.buf_clus=han.buf_clus
+    han.sortview_widgets.buf_count=han.buf_count
+    visible(han.sortview_widgets.win,true)
     nothing
 end
 

@@ -376,6 +376,7 @@ type Gui_Handles
     thres_widgets::Thres_Widgets
     gain_widgets::Gain_Widgets
     spike_widgets::Spike_Widgets
+    sortview_widgets::SortView
 end
 
 #=
