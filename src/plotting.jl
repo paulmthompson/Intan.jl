@@ -392,8 +392,6 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-identity_matrix(ctx)=ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Void, (Ptr{Void},), ctx.ptr)
-
 function update_isi(rhd::RHD2000,han::Gui_Handles,i)
 
     spike_num=han.spike
@@ -650,25 +648,6 @@ function clear_c3(c3,num)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
-    
-    nothing
-end
-
-function select_color(ctx,clus,alpha=1.0)
-
-    if clus==1
-        set_source_rgba(ctx,1.0,1.0,1.0,alpha) # white
-    elseif clus==2
-        set_source_rgba(ctx,1.0,1.0,0.0,alpha) #Yellow
-    elseif clus==3
-        set_source_rgba(ctx,0.0,1.0,0.0,alpha) #Green
-    elseif clus==4
-        set_source_rgba(ctx,0.0,0.0,1.0,alpha) #Blue
-    elseif clus==5
-        set_source_rgba(ctx,1.0,0.0,0.0,alpha) #Red
-    else
-        set_source_rgba(ctx,1.0,1.0,0.0,alpha)
-    end
     
     nothing
 end
