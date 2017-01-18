@@ -1365,18 +1365,6 @@ end
 Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 =#
 
-immutable Vec2
-    x::Float64
-    y::Float64
-end
-
-type RubberBand
-    pos1::Vec2
-    pos2::Vec2
-    moved::Bool
-    minpixels::Int
-end
-
 function rb_erase(r::Cairo.CairoContext, ctxcopy)
     # Erase the previous rubberband by copying from back surface to front
     set_source(r, ctxcopy)
@@ -1384,26 +1372,12 @@ function rb_erase(r::Cairo.CairoContext, ctxcopy)
     stroke(r)
 end
 
-function rb_draw(r::Cairo.CairoContext, rb::RubberBand)
-    rb_set(r, rb)
-    set_line_width(r, 1)
-    #set_source_rgb(r, 0, 0, 0)
-    #stroke_preserve(r)
-    set_source_rgb(r, 1, 1, 1)
-    stroke_preserve(r)
-end
-
-function rb_set(r::Cairo.CairoContext, rb::RubberBand)
-    move_to(r, rb.pos1.x, rb.pos1.y)
-    rel_line_to(r,rb.pos2.x-rb.pos1.x, rb.pos2.y-rb.pos1.y)
-end
-
 function rubberband_start(c::Canvas, x, y; minpixels::Int=2)
     # Copy the surface to another buffer, so we can repaint the areas obscured by the rubberband
     r = getgc(c)
     Cairo.save(r)
     ctxcopy = copy(r)
-    rb = RubberBand(Vec2(x,y), Vec2(x,y), false, minpixels)
+    rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
     push!((c.mouse, :button1motion),  (c, event) -> rubberband_move(c, rb, event.x, event.y, ctxcopy))
     push!((c.mouse, :motion), Gtk.default_mouse_cb)
     push!((c.mouse, :button1release), (c, event) -> rubberband_stop(c, rb, event.x, event.y, ctxcopy))
