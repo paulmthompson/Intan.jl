@@ -792,6 +792,8 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
 	#Update treeview
         update_treeview(rhd,han)
+
+        select_unit(rhd,han)
     end
     nothing    
 end
@@ -849,6 +851,9 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
         #Update treeview
         update_treeview(rhd,han)
+
+        #update selected cluster
+        select_unit(rhd,han)
 
         #Sort Button
         if han.sort_cb
