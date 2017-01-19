@@ -29,7 +29,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
             template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
-            plot_new_color(getgc(han.c2),han,clus)
+            plot_new_color(han.ctx2,han,clus)
         end
     end
     
@@ -89,9 +89,6 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             han.buf_ind=1
             han.buf_count=1
         end
-        if han.show_thres==true
-            plot_thres(han,rhd,rhd.s[1].d)
-        end
         han.hold=true
         han.pause=false
         change_button_label(mybutton,"Stop Collection")
@@ -107,7 +104,7 @@ end
 function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
-    ctx = getgc(han.c2)
+    ctx = han.ctx2
 
     clus=han.clus
 
@@ -170,7 +167,7 @@ end
 
 function draw_templates(c::ClusterTemplate,han::Gui_Handles)
 
-    ctx = getgc(han.c2)
+    ctx = han.ctx2
     mywidth=width(ctx)
     myheight=height(ctx)
 

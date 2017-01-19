@@ -166,10 +166,12 @@ function makegui(r::RHD2000)
     
     c2=@Canvas(500)
     #c2=@Canvas()
+
     @guarded draw(c2) do widget
         ctx = getgc(c2)
         clear_c2(c2,1)
     end
+
     show(c2)
     c_grid[1,1]=c2
     setproperty!(c2,:hexpand,true)
@@ -513,7 +515,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
 scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
-adj_thres,thres_slider,false,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
+adj_thres,thres_slider,false,0.0,0.0,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
 zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
 gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
@@ -692,10 +694,6 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
     =#
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)
-
-    if han.thres_changed
-        thres_changed(han,rhd)
-    end
     
     #plot spikes    
     if myread
@@ -736,6 +734,13 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 		draw_spike(rhd,han)
 	    end
             draw_c3(rhd,han)
+
+            if han.thres_changed
+                thres_changed(han,rhd)
+            end
+            if han.show_thres
+                plot_thres(han)
+            end
 	end	
 	han.draws+=1
 	if han.draws>500
@@ -745,12 +750,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             end
             if (!han.hold)&(!han.pause)
 	        clear_c2(han.c2,han.spike)
+                han.ctx2=getgc(han.c2)
+                han.ctx2s=copy(han.ctx2)
             end
             clear_c3(han.c3,han.spike)
-            #Display threshold if box checked
-            if han.show_thres==true
-                plot_thres(han,rhd,rhd.s[1].d)
-            end
             #Sort Button
             if han.sort_cb
                 draw_templates(rhd.s[han.spike].c,han)
@@ -863,10 +866,6 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         if han.sort_cb
             draw_templates(rhd.s[han.spike].c,han)
         end
-
-        if han.show_thres==true
-            plot_thres(han,rhd,rhd.s[1].d)
-        end
     end
         
     nothing
@@ -892,9 +891,6 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
     clear_c2(han.c2,han.spike)
-    if han.show_thres==true
-        plot_thres(han,rhd,rhd.s[1].d)
-    end
     #Sort Button
     if han.sort_cb
         draw_templates(rhd.s[han.spike].c,han)
@@ -1040,11 +1036,18 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
     han, rhd = user_data
 
     ctx=getgc(han.c2)
-    han.w2=width(ctx)
-    han.h2=height(ctx)
+
+    if (height(ctx)!=han.h2)|(width(ctx)!=han.w2)
+
+        han.ctx2=ctx
+        han.ctx2s=copy(han.ctx2)
+        han.w2=width(han.ctx2)
+        han.h2=height(han.ctx2)
     
-    setproperty!(han.adj_thres,:upper,han.h2/2)
-    setproperty!(han.adj_thres,:lower,-han.h2/2)
+        setproperty!(han.adj_thres,:upper,han.h2/2)
+        setproperty!(han.adj_thres,:lower,-han.h2/2)
+
+    end
     
     nothing
 end
@@ -1080,53 +1083,31 @@ end
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-
     mywidget = convert(CheckButton, widget)
-
     han.show_thres=getproperty(mywidget,:active,Bool)
+    han.old_thres=getproperty(han.adj_thres,:value,Int)
+    han.thres=getproperty(han.adj_thres,:value,Int)
 
     nothing
 end
 
-function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
-
-    ctx = getgc(han.c2)
-
-    thres=getproperty(han.adj_thres,:value,Int)
-    move_to(ctx,1,300-thres)
-    line_to(ctx,han.w2,300-thres)
-
-    move_to(ctx,1,300+thres)
-    line_to(ctx,han.w2,300+thres)
-
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    stroke(ctx)
+function plot_thres(han::Gui_Handles)
     
-    nothing
-end
+    ctx = han.ctx2
 
-function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
-
-    ctx = getgc(han.c2)
-
-    thres=getproperty(han.adj_thres,:value,Int)
-
-    move_to(ctx,1,han.h2/2-thres+2)
-    line_to(ctx,han.w2,han.h2/2-thres+2)
-
-    move_to(ctx,1,han.h2/2-thres-2)
-    line_to(ctx,han.w2,han.h2/2-thres-2)
+    move_to(ctx,1,han.h2/2-han.old_thres)
+    line_to(ctx,han.w2,han.h2/2-han.old_thres)
 
     set_line_width(ctx,5.0)
-    set_source_rgb(ctx,0.0,0.0,0.0)
+    set_source(ctx,han.ctx2s)
     stroke(ctx)
-
-    move_to(ctx,1,han.h2/2-thres)
-    line_to(ctx,han.w2,han.h2/2-thres)
+    
+    move_to(ctx,1,han.h2/2-han.thres)
+    line_to(ctx,han.w2,han.h2/2-han.thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
-    
+    han.old_thres=han.thres
     nothing
 end
 
@@ -1145,6 +1126,8 @@ end
 function thres_changed(han::Gui_Handles,rhd::RHD2000)
 
     mythres=getproperty(han.adj_thres,:value,Int)
+    han.thres=mythres
+    #han.old_thres=han.thres
     
     if getproperty(han.thres_all,:active,Bool)      
         @inbounds for i=1:length(rhd.s)
@@ -1152,10 +1135,6 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
         end    
     else
         @inbounds rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
-    end
-
-    if han.show_thres==true
-        plot_thres(han,rhd,rhd.s[1].d)
     end
 
     han.thres_changed=false
@@ -1796,9 +1775,6 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
             han.buf_ind=1
             han.buf_count=1
         end
-        if han.show_thres==true
-            plot_thres(han,rhd,rhd.s[1].d)
-        end
         if han.sort_cb
             draw_templates(rhd.s[han.spike].c,han)
         end
@@ -1808,7 +1784,7 @@ end
 
 function coordinate_transform(han::Gui_Handles,event)
 
-    ctx=getgc(han.c2)
+    ctx=han.ctx2
 
     #Convert canvas coordinates to voltage vs time coordinates
     myx=[1.0;collect(2:han.wave_points).*(han.w2/han.wave_points)]

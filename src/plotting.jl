@@ -341,7 +341,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     o=han.offset[han.spike]
     reads=han.draws
 
-    ctx=getgc(han.c2)
+    #ctx=getgc(han.c2)
+    ctx=han.ctx2s
     #set_operator(ctx,Cairo.OPERATOR_SOURCE)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
@@ -386,6 +387,9 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     end
 
     identity_matrix(ctx)
+
+    set_source(han.ctx2,han.ctx2s)
+    paint(han.ctx2)
     
     nothing
 end

@@ -282,7 +282,7 @@ type Gui_Handles
     c2::Gtk.GtkCanvasLeaf
     c3::Gtk.GtkCanvasLeaf
     ctx2::Cairo.CairoContext
-    ctx2copy::Cairo.CairoContext
+    ctx2s::Cairo.CairoContext
     w2::Int64
     h2::Int64
     
@@ -336,6 +336,8 @@ type Gui_Handles
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
     thres_changed::Bool
+    old_thres::Int64
+    thres::Int64
     
     hold::Bool
     
