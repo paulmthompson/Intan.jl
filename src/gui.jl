@@ -506,12 +506,14 @@ thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 
+sleep(1.0)
+
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,1,1,1,
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),1,1,1,
 scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
-adj_thres,thres_slider,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
+adj_thres,thres_slider,false,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
 zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
 gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
@@ -562,11 +564,10 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
 
     id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,r))
 
-    id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
 id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
-    #id = signal_connect(auto_cb,button_auto,"clicked",Void,(),false,(handles,r))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,r))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
@@ -581,9 +582,9 @@ id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handle
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
-id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,r))
+id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
 id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,r))
-id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,r))
+id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,r))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,r))
 
@@ -691,6 +692,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
     =#
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(rhd.task,rhd,myread)
+
+    if han.thres_changed
+        thres_changed(han,rhd)
+    end
     
     #plot spikes    
     if myread
@@ -731,9 +736,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 		draw_spike(rhd,han)
 	    end
             draw_c3(rhd,han)
-	end
-	reveal(han.c2)
-        reveal(han.c3)
+	end	
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
@@ -753,6 +756,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
                 draw_templates(rhd.s[han.spike].c,han)
             end
 	end
+        reveal(han.c2)
+        reveal(han.c3)
 	#write to disk, clear buffers
         queueToFile(rhd,rhd.save)
     end
@@ -816,7 +821,6 @@ function change_button_label(button,mylabel)
     hi=Gtk.GAccessor.child(button)
     Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
 end
-
 
 function update_c2(han::Gui_Handles,rhd::RHD2000)
 
@@ -1005,8 +1009,8 @@ function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function hold_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    han, rhd = user_data
+function hold_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+    han, = user_data
 
     han.hold=getproperty(han.hold_button,:active,Bool)
 
@@ -1036,10 +1040,11 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
     han, rhd = user_data
 
     ctx=getgc(han.c2)
-    myheight=height(ctx)
+    han.w2=width(ctx)
+    han.h2=height(ctx)
     
-    setproperty!(han.adj_thres,:upper,myheight/2)
-    setproperty!(han.adj_thres,:lower,-myheight/2)
+    setproperty!(han.adj_thres,:upper,han.h2/2)
+    setproperty!(han.adj_thres,:lower,-han.h2/2)
     
     nothing
 end
@@ -1072,17 +1077,13 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
 
     mywidget = convert(CheckButton, widget)
 
     han.show_thres=getproperty(mywidget,:active,Bool)
-	          
-    if han.show_thres==true
-        plot_thres(han,rhd,rhd.s[1].d)
-    end
 
     nothing
 end
@@ -1090,14 +1091,13 @@ end
 function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectAbs)
 
     ctx = getgc(han.c2)
-    mywidth=width(ctx)
 
     thres=getproperty(han.adj_thres,:value,Int)
     move_to(ctx,1,300-thres)
-    line_to(ctx,mywidth,300-thres)
+    line_to(ctx,han.w2,300-thres)
 
     move_to(ctx,1,300+thres)
-    line_to(ctx,mywidth,300+thres)
+    line_to(ctx,han.w2,300+thres)
 
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -1108,23 +1108,21 @@ end
 function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 
     ctx = getgc(han.c2)
-    mywidth=width(ctx)
-    myheight=height(ctx)
 
     thres=getproperty(han.adj_thres,:value,Int)
 
-    move_to(ctx,1,myheight/2-thres+2)
-    line_to(ctx,mywidth,myheight/2-thres+2)
+    move_to(ctx,1,han.h2/2-thres+2)
+    line_to(ctx,han.w2,han.h2/2-thres+2)
 
-    move_to(ctx,1,myheight/2-thres-2)
-    line_to(ctx,mywidth,myheight/2-thres-2)
+    move_to(ctx,1,han.h2/2-thres-2)
+    line_to(ctx,han.w2,han.h2/2-thres-2)
 
     set_line_width(ctx,5.0)
     set_source_rgb(ctx,0.0,0.0,0.0)
     stroke(ctx)
 
-    move_to(ctx,1,myheight/2-thres)
-    line_to(ctx,mywidth,myheight/2-thres)
+    move_to(ctx,1,han.h2/2-thres)
+    line_to(ctx,han.w2,han.h2/2-thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -1133,9 +1131,18 @@ function plot_thres(han::Gui_Handles,rhd::RHD2000,d::DetectNeg)
 end
 
 #Threshold
-function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han,  = user_data
+
+    mythres=getproperty(han.adj_thres,:value,Int)
+    setproperty!(han.sb,:value,mythres)
+    han.thres_changed=true
+
+    nothing
+end
+
+function thres_changed(han::Gui_Handles,rhd::RHD2000)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     
@@ -1147,12 +1154,12 @@ function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         @inbounds rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
 
-    setproperty!(han.sb,:value,mythres)
-
     if han.show_thres==true
         plot_thres(han,rhd,rhd.s[1].d)
     end
 
+    han.thres_changed=false
+    
     nothing
 end
 
@@ -1802,17 +1809,15 @@ end
 function coordinate_transform(han::Gui_Handles,event)
 
     ctx=getgc(han.c2)
-    mywidth=width(ctx)
-    myheight=height(ctx)
 
     #Convert canvas coordinates to voltage vs time coordinates
-    myx=[1.0;collect(2:han.wave_points).*(mywidth/han.wave_points)]
+    myx=[1.0;collect(2:han.wave_points).*(han.w2/han.wave_points)]
     x1=indmin(abs(myx-han.mi[1]))
     x2=indmin(abs(myx-event.x))
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    y1=(han.mi[2]-myheight/2+o)/s
-    y2=(event.y-myheight/2+o)/s
+    y1=(han.mi[2]-han.h2/2+o)/s
+    y2=(event.y-han.h2/2+o)/s
     
     #ensure that left most point is first
     if x1>x2

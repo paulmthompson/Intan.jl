@@ -343,10 +343,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     ctx=getgc(han.c2)
     #set_operator(ctx,Cairo.OPERATOR_SOURCE)
-    mywidth=width(ctx)
-    myheight=height(ctx)
-    Cairo.translate(ctx,0.0,myheight/2)
-    scale(ctx,mywidth/han.wave_points,s)
+    Cairo.translate(ctx,0.0,han.h2/2)
+    scale(ctx,han.w2/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
 
@@ -603,8 +601,8 @@ end
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
     ctx = getgc(myc)
-    mywidth=width(ctx)
     myheight=height(ctx)
+    mywidth=width(ctx)
 
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
@@ -657,11 +655,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    mywidth=width(ctx)
-    myheight=height(ctx)
 
-    Cairo.translate(ctx,0.0,myheight/2)
-    scale(ctx,mywidth/han.wave_points,s)
+    Cairo.translate(ctx,0.0,han.h2/2)
+    scale(ctx,han.w2/han.wave_points,s)
 
     #Plot Noise
     @inbounds for i=1:han.buf_ind

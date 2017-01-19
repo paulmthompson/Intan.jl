@@ -281,6 +281,10 @@ type Gui_Handles
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
     c3::Gtk.GtkCanvasLeaf
+    ctx2::Cairo.CairoContext
+    ctx2copy::Cairo.CairoContext
+    w2::Int64
+    h2::Int64
     
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
@@ -331,6 +335,7 @@ type Gui_Handles
     
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
+    thres_changed::Bool
     
     hold::Bool
     
