@@ -545,12 +545,10 @@ function draw_multi_chan(ctx::Cairo.CairoContext,han::Gui_Handles,k,n_row,n_col,
     ybounds=get_bounds(myheight,n_row+1)
     
     for x in xbounds
-	move_to(ctx,x,1)
-	line_to(ctx,x,myheight)
+        line(ctx,x,x,1,myheight)
     end
     for y in ybounds
-	move_to(ctx,1,y)
-	line_to(ctx,mywidth,y)
+        line(ctx,1,mywidth,y,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     set_line_width(ctx,1.0)
@@ -591,8 +589,7 @@ function prepare_events(ctx,han)
     myheight=height(ctx)
 
     for y in collect((myheight-250.0):50.0:(myheight-50.0))
-	move_to(ctx,1.0,y)
-	line_to(ctx,500.0,y)
+        line(ctx,1.0,500.0,y,y)
     end
     set_source_rgb(ctx,1.0,1.0,1.0)
     set_line_width(ctx,1.0)
@@ -614,6 +611,12 @@ end
 
 function prepare_scope(ctx,han)
 end
+
+function line(ctx,x1,x2,y1,y2)
+    move_to(ctx,x1,y1)
+    line_to(ctx,x2,y2)
+    nothing
+end
     
 function clear_c2(myc::Gtk.GtkCanvas,num)
         
@@ -628,27 +631,23 @@ function clear_c2(myc::Gtk.GtkCanvas,num)
     set_dash(ctx, dashes, 0.0)
     
     for y = [myheight/6, myheight/3, myheight/2, myheight/6*4, myheight/6*5]
-        move_to(ctx,1,y)
-        line_to(ctx,mywidth,y)
+        line(ctx,1,mywidth,y,y)
     end
 
     for x = [.2*mywidth, .4*mywidth, .6*mywidth, .8*mywidth]
-        move_to(ctx,x,1)
-        line_to(ctx,x,myheight)
+        line(ctx,x,x,1,myheight)
     end
 
     set_source_rgba(ctx,1.0,1.0,1.0,.5)
     stroke(ctx) 
     
     set_dash(ctx,Float64[])
-    
-    move_to(ctx,1,myheight)
-    line_to(ctx,mywidth,myheight)
+
+    line(ctx,1,mywidth,myheight,myheight)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
-    move_to(ctx,1,myheight/2)
-    line_to(ctx,mywidth,myheight/2)
+    line(ctx,1,mywidth,myheight/2,myheight/2)
     stroke(ctx)
 
     move_to(ctx,10,10)
@@ -753,8 +752,7 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     total_clus = max(han.total_clus[han.spike]+1,5)
 
-    move_to(ctx,0,130)
-    line_to(ctx,mywidth,130)
+    line(ctx,0,mywidth,130,130)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
@@ -762,8 +760,7 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     for i=1:total_clus
 
-        move_to(ctx,i*han.wave_points,0)
-        line_to(ctx,i*han.wave_points,130)
+        line(ctx,i*han.wave_points,i*han.wave_points,0,130)
         set_source_rgb(ctx,1.0,1.0,1.0)
         stroke(ctx)
 

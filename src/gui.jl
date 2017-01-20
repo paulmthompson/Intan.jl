@@ -733,8 +733,6 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
 	    end
-            draw_c3(rhd,han)
-
             if han.thres_changed
                 thres_changed(han,rhd)
             end
@@ -744,6 +742,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             if han.rb_active
                 draw_rb(han)
             end
+            draw_c3(rhd,han)
 	end	
 	han.draws+=1
 	if han.draws>500
@@ -1104,15 +1103,12 @@ function plot_thres(han::Gui_Handles)
     
     ctx = han.ctx2
 
-    move_to(ctx,1,han.h2/2-han.old_thres)
-    line_to(ctx,han.w2,han.h2/2-han.old_thres)
-
+    line(ctx,1,han.w2,han.h2/2-han.old_thres,han.h2/2-han.old_thres)
     set_line_width(ctx,5.0)
     set_source(ctx,han.ctx2s)
     stroke(ctx)
-    
-    move_to(ctx,1,han.h2/2-han.thres)
-    line_to(ctx,han.w2,han.h2/2-han.thres)
+
+    line(ctx,1,han.w2,han.h2/2-han.thres,han.h2/2-han.thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
@@ -1399,14 +1395,12 @@ function draw_rb(han::Gui_Handles)
         #Erase old rb
         ctx = han.ctx2
 
-        move_to(ctx,han.rb.pos0.x,han.rb.pos0.y)
-        line_to(ctx,han.rb.pos1.x,han.rb.pos1.y)
+        line(ctx,han.rb.pos0.x,han.rb.pos1.x,han.rb.pos0.y,han.rb.pos1.y)
         set_line_width(ctx,2.0)
         set_source(ctx,han.ctx2s)
         stroke(ctx)
-    
-        move_to(ctx,han.rb.pos0.x,han.rb.pos0.y)
-        line_to(ctx,han.rb.pos2.x,han.rb.pos2.y)
+
+        line(ctx,han.rb.pos0.x,han.rb.pos2.x,han.rb.pos0.y,han.rb.pos2.y)
         set_line_width(ctx,1.0)
         set_source_rgb(ctx,1.0,1.0,1.0)
         stroke(ctx)
