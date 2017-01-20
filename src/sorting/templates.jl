@@ -104,7 +104,7 @@ end
 function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
-    ctx = han.ctx2
+    ctx = han.ctx2s
 
     clus=han.clus
 
@@ -167,7 +167,7 @@ end
 
 function draw_templates(c::ClusterTemplate,han::Gui_Handles)
 
-    ctx = han.ctx2
+    ctx = han.ctx2s
     mywidth=width(ctx)
     myheight=height(ctx)
 
@@ -208,7 +208,7 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
         if ((han.buf_count>0)&(han.pause))
             template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sig_min[:,clus],rhd.s[han.spike].c.sig_max[:,clus],rhd.s[han.spike].c.tol[clus])
-            plot_new_color(getgc(han.c2),han,clus)
+            plot_new_color(han.ctx2,han,clus)
         end
     end
 end
