@@ -511,7 +511,7 @@ spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 sleep(1.0)
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),1,1,1,
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,1,1,
 scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
@@ -740,6 +740,9 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             end
             if han.show_thres
                 plot_thres(han)
+            end
+            if han.rb_active
+                draw_rb(han)
             end
 	end	
 	han.draws+=1
@@ -1362,50 +1365,55 @@ end
 Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 =#
 
-function rb_erase(r::Cairo.CairoContext, ctxcopy)
-    # Erase the previous rubberband by copying from back surface to front
-    set_source(r, ctxcopy)
-    set_line_width(r, 3)
-    stroke(r)
-end
+function rubberband_start(han::Gui_Handles, x, y; minpixels::Int=2)
 
-function rubberband_start(c::Canvas, x, y; minpixels::Int=2)
-    # Copy the surface to another buffer, so we can repaint the areas obscured by the rubberband
-    r = getgc(c)
-    Cairo.save(r)
-    ctxcopy = copy(r)
-    rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
-    push!((c.mouse, :button1motion),  (c, event) -> rubberband_move(c, rb, event.x, event.y, ctxcopy))
-    push!((c.mouse, :motion), Gtk.default_mouse_cb)
-    push!((c.mouse, :button1release), (c, event) -> rubberband_stop(c, rb, event.x, event.y, ctxcopy))
+    han.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
+    
+    push!((han.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
+    push!((han.c2.mouse, :motion), Gtk.default_mouse_cb)
+    push!((han.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y))
+    han.rb_active=true
     nothing
 end
 
-function rubberband_move(c::Canvas, rb::RubberBand, x, y, ctxcopy)
-    r = getgc(c)
-    if rb.moved
-        rb_erase(r, ctxcopy)
-    end
-    rb.moved = true
+function rubberband_move(han::Gui_Handles, x, y)
     
-    # Draw the new rubberband
-    rb.pos2 = Vec2(x, y)
-    rb_draw(r, rb)
-    reveal(c, false)
+    han.rb.moved = true
+    han.rb.pos2 = Vec2(x ,y)
+    nothing
 end
 
-function rubberband_stop(c::Canvas, rb::RubberBand, x, y, ctxcopy)
-    pop!((c.mouse, :button1motion))
-    pop!((c.mouse, :motion))
-    pop!((c.mouse, :button1release))
-    if !rb.moved
-        return
+function rubberband_stop(han::Gui_Handles, x, y)
+    pop!((han.c2.mouse, :button1motion))
+    pop!((han.c2.mouse, :motion))
+    pop!((han.c2.mouse, :button1release))
+
+    han.rb.moved = false
+    han.rb_active=false
+    nothing
+end
+
+function draw_rb(han::Gui_Handles)
+
+    if han.rb.moved
+        #Erase old rb
+        ctx = han.ctx2
+
+        move_to(ctx,han.rb.pos0.x,han.rb.pos0.y)
+        line_to(ctx,han.rb.pos1.x,han.rb.pos1.y)
+        set_line_width(ctx,2.0)
+        set_source(ctx,han.ctx2s)
+        stroke(ctx)
+    
+        move_to(ctx,han.rb.pos0.x,han.rb.pos0.y)
+        line_to(ctx,han.rb.pos2.x,han.rb.pos2.y)
+        set_line_width(ctx,1.0)
+        set_source_rgb(ctx,1.0,1.0,1.0)
+        stroke(ctx)
+
+        han.rb.pos1=han.rb.pos2
     end
-    r = getgc(c)
-    rb_set(r, rb)
-    rb_erase(r, ctxcopy)
-    restore(r)
-    reveal(c, false)
+    
     nothing
 end
 
@@ -1774,7 +1782,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
     
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
-        rubberband_start(han.c2,event.x,event.y)
+        rubberband_start(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
         clear_c2(han.c2,han.spike)
         han.ctx2=getgc(han.c2)

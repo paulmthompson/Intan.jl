@@ -285,6 +285,9 @@ type Gui_Handles
     ctx2s::Cairo.CairoContext
     w2::Int64
     h2::Int64
+
+    rb_active::Bool
+    rb::RubberBand
     
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
