@@ -781,6 +781,8 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
         clear_c(han)
         clear_c2(han.c2,han.spike)
+        han.ctx2=getgc(han.c2)
+        han.ctx2s=copy(han.ctx2)
 
         #Audio output
         set_audio(rhd,han)
@@ -836,6 +838,8 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         han.spike=chan_per_display*han.num16-chan_per_display+han.num
 
         clear_c2(han.c2,han.spike)
+        han.ctx2=getgc(han.c2)
+        han.ctx2s=copy(han.ctx2)
 
         #Audio output
         set_audio(rhd,han)
@@ -891,6 +895,8 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
     clear_c2(han.c2,han.spike)
+    han.ctx2=getgc(han.c2)
+    han.ctx2s=copy(han.ctx2)
     #Sort Button
     if han.sort_cb
         draw_templates(rhd.s[han.spike].c,han)
@@ -1771,6 +1777,8 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
         rubberband_start(han.c2,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
         clear_c2(han.c2,han.spike)
+        han.ctx2=getgc(han.c2)
+        han.ctx2s=copy(han.ctx2)
         if getproperty(han.buf_button,:active,Bool)
             han.buf_ind=1
             han.buf_count=1

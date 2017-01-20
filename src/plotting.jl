@@ -341,9 +341,10 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     o=han.offset[han.spike]
     reads=han.draws
 
-    #ctx=getgc(han.c2)
-    ctx=han.ctx2s
-    #set_operator(ctx,Cairo.OPERATOR_SOURCE)
+    #ctx=han.ctx2s
+    ctx=copy(han.ctx2s)
+    paint_with_alpha(ctx,0.0)
+
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
     
@@ -388,10 +389,22 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     identity_matrix(ctx)
 
-    set_source(han.ctx2,han.ctx2s)
-    paint(han.ctx2)
+    set_source(han.ctx2s,ctx)
+    mask_surface(han.ctx2s,ctx,0.0,0.0)
+    fill(han.ctx2s)
+
+    set_source(han.ctx2,ctx)
+    mask_surface(han.ctx2,ctx,0.0,0.0)
+    fill(han.ctx2)
+    
+    #set_source(han.ctx2,han.ctx2s)
+    #paint(han.ctx2)
     
     nothing
+end
+
+function mask_surface(ctx,s,x,y)
+    ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
 end
 
 function update_isi(rhd::RHD2000,han::Gui_Handles,i)
