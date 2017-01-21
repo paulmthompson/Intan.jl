@@ -49,23 +49,23 @@ Constructors
 function Task_COT()
 
     #Draw Task Screen
-    c1=@Canvas(800,800)
+    c1=Canvas(800,800)
     @guarded draw(c1) do widget
     ctx = getgc(c1)
     set_source_rgb(ctx,0,0,0)
     paint(ctx)
     end
     show(c1)
-    grid1 = @Grid()
+    grid1 = Grid()
     push!(grid1,c1)
-    win1 = @Window(grid1,"Center Out Task")
+    win1 = Window(grid1,"Center Out Task")
     showall(win1)
 
     #Draw Control widget
-    grid2 = @Grid()
-    button_start=@Button("Start Task")
+    grid2 = Grid()
+    button_start=Button("Start Task")
     grid2[1,1]=button_start
-    win2 = @Window(grid2,"Center Out Control")
+    win2 = Window(grid2,"Center Out Control")
     showall(win2)
 
     hold_time=300.0

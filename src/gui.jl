@@ -3,122 +3,122 @@
 function makegui(r::RHD2000)
 
     #GUI ARRANGEMENT
-    grid = @Grid()
+    grid = Grid()
 
     #COLUMN 1 - control buttons
 	
     #ROW 1
 	
     #ROW 2
-    vbox1_2=@Grid()
+    vbox1_2=Grid()
     grid[1,2]=vbox1_2
 	
-    frame_control=@Frame("Control")
+    frame_control=Frame("Control")
     grid[1,1]=frame_control
-    vbox_control = @Grid()
+    vbox_control = Grid()
     push!(frame_control,vbox_control)
     
-    button_init = @Button()
+    button_init = Button()
     add_button_label(button_init,"Init")
     vbox_control[1,1]=button_init
     
-    button_run = @ToggleButton()
+    button_run = ToggleButton()
     add_button_label(button_run,"Run")
     vbox_control[2,1]=button_run
     
-    button_cal = @CheckButton("Calibrate")
+    button_cal = CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
     vbox_control[1,2]=button_cal
 
     #GAIN
-    frame1_2=@Frame("Gain")
+    frame1_2=Frame("Gain")
     vbox1_2[1,2]=frame1_2
-    vbox1_2_1=@Box(:v)
+    vbox1_2_1=Box(:v)
     push!(frame1_2,vbox1_2_1)
 
-    sb2=@SpinButton(1:1000)
+    sb2=SpinButton(1:1000)
     setproperty!(sb2,:value,1)
     push!(vbox1_2_1,sb2)
 
-    gain_checkbox=@CheckButton()
+    gain_checkbox=CheckButton()
     add_button_label(gain_checkbox," x 10")
     push!(vbox1_2_1,gain_checkbox)
 
-    sb_offset=@SpinButton(-1000:1000)
+    sb_offset=SpinButton(-1000:1000)
     setproperty!(sb_offset,:value,0)
 
-    button_gain = @CheckButton()
+    button_gain = CheckButton()
     add_button_label(button_gain,"All Channels")
     setproperty!(button_gain,:active,false)
     push!(vbox1_2_1,button_gain)
     
 		
     #THRESHOLD
-    frame1_3=@Frame("Threshold")
+    frame1_3=Frame("Threshold")
     vbox1_2[1,3]=frame1_3
-    vbox1_3_1=@Box(:v)
+    vbox1_3_1=Box(:v)
     push!(frame1_3,vbox1_3_1)
     
-    sb=@SpinButton(-300:300)
+    sb=SpinButton(-300:300)
     setproperty!(sb,:value,0)
     push!(vbox1_3_1,sb)
 
-    button_thres_all = @CheckButton()
+    button_thres_all = CheckButton()
     add_button_label(button_thres_all,"All Channels")
     setproperty!(button_thres_all,:active,false)
     push!(vbox1_3_1,button_thres_all)
     
-    button_thres = @CheckButton()
+    button_thres = CheckButton()
     add_button_label(button_thres,"Show")
     setproperty!(button_thres,:active,false)
     push!(vbox1_3_1,button_thres)
 
     #SPIKE
-    frame_hold=@Frame("Spike")
+    frame_hold=Frame("Spike")
     vbox1_2[1,4]=frame_hold
-    vbox_hold=@Grid()
+    vbox_hold=Grid()
     push!(frame_hold,vbox_hold)
 
-    button_hold = @CheckButton("Hold on")
+    button_hold = CheckButton("Hold on")
     setproperty!(button_hold,:active,false)
     #vbox_hold[1,1]=button_hold
 
-    button_pause=@ToggleButton()
+    button_pause=ToggleButton()
     add_button_label(button_pause,"Pause")
     vbox_hold[2,2]=button_pause
 
-    button_clear=@Button()
+    button_clear=Button()
     add_button_label(button_clear,"Refresh")
     vbox_hold[1,2]=button_clear
 
-    button_buffer = @CheckButton("Buffer On")
+    button_buffer = CheckButton("Buffer On")
     setproperty!(button_buffer,:active,true)
     
     #CLUSTER
-    frame1_4=@Frame("Clustering")
+    frame1_4=Frame("Clustering")
     
-    vbox1_3_2=@Grid()
+    vbox1_3_2=Grid()
     push!(frame1_4,vbox1_3_2)
 
-    button_sort1 = @Button()
-    button_sort2 = @Button()
-    button_sort3 = @Button()
+    button_sort1 = Button()
+    button_sort2 = Button()
+    button_sort3 = Button()
 
-    button_sort4 = @Button()
-    button_sort5 = @Button()
+    button_sort4 = Button()
+    button_sort5 = Button()
 
-    check_sort1 = @CheckButton()
+    check_sort1 = CheckButton()
 
-    slider_sort = @Scale(false, 0, 100,1)
-    adj_sort = @Adjustment(slider_sort)
+    slider_sort = Scale(false, 0, 100,1)
+    adj_sort = Adjustment(slider_sort)
     setproperty!(adj_sort,:value,50)
-    slider_sort_label=@Label("Slider Label")
+    slider_sort_label=Label("Slider Label")
 
-    sort_list=@ListStore(Int32)
+    sort_list=ListStore(Int32)
     push!(sort_list,(0,))
-    sort_tv=@TreeView(TreeModel(sort_list))
-    sort_r1=@CellRendererText()
-    sort_c1=@TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
+    sort_tv=TreeView(TreeModel(sort_list))
+    sort_r1=CellRendererText()
+    sort_c1=TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
     Gtk.GAccessor.activate_on_single_click(sort_tv,1)
     
     push!(sort_tv,sort_c1)
@@ -132,22 +132,22 @@ function makegui(r::RHD2000)
     vbox1_3_2[1,8] = slider_sort
     vbox1_3_2[1,9] = slider_sort_label
     
-    myscroll=@ScrolledWindow()
+    myscroll=ScrolledWindow()
     Gtk.GAccessor.min_content_height(myscroll,150)
     Gtk.GAccessor.min_content_width(myscroll,100)
     push!(myscroll,sort_tv)
     vbox1_3_2[1,10]=myscroll
-    vbox1_3_2[1,11]=@Canvas(150,10)
+    vbox1_3_2[1,11]=Canvas(150,10)
 
     vbox1_2[1,5]=frame1_4 |> showall
 
     #COLUMN 2 - Threshold slider
-    vbox_slider=@Box(:v)
-    thres_slider = @Scale(true, -300,300,1)
-    adj_thres = @Adjustment(thres_slider)
+    vbox_slider=Box(:v)
+    thres_slider = Scale(true, -300,300,1)
+    adj_thres = Adjustment(thres_slider)
     setproperty!(adj_thres,:value,0)
 
-    c_thres=@Canvas(10,200)
+    c_thres=Canvas(10,200)
     setproperty!(c_thres,:vexpand,false)
     
     Gtk.GAccessor.inverted(thres_slider,true)
@@ -162,9 +162,9 @@ function makegui(r::RHD2000)
     #COLUMN 3 - MAXIMIZED CHANNEL PLOTTING
     
     #ROW 2
-    c_grid=@Grid()
+    c_grid=Grid()
     
-    c2=@Canvas(500)
+    c2=Canvas(500)
     #c2=@Canvas()
 
     @guarded draw(c2) do widget
@@ -178,7 +178,7 @@ function makegui(r::RHD2000)
     setproperty!(c2,:vexpand,true)
 
     #ROW 2
-    c3=@Canvas(500,200)     
+    c3=Canvas(500,200)     
     @guarded draw(c3) do widget
         ctx = getgc(c3)
         clear_c3(c3,1)
@@ -190,23 +190,23 @@ function makegui(r::RHD2000)
     grid[4,2]=c_grid
 
     #ROW 3
-    c2_slider=@Scale(false, 1:16)
-    adj2 = @Adjustment(c2_slider)
+    c2_slider=Scale(false, 1:16)
+    adj2 = Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
     grid[4,3]=c2_slider
  
     #COLUMN 3 - 16 CHANNEL DISPLAY
 
     #ROW 1 - Time
-    s_label=@Label("0")
-    m_label=@Label("0")
-    h_label=@Label("0")
-    sm_label=@Label(":")
-    mh_label=@Label(":")
+    s_label=Label("0")
+    m_label=Label("0")
+    h_label=Label("0")
+    sm_label=Label(":")
+    mh_label=Label(":")
 
-    frame_time=@Frame("Time Elapsed")
+    frame_time=Frame("Time Elapsed")
     grid[5,1]=frame_time
-    hbox_time=@ButtonBox(:h)
+    hbox_time=ButtonBox(:h)
 push!(frame_time,hbox_time)
 
     push!(hbox_time,h_label)
@@ -218,7 +218,7 @@ push!(hbox_time,m_label)
     
     #ROW 2
 #c=@Canvas(500,800)
-c=@Canvas(500)
+c=Canvas(500)
     @guarded draw(c) do widget
         ctx = getgc(c)
         set_source_rgb(ctx,0.0,0.0,0.0)
@@ -231,27 +231,27 @@ c=@Canvas(500)
 
     #ROW 3
     #Which 16 channels can be selected with a slider
-    c_slider = @Scale(false, 0:(div(length(r.nums)-1,16)+1))
-    adj = @Adjustment(c_slider)
+    c_slider = Scale(false, 0:(div(length(r.nums)-1,16)+1))
+    adj = Adjustment(c_slider)
     setproperty!(adj,:value,1)
     grid[5,3]=c_slider
 
     #COLUMN 4
     #ROW 2
-    vbox_42=@Box(:v)
+    vbox_42=Box(:v)
     grid[6,2]=vbox_42
     
-    vbox_rb_upper=@Box(:v)
+    vbox_rb_upper=Box(:v)
     push!(vbox_42,vbox_rb_upper)
     
-    push!(vbox_rb_upper,@Label("Top Panel"))
+    push!(vbox_rb_upper,Label("Top Panel"))
     
     rbs=Array(RadioButton,5)
-    rbs[1]=@RadioButton("16 Channel",active=true)
-    rbs[2]=@RadioButton(rbs[1],"32 Channel")
-    rbs[3]=@RadioButton(rbs[2],"64 Channel")
-    rbs[4]=@RadioButton(rbs[3],"64 Raster")
-    rbs[5]=@RadioButton(rbs[4],"Blank")
+    rbs[1]=RadioButton("16 Channel",active=true)
+    rbs[2]=RadioButton(rbs[1],"32 Channel")
+    rbs[3]=RadioButton(rbs[2],"64 Channel")
+    rbs[4]=RadioButton(rbs[3],"64 Raster")
+    rbs[5]=RadioButton(rbs[4],"Blank")
     
     push!(vbox_rb_upper,rbs[1])
     push!(vbox_rb_upper,rbs[2])
@@ -259,23 +259,23 @@ c=@Canvas(500)
     push!(vbox_rb_upper,rbs[4])
     push!(vbox_rb_upper,rbs[5])
     
-c_rb=@Canvas(40)
+c_rb=Canvas(40)
 setproperty!(c_rb,:vexpand,true)
     
     push!(vbox_42,c_rb)
     
-    vbox_rb_lower=@Box(:v)
+    vbox_rb_lower=Box(:v)
     push!(vbox_42,vbox_rb_lower)
-    push!(vbox_rb_lower,@Label("Lower Panel"))
+    push!(vbox_rb_lower,Label("Lower Panel"))
     
     rbs2=Array(RadioButton,7)
-    rbs2[1]=@RadioButton("Events",active=true)
-    rbs2[2]=@RadioButton(rbs2[1],"16 Raster")
-    rbs2[3]=@RadioButton(rbs2[2],"32 Raster")
-    rbs2[4]=@RadioButton(rbs2[3],"Soft Scope")
-    rbs2[5]=@RadioButton(rbs2[4],"64 Channel")
-rbs2[6]=@RadioButton(rbs2[5],"64 Raster")
-rbs2[7]=@RadioButton(rbs2[6],"Nothing")
+    rbs2[1]=RadioButton("Events",active=true)
+    rbs2[2]=RadioButton(rbs2[1],"16 Raster")
+    rbs2[3]=RadioButton(rbs2[2],"32 Raster")
+    rbs2[4]=RadioButton(rbs2[3],"Soft Scope")
+    rbs2[5]=RadioButton(rbs2[4],"64 Channel")
+rbs2[6]=RadioButton(rbs2[5],"64 Raster")
+rbs2[7]=RadioButton(rbs2[6],"Nothing")
 
     push!(vbox_rb_lower,rbs2[1])
     push!(vbox_rb_lower,rbs2[2])
@@ -288,62 +288,62 @@ rbs2[7]=@RadioButton(rbs2[6],"Nothing")
     #MENU ITEMS
     
     #SAVING
-    saveopts = @MenuItem("_Save")
-    savemenu = @Menu(saveopts)
-    save_ts_ = @MenuItem("Save Time Stamps")
+    saveopts = MenuItem("_Save")
+    savemenu = Menu(saveopts)
+    save_ts_ = MenuItem("Save Time Stamps")
     push!(savemenu,save_ts_)
-    save_v_ = @MenuItem("Save Voltage")
+    save_v_ = MenuItem("Save Voltage")
     push!(savemenu,save_v_)
     
     #SORTING
-    sortopts = @MenuItem("_Sorting")
-    sortmenu = @Menu(sortopts)
-    load_sort_ = @MenuItem("Load Sorting Parameters")
+    sortopts = MenuItem("_Sorting")
+    sortmenu = Menu(sortopts)
+    load_sort_ = MenuItem("Load Sorting Parameters")
     push!(sortmenu,load_sort_)
-    save_sort_ = @MenuItem("Save Sorting Parameters")
+    save_sort_ = MenuItem("Save Sorting Parameters")
     push!(sortmenu,save_sort_)
 	
     #Reference Electrode
-    refopts = @MenuItem("_Reference Electrodes")
-    refmenu = @Menu(refopts)
-    define_ref_ = @MenuItem("Define Reference Configuration")
+    refopts = MenuItem("_Reference Electrodes")
+    refmenu = Menu(refopts)
+    define_ref_ = MenuItem("Define Reference Configuration")
     push!(refmenu,define_ref_)
 	
     #Export
-exopts = @MenuItem("_Export")
-    exmenu = @Menu(exopts)
-    export_plex_ = @MenuItem("Plexon")
+exopts = MenuItem("_Export")
+    exmenu = Menu(exopts)
+    export_plex_ = MenuItem("Plexon")
     push!(exmenu,export_plex_)
-    export_klusta_ = @MenuItem("KlustaFormat")
+    export_klusta_ = MenuItem("KlustaFormat")
     push!(exmenu,export_klusta_)
-    export_nwb_ = @MenuItem("NWB")
+    export_nwb_ = MenuItem("NWB")
     push!(exmenu,export_nwb_)
-    export_jld_ = @MenuItem("JLD")
+    export_jld_ = MenuItem("JLD")
     push!(exmenu,export_jld_)
-export_mat_ = @MenuItem("MAT")
+export_mat_ = MenuItem("MAT")
 push!(exmenu,export_mat_)
 
     #Options
-    opopts = @MenuItem("_Options")
-opmenu = @Menu(opopts)
+    opopts = MenuItem("_Options")
+opmenu = Menu(opopts)
 
-op_align = @MenuItem("Alignment")
+op_align = MenuItem("Alignment")
 push!(opmenu,op_align)
-op_align_menu = @Menu(op_align)
-op_align_min = @MenuItem("Minimum")
+op_align_menu = Menu(op_align)
+op_align_min = MenuItem("Minimum")
 push!(op_align_menu,op_align_min)
-op_align_cross = @MenuItem("Threshold Crossing")
+op_align_cross = MenuItem("Threshold Crossing")
 push!(op_align_menu,op_align_cross)
 
 
 #Autosort
-    svopts = @MenuItem("_Sorting")
-svmenu = @Menu(svopts)
+    svopts = MenuItem("_Sort View")
+svmenu = Menu(svopts)
 
-sv_open = @MenuItem("Sort Viewer")
+sv_open = MenuItem("Sort Viewer")
 push!(svmenu,sv_open)
     
-    mb = @MenuBar()
+    mb = MenuBar()
     push!(mb,saveopts)
     push!(mb,sortopts)
 push!(mb,refopts)
@@ -353,53 +353,53 @@ push!(mb,svopts)
 grid[4,1]=mb
 
 # Reference popup
-ref_grid=@Grid()
+ref_grid=Grid()
 
-ref_list1=@ListStore(Int32)
+ref_list1=ListStore(Int32)
 for i=1:size(r.v,2)
     push!(ref_list1,(i,))
 end
-ref_tv1=@TreeView(TreeModel(ref_list1))
-ref_r1=@CellRendererText()
-ref_c1=@TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
+ref_tv1=TreeView(TreeModel(ref_list1))
+ref_r1=CellRendererText()
+ref_c1=TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
 
 ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
     
 push!(ref_tv1,ref_c1)
     
-ref_scroll1=@ScrolledWindow()
+ref_scroll1=ScrolledWindow()
 Gtk.GAccessor.min_content_height(ref_scroll1,350)
 Gtk.GAccessor.min_content_width(ref_scroll1,175)
 push!(ref_scroll1,ref_tv1)
 
-ref_list2=@ListStore(Int32)
+ref_list2=ListStore(Int32)
 for i=1:size(r.v,2)
     push!(ref_list2,(i,))
 end
-ref_tv2=@TreeView(TreeModel(ref_list2))
-ref_r2=@CellRendererText()
-ref_c2=@TreeViewColumn("Apply Reference To:",ref_r2, Dict([("text",0)]))
+ref_tv2=TreeView(TreeModel(ref_list2))
+ref_r2=CellRendererText()
+ref_c2=TreeViewColumn("Apply Reference To:",ref_r2, Dict([("text",0)]))
 
 ref_tv2_s=Gtk.GAccessor.selection(ref_tv2)
 Gtk.GAccessor.mode(ref_tv2_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
     
 push!(ref_tv2,ref_c2)
     
-ref_scroll2=@ScrolledWindow()
+ref_scroll2=ScrolledWindow()
 Gtk.GAccessor.min_content_height(ref_scroll2,350)
 Gtk.GAccessor.min_content_width(ref_scroll2,175)
 push!(ref_scroll2,ref_tv2)
 
-ref_button2=@Button("Select All/None")
-ref_button3=@Button("Apply")
+ref_button2=Button("Select All/None")
+ref_button3=Button("Apply")
 
 ref_grid[1,1]=ref_scroll1
-ref_grid[2,1]=@Canvas(50,350)
+ref_grid[2,1]=Canvas(50,350)
 ref_grid[3,1]=ref_scroll2
 ref_grid[3,2]=ref_button2
-ref_grid[2,3]=@Canvas(50,50)
+ref_grid[2,3]=Canvas(50,50)
 ref_grid[3,4]=ref_button3
-ref_win=@Window(ref_grid)
+ref_win=Window(ref_grid)
 setproperty!(ref_win, :title, "Reference Channel Select")
 
 showall(ref_win)
@@ -413,66 +413,66 @@ visible(sortview_handles.win,false)
 #POPUP MENUS
 
 #Enable-Disable
-    popupmenu = @Menu()
-    popup_enable = @MenuItem("Enable")
+    popupmenu = Menu()
+    popup_enable = MenuItem("Enable")
     push!(popupmenu, popup_enable)
-    popup_disable = @MenuItem("Disable")
+    popup_disable = MenuItem("Disable")
     push!(popupmenu, popup_disable)
 showall(popupmenu)
 
 #Event
-popup_event = @Menu()
+popup_event = Menu()
 event_handles=Array(Gtk.GtkMenuItemLeaf,0)
 for i=1:8
-    push!(event_handles,@MenuItem(string("Analog ",i)))
+    push!(event_handles,MenuItem(string("Analog ",i)))
     push!(popup_event,event_handles[i])
 end
 
 for i=1:16
-    push!(event_handles,@MenuItem(string("TTL ",i)))
+    push!(event_handles,MenuItem(string("TTL ",i)))
     push!(popup_event,event_handles[8+i])
 end
 
-popup_event_none=@MenuItem("None")
+popup_event_none=MenuItem("None")
 push!(popup_event,popup_event_none)
 showall(popup_event)
     
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
-    win = @Window(grid, "Intan.jl GUI") |> showall
+    win = Window(grid, "Intan.jl GUI") |> showall
 
 #Soft Scope
 
-popupmenu_scope = @Menu()
-popupmenu_voltage=@MenuItem("Voltage Scale")
-popupmenu_time=@MenuItem("Time Scale")
-popupmenu_thres=@MenuItem("Threshold")
+popupmenu_scope = Menu()
+popupmenu_voltage=MenuItem("Voltage Scale")
+popupmenu_time=MenuItem("Time Scale")
+popupmenu_thres=MenuItem("Threshold")
 push!(popupmenu_scope,popupmenu_voltage)
 push!(popupmenu_scope,popupmenu_time)
 push!(popupmenu_scope,popupmenu_thres)
 
 
-popupmenu_voltage_select=@Menu(popupmenu_voltage)
+popupmenu_voltage_select=Menu(popupmenu_voltage)
 scope_v_handles=Array(Gtk.GtkMenuItemLeaf,0)
 voltage_scales=[1, 50, 100, 200, 500]
 for i=1:5
-    push!(scope_v_handles,@MenuItem(string(voltage_scales[i]))) 
+    push!(scope_v_handles,MenuItem(string(voltage_scales[i]))) 
     push!(popupmenu_voltage_select,scope_v_handles[i])
 end
 
-popupmenu_time_select=@Menu(popupmenu_time)
+popupmenu_time_select=Menu(popupmenu_time)
 scope_t_handles=Array(Gtk.GtkMenuItemLeaf,0)
 time_scales=[1, 2, 3, 4, 5]
 for i=1:5
-    push!(scope_t_handles,@MenuItem(string(time_scales[i]))) 
+    push!(scope_t_handles,MenuItem(string(time_scales[i]))) 
     push!(popupmenu_time_select,scope_t_handles[i])
 end
 
-popupmenu_thres_select=@Menu(popupmenu_thres)
+popupmenu_thres_select=Menu(popupmenu_thres)
 scope_thres_handles=Array(Gtk.GtkMenuItemLeaf,0)
-push!(scope_thres_handles,@MenuItem("On"))
+push!(scope_thres_handles,MenuItem("On"))
 push!(popupmenu_thres_select,scope_thres_handles[1])
-push!(scope_thres_handles,@MenuItem("Off"))
+push!(scope_thres_handles,MenuItem("Off"))
 push!(popupmenu_thres_select,scope_thres_handles[2])
 
 showall(popupmenu_scope)   
@@ -743,6 +743,13 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
                 draw_rb(han)
             end
             draw_c3(rhd,han)
+            if visible(han.sortview_widgets.win)
+                if !han.pause
+
+                else
+
+                end
+            end
 	end	
 	han.draws+=1
 	if han.draws>500
@@ -818,7 +825,7 @@ function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 end
 
 function add_button_label(button,mylabel)
-    b_label=@Label(mylabel)
+    b_label=Label(mylabel)
     Gtk.GAccessor.markup(b_label, string("""<span size="x-small">""",mylabel,"</span>"))
     push!(button,b_label)
     show(b_label)
