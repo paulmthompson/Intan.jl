@@ -287,14 +287,6 @@ rbs2[7]=RadioButton(rbs2[6],"Nothing")
 		
     #MENU ITEMS
     
-    #SAVING
-    saveopts = MenuItem("_Save")
-    savemenu = Menu(saveopts)
-    save_ts_ = MenuItem("Save Time Stamps")
-    push!(savemenu,save_ts_)
-    save_v_ = MenuItem("Save Voltage")
-    push!(savemenu,save_v_)
-    
     #SORTING
     sortopts = MenuItem("_Sorting")
     sortmenu = Menu(sortopts)
@@ -344,7 +336,6 @@ sv_open = MenuItem("Sort Viewer")
 push!(svmenu,sv_open)
     
     mb = MenuBar()
-    push!(mb,saveopts)
     push!(mb,sortopts)
 push!(mb,refopts)
 push!(mb,exopts)
