@@ -171,7 +171,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         set_source_rgb(ctx,0.0,0.0,0.0)
         set_line_width(ctx,4.0)
         stroke(ctx)  
-
+  
         s=han.soft.v_div*-1
         
         #Draw voltage trace from desired channel

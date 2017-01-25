@@ -234,7 +234,7 @@ type SoftScope
 end
 
 function SoftScope(sr)
-    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,100),0,zeros(Int64,100),0,false)
+    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,200),0,zeros(Int64,200),0,false)
 end
 
 type Sort_Widgets

@@ -163,7 +163,7 @@ function open_board(fpga::FPGA)
     serial=Array(UInt8,11)
     ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
     serial[end]=0
-    serialnumber=bytestring(pointer(serial))
+    serialnumber=unsafe_string(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
     
     #Open by serial 
