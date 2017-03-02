@@ -567,8 +567,8 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
-id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
-id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
+id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,))
+id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
@@ -576,47 +576,47 @@ id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handle
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
-id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,r))
+id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,))
 id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
-id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,r))
+id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,r))
 
 for i=1:8
-    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 for i=9:24
-    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
-id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,r,-1))
+id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,-1))
 
 for i=1:5
-    id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,r,i))
+    id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,i))
 end
 
 for i=1:7
-    id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,r,i))
+    id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,i))
 end
 
 id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 
 for i=1:5
-    signal_connect(scope_popup_v_cb,scope_v_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    signal_connect(scope_popup_v_cb,scope_v_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 for i=1:5
-    signal_connect(scope_popup_t_cb,scope_t_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    signal_connect(scope_popup_t_cb,scope_t_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 for i=1:2
-    signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,r,i-1))
+    signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 #Reference
 
-#id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,r))
-id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,r))
+#id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,))
+id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,))
 id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
 id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,r))
@@ -993,8 +993,8 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    han, rhd = user_data
+function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+    han, = user_data
 
     mybuf=getproperty(han.buf_button,:active,Bool)
 
@@ -1019,9 +1019,9 @@ function hold_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     nothing
 end
 
-function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     
     widget = convert(ToggleButton, widgetptr)
 
@@ -1578,9 +1578,9 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
 end
 
-popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],true)
+popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles})=enable_disable(d[1],true)
 
-popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],false)
+popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles})=enable_disable(d[1],false)
 
 function enable_disable(han::Gui_Handles,en::Bool)
 
@@ -1605,9 +1605,9 @@ function enable_disable(han::Gui_Handles,en::Bool)
     nothing
 end
 
-function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
-    han, rhd, event_id = user_data
+    han, event_id = user_data
 
     ctx=getgc(han.c)
     myheight=height(ctx)
@@ -1632,9 +1632,9 @@ function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int6
     nothing
 end
 
-function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
-    han, rhd, event_id = user_data
+    han, event_id = user_data
 
     if han.c_right_top != event_id
         han.c_right_top=event_id
@@ -1676,9 +1676,9 @@ function set_slider(han::Gui_Handles,chan_num::Int64)
     nothing
 end
 
-function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
-    han, rhd, event_id = user_data
+    han, event_id = user_data
 
     if han.c_right_bottom != event_id
         han.c_right_bottom=event_id
@@ -1742,18 +1742,18 @@ function get_cluster_id(han::Gui_Handles)
     myind=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.sort_list), iter))
 end
 
-function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     selmodel=Gtk.GAccessor.selection(han.ref_tv1)
     selectall!(selmodel)
 
     nothing
 end
 
-function ref_b2_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+function ref_b2_cb(widget::Ptr, user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     selmodel=Gtk.GAccessor.selection(han.ref_tv2)
     selectall!(selmodel)
 
@@ -1856,9 +1856,9 @@ function generate_mask(han::Gui_Handles,x1,y1,x2,y2)
     nothing
 end
 
-function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
-    han, rhd, event_id = user_data
+    han, event_id = user_data
     
     if event_id==0
         han.soft.v_div=1.0
@@ -1877,9 +1877,9 @@ function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,In
     nothing
 end
 
-function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
-    han, rhd, event_id = user_data
+    han, event_id = user_data
     
     if event_id==0
         han.soft.t_div=1.0
@@ -1896,9 +1896,9 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,In
     nothing
 end
 
-function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})
+function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,Int64})
     
-    han, rhd, event_id = user_data
+    han, event_id = user_data
 
     if event_id==0
         han.soft.thres_on=true
