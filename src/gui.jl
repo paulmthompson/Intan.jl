@@ -619,7 +619,7 @@ end
 id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,))
 id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
-id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,r))
+id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,))
 
 signal_connect(ref_win, :delete_event) do widget, event
     visible(ref_win, false)
@@ -1133,7 +1133,6 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
-    #han.old_thres=han.thres
     
     if getproperty(han.thres_all,:active,Bool)      
         @inbounds for i=1:length(rhd.s)
@@ -1173,9 +1172,9 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
 
     mygain=getproperty(han.gain_multiply,:active,Bool)
 
