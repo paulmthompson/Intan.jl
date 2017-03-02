@@ -507,7 +507,7 @@ scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
 adj_thres,thres_slider,false,0.0,0.0,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
-zeros(Int64,500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
+zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
 gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
 
@@ -1028,10 +1028,13 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if getproperty(widget,:active,Bool)
         han.pause=true
         change_button_label(widget,"Resume")
+        for i=1:length(han.buf_mask)
+            han.buf_mask[i]=true
+        end
     else
         han.pause=false
         change_button_label(widget,"Pause")
-        han.hold=getproperty(han.hold_button,:active,Bool)
+        han.hold=getproperty(han.hold_button,:active,Bool) 
     end
 
     nothing
@@ -1359,13 +1362,18 @@ end
 Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 =#
 
-function rubberband_start(han::Gui_Handles, x, y; minpixels::Int=2)
+function rubberband_start(han::Gui_Handles, x, y, button_num=1)
 
-    han.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, minpixels)
-    
-    push!((han.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
-    push!((han.c2.mouse, :motion), Gtk.default_mouse_cb)
-    push!((han.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y))
+    han.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
+
+    if button_num==1
+        push!((han.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
+        push!((han.c2.mouse, :motion), Gtk.default_mouse_cb)
+        push!((han.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+    elseif button_num==3
+        push!((han.c2.mouse, :motion),  (c, event) -> rubberband_move(han,event.x, event.y))
+        push!((han.c2.mouse, :button3release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+    end
     han.rb_active=true
     nothing
 end
@@ -1377,13 +1385,20 @@ function rubberband_move(han::Gui_Handles, x, y)
     nothing
 end
 
-function rubberband_stop(han::Gui_Handles, x, y)
-    pop!((han.c2.mouse, :button1motion))
-    pop!((han.c2.mouse, :motion))
-    pop!((han.c2.mouse, :button1release))
+function rubberband_stop(han::Gui_Handles, x, y,button_num)
 
+    if button_num==1
+        pop!((han.c2.mouse, :button1motion))
+        pop!((han.c2.mouse, :motion))
+        pop!((han.c2.mouse, :button1release))
+    elseif button_num==3
+        pop!((han.c2.mouse, :motion))
+        pop!((han.c2.mouse, :button3release))
+    end
+        
     han.rb.moved = false
     han.rb_active=false
+    clear_rb(han)
     nothing
 end
 
@@ -1393,10 +1408,7 @@ function draw_rb(han::Gui_Handles)
         #Erase old rb
         ctx = han.ctx2
 
-        line(ctx,han.rb.pos0.x,han.rb.pos1.x,han.rb.pos0.y,han.rb.pos1.y)
-        set_line_width(ctx,2.0)
-        set_source(ctx,han.ctx2s)
-        stroke(ctx)
+        clear_rb(han)
 
         line(ctx,han.rb.pos0.x,han.rb.pos2.x,han.rb.pos0.y,han.rb.pos2.y)
         set_line_width(ctx,1.0)
@@ -1408,6 +1420,17 @@ function draw_rb(han::Gui_Handles)
     
     nothing
 end
+
+function clear_rb(han::Gui_Handles)
+
+    line(han.ctx2,han.rb.pos0.x,han.rb.pos1.x,han.rb.pos0.y,han.rb.pos1.y)
+    set_line_width(han.ctx2,2.0)
+    set_source(han.ctx2,han.ctx2s)
+    stroke(han.ctx2)
+    
+    nothing
+end
+
 
 #=
 Right Canvas Callbacks
@@ -1776,15 +1799,19 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
         han.mi=(event.x,event.y)
         rubberband_start(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
-        clear_c2(han.c2,han.spike)
-        han.ctx2=getgc(han.c2)
-        han.ctx2s=copy(han.ctx2)
-        if getproperty(han.buf_button,:active,Bool)
-            han.buf_ind=1
-            han.buf_count=1
-        end
-        if han.sort_cb
-            draw_templates(rhd.s[han.spike].c,han)
+        if !han.pause
+            clear_c2(han.c2,han.spike)
+            han.ctx2=getgc(han.c2)
+            han.ctx2s=copy(han.ctx2)
+            if getproperty(han.buf_button,:active,Bool)
+                han.buf_ind=1
+                han.buf_count=1
+            end
+            if han.sort_cb
+                draw_templates(rhd.s[han.spike].c,han)
+            end
+        else
+            rubberband_start(han,event.x,event.y,3)
         end
     end
     nothing

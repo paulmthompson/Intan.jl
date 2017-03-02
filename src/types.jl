@@ -353,6 +353,7 @@ type Gui_Handles
     pause::Bool
     
     buf_clus::Array{Int64,1}
+    buf_mask::Array{Bool,1}
     spike_win::Array{SpikeSorting.mywin,1}
     
     slider_sort::Gtk.GtkScaleLeaf

@@ -31,6 +31,8 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
             plot_new_color(han.ctx2,han,clus)
         end
+    elseif event.button==3
+
     end
     
     nothing
