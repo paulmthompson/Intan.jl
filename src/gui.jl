@@ -1811,6 +1811,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
                 draw_templates(rhd.s[han.spike].c,han)
             end
         else
+            han.mi=(event.x,event.y)
             rubberband_start(han,event.x,event.y,3)
         end
     end
@@ -1840,6 +1841,19 @@ function coordinate_transform(han::Gui_Handles,event)
         y2=y
     end
     (x1,x2,y1,y2)
+end
+
+function generate_mask(han::Gui_Handles,x1,y1,x2,y2)
+
+    for i=1:han.buf_count
+        for j=(x1-1):(x2+1)
+            if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,han.spike_buf[j,i],han.spike_buf[j+1,i])
+                han.buf_mask[i]=false
+            end
+        end
+    end
+    
+    nothing
 end
 
 function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Int64})

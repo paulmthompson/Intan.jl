@@ -8,20 +8,20 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     event = unsafe_load(param_tuple)
 
     clus=han.clus
+
+    (x1,x2,y1,y2)=coordinate_transform(han,event)
     
     if event.button==1 #Left click
         
-        (x1,x2,y1,y2)=coordinate_transform(han,event)
-
         if (clus==0) #do nothing if zeroth cluster    
         elseif (rhd.s[han.spike].c.num < clus) #new cluster
 
-            (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
+            (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
             setproperty!(han.adj_sort, :value, 50)
             draw_templates(rhd,han)
         else #replace old cluster
-            (mymean,mystd)=make_cluster(han.spike_buf,x1,y1,x2,y2,han.buf_count)
+            (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 50)
             draw_templates(rhd,han)
@@ -32,7 +32,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             plot_new_color(han.ctx2,han,clus)
         end
     elseif event.button==3
-
+        generate_mask(han,x1,y1,x2,y2)
     end
     
     nothing
@@ -266,9 +266,10 @@ function delete_cluster(c::ClusterTemplate,n::Int64)
     nothing
 end
 
-function make_cluster(input,x1,y1,x2,y2,nn)
+function make_cluster(han::Gui_Handles,x1,y1,x2,y2)
     
     hits=0
+    input=han.spike_buf
     mymean=zeros(Float64,size(input,1)-1)
     mysum=zeros(Int64,size(input,1)-1)
     mystd=zeros(Float64,size(input,1)-1)
@@ -281,9 +282,9 @@ function make_cluster(input,x1,y1,x2,y2,nn)
         x2=size(input,1)-3
     end
     
-    for i=1:nn
+    for i=1:han.buf_count
         for j=(x1-1):(x2+1)
-            if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i])
+            if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))&(han.buf_mask[i])
                 hits+=1
                 for ii=1:length(mymean)
                     mysum[ii] += input[ii,i]
