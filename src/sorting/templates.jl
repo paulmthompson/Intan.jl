@@ -32,7 +32,10 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             plot_new_color(han.ctx2,han,clus)
         end
     elseif event.button==3
-        generate_mask(han,x1,y1,x2,y2)
+        if han.pause
+            generate_mask(han,x1,y1,x2,y2)
+            replot_spikes(han)
+        end
     end
     
     nothing

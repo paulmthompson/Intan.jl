@@ -775,3 +775,37 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     nothing
 end
+
+function replot_spikes(han::Gui_Handles)
+
+    clear_c2(han.c2,han.spike)
+    han.ctx2=getgc(han.c2)
+    han.ctx2s=copy(han.ctx2)
+
+    ctx=han.ctx2s
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+
+    Cairo.translate(ctx,0.0,han.h2/2)
+    scale(ctx,han.w2/han.wave_points,s)
+
+    for i=1:(han.total_clus[han.spike]+1)
+        for j=1:han.buf_ind
+            if (han.buf_clus[j]==(i-1))&(han.buf_mask[j])
+                move_to(ctx,1,(han.spike_buf[1,j]-o))
+                for jj=2:size(han.spike_buf,1)
+                    line_to(ctx,jj,han.spike_buf[jj,j]-o)
+                end
+            end
+        end
+        set_line_width(ctx,0.5)
+        select_color(ctx,i)
+        stroke(ctx)
+    end
+    identity_matrix(ctx)
+    set_source(han.ctx2,ctx)
+    mask_surface(han.ctx2,ctx,0.0,0.0)
+    fill(han.ctx2)
+    reveal(han.c2)
+    nothing
+end
