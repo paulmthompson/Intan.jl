@@ -781,12 +781,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing    
 end
 
-function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-    update_c2(han,rhd)
-    nothing
-end
+update_c2_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=update_c2(d[1],d[2])
 
 function update_c2(han::Gui_Handles,rhd::RHD2000)
 
@@ -794,6 +789,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
     if han.num16>0
 
+        chan_per_display = getproperty(han.adj2,:upper,Int64)
         old_spike=rem(han.spike-1,chan_per_display)+1
         new_single_channel(han,rhd)
         
