@@ -773,37 +773,10 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han, rhd = user_data 
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
-    chan_per_display = getproperty(han.adj2,:upper,Int64)
-
+    
     if han.num16>0
-        
-        han.spike=chan_per_display*han.num16-chan_per_display+han.num      
-
         clear_c(han)
-        clear_c2(han.c2,han.spike)
-        han.ctx2=getgc(han.c2)
-        han.ctx2s=copy(han.ctx2)
-
-        #Audio output
-        set_audio(rhd,han)
-        
-        #Display Gain
-        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-        #Display Threshold
-        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
-
-        #Spike Buffer
-        if getproperty(han.buf_button,:active,Bool)
-            han.buf_ind=1
-            han.buf_count=1
-        end
-
-	#Update treeview
-        update_treeview(han)
-
-        select_unit(rhd,han)
+        new_single_channel(han,rhd)
     end
     nothing    
 end
@@ -815,78 +788,56 @@ function update_c2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function add_button_label(button,mylabel)
-    b_label=Label(mylabel)
-    Gtk.GAccessor.markup(b_label, string("""<span size="x-small">""",mylabel,"</span>"))
-    push!(button,b_label)
-    show(b_label)
-end
-
-function change_button_label(button,mylabel)
-    hi=Gtk.GAccessor.child(button)
-    Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
-end
-
 function update_c2(han::Gui_Handles,rhd::RHD2000)
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
-    chan_per_display = getproperty(han.adj2,:upper,Int64)
 
     if han.num16>0
 
         old_spike=rem(han.spike-1,chan_per_display)+1
-        han.spike=chan_per_display*han.num16-chan_per_display+han.num
-
-        clear_c2(han.c2,han.spike)
-        han.ctx2=getgc(han.c2)
-        han.ctx2s=copy(han.ctx2)
-
-        #Audio output
-        set_audio(rhd,han)
-
-        #Display Gain
-        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-        #Display Threshold
-        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
-
-        #Spike Buffer
-        if getproperty(han.buf_button,:active,Bool)
-            han.buf_ind=1
-            han.buf_count=1
-        end
-
+        new_single_channel(han,rhd)
+        
         #Highlight channel
         highlight_channel(han,old_spike)
-
-        #Update treeview
-        update_treeview(han)
-
-        #update selected cluster
-        select_unit(rhd,han)
 
         #Sort Button
         if han.sort_cb
             draw_templates(rhd.s[han.spike].c,han)
         end
-    end
-        
+    end       
     nothing
 end
 
-function update_treeview(han::Gui_Handles)
+function new_single_channel(han::Gui_Handles,rhd::RHD2000)
 
-    for i=length(han.sort_list):-1:2
-        deleteat!(han.sort_list,i)
+    chan_per_display = getproperty(han.adj2,:upper,Int64)
+    han.spike=chan_per_display*han.num16-chan_per_display+han.num
+    
+    clear_c2(han.c2,han.spike)
+    han.ctx2=getgc(han.c2)
+    han.ctx2s=copy(han.ctx2)
+
+    #Audio output
+    set_audio(rhd,han)
+
+    #Display Gain
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+
+    #Display Threshold
+    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+    
+    #Spike Buffer
+    if getproperty(han.buf_button,:active,Bool)
+        han.buf_ind=1
+        han.buf_count=1
     end
 
-    for i=1:han.total_clus[han.spike]
-        push!(han.sort_list,(i,))
-    end
+    #Update treeview
+    update_treeview(han)
 
-    selmodel=Gtk.GAccessor.selection(han.sort_tv)
-    select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
+    #update selected cluster
+    select_unit(rhd,han)
     
     nothing
 end
@@ -1647,6 +1598,10 @@ function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
     nothing
 end
 
+#=
+Multi Channel Display Selection
+=#
+
 function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
@@ -1681,16 +1636,6 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
     nothing
 end
 
-function set_slider(han::Gui_Handles,chan_num::Int64)
-    han.num16=div(han.spike-1,chan_num)+1
-    han.num=rem(han.spike-1,chan_num)+1
-    setproperty!(han.adj2,:upper,chan_num)
-    setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
-    setproperty!(han.adj2, :value, han.num)
-    setproperty!(han.adj, :value, han.num16)
-    nothing
-end
-
 function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
@@ -1716,6 +1661,21 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
     clear_c(han)
     nothing
 end
+
+function set_slider(han::Gui_Handles,chan_num::Int64)
+    han.num16=div(han.spike-1,chan_num)+1
+    han.num=rem(han.spike-1,chan_num)+1
+    setproperty!(han.adj2,:upper,chan_num)
+    setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
+    setproperty!(han.adj2, :value, han.num)
+    setproperty!(han.adj, :value, han.num16)
+    nothing
+end
+
+#=
+Treeview Functions
+
+=#
 
 function unit_select_cb(w::Ptr,p1,p2,user_data::Tuple{Gui_Handles,RHD2000})
 
@@ -1755,6 +1715,22 @@ function get_cluster_id(han::Gui_Handles)
     iter=Gtk.selected(selmodel)
 
     myind=parse(Int64,Gtk.get_string_from_iter(TreeModel(han.sort_list), iter))
+end
+
+function update_treeview(han::Gui_Handles)
+
+    for i=length(han.sort_list):-1:2
+        deleteat!(han.sort_list,i)
+    end
+
+    for i=1:han.total_clus[han.spike]
+        push!(han.sort_list,(i,))
+    end
+
+    selmodel=Gtk.GAccessor.selection(han.sort_tv)
+    select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
+    
+    nothing
 end
 
 function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles})
@@ -1974,4 +1950,16 @@ function get_template_dims(han::Gui_Handles,clus)
     xbounds=linspace(0.0,mywidth,total_clus+1)
 
     (xbounds[clus],xbounds[clus+1],0.0,130.0)
+end
+
+function add_button_label(button,mylabel)
+    b_label=Label(mylabel)
+    Gtk.GAccessor.markup(b_label, string("""<span size="x-small">""",mylabel,"</span>"))
+    push!(button,b_label)
+    show(b_label)
+end
+
+function change_button_label(button,mylabel)
+    hi=Gtk.GAccessor.child(button)
+    Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
 end
