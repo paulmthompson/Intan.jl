@@ -89,7 +89,8 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     if !han.hold
         clear_c2(han.c2,han.spike)
-    
+        han.ctx2=getgc(han.c2)
+        han.ctx2s=copy(han.ctx2)
         if getproperty(han.buf_button,:active,Bool)
             han.buf_ind=1
             han.buf_count=1
