@@ -801,7 +801,7 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         end
 
 	#Update treeview
-        update_treeview(rhd,han)
+        update_treeview(han)
 
         select_unit(rhd,han)
     end
@@ -861,7 +861,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
         highlight_channel(han,old_spike)
 
         #Update treeview
-        update_treeview(rhd,han)
+        update_treeview(han)
 
         #update selected cluster
         select_unit(rhd,han)
@@ -875,7 +875,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     nothing
 end
 
-function update_treeview(rhd::RHD2000,han::Gui_Handles)
+function update_treeview(han::Gui_Handles)
 
     for i=length(han.sort_list):-1:2
         deleteat!(han.sort_list,i)
@@ -1089,6 +1089,16 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
+#=
+Threshold
+
+
+=#
+
+#=
+Threshold Callbacks
+=#
+
 function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
@@ -1096,6 +1106,17 @@ function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     han.show_thres=getproperty(mywidget,:active,Bool)
     han.old_thres=getproperty(han.adj_thres,:value,Int)
     han.thres=getproperty(han.adj_thres,:value,Int)
+
+    nothing
+end
+
+function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han,  = user_data
+
+    mythres=getproperty(han.adj_thres,:value,Int)
+    setproperty!(han.sb,:value,mythres)
+    han.thres_changed=true
 
     nothing
 end
@@ -1117,18 +1138,9 @@ function plot_thres(han::Gui_Handles)
     nothing
 end
 
-#Threshold
-function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han,  = user_data
-
-    mythres=getproperty(han.adj_thres,:value,Int)
-    setproperty!(han.sb,:value,mythres)
-    han.thres_changed=true
-
-    nothing
-end
-
+#=
+Set Threshold for sorting equal to GUI threshold
+=#
 function thres_changed(han::Gui_Handles,rhd::RHD2000)
 
     mythres=getproperty(han.adj_thres,:value,Int)
@@ -1146,6 +1158,10 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
     
     nothing
 end
+
+#=
+Set threshold in GUI handles equal to RHD
+=# 
 
 #Gain
 function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
@@ -1332,7 +1348,7 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         end
     end
 
-    update_treeview(rhd,han)
+    update_treeview(han)
 
     update_ref(rhd,han)
 
@@ -1404,7 +1420,7 @@ end
 function draw_rb(han::Gui_Handles)
 
     if han.rb.moved
-        #Erase old rb
+
         ctx = han.ctx2
 
         clear_rb(han)
