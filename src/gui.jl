@@ -872,9 +872,11 @@ function highlight_channel(han::Gui_Handles,old_spike)
         (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
     end
 
-    draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
-    draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
-    draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
+    if han.c_right_top<4
+        draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
+        draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
+        draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
+    end
 
     nothing
 end
@@ -1102,7 +1104,7 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
 end
 
 function update_thres(han::Gui_Handles,s::DArray)
-
+    remotecall_fetch(((x,h)->localpart(x)[h.spike].thres=-1*h.thres/h.scale[h.spike,1]+h.offset[h.spike]),2,s,han)
 end
 
 function update_thres(han::Gui_Handles,s::Array)
@@ -1113,7 +1115,6 @@ function update_thres(han::Gui_Handles,s::Array)
     else
         @inbounds s[han.spike].thres=-1*han.thres/han.scale[han.spike,1]+han.offset[han.spike]
     end
-
 end
 
 #=
@@ -1665,11 +1666,11 @@ end
 function set_slider(han::Gui_Handles,chan_num::Int64)
     han.num16=div(han.spike-1,chan_num)+1
     han.num=rem(han.spike-1,chan_num)+1
+    han.chan_per_display=chan_num
     setproperty!(han.adj2,:upper,chan_num)
     setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
     setproperty!(han.adj2, :value, han.num)
-    setproperty!(han.adj, :value, han.num16)
-    han.chan_per_display=chan_num
+    setproperty!(han.adj, :value, han.num16)  
     nothing
 end
 
