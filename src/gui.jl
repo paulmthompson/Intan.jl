@@ -506,7 +506,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
 scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
 button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
 mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
-adj_thres,thres_slider,false,0.0,0.0,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
+adj_thres,thres_slider,false,0.0,0.0,false,16,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
 zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
 zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
 gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
@@ -720,7 +720,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 
             update_time(rhd,han)         
 	    reveal(han.c)
-                
+
+            if han.spike_changed
+
+            end 
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
 	    end
@@ -789,8 +792,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
 
     if han.num16>0
 
-        chan_per_display = getproperty(han.adj2,:upper,Int64)
-        old_spike=rem(han.spike-1,chan_per_display)+1
+        old_spike=rem(han.spike-1,han.chan_per_display)+1
         new_single_channel(han,rhd)
         
         #Highlight channel
@@ -806,8 +808,7 @@ end
 
 function new_single_channel(han::Gui_Handles,rhd::RHD2000)
 
-    chan_per_display = getproperty(han.adj2,:upper,Int64)
-    han.spike=chan_per_display*han.num16-chan_per_display+han.num
+    han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
     
     clear_c2(han.c2,han.spike)
     han.ctx2=getgc(han.c2)
@@ -1092,18 +1093,27 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
-    
-    if getproperty(han.thres_all,:active,Bool)      
-        @inbounds for i=1:length(rhd.s)
-            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
-        end    
-    else
-        @inbounds rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
-    end
 
+    update_thres(han,rhd.s)
+    
     han.thres_changed=false
     
     nothing
+end
+
+function update_thres(han::Gui_Handles,s::DArray)
+
+end
+
+function update_thres(han::Gui_Handles,s::Array)
+    if getproperty(han.thres_all,:active,Bool)      
+        @inbounds for i=1:length(s)
+            s[i].thres=-1*han.thres/han.scale[i,1]+han.offset[i]
+        end    
+    else
+        @inbounds s[han.spike].thres=-1*han.thres/han.scale[han.spike,1]+han.offset[han.spike]
+    end
+
 end
 
 #=
@@ -1555,13 +1565,7 @@ function enable_disable(han::Gui_Handles,en::Bool)
     end
 
     if inmulti
-        if han.c_right_top==1 #16 channel
-            han.enabled[16*han.num16-16+count]=en
-        elseif han.c_right_top==2 #32 channel
-            han.enabled[32*han.num16-32+count]=en
-        else #64 channel
-            han.enabled[64*han.num16-64+count]=en
-        end
+        han.enabled[han.chan_per_display*han.num16-han.chan_per_display+count]=en
     end
 
     nothing
@@ -1665,6 +1669,7 @@ function set_slider(han::Gui_Handles,chan_num::Int64)
     setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
     setproperty!(han.adj2, :value, han.num)
     setproperty!(han.adj, :value, han.num16)
+    han.chan_per_display=chan_num
     nothing
 end
 

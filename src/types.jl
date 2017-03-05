@@ -341,6 +341,8 @@ type Gui_Handles
     thres_changed::Bool
     old_thres::Int64
     thres::Int64
+    spike_changed::Bool
+    chan_per_display::Int64
     
     hold::Bool
     
