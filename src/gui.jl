@@ -1104,7 +1104,44 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
 end
 
 function update_thres(han::Gui_Handles,s::DArray)
-    remotecall_fetch(((x,h)->localpart(x)[h.spike].thres=-1*h.thres/h.scale[h.spike,1]+h.offset[h.spike]),2,s,han)
+    if getproperty(han.thres_all,:active,Bool)
+        @sync for p in procs(s)
+            @spawnat p begin
+                set_multiple_thres(localpart(s),han,localindexes(s))
+            end
+        end
+        
+        #=
+        for i=1:length(s)
+            (nn,mycore)=get_thres_id(s,i)
+            remotecall_wait(((x,h)->localpart(x)[nn].thres=-1*h.thres/h.scale[nn,1]+h.offset[nn]),mycore,s,han)
+        end
+        =#
+    else
+        (nn,mycore)=get_thres_id(s,han.spike)
+        remotecall_wait(((x,h)->localpart(x)[nn].thres=-1*h.thres/h.scale[nn,1]+h.offset[nn]),mycore,s,han)
+    end
+end
+
+function get_thres_id(s::DArray,ss::Int64)
+
+    mycore=1
+    mynum=ss
+
+    for i=2:(length(procs(s))+1)
+        if ss<s.cuts[1][i]
+            mycore=i
+            mynum=ss-s.cuts[1][i-1]+1
+            break
+        end
+    end
+    (mynum,mycore)
+end
+
+function set_multiple_thres(s::Array,han::Gui_Handles,inds)
+    @inbounds for i=1:length(s)
+        s[i].thres=-1*han.thres/han.scale[inds[1][i],1]+han.offset[inds[1][i]]
+    end 
 end
 
 function update_thres(han::Gui_Handles,s::Array)
