@@ -722,7 +722,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 	    reveal(han.c)
 
             if han.spike_changed
-
+                new_single_channel(han,rhd)
             end 
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
@@ -779,7 +779,8 @@ function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     if han.num16>0
         clear_c(han)
-        new_single_channel(han,rhd)
+        #new_single_channel(han,rhd)
+        han.spike_changed=true
     end
     nothing    
 end
@@ -793,15 +794,11 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     if han.num16>0
 
         old_spike=rem(han.spike-1,han.chan_per_display)+1
-        new_single_channel(han,rhd)
+        #new_single_channel(han,rhd)
+        han.spike_changed=true
         
         #Highlight channel
         highlight_channel(han,old_spike)
-
-        #Sort Button
-        if han.sort_cb
-            draw_templates(rhd.s[han.spike].c,han)
-        end
     end       
     nothing
 end
@@ -815,14 +812,13 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
     han.ctx2s=copy(han.ctx2)
 
     #Audio output
-    set_audio(rhd,han)
+    set_audio(rhd.fpga,han,rhd)
 
     #Display Gain
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
     #Display Threshold
-    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+    get_thres(rhd,han,rhd.s)
     
     #Spike Buffer
     if getproperty(han.buf_button,:active,Bool)
@@ -835,7 +831,32 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
 
     #update selected cluster
     select_unit(rhd,han)
+
+    #Sort Button
+    if han.sort_cb
+        draw_templates(rhd.s[han.spike].c,han)
+    end
+
+    han.spike_changed=false
     
+    nothing
+end
+
+function get_thres(rhd::RHD2000,han::Gui_Handles,s::DArray)
+    (nn,mycore)=get_thres_id(s,han.spike)
+    
+    mythres=remotecall_fetch(((x,h)->(localpart(x)[h.spike].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han)
+
+    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+
+    nothing
+end
+
+function get_thres(rhd::RHD2000,han::Gui_Handles,s::Array)
+
+    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+
     nothing
 end
 
@@ -893,19 +914,31 @@ function draw_box(x1,y1,x2,y2,mycolor,linewidth,ctx)
     nothing
 end
 
-function set_audio(rhd::RHD2000,han::Gui_Handles)
+function set_audio(fpga::Array,ii,refs)
 
-    selectDacDataStream(rhd.fpga[1],0,div(han.spike-1,32))
-    selectDacDataChannel(rhd.fpga[1],0,rem(han.spike-1,32))
+    selectDacDataStream(fpga[1],0,div(ii-1,32))
+    selectDacDataChannel(fpga[1],0,rem(ii-1,32))
 
-    if rhd.refs[han.spike]>0
-        enableDac(rhd.fpga[1],1,true)
-        selectDacDataStream(rhd.fpga[1],1,div(rhd.refs[han.spike]-1,32))
-        selectDacDataChannel(rhd.fpga[1],1,rem(rhd.refs[han.spike]-1,32))
+    if refs>0
+        enableDac(fpga[1],1,true)
+        selectDacDataStream(fpga[1],1,div(refs-1,32))
+        selectDacDataChannel(fpga[1],1,rem(refs-1,32))
     else
-        enableDac(rhd.fpga[1],1,false)
+        enableDac(fpga[1],1,false)
     end
     nothing
+end
+
+function set_audio(fpga::Array,han::Gui_Handles,rhd::RHD2000)
+
+    set_audio(fpga,han.spike,rhd.refs[han.spike])
+    
+end
+
+function set_audio(fpga::DArray,han::Gui_Handles,rhd::RHD2000)
+
+    remotecall_wait(((x,h,ii)->set_audio(localpart(x),h,ii)),2,fpga,han.spike,rhd.refs[han.spike])
+    
 end
 
 function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
