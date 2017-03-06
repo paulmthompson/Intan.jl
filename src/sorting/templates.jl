@@ -18,12 +18,12 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
             (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
             add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
-            setproperty!(han.adj_sort, :value, 50)
+            setproperty!(han.adj_sort, :value, 1.0)
             draw_templates(rhd,han)
         else #replace old cluster
             (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
             change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
-            setproperty!(han.adj_sort, :value, 50)
+            setproperty!(han.adj_sort, :value, 1.0)
             draw_templates(rhd,han)
         end
 
@@ -204,13 +204,13 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     han,rhd = user_data
 
-    myval=getproperty(han.adj_sort, :value, Int64) # primary display
+    myval=getproperty(han.adj_sort, :value, Float64) # primary display
 
     clus=han.clus
     
     if clus>0
 
-        rhd.s[han.spike].c.tol[clus] = myval/50.0
+        rhd.s[han.spike].c.tol[clus] = myval
 
         if ((han.buf_count>0)&(han.pause))
             template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sig_min[:,clus],rhd.s[han.spike].c.sig_max[:,clus],rhd.s[han.spike].c.tol[clus])

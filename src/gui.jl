@@ -109,9 +109,9 @@ function makegui(r::RHD2000)
 
     check_sort1 = CheckButton()
 
-    slider_sort = Scale(false, 0, 100,1)
+    slider_sort = Scale(false, 0.0, 2.0,.02)
     adj_sort = Adjustment(slider_sort)
-    setproperty!(adj_sort,:value,50)
+    setproperty!(adj_sort,:value,1.0)
     slider_sort_label=Label("Slider Label")
 
     sort_list=ListStore(Int32)
@@ -315,8 +315,8 @@ exopts = MenuItem("_Export")
 export_mat_ = MenuItem("MAT")
 push!(exmenu,export_mat_)
 
-    #Options
-    opopts = MenuItem("_Options")
+#Options
+opopts = MenuItem("_Options")
 opmenu = Menu(opopts)
 
 op_align = MenuItem("Alignment")
@@ -326,7 +326,6 @@ op_align_min = MenuItem("Minimum")
 push!(op_align_menu,op_align_min)
 op_align_cross = MenuItem("Threshold Crossing")
 push!(op_align_menu,op_align_cross)
-
 
 #Autosort
     svopts = MenuItem("_Sort View")
@@ -499,7 +498,7 @@ thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 
-sleep(1.0)
+sleep(2.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,1,1,
@@ -929,11 +928,7 @@ function set_audio(fpga::Array,ii,refs)
     nothing
 end
 
-function set_audio(fpga::Array,han::Gui_Handles,rhd::RHD2000)
-
-    set_audio(fpga,han.spike,rhd.refs[han.spike])
-    
-end
+set_audio(fp::Array,h::Gui_Handles,r::RHD2000)=set_audio(fp,h.spike,r.refs[h.spike])
 
 function set_audio(fpga::DArray,han::Gui_Handles,rhd::RHD2000)
 
@@ -967,10 +962,9 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
             han.scale[i,2] = -.125*.25
         end
 
-        mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
-        
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
-        setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+
+        get_thres(rhd,han,rhd.s)
     end
 
     nothing
@@ -1754,7 +1748,7 @@ function select_unit(rhd::RHD2000,han::Gui_Handles)
     han.clus=clus
     if clus>0
         mytol=rhd.s[han.spike].c.tol[clus]
-        setproperty!(han.adj_sort, :value, mytol*50)
+        setproperty!(han.adj_sort, :value, mytol)
     end
 
     ctx=getgc(han.c3)
