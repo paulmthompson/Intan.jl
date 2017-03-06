@@ -1104,19 +1104,12 @@ function thres_changed(han::Gui_Handles,rhd::RHD2000)
 end
 
 function update_thres(han::Gui_Handles,s::DArray)
-    if getproperty(han.thres_all,:active,Bool)
+    if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
         @sync for p in procs(s)
             @spawnat p begin
                 set_multiple_thres(localpart(s),han,localindexes(s))
             end
         end
-        
-        #=
-        for i=1:length(s)
-            (nn,mycore)=get_thres_id(s,i)
-            remotecall_wait(((x,h)->localpart(x)[nn].thres=-1*h.thres/h.scale[nn,1]+h.offset[nn]),mycore,s,han)
-        end
-        =#
     else
         (nn,mycore)=get_thres_id(s,han.spike)
         remotecall_wait(((x,h)->localpart(x)[nn].thres=-1*h.thres/h.scale[nn,1]+h.offset[nn]),mycore,s,han)
@@ -1145,7 +1138,7 @@ function set_multiple_thres(s::Array,han::Gui_Handles,inds)
 end
 
 function update_thres(han::Gui_Handles,s::Array)
-    if getproperty(han.thres_all,:active,Bool)      
+    if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
         @inbounds for i=1:length(s)
             s[i].thres=-1*han.thres/han.scale[i,1]+han.offset[i]
         end    
@@ -1171,14 +1164,12 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
         han.scale[:,2]=-.2*gainval/1000
-        for i=1:length(han.offset)
-            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
-        end
     else
         han.scale[han.spike,1]=-1*gainval/1000
         han.scale[han.spike,2]=-.2*gainval/1000
-        rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
+
+    han.thres_changed=true
 
     nothing
 end
@@ -1211,12 +1202,12 @@ function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mygain==true
         for i=1:length(han.offset)
             han.offset[i]=offval
-            rhd.s[i].thres=-1*mythres/han.scale[i,1]+han.offset[i]
         end
     else
         han.offset[han.spike]=offval
-        rhd.s[han.spike].thres=-1*mythres/han.scale[han.spike,1]+han.offset[han.spike]
     end
+
+    han.thres_changed=true
 
     nothing
 end
