@@ -218,6 +218,8 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             plot_new_color(han.ctx2,han,clus)
         end
     end
+    han.c_changed=true
+    nothing
 end
 
 function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,2})
