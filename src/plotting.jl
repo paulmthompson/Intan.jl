@@ -736,7 +736,7 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
     if reads==1
         prepare_c3(rhd,han)
-        draw_templates(rhd,han)
+        draw_templates_c3(han)
         draw_isi(rhd,han)
     end
 

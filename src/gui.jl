@@ -501,14 +501,21 @@ spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
 sleep(2.0)
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,1,1,
-scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),zeros(Int64,length(r.nums),2),sb,
-button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),trues(length(r.nums)),false,
-mytime(0,h_label,0,m_label,0,s_label),r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
-adj_thres,thres_slider,false,0.0,0.0,false,16,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,false,
-zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,
-zeros(Int64,500),zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,ref_tv2,ref_list1,ref_list2,
-gain_checkbox,false,SoftScope(r.sr),popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,sortview_handles)
+handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
+                    c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
+                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),
+                    1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
+                    zeros(Int64,length(r.nums),2),sb,button_gain,sb2,0,button_thres_all,
+                    -1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
+                    r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
+                    adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,r.s[1].s.win)),
+                    false,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,
+                    false,zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),
+                    slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,zeros(Int64,500),
+                    zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
+                    ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
+                    popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
+                    sortview_handles)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -722,7 +729,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 
             if han.spike_changed
                 new_single_channel(han,rhd)
-            end 
+            end
+            if han.c_changed
+                send_clus(rhd.s,han)
+            end
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
 	    end
@@ -758,7 +768,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
             clear_c3(han.c3,han.spike)
             #Sort Button
             if han.sort_cb
-                draw_templates(rhd.s[han.spike].c,han)
+                draw_templates(han)
             end
 	end
         reveal(han.c2)
@@ -825,6 +835,9 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
         han.buf_count=1
     end
 
+    #Get Cluster
+    get_cluster(han,rhd.s)
+
     #Update treeview
     update_treeview(han)
 
@@ -833,12 +846,33 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
 
     #Sort Button
     if han.sort_cb
-        draw_templates(rhd.s[han.spike].c,han)
+        draw_templates(han)
     end
 
     han.spike_changed=false
     
     nothing
+end
+
+function get_cluster(han::Gui_Handles,s::Array)
+    han.temp=deepcopy(s[han.spike].c)
+end
+
+function get_cluster(han::Gui_Handles,s::DArray)
+    (nn,mycore)=get_thres_id(s,han.spike)
+    
+    han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,han.spike)
+end
+
+function send_clus(s::Array,han::Gui_Handles)
+    s[han.spike].c=deepcopy(han.temp)
+    han.c_changed=false
+end
+
+function send_clus(s::DArray,han::Gui_Handles)
+    (nn,mycore)=get_thres_id(s,han.spike)
+    remotecall_wait(((x,ss,tt)->localpart(x)[ss].c=tt),mycore,s,han.spike,han.temp)
+    han.c_changed=false
 end
 
 function get_thres(rhd::RHD2000,han::Gui_Handles,s::DArray)
@@ -867,7 +901,7 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.ctx2s=copy(han.ctx2)
     #Sort Button
     if han.sort_cb
-        draw_templates(rhd.s[han.spike].c,han)
+        draw_templates(han)
     end
     
     nothing

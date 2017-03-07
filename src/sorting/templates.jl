@@ -14,17 +14,19 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     if event.button==1 #Left click
         
         if (clus==0) #do nothing if zeroth cluster    
-        elseif (rhd.s[han.spike].c.num < clus) #new cluster
+        elseif (han.temp.num < clus) #new cluster
 
             (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
-            add_new_cluster(rhd.s[han.spike].c,mymean,mystd)
+            add_new_cluster(han.temp,mymean,mystd)
             setproperty!(han.adj_sort, :value, 1.0)
-            draw_templates(rhd,han)
+            han.c_changed=true
+            #draw_templates(han)
         else #replace old cluster
             (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
-            change_cluster(rhd.s[han.spike].c,mymean,mystd,clus)
+            change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
-            draw_templates(rhd,han)
+            han.c_changed=true
+            #draw_templates(han)
         end
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
@@ -49,12 +51,13 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if (clus<1) #do nothing if zeroth cluster selected      
     else
-        delete_cluster(rhd.s[han.spike].c,clus)
+        delete_cluster(han.temp,clus)
         deleteat!(han.sort_list,han.total_clus[han.spike]+1)
         han.total_clus[han.spike] -= 1
         han.clus = 0
         selmodel=Gtk.GAccessor.selection(han.sort_tv)
         select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
+        han.c_changed=true
     end
     nothing
 end
@@ -68,8 +71,6 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.total_clus[han.spike] += 1
     han.clus = han.total_clus[han.spike]
     push!(han.sort_list,(han.total_clus[han.spike],))
-
-    #setproperty!(han.adj_sort, :value, 50)
 
     selmodel=Gtk.GAccessor.selection(han.sort_tv)
     select!(selmodel, Gtk.iter_from_index(han.sort_list, han.total_clus[han.spike]+1))
@@ -121,19 +122,19 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         Cairo.translate(ctx,0.0,han.h2/2)
         scale(ctx,han.w2/han.wave_points,s)
         
-        move_to(ctx,1.0,rhd.s[han.spike].c.templates[1,clus]+(rhd.s[han.spike].c.sig_max[1,clus]*rhd.s[han.spike].c.tol[clus])-o)
+        move_to(ctx,1.0,han.temp.templates[1,clus]+(han.temp.sig_max[1,clus]*han.temp.tol[clus])-o)
 
-        for i=2:size(rhd.s[han.spike].c.templates,1)
-            y=rhd.s[han.spike].c.templates[i,clus]+(rhd.s[han.spike].c.sig_max[i,clus]*rhd.s[han.spike].c.tol[clus])-o
+        for i=2:size(han.temp.templates,1)
+            y=han.temp.templates[i,clus]+(han.temp.sig_max[i,clus]*han.temp.tol[clus])-o
             line_to(ctx,i,y)
         end
 
-        y=rhd.s[han.spike].c.templates[end,clus]-(rhd.s[han.spike].c.sig_min[end,clus]*rhd.s[han.spike].c.tol[clus])-o
+        y=han.temp.templates[end,clus]-(han.temp.sig_min[end,clus]*han.temp.tol[clus])-o
         
-        line_to(ctx,size(rhd.s[han.spike].c.templates,1),y)
+        line_to(ctx,size(han.temp.templates,1),y)
 
-        for i=(size(rhd.s[han.spike].c.templates,1)-1):-1:1
-            y=rhd.s[han.spike].c.templates[i,clus]-(rhd.s[han.spike].c.sig_min[i,clus]*rhd.s[han.spike].c.tol[clus])-o
+        for i=(size(han.temp.templates,1)-1):-1:1
+            y=han.temp.templates[i,clus]-(han.temp.sig_min[i,clus]*han.temp.tol[clus])-o
             line_to(ctx,i,y)
         end
 
@@ -165,13 +166,13 @@ function check_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     if han.sort_cb
-        draw_templates(rhd.s[han.spike].c,han)
+        draw_templates(han)
     end
     
     nothing
 end
 
-function draw_templates(c::ClusterTemplate,han::Gui_Handles)
+function draw_templates(han::Gui_Handles)
 
     ctx = han.ctx2s
     mywidth=width(ctx)
@@ -185,10 +186,10 @@ function draw_templates(c::ClusterTemplate,han::Gui_Handles)
     
     for clus=1:han.total_clus[han.spike]
         
-        move_to(ctx,1.0,(c.templates[1,clus])-o)
+        move_to(ctx,1.0,(han.temp.templates[1,clus])-o)
         
-        for i=2:size(c.sig_max,1)
-            y=c.templates[i,clus]-o
+        for i=2:size(han.temp.sig_max,1)
+            y=han.temp.templates[i,clus]-o
             line_to(ctx,i,y)
         end
         
@@ -210,10 +211,10 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     if clus>0
 
-        rhd.s[han.spike].c.tol[clus] = myval
+        han.temp.tol[clus] = myval
 
         if ((han.buf_count>0)&(han.pause))
-            template_cluster(han,clus,rhd.s[han.spike].c.templates[:,clus],rhd.s[han.spike].c.sig_min[:,clus],rhd.s[han.spike].c.sig_max[:,clus],rhd.s[han.spike].c.tol[clus])
+            template_cluster(han,clus,han.temp.templates[:,clus],han.temp.sig_min[:,clus],han.temp.sig_max[:,clus],han.temp.tol[clus])
             plot_new_color(han.ctx2,han,clus)
         end
     end
@@ -346,7 +347,7 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
     nothing
 end
 
-function draw_templates(rhd::RHD2000,han::Gui_Handles)
+function draw_templates_c3(han::Gui_Handles)
 
     ctx=getgc(han.c3)
 
@@ -364,10 +365,10 @@ function draw_templates(rhd::RHD2000,han::Gui_Handles)
         scale(ctx,mywidth/(han.wave_points*total_clus),s)
 
         startx=(clus-1)*(han.wave_points)+1
-        move_to(ctx,1.0+startx,rhd.s[han.spike].c.templates[1,clus]-o)
+        move_to(ctx,1.0+startx,han.temp.templates[1,clus]-o)
 
-        for i=2:size(rhd.s[han.spike].c.sig_max,1)
-            y=rhd.s[han.spike].c.templates[i,clus]-o
+        for i=2:size(han.temp.sig_max,1)
+            y=han.temp.templates[i,clus]-o
             line_to(ctx,i+startx,y)
         end
         

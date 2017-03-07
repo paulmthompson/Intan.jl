@@ -343,6 +343,9 @@ type Gui_Handles
     thres::Int64
     spike_changed::Bool
     chan_per_display::Int64
+
+    temp::ClusterTemplate
+    c_changed::Bool
     
     hold::Bool
     
