@@ -22,8 +22,6 @@ function CreateRHD2000Registers(sampleRate)
 
     #Register 4 variables
     r.weakMiso=1
-
-
     r.twosComp=0
     r.absMode=0
     enableDsp(true,r)

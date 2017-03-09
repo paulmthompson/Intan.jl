@@ -304,6 +304,14 @@ function SoftScope(sr)
     SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false)
 end
 
+type Band_Widgets
+    win::Gtk.GtkWindowLeaf
+    sb1::Gtk.GtkSpinButtonLeaf
+    sb2::Gtk.GtkSpinButtonLeaf
+    sb3::Gtk.GtkSpinButtonLeaf
+    b1::Gtk.GtkButtonLeaf
+end
+
 type Sort_Widgets
    b1::Gtk.GtkButtonLeaf
    b2::Gtk.GtkButtonLeaf
@@ -313,24 +321,24 @@ type Sort_Widgets
 end
 
 type Thres_Widgets
-	slider::Gtk.GtkScaleLeaf
-	adj::Gtk.GtkAdjustmentLeaf
-	all::Gtk.GtkCheckButtonLeaf
-	show::Gtk.GtkCheckButtonLeaf
+    slider::Gtk.GtkScaleLeaf
+    adj::Gtk.GtkAdjustmentLeaf
+    all::Gtk.GtkCheckButtonLeaf
+    show::Gtk.GtkCheckButtonLeaf
 end
 
 type Gain_Widgets
-	gainbox::Gtk.GtkSpinButtonLeaf
-	offbox::Gtk.GtkSpinButtonLeaf
-	multiply::Gtk.GtkCheckButtonLeaf
-	all::Gtk.GtkCheckButtonLeaf
+    gainbox::Gtk.GtkSpinButtonLeaf
+    offbox::Gtk.GtkSpinButtonLeaf
+    multiply::Gtk.GtkCheckButtonLeaf
+    all::Gtk.GtkCheckButtonLeaf
 end
 
 type Spike_Widgets
-	hold::Gtk.GtkCheckButtonLeaf
-	buf::Gtk.GtkCheckButtonLeaf
-	refresh::Gtk.GtkButtonLeaf
-	pause::Gtk.GtkToggleButtonLeaf
+    hold::Gtk.GtkCheckButtonLeaf
+    buf::Gtk.GtkCheckButtonLeaf
+    refresh::Gtk.GtkButtonLeaf
+    pause::Gtk.GtkToggleButtonLeaf
 end
 
 type Gui_Handles
@@ -460,6 +468,7 @@ type Gui_Handles
     gain_widgets::Gain_Widgets
     spike_widgets::Spike_Widgets
     sortview_widgets::SortView
+    band_widgets::Band_Widgets
 end
 
 #=

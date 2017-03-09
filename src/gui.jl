@@ -327,6 +327,9 @@ push!(op_align_menu,op_align_min)
 op_align_cross = MenuItem("Threshold Crossing")
 push!(op_align_menu,op_align_cross)
 
+op_band = MenuItem("Bandwidth")
+push!(opmenu,op_band)
+
 #Autosort
     svopts = MenuItem("_Sort View")
 svmenu = Menu(svopts)
@@ -394,6 +397,33 @@ setproperty!(ref_win, :title, "Reference Channel Select")
 
 showall(ref_win)
 visible(ref_win,false)
+
+#Bandwidth Adjustment
+
+band_grid=Grid()
+band_sb1=SpinButton(0:1000)
+setproperty!(band_sb1,:value,300)
+band_grid[1,1]=band_sb1
+band_grid[2,1]=Label("Lower Bandwidth")
+
+band_sb2=SpinButton(1000:10000)
+setproperty!(band_sb2,:value,5000)
+band_grid[1,2]=band_sb2
+band_grid[2,2]=Label("Higher BandWidth")
+
+band_sb3=SpinButton(0:1000)
+setproperty!(band_sb3,:value,300)
+band_grid[1,3]=band_sb3
+band_grid[2,3]=Label("DSP High Pass")
+
+band_b1=Button("Update")
+band_grid[1,4]=band_b1
+
+band_win=Window(band_grid)
+setproperty!(band_win, :title, "Bandwidth Adjustment")
+
+showall(band_win)
+visible(band_win,false)
 
 #SortView
 
@@ -497,6 +527,7 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
+band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
 
 sleep(2.0)
 
@@ -515,7 +546,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles)
+                    sortview_handles,band_widgets)
 
     #Connect Callbacks to objects on GUI
 if typeof(r.s[1].c)==ClusterWindow
@@ -580,6 +611,7 @@ id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handle
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
+id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
 id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,))
@@ -629,6 +661,15 @@ id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handl
 
 signal_connect(ref_win, :delete_event) do widget, event
     visible(ref_win, false)
+    true
+end
+
+#Bandwidth Window
+
+signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,r))
+
+signal_connect(band_win, :delete_event) do widget, event
+    visible(band_win, false)
     true
 end
 
@@ -1349,6 +1390,47 @@ function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     visible(han.ref_win,true)
+    nothing
+end
+
+function band_adj_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han, rhd = user_data
+
+    visible(han.band_widgets.win,true)
+end
+
+function band_b1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    lower=getproperty(han.band_widgets.sb1,:value,Int64)
+    upper=getproperty(han.band_widgets.sb2,:value,Int64)
+    dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
+
+    change_bandwidth(rhd.fpga,lower,upper,dsp_lower)
+    
+    nothing
+end
+
+function change_bandwidth(fpgas::Array,lower,upper,dsp_lower)
+
+    for fpga in fpgas
+        setLowerBandwidth(lower,fpga.r)
+        setUpperBandwidth(upper,fpga.r)
+        setDspCutoffFreq(dsp_lower,fpga.r)
+        commandList=createCommandListRegisterConfig(zeros(Int32,1),true,fpga.r)
+        uploadCommandList(fpga,commandList, "AuxCmd3", 1)
+    end
+    nothing
+end
+
+function change_bandwidth(fpgas::DArray,lower,upper,dsp_lower)
+
+    @sync for p in procs(fpgas)
+        @spawnat p begin
+            change_bandwidth(localpart(fpgas),lower,upper,dsp_lower)
+        end
+    end
     nothing
 end
 
