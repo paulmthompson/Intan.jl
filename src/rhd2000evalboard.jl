@@ -110,14 +110,14 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     setLedDisplay(fpga,ledArray)
     
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
-    r=CreateRHD2000Registers(Float64(fpga.sampleRate))
+    fpga.r=CreateRHD2000Registers(Float64(fpga.sampleRate))
     
     #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
-    commandList=createCommandListRegisterConfig(zeros(Int32,1),false,r)
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),false,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 0)
     
     #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
-    commandList=createCommandListRegisterConfig(zeros(Int32,1),true,r)
+    commandList=createCommandListRegisterConfig(zeros(Int32,1),true,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 1)
 
     selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)

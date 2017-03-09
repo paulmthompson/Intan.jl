@@ -68,6 +68,72 @@ end
 
 WIFI()=WIFI(false,1)
 
+
+type register
+    sampleRate::Cdouble
+
+    #Register 0 variables
+    adcReferenceBw::Int32
+    ampFastSettle::Int32
+    ampVrefEnable::Int32
+    adcComparatorBias::Int32
+    adcComparatorSelect::Int32
+
+    #Register 1 variables
+    vddSenseEnable::Int32
+    adcBufferBias::Int32
+
+    #Register 2 variables
+    muxBias::Int32
+
+    #Register 3 variables
+    muxLoad::Int32
+    tempS1::Int32
+    tempS2::Int32
+    tempEn::Int32
+    digOutHiZ::Int32
+    digOut::Int32
+
+    #Register 4 variables
+    weakMiso::Int32
+    twosComp::Int32
+    absMode::Int32
+    dspEn::Int32
+    dspCutoffFreq::Int32
+
+    #Register 5 variables
+    zcheckDacPower::Int32
+    zcheckLoad::Int32
+    zcheckScale::Int32
+    zcheckConnAll::Int32
+    zcheckSelPol::Int32
+    zcheckEn::Int32
+
+    #Register 6 variables
+
+    #Register 7 variables
+    zcheckSelect::Int32
+
+    #Register 8-13 variables
+    offChipRH1::Int32
+    offChipRH2::Int32
+    offChipRL::Int32
+    adcAux1En::Int32
+    adcAux2En::Int32
+    adcAux3En::Int32
+    rH1Dac1::Int32
+    rH1Dac2::Int32
+    rH2Dac1::Int32
+    rH2Dac2::Int32
+    rLDac1::Int32
+    rLDac2::Int32
+    rLDac3::Int32
+
+    #Register 14-17 variables
+    aPwr::Array{Int32,1}
+
+end
+
 type FPGA
     id::Int64
     board::Ptr{Void}
@@ -85,15 +151,16 @@ type FPGA
     ttlout::Array{UInt16,1}
     ttloutput::UInt16
     usb3::Bool
+    r::register
 end
 
 function FPGA(board_id::Int64,amps::Array{Int64,1})
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false)
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false,CreateRHD2000Registers(30000))
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false)
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false,CreateRHD2000Registers(30000))
     end
 end
 
