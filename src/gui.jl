@@ -534,7 +534,7 @@ sleep(2.0)
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
                     c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
-                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),
+                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
                     zeros(Int64,length(r.nums),2),sb,button_gain,sb2,0,button_thres_all,
                     -1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
@@ -1509,6 +1509,8 @@ Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 function rubberband_start(han::Gui_Handles, x, y, button_num=1)
 
     han.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
+    han.selected=falses(500)
+    han.plotted=falses(500)
 
     if button_num==1
         push!((han.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
@@ -1551,18 +1553,93 @@ function draw_rb(han::Gui_Handles)
     if han.rb.moved
 
         ctx = han.ctx2
-
         clear_rb(han)
 
         line(ctx,han.rb.pos0.x,han.rb.pos2.x,han.rb.pos0.y,han.rb.pos2.y)
         set_line_width(ctx,1.0)
         set_source_rgb(ctx,1.0,1.0,1.0)
-        stroke(ctx)
+        stroke(ctx)   
 
-        han.rb.pos1=han.rb.pos2
+        #Find selected waveforms and plot
+        if (han.clus>0)&((han.buf_count>0)&(han.pause))
+            get_selected_waveforms(han)
+            plot_selected_waveforms(han)
+        end
+        han.rb.pos1=han.rb.pos2 
     end
     
     nothing
+end
+
+function get_selected_waveforms(han::Gui_Handles)
+
+    (x1,x2,y1,y2)=coordinate_transform(han,han.rb.pos0.x,han.rb.pos0.y,han.rb.pos2.x,han.rb.pos2.y)
+    input=han.spike_buf
+
+    if x1<3
+        x1=2
+    end
+    if x2>(size(input,1)-3)
+        x2=size(input,1)-3
+    end
+    
+    for i=1:han.buf_count
+        intersected=false
+        if han.buf_mask[i]
+            for j=(x1-1):(x2+1)
+                if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))
+                    intersected=true
+                    han.selected[i]=true
+                    break
+                end
+            end
+            if (han.plotted[i])&(!intersected)
+                han.selected[i]=false
+                break
+            end
+        end
+    end
+    
+    nothing
+end
+
+function plot_selected_waveforms(han::Gui_Handles)
+
+    ctx=han.ctx2
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+
+    set_line_width(ctx,2.0)
+    set_source(ctx,han.ctx2s)
+    Cairo.translate(ctx,0.0,han.h2/2)
+    scale(ctx,han.w2/han.wave_points,s)
+    
+    for j=1:han.buf_count
+        if (!han.selected[j])&(han.plotted[j])
+            move_to(ctx,1,(han.spike_buf[1,j]-o))
+            for jj=2:size(han.spike_buf,1)
+                line_to(ctx,jj,han.spike_buf[jj,j]-o)
+            end
+            han.plotted[j]=false
+        end
+    end
+    stroke(ctx)
+
+    for i=1:han.buf_count
+        if (han.selected[i])&(!han.plotted[i])
+            move_to(ctx,1,(han.spike_buf[1,i]-o))
+            for jj=2:size(han.spike_buf,1)
+                line_to(ctx,jj,han.spike_buf[jj,i]-o)
+            end
+            han.plotted[i]=true
+        end
+    end
+    set_line_width(ctx,0.5)
+    select_color(ctx,han.clus+1)
+    stroke(ctx)
+
+    identity_matrix(ctx)
+    
 end
 
 function clear_rb(han::Gui_Handles)
@@ -1983,17 +2060,21 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
 end
 
 function coordinate_transform(han::Gui_Handles,event)
+    (x1,x2,y1,y2)=coordinate_transform(han,han.mi[1],han.mi[2],event.x,event.y)
+end
 
+function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
+    
     ctx=han.ctx2
 
     #Convert canvas coordinates to voltage vs time coordinates
     myx=[1.0;collect(2:han.wave_points).*(han.w2/han.wave_points)]
-    x1=indmin(abs(myx-han.mi[1]))
-    x2=indmin(abs(myx-event.x))
+    x1=indmin(abs(myx-xi1))
+    x2=indmin(abs(myx-xi2))
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    y1=(han.mi[2]-han.h2/2+o)/s
-    y2=(event.y-han.h2/2+o)/s
+    y1=(yi1-han.h2/2+o)/s
+    y2=(yi2-han.h2/2+o)/s
     
     #ensure that left most point is first
     if x1>x2

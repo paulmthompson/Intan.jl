@@ -363,6 +363,8 @@ type Gui_Handles
 
     rb_active::Bool
     rb::RubberBand
+    selected::Array{Bool,1}
+    plotted::Array{Bool,1}
     
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
