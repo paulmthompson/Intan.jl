@@ -672,6 +672,8 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
 
+    set_line_width(ctx,2.0)
+    set_source(ctx,han.ctx2s)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
 
@@ -686,10 +688,6 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
             han.buf_clus[i]=0
         end
     end
-    set_line_width(ctx,0.5);
-    set_source_rgba(ctx,0.0,0.0,0.0,1.0)
-    stroke_preserve(ctx)
-    select_color(ctx,1)
     stroke(ctx)
 
     #Plot New color
