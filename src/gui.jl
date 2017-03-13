@@ -1,6 +1,6 @@
 
 
-function makegui(r::RHD2000,s)
+function makegui(r::RHD2000,s,task)
 
     #GUI ARRANGEMENT
     grid = Grid()
@@ -502,10 +502,10 @@ showall(popupmenu_scope)
 
 mkdir(r.save.folder)
 
-if typeof(r.save)==SaveAll
+if r.save.save_full
     prepare_v_header(r)
     prepare_stamp_header(r)
-elseif typeof(r.save)==SaveNone
+else
     prepare_stamp_header(r)
 end
 
@@ -597,10 +597,10 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
-    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
+    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r,s))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
@@ -693,20 +693,20 @@ function run_cb(widgetptr::Ptr,user_data::Tuple)
     @async if getproperty(widget,:active,Bool)==true
         
         #unpack tuple
-        han, rhd, s = user_data
+        han, rhd, s,task = user_data
               
 	if rhd.debug.state==false
             map(runBoard,rhd.fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop(rhd,han,s) 
+           main_loop(rhd,han,s,task) 
         end       
     end
         
     nothing
 end
 
-function main_loop(rhd::RHD2000,han::Gui_Handles,s)
+function main_loop(rhd::RHD2000,han::Gui_Handles,s,task)
     #get spikes and sort
     if rhd.debug.state==false
         if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
@@ -731,7 +731,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s)
     end
     =#
     #process and output (e.g. kalman, spike triggered stim calc, etc)
-    do_task(rhd.task,rhd,myread)
+    do_task(task,rhd,myread)
     
     #plot spikes    
     if myread
@@ -815,7 +815,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s)
         reveal(han.c2)
         reveal(han.c3)
 	#write to disk, clear buffers
-        queueToFile(rhd,rhd.save)
+        queueToFile(rhd,task)
     end
     sleep(.00001)
     #sleep(.02) #debug
@@ -1009,11 +1009,11 @@ function set_audio(fpga::DArray,han::Gui_Handles,rhd::RHD2000)
     
 end
 
-function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task})
 
-    han, rhd = user_data       
+    han, rhd,task = user_data       
     init_board!(rhd)
-    init_task(rhd.task,rhd)
+    init_task(task,rhd)
 
     nothing
 end

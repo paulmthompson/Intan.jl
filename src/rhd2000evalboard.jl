@@ -1255,36 +1255,27 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
     nothing
 end
 
-function queueToFile(rhd::RHD2000,sav::SaveAll)
+function queueToFile(rhd::RHD2000,task::Task)
 
     #write analog voltage traces
-    f=open(rhd.save.v, "a+")
-
-    write(f,rhd.v)
-    close(f)
-
-    writeTimeStamp(rhd)
-    nothing
-end
-
-function queueToFile(rhd::RHD2000,sav::SaveWave)
-    
-    f=open(v_save_file,"a+")
-    for i=1:size(rhd.v,2)
-        for j=1:rhd.nums[i]
-            if rhd.buf[j,i].inds[1]>0
-                write(f,rhd.v[rhd.buf[j,i].inds,i])
-            end
-        end
+    if rhd.save.save_full
+        f=open(rhd.save.v, "a+")
+        write(f,rhd.v)
+        close(f)
     end
-    close(f)
-    
-    writeTimeStamp(rhd)
-    nothing
-end
 
-function queueToFile(rhd::RHD2000,sav::SaveNone)
     writeTimeStamp(rhd)
+
+    save_task(task,rhd)
+
+    #Clear buffers
+    @inbounds for i=1:size(rhd.buf,2)
+        for j=1:rhd.nums[i]
+            rhd.buf[j,i]=Spike()
+        end
+        rhd.nums[i]=0
+    end
+    nothing
 end
 
 function writeTimeStamp(rhd::RHD2000)
@@ -1309,15 +1300,6 @@ function writeTimeStamp(rhd::RHD2000)
 
     close(f)
 
-    save_task(rhd.task,rhd)
-
-    #Clear buffers
-    @inbounds for i=1:size(rhd.buf,2)
-        for j=1:rhd.nums[i]
-            rhd.buf[j,i]=Spike()
-        end
-        rhd.nums[i]=0
-    end
     nothing
 end
 

@@ -61,7 +61,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys);
+(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys);
 
 facts() do
     @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -91,7 +91,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 myfpga1=FPGA(1,myamp)
 myfpga2=FPGA(2,myamp)
-(myrhd2,ss2)=makeRHD([myfpga1,myfpga2],myt,debug=d,sav=mys,parallel=true);
+(myrhd2,ss2)=makeRHD([myfpga1,myfpga2],debug=d,sav=mys,parallel=true);
 
 facts() do
     @fact myrhd2.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -125,7 +125,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys);
+(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys);
 
 Intan.init_board!(myrhd)
 

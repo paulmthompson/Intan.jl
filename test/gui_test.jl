@@ -7,9 +7,9 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveAll()
 myfpga=FPGA(1,myamp)
-(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys)
+(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys)
 
-handles = makegui(myrhd,ss)
+handles = makegui(myrhd,ss,myt)
 
 sleep(1.0)
 
@@ -24,7 +24,7 @@ Callback Testing
 =#
 
 #Initialization
-Intan.init_cb(handles.init.handle,(handles,myrhd))
+Intan.init_cb(handles.init.handle,(handles,myrhd,myt))
 
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 2
@@ -35,7 +35,7 @@ end
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
 
 facts() do
     myreads=myrhd.reads
@@ -182,7 +182,7 @@ sleep(1.0)
 
 for i=0:4
     Intan.scope_popup_v_cb(handles.run.handle,(handles,i))
-	sleep(1.0)
+    sleep(1.0)
 end
 
 Intan.scope_popup_v_cb(handles.run.handle,(handles,2))
@@ -216,13 +216,13 @@ sleep(1.0)
 Intan.popup_enable_cb(handles.run.handle,(handles,))
 
 facts() do
-	@fact handles.enabled[handles.spike] --> true
+    @fact handles.enabled[handles.spike] --> true
 end
 
 Intan.popup_disable_cb(handles.run.handle,(handles,))
 
 facts() do
-	@fact handles.enabled[handles.spike] --> false
+    @fact handles.enabled[handles.spike] --> false
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)

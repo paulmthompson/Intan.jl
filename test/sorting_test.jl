@@ -7,19 +7,19 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveNone()
 myfpga=FPGA(1,myamp)
-(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys)
+(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys)
 
-handles = makegui(myrhd,ss)
+handles = makegui(myrhd,ss,myt)
 
 sleep(1.0)
 
 #Initialization
-Intan.init_cb(handles.init.handle,(handles,myrhd))
+Intan.init_cb(handles.init.handle,(handles,myrhd,myt))
 
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
 
 #Calibration
 sleep(1.0)
@@ -44,9 +44,8 @@ sleep(1.0)
 
 facts() do
 
-	@fact handles.total_clus[1] --> 1
-	@fact handles.total_clus[2] --> 0
-
+    @fact handles.total_clus[1] --> 1
+    @fact handles.total_clus[2] --> 0
 end
 
 #Delete Unit
@@ -54,8 +53,8 @@ Intan.b1_cb_template(handles.run.handle,(handles,))
 
 facts() do
 
-	@fact handles.total_clus[1] --> 0
-	@fact handles.total_clus[2] --> 0
+    @fact handles.total_clus[1] --> 0
+    @fact handles.total_clus[2] --> 0
 end
 
 sleep(1.0)
@@ -84,9 +83,8 @@ sleep(1.0)
 
 facts() do
 
-	@fact handles.total_clus[1] --> 2
-	@fact handles.total_clus[2] --> 0
-
+    @fact handles.total_clus[1] --> 2
+    @fact handles.total_clus[2] --> 0
 end
 
 #Change second unit
@@ -101,9 +99,8 @@ sleep(1.0)
 
 facts() do
 
-	@fact handles.total_clus[1] --> 2
-	@fact handles.total_clus[2] --> 0
-
+    @fact handles.total_clus[1] --> 2
+    @fact handles.total_clus[2] --> 0
 end
 
 #Show Templates
@@ -139,11 +136,8 @@ sleep(1.0)
 
 facts() do
 
-	@fact handles.total_clus[1] --> 2
-	@fact handles.total_clus[2] --> 0
-
+    @fact handles.total_clus[1] --> 2
+    @fact handles.total_clus[2] --> 0
 end
-
-
 
 end

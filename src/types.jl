@@ -3,9 +3,6 @@ export SaveWave,SaveAll,SaveNone, FPGA
 
 abstract RHD2000
 abstract Task
-abstract SaveOpt
-
-global num_rhd = 0
 
 type Debug
     state::Bool
@@ -15,10 +12,8 @@ type Debug
     maxind::Int64
 end
 
-type SaveWave <: SaveOpt 
-end
-
-type SaveAll <: SaveOpt
+type SaveOpt
+    save_full::Bool
     v::String
     ts::String
     adc::String
@@ -27,36 +22,26 @@ type SaveAll <: SaveOpt
 end
 
 function SaveAll()
+    out=make_save_structure()
+    out.save_full=true
+    out
+end
 
+function SaveNone()
+    out=make_save_structure()
+    out.save_full=false
+    out
+end
+
+function make_save_structure()
     @static if is_unix()
         t=string("./",now())
-        out=SaveAll(string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+        out=SaveOpt(true,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveAll(string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
-    end
-    out
-end
-
-type SaveNone <: SaveOpt
-    ts::String
-    adc::String
-    ttl::String
-    folder::String
-end
-
-function SaveNone()
-
-    @static if is_unix()
-        t=string("./",now())
-        out=SaveNone(string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
-    end
-
-    @static if is_windows()
-	t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveNone(string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+        out=SaveAll(true,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
     end
     out
 end
@@ -67,7 +52,6 @@ type WIFI
 end
 
 WIFI()=WIFI(false,1)
-
 
 type register
     sampleRate::Cdouble
@@ -131,7 +115,6 @@ type register
 
     #Register 14-17 variables
     aPwr::Array{Int32,1}
-
 end
 
 type FPGA
@@ -172,7 +155,6 @@ type RHD_Single <: RHD2000
     debug::Debug
     reads::Int64
     cal::Int64
-    task::Task
     save::SaveOpt
     sr::Int64
     refs::Array{Int64,1}
@@ -180,8 +162,8 @@ type RHD_Single <: RHD2000
     time::Array{UInt32,2}
 end
 
-function RHD_Single(fpga,num_channels,s,buf,nums,task,save,debug)
-    RHD_Single(fpga,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)))
+function RHD_Single(fpga,num_channels,s,buf,nums,save,debug)
+    RHD_Single(fpga,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)))
 end
 
 type RHD_Parallel <: RHD2000
@@ -192,7 +174,6 @@ type RHD_Parallel <: RHD2000
     debug::Debug
     reads::Int64
     cal::Int64
-    task::Task
     save::SaveOpt
     sr::Int64
     refs::Array{Int64,1}
@@ -200,8 +181,8 @@ type RHD_Parallel <: RHD2000
     time::SharedArray{UInt32,2}
 end
 
-function RHD_Parallel(fpga,num_channels,s,buf,nums,task,save,debug)
-    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
+function RHD_Parallel(fpga,num_channels,s,buf,nums,save,debug)
+    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
@@ -212,7 +193,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false,wifi=false)
+function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -238,7 +219,7 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
                 myfpga.usb3=true
             end
         end
-        rhd=RHD_Single(fpga,numchannels,s,buf,nums,mytask,sav,debug)
+        rhd=RHD_Single(fpga,numchannels,s,buf,nums,sav,debug)
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
@@ -247,16 +228,18 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
                 myfpga.usb3=true
             end
         end
-        rhd=RHD_Parallel(fpga,numchannels,s,buf,nums,mytask,sav,debug)
+        rhd=RHD_Parallel(fpga,numchannels,s,buf,nums,sav,debug)
     end
 
     rhd.sr=sr
 
+    #=
     if wifi==true
         #Spawn a UDP listener thread to receive wireless packets
         udp_listener()
         rhd.wifi.enabled=true
     end
+    =#
 
     (rhd,s)
 end
