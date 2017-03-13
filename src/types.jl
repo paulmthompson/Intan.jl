@@ -167,7 +167,6 @@ end
 type RHD_Single <: RHD2000
     fpga::Array{FPGA,1}
     v::Array{Int16,2}
-    prev::Array{Float64,1}
     buf::Array{Spike,2}
     nums::Array{UInt16,1}
     debug::Debug
@@ -182,13 +181,12 @@ type RHD_Single <: RHD2000
 end
 
 function RHD_Single(fpga,num_channels,s,buf,nums,task,save,debug)
-    RHD_Single(fpga,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),zeros(Float64,SAMPLES_PER_DATA_BLOCK),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)))
+    RHD_Single(fpga,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)))
 end
 
 type RHD_Parallel <: RHD2000
     fpga::DArray{FPGA,1}
     v::SharedArray{Int16,2}
-    prev::SharedArray{Float64,1}
     buf::SharedArray{Spike,2}
     nums::SharedArray{UInt16,1}
     debug::Debug
@@ -203,7 +201,7 @@ type RHD_Parallel <: RHD2000
 end
 
 function RHD_Parallel(fpga,num_channels,s,buf,nums,task,save,debug)
-    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),convert(SharedArray{Float64,1},zeros(Float64,SAMPLES_PER_DATA_BLOCK)),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
+    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]

@@ -20,13 +20,11 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             add_new_cluster(han.temp,mymean,mystd)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
-            #draw_templates(han)
         else #replace old cluster
             (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
             change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
-            #draw_templates(han)
         end
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
@@ -341,7 +339,6 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
         if mymisses<5 #If passes template matching, set as unit
             han.buf_clus[i]=clus
         elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
-            #han.buf_clus[i]=0
             han.buf_clus[i]=-1
         end
     end

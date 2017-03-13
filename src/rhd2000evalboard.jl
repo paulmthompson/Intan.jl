@@ -1077,27 +1077,10 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
             end
         end
 
-        #Filter
-        #applyFilter(rhd)
-
         applySorting(rhd,s)       
     end
                             
     return true 
-end
-
-function applyFilter(rhd::RHD2000)
-
-    for i=1:size(rhd.v,2)
-        for j=1:SAMPLES_PER_DATA_BLOCK
-            rhd.prev[j]=convert(Float64,rhd.v[j,i])
-        end
-        filt!(rhd.prev,rhd.filts[i],rhd.prev)
-        for j=1:SAMPLES_PER_DATA_BLOCK
-            rhd.v[j,i]=round(Int16,rhd.prev[j])
-        end
-    end
-    nothing
 end
 
 function applySorting(rhd::RHD2000,s)
