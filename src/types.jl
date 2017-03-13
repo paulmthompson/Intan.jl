@@ -21,27 +21,18 @@ type SaveOpt
     folder::String
 end
 
-function SaveAll()
-    out=make_save_structure()
-    out.save_full=true
-    out
-end
+SaveAll()=make_save_structure(true)
+SaveNone()=make_save_structure(false)
 
-function SaveNone()
-    out=make_save_structure()
-    out.save_full=false
-    out
-end
-
-function make_save_structure()
+function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(true,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveAll(true,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+        out=SaveAll(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
     end
     out
 end
