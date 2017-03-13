@@ -33,7 +33,7 @@ facts() do
 
     @fact r.absMode --> 0
     @fact r.dspEn --> 1
-    @fact r.dspCutoffFreq --> 12
+    @fact r.dspCutoffFreq --> 3
 
     #Register 5
     @fact r.zcheckDacPower --> 0

@@ -538,9 +538,9 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
                     zeros(Int64,length(r.nums),2),sb,button_gain,sb2,0,button_thres_all,
                     -1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
-                    r.s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
-                    adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,r.s[1].s.win)),
-                    false,false,zeros(Int16,r.s[1].s.win+1,500),1,1,button_buffer,button_hold,
+                    s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
+                    adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
+                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_buffer,button_hold,
                     false,zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),
                     slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,zeros(Int64,500),
                     zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
@@ -549,7 +549,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     sortview_handles,band_widgets)
 
     #Connect Callbacks to objects on GUI
-if typeof(r.s[1].c)==ClusterWindow
+if typeof(s[1].c)==ClusterWindow
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
     id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
@@ -566,7 +566,7 @@ if typeof(r.s[1].c)==ClusterWindow
     #setproperty!(tb1,:label,"Cluster: ")
     #setproperty!(tb2,:label,"Window: ")
     
-elseif typeof(r.s[1].c)==ClusterTemplate
+elseif typeof(s[1].c)==ClusterTemplate
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     
@@ -1029,7 +1029,7 @@ function cal_cb(widget::Ptr, user_data::Tuple)
     else
         rhd.cal=3
     
-        @inbounds for i=1:length(rhd.s)
+        @inbounds for i=1:length(s)
             han.offset[i]=0.0
             han.scale[i,1] = -.125
             han.scale[i,2] = -.125*.25

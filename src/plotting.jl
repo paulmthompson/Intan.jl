@@ -210,7 +210,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         #draw threshold
 
         if han.soft.thres_on
-            plot_thres_scope(han,rhd,rhd.s[1].d,ctx)
+            plot_thres_scope(han,rhd,ctx)
         end
 
         han.soft.draws=1
@@ -234,11 +234,11 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-function plot_thres_scope(han,rhd,d::DetectNeg,ctx)
+function plot_thres_scope(han,rhd,ctx)
 
     myheight=height(ctx)
     
-    thres=rhd.s[han.spike].thres*han.soft.v_div
+    thres=han.thres*han.soft.v_div
 
     move_to(ctx,1,myheight-150-thres+2)
     line_to(ctx,500,myheight-150-thres+2)

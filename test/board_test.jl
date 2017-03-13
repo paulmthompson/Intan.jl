@@ -61,12 +61,12 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-myrhd=makeRHD([myfpga],myt,debug=d,sav=mys);
+(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys);
 
 facts() do
     @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
-    @fact length(myrhd.s) --> 64
-    @fact typeof(myrhd.s) --> Array{SpikeSorting.Sorting_1,1}
+    @fact length(ss) --> 64
+    @fact typeof(ss) --> Array{SpikeSorting.Sorting_1,1}
     @fact typeof(myrhd.buf) --> Array{SpikeSorting.Spike,2}
     @fact size(myrhd.buf,2) --> 64
     @fact myrhd.nums --> zeros(Int64,64)
@@ -79,8 +79,8 @@ facts() do
     @fact myrhd.fpga[1].numDataStreams --> 2
     @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
     @fact myrhd.fpga[1].sampleRate --> 30000
-    @fact myrhd.fpga[1].numWords --> 52800
-    @fact myrhd.fpga[1].numBytesPerBlock --> 105600
+    @fact myrhd.fpga[1].numWords --> 45056
+    @fact myrhd.fpga[1].numBytesPerBlock --> 90112
 end
 
 #=
@@ -91,12 +91,12 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 myfpga1=FPGA(1,myamp)
 myfpga2=FPGA(2,myamp)
-myrhd2=makeRHD([myfpga1,myfpga2],myt,debug=d,sav=mys,parallel=true);
+(myrhd2,ss2)=makeRHD([myfpga1,myfpga2],myt,debug=d,sav=mys,parallel=true);
 
 facts() do
     @fact myrhd2.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
-    @fact length(myrhd2.s) --> 64
-    @fact typeof(myrhd2.s) --> DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
+    @fact length(ss2) --> 64
+    @fact typeof(ss2) --> DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
     @fact typeof(myrhd2.buf) --> SharedArray{SpikeSorting.Spike,2}
     @fact size(myrhd2.buf,2) --> 64
     @fact myrhd2.nums --> zeros(Int64,64)
@@ -125,7 +125,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-myrhd=makeRHD([myfpga],myt,debug=d,sav=mys);
+(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys);
 
 Intan.init_board!(myrhd)
 

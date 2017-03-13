@@ -7,9 +7,9 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveAll()
 myfpga=FPGA(1,myamp)
-myrhd=makeRHD([myfpga],myt,debug=d,sav=mys)
+(myrhd,ss)=makeRHD([myfpga],myt,debug=d,sav=mys)
 
-handles = makegui(myrhd)
+handles = makegui(myrhd,ss)
 
 sleep(1.0)
 
@@ -35,7 +35,7 @@ end
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss))
 
 facts() do
     myreads=myrhd.reads
@@ -49,7 +49,7 @@ end
 #Calibration
 sleep(1.0)
 setproperty!(handles.cal,:active,false)
-Intan.cal_cb(handles.cal.handle,(handles,myrhd))
+Intan.cal_cb(handles.cal.handle,(handles,myrhd,ss))
 sleep(1.0)
 
 facts() do
@@ -61,7 +61,7 @@ sleep(1.0)
 facts() do
     for i=1:4
         setproperty!(handles.adj,:value,i)
-        Intan.update_c1(handles.adj.handle,(handles,myrhd))
+        Intan.update_c1(handles.adj.handle,(handles,))
         sleep(1.0)
         @fact handles.num16 --> i
         @fact handles.spike --> 16*i-16+handles.num
@@ -73,7 +73,7 @@ sleep(1.0)
 facts() do
     for i=1:4
         setproperty!(handles.adj2,:value,i)
-        Intan.update_c2(handles,myrhd)
+        Intan.update_c2(handles)
         sleep(1.0)
         @fact handles.num --> i
         @fact handles.spike --> 16*handles.num16-16+i
@@ -115,7 +115,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-	@fact handles.spike --> 49
+    @fact handles.spike --> 49
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),200.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -123,7 +123,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-	@fact handles.spike --> 53
+    @fact handles.spike --> 53
 end
 
 #32 Channel Select
@@ -138,7 +138,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-	@fact handles.spike --> 33
+    @fact handles.spike --> 33
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),150.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -146,7 +146,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-	@fact handles.spike --> 39
+    @fact handles.spike --> 39
 end
 
 
@@ -154,21 +154,21 @@ end
 RadioButtons
 =#
 for i=2:5
-	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-	signal_emit(handles.rb1[i],"clicked",Bool,press)
-	sleep(1.0)
-	facts() do
-		@fact handles.c_right_top --> i
-	end
+    press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+    signal_emit(handles.rb1[i],"clicked",Bool,press)
+    sleep(1.0)
+    facts() do
+	@fact handles.c_right_top --> i
+    end
 end
 
 for i=1:6
-	press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-	signal_emit(handles.rb2[i],"clicked",Bool,press)
-	sleep(1.0)
-	facts() do
-		@fact handles.c_right_bottom --> i
-	end
+    press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb2[i]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+    signal_emit(handles.rb2[i],"clicked",Bool,press)
+    sleep(1.0)
+    facts() do
+	@fact handles.c_right_bottom --> i
+    end
 end
 
 #=
@@ -181,7 +181,7 @@ signal_emit(handles.rb2[4],"clicked",Bool,press)
 sleep(1.0)
 
 for i=0:4
-	Intan.scope_popup_v_cb(handles.run.handle,(handles,i))
+    Intan.scope_popup_v_cb(handles.run.handle,(handles,i))
 	sleep(1.0)
 end
 
@@ -189,16 +189,16 @@ Intan.scope_popup_v_cb(handles.run.handle,(handles,2))
 sleep(1.0)
 
 for i=0:4
-	Intan.scope_popup_t_cb(handles.run.handle,(handles,i))
-	sleep(1.0)
+    Intan.scope_popup_t_cb(handles.run.handle,(handles,i))
+    sleep(1.0)
 end
 
 Intan.scope_popup_t_cb(handles.run.handle,(handles,2))
 sleep(1.0)
 
 for i=0:1
-	Intan.scope_popup_thres_cb(handles.run.handle,(handles,i))
-	sleep(1.0)
+    Intan.scope_popup_thres_cb(handles.run.handle,(handles,i))
+    sleep(1.0)
 end
 
 #=
@@ -236,13 +236,13 @@ sleep(1.0)
 Intan.popup_enable_cb(handles.run.handle,(handles,))
 
 facts() do
-	@fact handles.enabled[handles.spike] --> true
+    @fact handles.enabled[handles.spike] --> true
 end
 
 Intan.popup_disable_cb(handles.run.handle,(handles,))
 
 facts() do
-	@fact handles.enabled[handles.spike] --> false
+    @fact handles.enabled[handles.spike] --> false
 end
 
 
@@ -254,7 +254,6 @@ SAVE LOAD Test
 myv=parse_v(myrhd.save.v)
 
 facts() do
-
     @fact size(myv,2) --> 64
 end
 
