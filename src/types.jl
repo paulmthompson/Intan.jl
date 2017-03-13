@@ -232,8 +232,6 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
         params=debug_sort
     end
 
-    notches=[make_notch(59,61,sr) for i=1:numchannels]
-
     wave_points=get_wavelength(sr,wave_time)
     
     if parallel==false
@@ -265,13 +263,6 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
     end
 
     (rhd,s)
-end
-
-function make_notch(wn1,wn2,sr)
-    responsetype = Bandstop(wn1,wn2; fs=sr)
-    designmethod = Butterworth(4)
-    df1=digitalfilter(responsetype, designmethod)
-    DF2TFilter(df1)
 end
 
 get_wavelength(sr,timewin)=round(Int,sr*timewin/1000)
