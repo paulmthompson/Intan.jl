@@ -881,7 +881,7 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
     update_treeview(han)
 
     #update selected cluster
-    select_unit(rhd)
+    select_unit(han)
 
     #Sort Button
     if han.sort_cb
