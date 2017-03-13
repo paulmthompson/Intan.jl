@@ -1030,7 +1030,7 @@ function cal_update(rhd::RHD2000)
     nothing
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
 
     if compareNumWords(rhd.fpga)
         return false
@@ -1080,7 +1080,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64)
         #Filter
         #applyFilter(rhd)
 
-        applySorting(rhd)       
+        applySorting(rhd,s)       
     end
                             
     return true 
@@ -1100,16 +1100,16 @@ function applyFilter(rhd::RHD2000)
     nothing
 end
 
-function applySorting(rhd::RHD2000)
+function applySorting(rhd::RHD2000,s)
 
     if rhd.cal==0
 
-        cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+        cal!(s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
         rhd.cal=1
                       
     elseif rhd.cal<3
 
-        cal!(rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
+        cal!(s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
 
         if rhd.reads>20
             rhd.cal=2
@@ -1117,7 +1117,7 @@ function applySorting(rhd::RHD2000)
         
     elseif rhd.cal==3
             
-        onlinesort!(rhd.s,rhd.v,rhd.buf,rhd.nums)
+        onlinesort!(s,rhd.v,rhd.buf,rhd.nums)
     end
 
     rhd.reads+=1

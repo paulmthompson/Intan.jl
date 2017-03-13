@@ -164,39 +164,48 @@ function FPGA(board_id::Int64,amps::Array{Int64,1})
     end
 end
 
-function gen_rhd(fpga,v,prev,s,buf,nums,tas,sav,filts,mytime)
+type RHD_Single <: RHD2000
+    fpga::Array{FPGA,1}
+    v::Array{Int16,2}
+    prev::Array{Float64,1}
+    s::Array{Sorting,1}
+    buf::Array{Spike,2}
+    nums::Array{Int64,1}
+    debug::Debug
+    reads::Int64
+    cal::Int64
+    task::Task
+    save::SaveOpt
+    sr::Int64
+    refs::Array{Int64,1}
+    ttl_state::Bool
+    time::Array{UInt32,2}
+end
 
-    global num_rhd
+function RHD_Single(fpga,num_channels,s,buf,nums,task,save,debug)
+    RHD_Single(fpga,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),zeros(Float64,SAMPLES_PER_DATA_BLOCK),s,buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,zeros(Int64,SAMPLES_PER_DATA_BLOCK,num_channels))
+end
 
-    num_rhd+=1
-    k=num_rhd
-    
-    @eval begin
-        type $(Symbol("RHD200$k")) <: RHD2000
-            fpga::$(typeof(fpga))
-            v::$(typeof(v))
-            prev::$(typeof(prev))
-            s::$(typeof(s))
-            buf::$(typeof(buf))
-            nums::$(typeof(nums))
-            debug::Debug
-            reads::Int64
-            cal::Int64
-            task::$(typeof(tas))
-            save::$(typeof(sav))
-            filts::$(typeof(filts))
-            sr::Int64
-            refs::Array{Int64,1}
-            ttl_state::Bool
-            time::$(typeof(mytime))
-            wifi::WIFI
-        end
+type RHD_Parallel <: RHD2000
+    fpga::DArray{FPGA,1}
+    v::SharedArray{Int16,2}
+    prev::Array{Float64,1}
+    s::DArray{Sorting,1}
+    buf::SharedArray{Spike,2}
+    nums::SharedArray{Int64,1}
+    debug::Debug
+    reads::Int64
+    cal::Int64
+    task::Task
+    save::SaveOpt
+    sr::Int64
+    refs::Array{Int64,1}
+    ttl_state::Bool
+    time::SharedArray{UInt32,2}
+end
 
-        function make_rhd(fpga::$(typeof(fpga)),v::$(typeof(v)),prev::$(typeof(prev)),s::$(typeof(s)),buf::$(typeof(buf)),nums::$(typeof(nums)),debug::Debug,tas::$(typeof(tas)),sav::$(typeof(sav)),filts::$(typeof(filts)),mytime::$(typeof(mytime)))
-            
-            $(Symbol("RHD200$k"))(fpga,v,prev,s,buf,nums,debug,0,0,tas,sav,filts,30000,zeros(Int64,size(v,2)),false,mytime,WIFI())
-        end
-    end
+function RHD_Parallel(fpga,num_channels,s,buf,nums,task,save,debug)
+    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),convert(SharedArray{Float64,1},zeros(Float64,SAMPLES_PER_DATA_BLOCK)),s,buf,nums,debug,0,0,task,save,30000,zeros(Int64,num_channels),false,zeros(Int64,SAMPLES_PER_DATA_BLOCK,num_channels))
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
@@ -228,19 +237,15 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
     wave_points=get_wavelength(sr,wave_time)
     
     if parallel==false
-        v=zeros(Int16,SAMPLES_PER_DATA_BLOCK,numchannels)
-        prev=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
-        mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
         if usb3==true
             for myfpga in fpga
                 myfpga.usb3=true
             end
         end
+        rhd=RHD_Single(fpga,numchannels,s,buf,nums,mytask,sav,debug)
     else
-        v=convert(SharedArray{Int16,2},zeros(Int64,SAMPLES_PER_DATA_BLOCK,numchannels))
-        prev=convert(SharedArray{Float64,1},zeros(Int64,SAMPLES_PER_DATA_BLOCK))
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
         if usb3==true
@@ -248,14 +253,8 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
                 myfpga.usb3=true
             end
         end
-        fpga=distribute(fpga)
-        mytime=zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))
-        mytime=convert(SharedArray{UInt32,2},mytime)
+        rhd=RHD_Parallel(fpga,numchannels,s,buf,nums,mytask,sav,debug)
     end
-
-    
-    gen_rhd(fpga,v,prev,s,buf,nums,mytask,sav,notches,mytime)
-    rhd=make_rhd(fpga,v,prev,s,buf,nums,debug,mytask,sav,notches,mytime)
 
     rhd.sr=sr
 
@@ -265,7 +264,7 @@ function makeRHD(fpga::Array{FPGA,1},mytask::Task; params=default_sort, parallel
         rhd.wifi.enabled=true
     end
 
-    rhd
+    (rhd,s)
 end
 
 function make_notch(wn1,wn2,sr)

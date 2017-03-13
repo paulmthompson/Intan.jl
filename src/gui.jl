@@ -1,6 +1,6 @@
 
 
-function makegui(r::RHD2000)
+function makegui(r::RHD2000,s)
 
     #GUI ARRANGEMENT
     grid = Grid()
@@ -567,57 +567,57 @@ if typeof(r.s[1].c)==ClusterWindow
     #setproperty!(tb2,:label,"Window: ")
     
 elseif typeof(r.s[1].c)==ClusterTemplate
-    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-    id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
+    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     
-    id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort1,"Delete Unit")
     
-    id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort2,"Add Unit")
     
-    id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort3,"Collect Templates")
     
-    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort4,"Show Template Bounds")
     
     setproperty!(check_sort1,:label,"Show Template")
-    id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,))
 
     setproperty!(slider_sort_label,:label,"Tolerance")
 
-    id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,r))
+    id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
 end
 
 id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
 
-    id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,r))
+    id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
-id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r))
-    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,r))
-    id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,r))
+id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s))
+    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
+    id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r))
-    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
-    #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,r))
-id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r,s))
+    #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
+id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
-id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r))
-id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r))
+id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r,s))
+id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r,s))
 id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
 id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,))
 id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
-id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,r))
+id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -675,7 +675,7 @@ end
 
 #SortView
 
-id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,r))
+id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,))
 
 signal_connect(sortview_handles.win, :delete_event) do widget, event
     visible(sortview_handles.win, false)
@@ -686,43 +686,43 @@ handles
 end
 
 #Drawing
-function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function run_cb(widgetptr::Ptr,user_data::Tuple)
 
     widget = convert(ToggleButton, widgetptr)
 	          
     @async if getproperty(widget,:active,Bool)==true
         
         #unpack tuple
-        han, rhd = user_data
+        han, rhd, s = user_data
               
 	if rhd.debug.state==false
             map(runBoard,rhd.fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop(rhd,han) 
+           main_loop(rhd,han,s) 
         end       
     end
         
     nothing
 end
 
-function main_loop(rhd::RHD2000,han::Gui_Handles)
+function main_loop(rhd::RHD2000,han::Gui_Handles,s)
     #get spikes and sort
     if rhd.debug.state==false
         if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
 
             if rhd.cal<3
-                calibrate_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
+                calibrate_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
             else
-                onlinesort_parallel(rhd.fpga,rhd.s,rhd.v,rhd.buf,rhd.nums,rhd.time)
+                onlinesort_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time)
             end
             cal_update(rhd)
 	    myread=true
         else
-            myread=readDataBlocks(rhd,1)
+            myread=readDataBlocks(rhd,1,s)
         end
     else
-        myread=readDataBlocks(rhd)
+        myread=readDataBlocks(rhd,s)
     end
     #=
     if myread
@@ -769,16 +769,16 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
 	    reveal(han.c)
 
             if han.spike_changed
-                new_single_channel(han,rhd)
+                new_single_channel(han,rhd,s)
             end
             if han.c_changed
-                send_clus(rhd.s,han)
+                send_clus(s,han)
             end
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
 	    end
             if han.thres_changed
-                thres_changed(han,rhd)
+                thres_changed(han,s)
             end
             if han.show_thres
                 plot_thres(han)
@@ -822,29 +822,27 @@ function main_loop(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
     
-    han, rhd = user_data 
+    han, = user_data 
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
     
     if han.num16>0
         clear_c(han)
-        #new_single_channel(han,rhd)
         han.spike_changed=true
     end
     nothing    
 end
 
-update_c2_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=update_c2(d[1],d[2])
+update_c2_cb(w::Ptr,d::Tuple{Gui_Handles})=update_c2(d[1])
 
-function update_c2(han::Gui_Handles,rhd::RHD2000)
+function update_c2(han::Gui_Handles)
 
     han.num=getproperty(han.adj2, :value, Int64) # primary display
 
     if han.num16>0
 
         old_spike=rem(han.spike-1,han.chan_per_display)+1
-        #new_single_channel(han,rhd)
         han.spike_changed=true
         
         #Highlight channel
@@ -853,7 +851,7 @@ function update_c2(han::Gui_Handles,rhd::RHD2000)
     nothing
 end
 
-function new_single_channel(han::Gui_Handles,rhd::RHD2000)
+function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
 
     han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
     
@@ -868,7 +866,7 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
     #Display Threshold
-    get_thres(rhd,han,rhd.s)
+    get_thres(han,s)
     
     #Spike Buffer
     if getproperty(han.buf_button,:active,Bool)
@@ -877,13 +875,13 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000)
     end
 
     #Get Cluster
-    get_cluster(han,rhd.s)
+    get_cluster(han,s)
 
     #Update treeview
     update_treeview(han)
 
     #update selected cluster
-    select_unit(rhd,han)
+    select_unit(rhd)
 
     #Sort Button
     if han.sort_cb
@@ -916,7 +914,7 @@ function send_clus(s::DArray,han::Gui_Handles)
     han.c_changed=false
 end
 
-function get_thres(rhd::RHD2000,han::Gui_Handles,s::DArray)
+function get_thres(han::Gui_Handles,s::DArray)
     (nn,mycore)=get_thres_id(s,han.spike)
     
     mythres=remotecall_fetch(((x,h)->(localpart(x)[h.spike].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han)
@@ -926,17 +924,17 @@ function get_thres(rhd::RHD2000,han::Gui_Handles,s::DArray)
     nothing
 end
 
-function get_thres(rhd::RHD2000,han::Gui_Handles,s::Array)
+function get_thres(han::Gui_Handles,s::Array)
 
-    mythres=(rhd.s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    mythres=(s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
 end
 
-function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han,rhd = user_data
+    han, = user_data
     clear_c2(han.c2,han.spike)
     han.ctx2=getgc(han.c2)
     han.ctx2s=copy(han.ctx2)
@@ -1020,9 +1018,9 @@ function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+function cal_cb(widget::Ptr, user_data::Tuple)
 
-    han, rhd = user_data
+    han, rhd, s = user_data
 
     mycal=getproperty(han.cal,:active,Bool)
         
@@ -1039,7 +1037,7 @@ function cal_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
 
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
 
-        get_thres(rhd,han,rhd.s)
+        get_thres(han,s)
     end
 
     nothing
@@ -1193,12 +1191,12 @@ end
 #=
 Set Threshold for sorting equal to GUI threshold
 =#
-function thres_changed(han::Gui_Handles,rhd::RHD2000)
+function thres_changed(han::Gui_Handles,s)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
 
-    update_thres(han,rhd.s)
+    update_thres(han,s)
     
     han.thres_changed=false
     
@@ -1254,9 +1252,9 @@ Set threshold in GUI handles equal to RHD
 =# 
 
 #Gain
-function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
 
     mygain=getproperty(han.gain,:active,Bool)
 
@@ -1292,9 +1290,9 @@ function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 end
 
 #Offset
-function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
 
     mygain=getproperty(han.gain,:active,Bool)
 
@@ -1318,9 +1316,9 @@ end
 SortView Callbacks
 =#
 
-function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     han.sortview_widgets.spike_buf=han.spike_buf
     han.sortview_widgets.buf_clus=han.buf_clus
     han.sortview_widgets.buf_count=han.buf_count
@@ -1360,9 +1358,9 @@ function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Sorting})
 
-    han, rhd = user_data
+    han, rhd, s = user_data
 
     filepath=save_dialog("Save configuration",han.win)
 
@@ -1375,7 +1373,7 @@ function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     write(file, "Gain", han.scale)
     write(file, "Offset", han.offset)
-    write(file, "Sorting", rhd.s)
+    write(file, "Sorting", s)
     write(file, "total_clus",han.total_clus)
     write(file, "Enabled", han.enabled)
     write(file, "Reference",rhd.refs)
@@ -1434,9 +1432,9 @@ function change_bandwidth(fpgas::DArray,lower,upper,dsp_lower)
     nothing
 end
 
-function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Sorting})
 
-    han, rhd = user_data
+    han, rhd, s = user_data
 
     filepath=open_dialog("Load Configuration",han.win)
 
@@ -1453,10 +1451,10 @@ function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             han.offset[i]=o[i]
         end
 
-        s=read(file,"Sorting")
+        s_saved=read(file,"Sorting")
 
         for i=1:length(s)
-            rhd.s[i]=s[i]
+            s[i]=s_saved[i]
         end
 
         total_clus=read(file,"total_clus")
@@ -1657,9 +1655,9 @@ end
 Right Canvas Callbacks
 =#
 
-function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     event = unsafe_load(param_tuple)
 
     ctx=getgc(han.c)
@@ -1677,7 +1675,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
 
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
-                    update_c2(han,rhd)
+                    update_c2(han)
                 end
                 
             elseif event.button == 3 #right click
@@ -1691,7 +1689,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
                 (inmulti,channel_num)=check_multi(han,6,6,32,event.x,event.y)
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
-                    update_c2(han,rhd)
+                    update_c2(han)
                 end
                 
             elseif event.button == 3 #right click
@@ -1706,7 +1704,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
-                    update_c2(han,rhd)
+                    update_c2(han)
                 end
                 
             elseif event.button == 3 #right click
@@ -1740,7 +1738,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
                 if inmulti
                     setproperty!(han.adj2,:value,channel_num)
-                    update_c2(han,rhd)
+                    update_c2(han)
                 end
                 
             elseif event.button == 3 #right click
@@ -1927,20 +1925,20 @@ Treeview Functions
 
 =#
 
-function unit_select_cb(w::Ptr,p1,p2,user_data::Tuple{Gui_Handles,RHD2000})
+function unit_select_cb(w::Ptr,p1,p2,user_data::Tuple{Gui_Handles})
 
-    han,rhd = user_data  
-    select_unit(rhd,han)
+    han, = user_data  
+    select_unit(han)
 end
 
-function select_unit(rhd::RHD2000,han::Gui_Handles)
+function select_unit(han::Gui_Handles)
     clus=get_cluster_id(han)
     
     old_clus=han.clus
 
     han.clus=clus
     if clus>0
-        mytol=rhd.s[han.spike].c.tol[clus]
+        mytol=han.temp.tol[clus]
         setproperty!(han.adj_sort, :value, mytol)
     end
 
@@ -2031,9 +2029,9 @@ function is_selected(store,tv,ind)
 end
 
 
-function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     event = unsafe_load(param_tuple)
     
     if event.button == 1 #left click captures window
@@ -2049,7 +2047,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,R
                 han.buf_count=1
             end
             if han.sort_cb
-                draw_templates(rhd.s[han.spike].c,han)
+                draw_templates(han)
             end
         else
             han.mi=(event.x,event.y)
@@ -2154,19 +2152,19 @@ function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,Int64})
     nothing
 end
 
-function c3_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+function c3_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     event = unsafe_load(param_tuple)
     
     if event.button == 1 #left click captures window
-        check_c3_click(rhd,han,event.x,event.y)
+        check_c3_click(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
     end
     nothing
 end
 
-function check_c3_click(rhd::RHD2000,han::Gui_Handles,x,y)
+function check_c3_click(han::Gui_Handles,x,y)
 
     ctx=getgc(han.c3)
     mywidth=width(ctx)
@@ -2189,7 +2187,7 @@ function check_c3_click(rhd::RHD2000,han::Gui_Handles,x,y)
     if (inmulti)&(count<han.total_clus[han.spike]+1)
         selmodel=Gtk.GAccessor.selection(han.sort_tv)
         select!(selmodel, Gtk.iter_from_index(han.sort_list,count+1))
-        select_unit(rhd,han)
+        select_unit(han)
     end
     nothing
 end

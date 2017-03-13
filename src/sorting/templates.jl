@@ -2,9 +2,9 @@
 Template Matching Spike Sorting
 =#
 
-function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
+function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     event = unsafe_load(param_tuple)
 
     clus=han.clus
@@ -44,9 +44,9 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 end
 
 #Delete clusters
-function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
     
-    han, rhd = user_data
+    han, = user_data
     clus=han.clus
 
     if (clus<1) #do nothing if zeroth cluster selected      
@@ -63,9 +63,9 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 end
 
 #Add Unit
-function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     
-    han, rhd = user_data
+    han, = user_data
     
     #Add total number of units and go to that unit
     han.total_clus[han.spike] += 1
@@ -78,9 +78,9 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
 
     mybutton = convert(Button, widget)
 
@@ -108,9 +108,9 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     ctx = han.ctx2s
 
     clus=han.clus
@@ -153,9 +153,9 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function check_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function check_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
 
-    han, rhd = user_data
+    han, = user_data
     
     mycheck=convert(CheckButton,widget)
 
@@ -201,9 +201,9 @@ function draw_templates(han::Gui_Handles)
     nothing
 end
 
-function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
     
-    han,rhd = user_data
+    han, = user_data
 
     myval=getproperty(han.adj_sort, :value, Float64) # primary display
 
