@@ -1065,10 +1065,6 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
 
         fillFromUsbBuffer!(rhd.fpga,i,rhd.v,rhd.time)
 
-        if rhd.wifi.enabled==true
-            
-        end
-
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0
                 for k=1:size(rhd.v,1)
