@@ -2066,7 +2066,7 @@ function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Fl
     ctx=han.ctx2
 
     #Convert canvas coordinates to voltage vs time coordinates
-    myx=[1.0;collect(2:han.wave_points).*(han.w2/han.wave_points)]
+    myx=[1.0;collect(2:(han.wave_points-1)).*(han.w2/han.wave_points)]
     x1=indmin(abs(myx-xi1))
     x2=indmin(abs(myx-xi2))
     s=han.scale[han.spike,1]
