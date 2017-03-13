@@ -49,7 +49,7 @@ end
 #Calibration
 sleep(1.0)
 setproperty!(handles.cal,:active,false)
-Intan.cal_cb(handles.cal.handle,(handles,myrhd,ss))
+Intan.cal_cb(handles.cal.handle,(handles,myrhd))
 sleep(1.0)
 
 facts() do
