@@ -601,7 +601,7 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task))
-    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r,s))
+    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,))
@@ -686,7 +686,26 @@ handles
 end
 
 #Drawing
-function run_cb(widgetptr::Ptr,user_data::Tuple)
+function run_cb{T<:Sorting}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task})
+    
+    widget = convert(ToggleButton, widgetptr)
+	          
+    @async if getproperty(widget,:active,Bool)==true
+        
+        #unpack tuple
+        han, rhd, s,task = user_data
+              
+	if rhd.debug.state==false
+            map(runBoard,rhd.fpga)
+        end
+        while getproperty(widget,:active,Bool)==true
+           main_loop_par(rhd,han,s,task) 
+        end       
+    end
+    nothing
+end
+
+function run_cb{R<:RHD2000,S<:Sorting,T<:Task}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T})
 
     widget = convert(ToggleButton, widgetptr)
 	          
@@ -699,37 +718,39 @@ function run_cb(widgetptr::Ptr,user_data::Tuple)
             map(runBoard,rhd.fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop(rhd,han,s,task) 
+           main_loop_s(rhd,han,s,task) 
         end       
     end
         
     nothing
 end
 
-function main_loop(rhd::RHD2000,han::Gui_Handles,s,task)
-    #get spikes and sort
+function main_loop_s{T<:Sorting}(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task)
     if rhd.debug.state==false
-        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}} #parallel
-
-            if rhd.cal<3
-                calibrate_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
-            else
-                onlinesort_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time)
-            end
-            cal_update(rhd)
-	    myread=true
-        else
-            myread=readDataBlocks(rhd,1,s)
-        end
+        myread=readDataBlocks(rhd,1,s)
     else
         myread=readDataBlocks(rhd,s)
     end
-    #=
-    if myread
-        rhd.ttl_state = !rhd.ttl_state
-        sendTimePulse(rhd.fpga[1],rhd.ttl_state)
+    main_loop(rhd,han,s,task,myread)
+end
+
+function main_loop_par{T<:Sorting}(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task)
+    if rhd.debug.state==false
+        if rhd.cal<3
+            calibrate_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
+        else
+            onlinesort_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time)
+        end
+        cal_update(rhd)
+	myread=true
+    else
+        myread=readDataBlocks(rhd,s)
     end
-    =#
+    main_loop(rhd,han,s,task,myread)
+end
+
+function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool)
+
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(task,rhd,myread)
     
@@ -893,28 +914,28 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
     nothing
 end
 
-function get_cluster(han::Gui_Handles,s::Array)
+function get_cluster{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
     han.temp=deepcopy(s[han.spike].c)
 end
 
-function get_cluster(han::Gui_Handles,s::DArray)
+function get_cluster{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
     han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,han.spike)
 end
 
-function send_clus(s::Array,han::Gui_Handles)
+function send_clus{T<:Sorting}(s::Array{T,1},han::Gui_Handles)
     s[han.spike].c=deepcopy(han.temp)
     han.c_changed=false
 end
 
-function send_clus(s::DArray,han::Gui_Handles)
+function send_clus{T<:Sorting}(s::DArray{T,1,Array{T,1}},han::Gui_Handles)
     (nn,mycore)=get_thres_id(s,han.spike)
     remotecall_wait(((x,ss,tt)->localpart(x)[ss].c=tt),mycore,s,han.spike,han.temp)
     han.c_changed=false
 end
 
-function get_thres(han::Gui_Handles,s::DArray)
+function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
     mythres=remotecall_fetch(((x,h)->(localpart(x)[h.spike].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han)
@@ -924,7 +945,7 @@ function get_thres(han::Gui_Handles,s::DArray)
     nothing
 end
 
-function get_thres(han::Gui_Handles,s::Array)
+function get_thres{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
 
     mythres=(s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
@@ -1001,9 +1022,9 @@ function set_audio(fpga::Array,ii,refs)
     nothing
 end
 
-set_audio(fp::Array,h::Gui_Handles,r::RHD2000)=set_audio(fp,h.spike,r.refs[h.spike])
+set_audio(fp::Array{FPGA,1},h::Gui_Handles,r::RHD2000)=set_audio(fp,h.spike,r.refs[h.spike])
 
-function set_audio(fpga::DArray,han::Gui_Handles,rhd::RHD2000)
+function set_audio(fpga::DArray{FPGA,1,Array{FPGA,1}},han::Gui_Handles,rhd::RHD2000)
 
     remotecall_wait(((x,h,ii)->set_audio(localpart(x),h,ii)),2,fpga,han.spike,rhd.refs[han.spike])
     
@@ -1018,9 +1039,9 @@ function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task})
     nothing
 end
 
-function cal_cb(widget::Ptr, user_data::Tuple)
+function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
 
-    han, rhd, s = user_data
+    han, rhd = user_data
 
     mycal=getproperty(han.cal,:active,Bool)
         
@@ -1029,7 +1050,7 @@ function cal_cb(widget::Ptr, user_data::Tuple)
     else
         rhd.cal=3
     
-        @inbounds for i=1:length(s)
+        @inbounds for i=1:length(han.offset)
             han.offset[i]=0.0
             han.scale[i,1] = -.125
             han.scale[i,2] = -.125*.25
@@ -1037,7 +1058,7 @@ function cal_cb(widget::Ptr, user_data::Tuple)
 
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
 
-        get_thres(han,s)
+        han.spike_changed=true
     end
 
     nothing

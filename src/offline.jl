@@ -15,21 +15,18 @@ function Debug(filepath::AbstractString, filetype::AbstractString)
     d
 end
 
-function readDataBlocks(rhd::RHD2000,s)
-
+function readDataBlocks{T<:Sorting}(rhd::RHD2000,s::Array{T,1})
     fillFromOffline!(rhd)
+    applySorting(rhd,s)
+    true
+end
 
-    #Filter
-    #applyFilter(rhd)
-
-    if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}}
-        if rhd.cal<3
-            offline_cal(rhd,s,rhd.v,rhd.buf,rhd.nums)
-        else
-            offline_sort(rhd,s,rhd.v,rhd.buf,rhd.nums)
-        end
+function readDataBlocks{T<:Sorting}(rhd::RHD2000,s::DArray{T,1,Array{T,1}})
+    fillFromOffline!(rhd)
+    if rhd.cal<3
+        offline_cal(rhd,s,rhd.v,rhd.buf,rhd.nums)
     else
-        applySorting(rhd,s)
+        offline_sort(rhd,s,rhd.v,rhd.buf,rhd.nums)
     end
     true
 end
