@@ -6,22 +6,40 @@
 Intan.jl - Julia Electrophysiology Interface
 ===============================================
 
+Intan.jl is a graphical interface for viewing and processing extracellular electrophysiology 
+data being collected in real time. This system works out of the box with Intan Technologies 
+RHD2000-Series Amplifier Evaluation System, but could be configured to work with other systems that expose 
+their acquisition API like Intan.
+
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
-
+   :caption: Installation
+   install_overview.rst
+   installing_julia.rst
+   installing_module.rst
+   
+.. toctree::
+  :maxdepth: 2
+  :caption: Data Acquisition
   Getting_Started.rst
   Data_Acquisition.rst
   Visualization.rst
   Spike_Sorting.rst
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Experimental Control
   Experimental_Control.rst
   Online_Decoding.rst
   Tasks.rst
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Developer Documentation
   TypesMethods.rst
   Performance.rst
   
-
-This module is designed to work with Intan Technologies RHD2000-Series Amplifier Evaluation System for neural signal acquisition.
-
 
