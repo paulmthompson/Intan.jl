@@ -264,6 +264,15 @@ facts() do
     @fact length(mys_m) --> length(mys_j)
 end
 
-#destroy(handles.win)
+
+#=
+Close
+=#
+
+setproperty!(handles.run,:active,false)
+sleep(1.0)
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
+
+destroy(handles.win)
 
 end
