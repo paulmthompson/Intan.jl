@@ -541,9 +541,9 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
                     false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_buffer,button_hold,
-                    false,zeros(Int64,500),trues(500),Array(SpikeSorting.mywin,0),
-                    slider_sort,adj_sort,sort_list,sort_tv,button_pause,1,1,zeros(Int64,500),
-                    zeros(UInt32,20),zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
+                    false,zeros(Int64,500),trues(500),slider_sort,adj_sort,sort_list,
+                    sort_tv,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
+                    zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets)

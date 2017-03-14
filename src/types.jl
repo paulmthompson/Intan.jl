@@ -395,7 +395,6 @@ type Gui_Handles
     
     buf_clus::Array{Int64,1}
     buf_mask::Array{Bool,1}
-    spike_win::Array{SpikeSorting.mywin,1}
     
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
