@@ -32,7 +32,7 @@ function make_save_structure(save_full::Bool)
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveAll(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
     end
     out
 end
