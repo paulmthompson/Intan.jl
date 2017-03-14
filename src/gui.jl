@@ -207,9 +207,9 @@ function makegui(r::RHD2000,s,task)
     frame_time=Frame("Time Elapsed")
     grid[5,1]=frame_time
     hbox_time=ButtonBox(:h)
-push!(frame_time,hbox_time)
+    push!(frame_time,hbox_time)
 
-    push!(hbox_time,h_label)
+push!(hbox_time,h_label)
     push!(hbox_time,mh_label)
 push!(hbox_time,m_label)
     push!(hbox_time,sm_label)
@@ -226,7 +226,7 @@ c=Canvas(500)
         paint(ctx)
     end
     show(c)   
-    grid[5,2]=c
+grid[5,2]=c
     setproperty!(c,:vexpand,true)
 
     #ROW 3
@@ -241,7 +241,7 @@ c=Canvas(500)
     vbox_42=Box(:v)
     grid[6,2]=vbox_42
     
-    vbox_rb_upper=Box(:v)
+vbox_rb_upper=Box(:v)
     push!(vbox_42,vbox_rb_upper)
     
     push!(vbox_rb_upper,Label("Top Panel"))
@@ -273,7 +273,7 @@ setproperty!(c_rb,:vexpand,true)
     rbs2[2]=RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=RadioButton(rbs2[2],"32 Raster")
     rbs2[4]=RadioButton(rbs2[3],"Soft Scope")
-    rbs2[5]=RadioButton(rbs2[4],"64 Channel")
+rbs2[5]=RadioButton(rbs2[4],"64 Channel")
 rbs2[6]=RadioButton(rbs2[5],"64 Raster")
 rbs2[7]=RadioButton(rbs2[6],"Nothing")
 
@@ -548,7 +548,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets)
 
-    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))

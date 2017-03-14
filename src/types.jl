@@ -178,7 +178,7 @@ end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
-debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMinMax(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
+debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignProm(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
 default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
