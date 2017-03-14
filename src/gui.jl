@@ -534,7 +534,7 @@ sleep(2.0)
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
                     c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
-                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),
+                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),1,
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
                     zeros(Int64,length(r.nums),2),sb,button_gain,sb2,0,button_thres_all,
                     -1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
@@ -1654,7 +1654,11 @@ function plot_selected_waveforms(han::Gui_Handles)
         end
     end
     set_line_width(ctx,0.5)
-    select_color(ctx,han.clus+1)
+    if han.click_button==1
+        select_color(ctx,han.clus+1)
+    elseif han.click_button==3
+        select_color(ctx,1)
+    end
     stroke(ctx)
 
     identity_matrix(ctx)
@@ -2054,6 +2058,8 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
     han, = user_data
     event = unsafe_load(param_tuple)
+
+    han.click_button=event.button
     
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
