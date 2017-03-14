@@ -536,8 +536,8 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
                     false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),1,
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
-                    zeros(Int64,length(r.nums),2),sb,button_gain,sb2,0,button_thres_all,
-                    -1.*ones(Int64,6),trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
+                    sb,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),
+                    trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
                     false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_buffer,button_hold,
@@ -548,25 +548,6 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets)
 
-    #Connect Callbacks to objects on GUI
-if typeof(s[1].c)==ClusterWindow
-    id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-    id = signal_connect(canvas_release_win,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,r))
-    id = signal_connect(b1_cb_win,button_sort1,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort1,:label,"Delete Cluster")
-    id = signal_connect(b2_cb_win,button_sort2,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort2,:label,"Delete Window")
-    id = signal_connect(b3_cb_win,button_sort3,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort3,:label,"Show Windows")
-    id = signal_connect(b4_cb_win,button_sort4,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort3,:label,"Select Cluster")
-    id = signal_connect(b5_cb_win,button_sort5,"clicked",Void,(),false,(handles,r))
-    setproperty!(button_sort3,:label,"Select Window")
-
-    #setproperty!(tb1,:label,"Cluster: ")
-    #setproperty!(tb2,:label,"Window: ")
-    
-elseif typeof(s[1].c)==ClusterTemplate
     id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     
@@ -588,7 +569,6 @@ elseif typeof(s[1].c)==ClusterTemplate
     setproperty!(slider_sort_label,:label,"Tolerance")
 
     id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
-end
 
 id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
 

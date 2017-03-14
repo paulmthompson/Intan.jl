@@ -340,8 +340,6 @@ type Gui_Handles
     clus::Int64
     total_clus::Array{Int64,1}
     
-    var2::Array{Int64,2} #saved variable 2 for each channel
-    
     sb::Gtk.GtkSpinButtonLeaf
     
     gain::Gtk.GtkCheckButtonLeaf
