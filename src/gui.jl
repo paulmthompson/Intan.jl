@@ -1206,9 +1206,9 @@ end
 
 function update_thres(han::Gui_Handles,s::DArray)
     if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
-        @sync for p in procs(s)
-            @spawnat p begin
-                set_multiple_thres(localpart(s),han,localindexes(s))
+        @sync begin
+            for p in procs(s)
+                @async remotecall_wait((ss)->set_multiple_thres(localpart(ss),han,localindexes(ss)),p,s)
             end
         end
     else
@@ -1425,9 +1425,9 @@ end
 
 function change_bandwidth(fpgas::DArray,lower,upper,dsp_lower)
 
-    @sync for p in procs(fpgas)
-        @spawnat p begin
-            change_bandwidth(localpart(fpgas),lower,upper,dsp_lower)
+    @sync begin
+        for p in procs(fpgas)
+            @async remotecall_wait((ff)->change_bandwidth(localpart(ff),lower,upper,dsp_lower),p,fpgas)
         end
     end
     nothing

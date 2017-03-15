@@ -938,20 +938,20 @@ compareNumWords(fpga::FPGA)=numWordsInFifo(fpga) < fpga.numWords
 
 function calibrate_parallel(fpga,s,v,buf,nums,mytime,calnum)
 
-    @sync for p in procs(fpga)
-        @spawnat p begin
-            readDataBlocks_cal(localpart(fpga),localpart(s),v,buf,nums,mytime,calnum)
-        end 
+    @sync begin
+        for p in procs(fpga)
+            @async remotecall_wait((ff,ss)->readDataBlocks_cal(localpart(ff),localpart(ss),v,buf,nums,mytime),p,fpga,s)
+        end
     end
     nothing
 end
 
 function onlinesort_parallel(fpga,s,v,buf,nums,mytime)
 
-    @sync for p in procs(fpga)
-        @spawnat p begin
-            readDataBlocks_on(localpart(fpga),localpart(s),v,buf,nums,mytime)
-        end 
+    @sync begin
+        for p in procs(fpga)
+            @async remotecall_wait((ff,ss)->readDataBlocks_on(localpart(ff),localpart(ss),v,buf,nums,mytime),p,fpga,s)
+        end
     end
     nothing
 end
