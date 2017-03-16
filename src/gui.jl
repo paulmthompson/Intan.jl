@@ -11,7 +11,10 @@ function makegui(r::RHD2000,s,task)
 	
     #ROW 2
     vbox1_2=Grid()
-    grid[1,2]=vbox1_2
+    scroll_left=ScrolledWindow()
+    Gtk.GAccessor.policy(scroll_left,Gtk.GConstants.GtkPolicyType.NEVER,Gtk.GConstants.GtkPolicyType.AUTOMATIC)
+    push!(scroll_left,vbox1_2)
+    grid[1,2]=scroll_left
 	
     frame_control=Frame("Control")
     grid[1,1]=frame_control
@@ -157,7 +160,7 @@ function makegui(r::RHD2000,s,task)
     #ROW 2
     c_grid=Grid()
     
-    c2=Canvas(500)
+    c2=Canvas()
     #c2=@Canvas()
 
     @guarded draw(c2) do widget
@@ -171,14 +174,14 @@ function makegui(r::RHD2000,s,task)
     setproperty!(c2,:vexpand,true)
 
     #ROW 2
-    c3=Canvas(500,200)     
+    c3=Canvas(-1,200)     
     @guarded draw(c3) do widget
         ctx = getgc(c3)
         clear_c3(c3,1)
     end
     show(c3)
     c_grid[1,2]=c3
-    #setproperty!(c3,:hexpand,true)
+    setproperty!(c3,:hexpand,true)
 
     grid[4,2]=c_grid
 
@@ -652,6 +655,8 @@ signal_connect(sortview_handles.win, :delete_event) do widget, event
     visible(sortview_handles.win, false)
     true
 end
+
+resize!(handles.win,800,800)
 
 handles  
 end
