@@ -90,9 +90,6 @@ function makegui(r::RHD2000,s,task)
     button_clear=Button()
     add_button_label(button_clear,"Refresh")
     vbox_hold[1,2]=button_clear
-
-    button_buffer = CheckButton("Buffer On")
-    setproperty!(button_buffer,:active,true)
     
     #CLUSTER
     frame1_4=Frame("Clustering")
@@ -526,7 +523,7 @@ end
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1)
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
-spike_widgets=Spike_Widgets(button_hold,button_buffer,button_clear,button_pause)
+spike_widgets=Spike_Widgets(button_hold,button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
 
 sleep(2.0)
@@ -540,7 +537,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
-                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_buffer,button_hold,
+                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_hold,
                     false,zeros(Int64,500),trues(500),slider_sort,adj_sort,sort_list,
                     sort_tv,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
@@ -594,10 +591,9 @@ id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handle
 id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
-id = signal_connect(buf_on_cb,button_buffer,"clicked",Void,(),false,(handles,))
-id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
+id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -869,11 +865,8 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
     #Display Threshold
     get_thres(han,s)
     
-    #Spike Buffer
-    if getproperty(han.buf_button,:active,Bool)
-        han.buf_ind=1
-        han.buf_count=1
-    end
+    han.buf_ind=1
+    han.buf_count=1
 
     #Get Cluster
     get_cluster(han,s)
@@ -1039,24 +1032,6 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
         setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
 
         han.spike_changed=true
-    end
-
-    nothing
-end
-
-function buf_on_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-    han, = user_data
-
-    mybuf=getproperty(han.buf_button,:active,Bool)
-
-    if mybuf==true
-        han.buf_count=1
-        han.buf_ind=1
-        for i=1:length(han.buf_clus)
-            han.buf_clus[i]=0
-        end
-    else
-        han.buf_count=0
     end
 
     nothing
@@ -2049,10 +2024,8 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             clear_c2(han.c2,han.spike)
             han.ctx2=getgc(han.c2)
             han.ctx2s=copy(han.ctx2)
-            if getproperty(han.buf_button,:active,Bool)
-                han.buf_ind=1
-                han.buf_count=1
-            end
+            han.buf_ind=1
+            han.buf_count=1
             if han.sort_cb
                 draw_templates(han)
             end

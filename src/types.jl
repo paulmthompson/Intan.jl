@@ -296,7 +296,6 @@ end
 
 type Spike_Widgets
     hold::Gtk.GtkCheckButtonLeaf
-    buf::Gtk.GtkCheckButtonLeaf
     refresh::Gtk.GtkButtonLeaf
     pause::Gtk.GtkToggleButtonLeaf
 end
@@ -389,7 +388,7 @@ type Gui_Handles
     buf_ind::Int64
     buf_count::Int64
     
-    buf_button::Gtk.GtkCheckButtonLeaf
+    #buf_button::Gtk.GtkCheckButtonLeaf
     hold_button::Gtk.GtkCheckButtonLeaf
     pause::Bool
     
