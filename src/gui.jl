@@ -79,10 +79,6 @@ function makegui(r::RHD2000,s,task)
     vbox_hold=Grid()
     push!(frame_hold,vbox_hold)
 
-    button_hold = CheckButton("Hold on")
-    setproperty!(button_hold,:active,false)
-    #vbox_hold[1,1]=button_hold
-
     button_pause=ToggleButton()
     add_button_label(button_pause,"Pause")
     vbox_hold[2,2]=button_pause
@@ -523,7 +519,7 @@ end
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1)
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
-spike_widgets=Spike_Widgets(button_hold,button_clear,button_pause)
+spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
 
 sleep(2.0)
@@ -537,9 +533,9 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
-                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,button_hold,
-                    false,zeros(Int64,500),trues(500),slider_sort,adj_sort,sort_list,
-                    sort_tv,button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
+                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,false,zeros(Int64,500),
+                    trues(500),slider_sort,adj_sort,sort_list,sort_tv,
+                    button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
@@ -593,7 +589,6 @@ id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
-id = signal_connect(hold_cb,button_hold,"clicked",Void,(),false,(handles,))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -1037,14 +1032,6 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
     nothing
 end
 
-function hold_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-    han, = user_data
-
-    han.hold=getproperty(han.hold_button,:active,Bool)
-
-    nothing
-end
-
 function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
@@ -1060,7 +1047,7 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
     else
         han.pause=false
         change_button_label(widget,"Pause")
-        han.hold=getproperty(han.hold_button,:active,Bool) 
+        han.hold=false
     end
 
     nothing

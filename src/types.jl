@@ -295,7 +295,6 @@ type Gain_Widgets
 end
 
 type Spike_Widgets
-    hold::Gtk.GtkCheckButtonLeaf
     refresh::Gtk.GtkButtonLeaf
     pause::Gtk.GtkToggleButtonLeaf
 end
@@ -388,8 +387,6 @@ type Gui_Handles
     buf_ind::Int64
     buf_count::Int64
     
-    #buf_button::Gtk.GtkCheckButtonLeaf
-    hold_button::Gtk.GtkCheckButtonLeaf
     pause::Bool
     
     buf_clus::Array{Int64,1}
