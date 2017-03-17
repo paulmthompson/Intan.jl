@@ -656,7 +656,7 @@ signal_connect(sortview_handles.win, :delete_event) do widget, event
     true
 end
 
-resize!(handles.win,800,800)
+resize!(handles.win,1200,800)
 
 handles  
 end
