@@ -894,7 +894,7 @@ end
 function get_cluster{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
-    han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,han.spike)
+    han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,nn)
 end
 
 function send_clus{T<:Sorting}(s::Array{T,1},han::Gui_Handles)
@@ -904,14 +904,14 @@ end
 
 function send_clus{T<:Sorting}(s::DArray{T,1,Array{T,1}},han::Gui_Handles)
     (nn,mycore)=get_thres_id(s,han.spike)
-    remotecall_wait(((x,ss,tt)->localpart(x)[ss].c=tt),mycore,s,han.spike,han.temp)
+    remotecall_wait(((x,tt,num)->localpart(x)[num].c=tt),mycore,s,han.temp,nn)
     han.c_changed=false
 end
 
 function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
-    mythres=remotecall_fetch(((x,h)->(localpart(x)[h.spike].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han)
+    mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han,nn)
 
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
@@ -1171,7 +1171,7 @@ function thres_changed(han::Gui_Handles,s)
     nothing
 end
 
-function update_thres(han::Gui_Handles,s::DArray)
+function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
         @sync begin
             for p in procs(s)
@@ -1180,11 +1180,11 @@ function update_thres(han::Gui_Handles,s::DArray)
         end
     else
         (nn,mycore)=get_thres_id(s,han.spike)
-        remotecall_wait(((x,h)->localpart(x)[nn].thres=-1*h.thres/h.scale[nn,1]+h.offset[nn]),mycore,s,han)
+        remotecall_wait(((x,h,num)->localpart(x)[num].thres=-1*h.thres/h.scale[h.spike,1]+h.offset[h.spike]),mycore,s,han,nn)
     end
 end
 
-function get_thres_id(s::DArray,ss::Int64)
+function get_thres_id{T}(s::DArray{T,1,Array{T,1}},ss::Int64)
 
     mycore=1
     mynum=ss
