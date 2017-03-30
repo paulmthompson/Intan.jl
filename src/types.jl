@@ -128,13 +128,13 @@ type FPGA
     r::register
 end
 
-function FPGA(board_id::Int64,amps::Array{Int64,1})
+function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false)
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false,CreateRHD2000Registers(30000))
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,false,CreateRHD2000Registers(30000))
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
     end
 end
 
@@ -184,7 +184,7 @@ default_debug=Debug(false,"off",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 
-function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6,usb3=false)
+function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -205,32 +205,14 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
     if parallel==false
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
-        if usb3==true
-            for myfpga in fpga
-                myfpga.usb3=true
-            end
-        end
         rhd=RHD_Single(fpga,numchannels,s,buf,nums,sav,debug)
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
-        if usb3==true
-            for myfpga in fpga
-                myfpga.usb3=true
-            end
-        end
         rhd=RHD_Parallel(fpga,numchannels,s,buf,nums,sav,debug)
     end
 
     rhd.sr=sr
-
-    #=
-    if wifi==true
-        #Spawn a UDP listener thread to receive wireless packets
-        udp_listener()
-        rhd.wifi.enabled=true
-    end
-    =#
 
     (rhd,s)
 end
