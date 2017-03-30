@@ -53,26 +53,36 @@ end
 
 function init_board!(rhd::RHD2000)
 
+    init_board!(rhd,rhd.fpga)
+
+    nothing
+end
+
+function init_board!(rhd::RHD2000,fpga::DArray{FPGA,1,Array{FPGA,1}})
     if rhd.debug.state==false
-        map(open_board,rhd.fpga)
-        map(uploadFpgaBitfile,rhd.fpga)
+        map(open_board,fpga)
+        map(uploadFpgaBitfile,fpga)
     else
-        if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}}
-            map(getlibrary,rhd.fpga)
-        else
-            for fpga in rhd.fpga
-                getlibrary(fpga)
-            end
+        map(getlibrary,fpga)
+    end
+
+    @sync for p in procs(fpga)
+        @async remotecall_fetch((d,sr,db)->init_board_helper(localpart(d),sr,db),p,fpga,rhd.sr,rhd.debug.state)
+    end
+    nothing
+end
+
+function init_board!(rhd::RHD2000,fpga::Array{FPGA,1})
+    if rhd.debug.state==false
+        map(open_board,fpga)
+        map(uploadFpgaBitfile,fpga)
+    else
+        for thisfpga in fpga
+            getlibrary(thisfpga)
         end
     end
 
-    if typeof(rhd.fpga)==DArray{Intan.FPGA,1,Array{Intan.FPGA,1}}
-        @sync for p in procs(rhd.fpga)
-            @async remotecall_fetch((d,sr,db)->init_board_helper(localpart(d),sr,db),p,rhd.fpga,rhd.sr,rhd.debug.state)
-        end
-    else     
-        init_board_helper(rhd.fpga,rhd.sr,rhd.debug.state)
-    end
+    init_board_helper(fpga,rhd.sr,rhd.debug.state)
 
     nothing
 end
