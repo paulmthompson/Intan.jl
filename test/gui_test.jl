@@ -24,7 +24,7 @@ Callback Testing
 =#
 
 #Initialization
-Intan.init_cb(handles.init.handle,(handles,myrhd,myt))
+Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myrhd.fpga))
 
 facts() do
     @fact myrhd.fpga[1].numDataStreams --> 2
@@ -35,7 +35,7 @@ end
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myrhd.fpga))
 
 facts() do
     myreads=myrhd.reads
@@ -251,6 +251,14 @@ end
 SAVE LOAD Test
 =#
 
+sleep(1.0);
+
+setproperty!(handles.run,:active,false)
+sleep(1.0);
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myrhd.fpga))
+
+sleep(1.0);
+
 myv=parse_v(myrhd.save.v)
 
 facts() do
@@ -268,10 +276,6 @@ end
 #=
 Close
 =#
-
-setproperty!(handles.run,:active,false)
-sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
 
 destroy(handles.win)
 

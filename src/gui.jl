@@ -573,10 +573,10 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,r.fpga))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
-    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task))
+    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,r.fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
@@ -662,17 +662,17 @@ handles
 end
 
 #Drawing
-function run_cb{T<:Sorting}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task})
+function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})
     
     widget = convert(ToggleButton, widgetptr)
 	          
     @async if getproperty(widget,:active,Bool)==true
         
         #unpack tuple
-        han, rhd, s,task = user_data
+        han, rhd, s,task,fpga = user_data
               
 	if rhd.debug.state==false
-            map(runBoard,rhd.fpga)
+            map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
            main_loop_par(rhd,han,s,task) 
@@ -681,17 +681,17 @@ function run_cb{T<:Sorting}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,
     nothing
 end
 
-function run_cb{R<:RHD2000,S<:Sorting,T<:Task}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T})
+function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array{I,1}})
 
     widget = convert(ToggleButton, widgetptr)
 	          
     @async if getproperty(widget,:active,Bool)==true
         
         #unpack tuple
-        han, rhd, s,task = user_data
+        han, rhd, s,task,fpga = user_data
               
 	if rhd.debug.state==false
-            map(runBoard,rhd.fpga)
+            map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
            main_loop_s(rhd,han,s,task) 
@@ -1003,10 +1003,19 @@ function set_audio(fpga::DArray{FPGA,1,Array{FPGA,1}},han::Gui_Handles,rhd::RHD2
     
 end
 
-function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task})
+function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Array{I,1}})
 
-    han, rhd,task = user_data       
-    init_board!(rhd)
+    han, rhd,task,fpga = user_data       
+    init_board!(rhd,fpga)
+    init_task(task,rhd)
+
+    nothing
+end
+
+function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DArray{I,1,Array{I,1}}})
+
+    han, rhd,task,fpga = user_data       
+    init_board!(rhd,fpga)
     init_task(task,rhd)
 
     nothing

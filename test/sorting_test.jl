@@ -14,12 +14,12 @@ handles = makegui(myrhd,ss,myt)
 sleep(1.0)
 
 #Initialization
-Intan.init_cb(handles.init.handle,(handles,myrhd,myt))
+Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myrhd.fpga))
 
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myrhd.fpga))
 
 #Calibration
 sleep(1.0)

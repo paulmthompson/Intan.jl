@@ -3,6 +3,7 @@ export SaveWave,SaveAll,SaveNone, FPGA
 
 abstract RHD2000
 abstract Task
+abstract IC
 
 type Debug
     state::Bool
@@ -108,7 +109,7 @@ type register
     aPwr::Array{Int32,1}
 end
 
-type FPGA
+type FPGA <: IC
     id::Int64
     board::Ptr{Void}
     lib::Ptr{Void}
