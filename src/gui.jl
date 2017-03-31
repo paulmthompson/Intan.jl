@@ -675,7 +675,7 @@ function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RH
             map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop_par(rhd,han,s,task) 
+           main_loop_par(rhd,han,s,task,fpga) 
         end       
     end
     nothing
@@ -694,38 +694,38 @@ function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::T
             map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop_s(rhd,han,s,task) 
+           main_loop_s(rhd,han,s,task,fpga) 
         end       
     end
         
     nothing
 end
 
-function main_loop_s{T<:Sorting}(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task)
+function main_loop_s{T<:Sorting,I<:IC}(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga::Array{I,1})
     if rhd.debug.state==false
-        myread=readDataBlocks(rhd,1,s)
+        myread=readDataBlocks(rhd,1,s,fpga)
     else
         myread=readDataBlocks(rhd,s)
     end
-    main_loop(rhd,han,s,task,myread)
+    main_loop(rhd,han,s,task,myread,fpga)
 end
 
-function main_loop_par{T<:Sorting}(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task)
+function main_loop_par{T<:Sorting,I<:IC}(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task,fpga::DArray{I,1,Array{I,1}})
     if rhd.debug.state==false
         if rhd.cal<3
-            calibrate_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
+            calibrate_parallel(fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
         else
-            onlinesort_parallel(rhd.fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time)
+            onlinesort_parallel(fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time)
         end
         cal_update(rhd)
 	myread=true
     else
         myread=readDataBlocks(rhd,s)
     end
-    main_loop(rhd,han,s,task,myread)
+    main_loop(rhd,han,s,task,myread,fpga)
 end
 
-function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool)
+function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(task,rhd,myread)

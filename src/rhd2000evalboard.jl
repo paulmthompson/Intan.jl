@@ -1040,9 +1040,9 @@ function cal_update(rhd::RHD2000)
     nothing
 end
 
-function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
+function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
 
-    if compareNumWords(rhd.fpga)
+    if compareNumWords(myfpga)
         return false
     end
 
@@ -1055,17 +1055,17 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
 
     numRead=0
 
-    numBytesToRead = rhd.fpga[1].numBytesPerBlock * numBlocks
-    if length(rhd.fpga)>1
-        for fpga in rhd.fpga
+    numBytesToRead = myfpga[1].numBytesPerBlock * numBlocks
+    if length(myfpga)>1
+        for fpga in myfpga
             ReadFromPipeOut(fpga,PipeOutData, convert(Clong, fpga.numBytesPerBlock * numBlocks), fpga.usbBuffer)
         end
         numRead=numBytesToRead
     else
-        if rhd.fpga[1].usb3
-            numRead=ReadFromBlockPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+        if myfpga[1].usb3
+            numRead=ReadFromBlockPipeOut(myfpga[1],PipeOutData, convert(Clong, numBytesToRead), myfpga[1].usbBuffer)
         else
-            numRead=ReadFromPipeOut(rhd.fpga[1],PipeOutData, convert(Clong, numBytesToRead), rhd.fpga[1].usbBuffer)
+            numRead=ReadFromPipeOut(myfpga[1],PipeOutData, convert(Clong, numBytesToRead), myfpga[1].usbBuffer)
 	end
     end  
 
@@ -1073,7 +1073,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s)
 
         #Move data from usbBuffer to v
 
-        fillFromUsbBuffer!(rhd.fpga,i,rhd.v,rhd.time)
+        fillFromUsbBuffer!(myfpga,i,rhd.v,rhd.time)
 
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0
