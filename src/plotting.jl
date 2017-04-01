@@ -261,16 +261,16 @@ end
 
 #Event plotting
 
-function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
+function plot_events(fpga::Array{FPGA,1},han::Gui_Handles,myreads::Int64)
 
     @inbounds for i=1:6
 	if han.events[i]>-1
 	    if han.events[i]<8 #analog
-		val=parse_analog(rhd,han,han.events[i]+1)
-		plot_analog(rhd,han,i,myreads,val)
+		val=parse_analog(fpga[1].adc,han.events[i]+1)
+		plot_analog(han,i,myreads,val)
 	    else
-		val=parse_ttl(rhd,han,han.events[i]-7)
-		plot_ttl(rhd,han,i,myreads,val)
+		val=parse_ttl(fpga[1].ttlin,han.events[i]-7)
+		plot_ttl(han,i,myreads,val)
 	    end
 	end
     end
@@ -278,17 +278,17 @@ function plot_events(rhd::RHD2000,han::Gui_Handles,myreads::Int64)
     nothing
 end
 
-function parse_analog(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+function parse_analog(adc::Array,chan::Int64)
 
     mysum=0
-    for i=1:size(rhd.fpga[1].adc,1)
-	mysum+=rhd.fpga[1].adc[i,chan]
+    for i=1:size(adc,1)
+	mysum+=adc[i,chan]
     end
     
-    round(Int64,mysum/size(rhd.fpga[1].adc,1)/0xffff*30)
+    round(Int64,mysum/size(adc,1)/0xffff*30)
 end
 
-function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
+function plot_analog(han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
 
     ctx=getgc(han.c)
     myheight=height(ctx)
@@ -301,18 +301,18 @@ function plot_analog(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64
     nothing
 end
 
-function parse_ttl(rhd::RHD2000,han::Gui_Handles,chan::Int64)
+function parse_ttl(ttlin::Array,chan::Int64)
    
     y=0
     
-    for i=1:length(rhd.fpga[1].ttlin)
-        y=y|(rhd.fpga[1].ttlin[i]&(2^(chan-1)))
+    for i=1:length(ttlin)
+        y=y|(ttlin[i]&(2^(chan-1)))
     end
     
     y>0
 end
 
-function plot_ttl(rhd::RHD2000,han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
+function plot_ttl(han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
 
     ctx=getgc(han.c)
     myheight=height(ctx)

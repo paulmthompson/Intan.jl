@@ -748,7 +748,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
             #bottom right
             if han.c_right_bottom==1
-	        plot_events(rhd,han,han.draws)
+	        plot_events(fpga,han,han.draws)
             elseif han.c_right_bottom==2
                 draw_raster16(rhd,han)
             elseif han.c_right_bottom==3
