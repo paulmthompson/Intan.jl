@@ -1,6 +1,6 @@
 
 
-function makegui(r::RHD2000,s,task)
+function makegui(r::RHD2000,s,task,fpga)
 
     #GUI ARRANGEMENT
     grid = Grid()
@@ -573,10 +573,10 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,r.fpga))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
     id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
-    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,r.fpga))
+    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))

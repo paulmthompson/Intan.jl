@@ -7,19 +7,19 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 mys=SaveNone()
 myfpga=FPGA(1,myamp)
-(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys)
+(myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d,sav=mys)
 
-handles = makegui(myrhd,ss,myt)
+handles = makegui(myrhd,ss,myt,myfpgas)
 
 sleep(1.0)
 
 #Initialization
-Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myrhd.fpga))
+Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myfpgas))
 
 #Run
 setproperty!(handles.run,:active,true)
 sleep(1.0)
-Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myrhd.fpga))
+Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
 #Calibration
 sleep(1.0)

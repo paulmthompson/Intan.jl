@@ -61,7 +61,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys);
+(myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d,sav=mys);
 
 facts() do
     @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -73,14 +73,14 @@ facts() do
     @fact myrhd.time --> zeros(UInt32,Intan.SAMPLES_PER_DATA_BLOCK,1)
 end
 
-Intan.init_board!(myrhd)
+Intan.init_board!(myrhd,myfpgas)
 
 facts() do
-    @fact myrhd.fpga[1].numDataStreams --> 2
-    @fact myrhd.fpga[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-    @fact myrhd.fpga[1].sampleRate --> 30000
-    @fact myrhd.fpga[1].numWords --> 45056
-    @fact myrhd.fpga[1].numBytesPerBlock --> 90112
+    @fact myfpgas[1].numDataStreams --> 2
+    @fact myfpgas[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+    @fact myfpgas[1].sampleRate --> 30000
+    @fact myfpgas[1].numWords --> 45056
+    @fact myfpgas[1].numBytesPerBlock --> 90112
 end
 
 #=
@@ -91,7 +91,7 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
 myfpga1=FPGA(1,myamp)
 myfpga2=FPGA(2,myamp)
-(myrhd2,ss2)=makeRHD([myfpga1,myfpga2],debug=d,sav=mys,parallel=true);
+(myrhd2,ss2,myfpgas)=makeRHD([myfpga1,myfpga2],debug=d,sav=mys,parallel=true);
 
 facts() do
     @fact myrhd2.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
@@ -125,16 +125,16 @@ d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)
 
-(myrhd,ss)=makeRHD([myfpga],debug=d,sav=mys);
+(myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d,sav=mys);
 
-Intan.init_board!(myrhd)
+Intan.init_board!(myrhd,myfpgas)
 
 
 facts() do
 
     for i in [1000,1250,1500,2000,2500,3000,3333,4000,5000,6250,8000,10000,12500,15000,20000,25000,30000]
-        Intan.setSampleRate(myrhd.fpga[1],i,myrhd.debug.state)
-        @fact myrhd.fpga[1].sampleRate --> i
+        Intan.setSampleRate(myfpgas[1],i,myrhd.debug.state)
+        @fact myfpgas[1].sampleRate --> i
     end
 end
 end

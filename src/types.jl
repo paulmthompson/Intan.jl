@@ -174,7 +174,7 @@ type RHD_Parallel <: RHD2000
 end
 
 function RHD_Parallel(fpga,num_channels,s,buf,nums,save,debug)
-    RHD_Parallel(distribute(fpga),convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
+    RHD_Parallel(fpga,convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))))
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
@@ -206,16 +206,18 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
     if parallel==false
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
-        rhd=RHD_Single(fpga,numchannels,s,buf,nums,sav,debug)
+        fpgas=fpga
+        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,sav,debug) 
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
-        rhd=RHD_Parallel(fpga,numchannels,s,buf,nums,sav,debug)
+        fpgas=distribute(fpga)
+        rhd=RHD_Parallel(fpgas,numchannels,s,buf,nums,sav,debug)
     end
 
     rhd.sr=sr
 
-    (rhd,s)
+    (rhd,s,fpgas)
 end
 
 get_wavelength(sr,timewin)=round(Int,sr*timewin/1000)
