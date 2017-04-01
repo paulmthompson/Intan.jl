@@ -640,7 +640,7 @@ end
 
 #Bandwidth Window
 
-signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,r))
+signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,fpga))
 
 signal_connect(band_win, :delete_event) do widget, event
     visible(band_win, false)
@@ -1378,20 +1378,37 @@ function band_adj_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     visible(han.band_widgets.win,true)
 end
 
-function band_b1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
 
-    han, rhd = user_data
+    han, myic = user_data
 
     lower=getproperty(han.band_widgets.sb1,:value,Int64)
     upper=getproperty(han.band_widgets.sb2,:value,Int64)
     dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
 
-    change_bandwidth(rhd.fpga,lower,upper,dsp_lower)
+    change_bandwidth(myic,lower,upper,dsp_lower)
     
     nothing
 end
 
-function change_bandwidth(fpgas::Array,lower,upper,dsp_lower)
+function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,DArray{I,1,Array{I,1}}})
+
+    han, myic = user_data
+
+    lower=getproperty(han.band_widgets.sb1,:value,Int64)
+    upper=getproperty(han.band_widgets.sb2,:value,Int64)
+    dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
+
+    change_bandwidth(myic,lower,upper,dsp_lower)
+    
+    nothing
+end                    
+
+change_bandwidth(fpgas::Array{FPGA,1},lower,upper,dsp_lower)=change_bandwidth_fpga(fpgas,lower,upper,dsp_lower)
+
+change_bandwidth(fpgas::DArray{FPGA,1,Array{FPGA,1}},lower,upper,dsp_lower)=change_bandwidth_fpga(fpgas,lower,upper,dsp_lower)
+
+function change_bandwidth_fpga(fpgas::Array,lower,upper,dsp_lower)
 
     for fpga in fpgas
         setLowerBandwidth(lower,fpga.r)
@@ -1403,7 +1420,7 @@ function change_bandwidth(fpgas::Array,lower,upper,dsp_lower)
     nothing
 end
 
-function change_bandwidth(fpgas::DArray,lower,upper,dsp_lower)
+function change_bandwidth_fpga(fpgas::DArray,lower,upper,dsp_lower)
 
     @sync begin
         for p in procs(fpgas)
