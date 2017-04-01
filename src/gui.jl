@@ -766,7 +766,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 	    reveal(han.c)
 
             if han.spike_changed
-                new_single_channel(han,rhd,s)
+                new_single_channel(han,rhd,s,fpga)
             end
             if han.c_changed
                 send_clus(s,han)
@@ -848,7 +848,11 @@ function update_c2(han::Gui_Handles)
     nothing
 end
 
-function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
+new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::Array{FPGA,1})=new_single_channel_fpga(han,rhd,s,fpga)
+    
+new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::DArray{FPGA,1,Array{FPGA,1}})=new_single_channel_fpga(han,rhd,s,fpga)
+
+function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
 
     han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
     
@@ -857,7 +861,7 @@ function new_single_channel(han::Gui_Handles,rhd::RHD2000,s)
     han.ctx2s=copy(han.ctx2)
 
     #Audio output
-    set_audio(rhd.fpga,han,rhd)
+    set_audio(fpga,han,rhd)
 
     #Display Gain
     setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
