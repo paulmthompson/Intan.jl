@@ -97,7 +97,7 @@ function prepare_stamp_header(rhd::RHD2000)
     write(f,convert(UInt8,Dates.hour(t)))
     write(f,convert(UInt8,Dates.minute(t)))
     write(f,convert(UInt16,size(rhd.v,2)))
-    write(f,convert(UInt32,rhd.fpga[1].sampleRate))
+    write(f,convert(UInt32,rhd.sr))
 
     close(f)
 
@@ -200,7 +200,7 @@ function prepare_ttl_header(rhd::RHD2000)
     write(f,convert(UInt8,Dates.minute(t)))
     write(f,convert(UInt16,16))
     write(f,convert(UInt16,size(rhd.v,1)))
-    write(f,convert(UInt32,rhd.fpga[1].sampleRate))
+    write(f,convert(UInt32,rhd.sr))
 
     close(f)
     
