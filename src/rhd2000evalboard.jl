@@ -51,13 +51,6 @@ function getlibrary(fpga::FPGA)
     nothing
 end
 
-function init_board!(rhd::RHD2000)
-
-    init_board!(rhd,rhd.fpga)
-
-    nothing
-end
-
 function init_board!(rhd::RHD2000,fpga::DArray{FPGA,1,Array{FPGA,1}})
     if rhd.debug.state==false
         map(open_board,fpga)
