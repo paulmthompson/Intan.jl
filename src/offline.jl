@@ -24,23 +24,23 @@ end
 function readDataBlocks{T<:Sorting}(rhd::RHD2000,s::DArray{T,1,Array{T,1}})
     fillFromOffline!(rhd)
     if rhd.cal<3
-        offline_cal(rhd,s,rhd.v,rhd.buf,rhd.nums)
+        offline_cal(s,rhd.v,rhd.buf,rhd.nums)
     else
-        offline_sort(rhd,s,rhd.v,rhd.buf,rhd.nums)
+        offline_sort(s,rhd.v,rhd.buf,rhd.nums)
     end
     true
 end
 
-function offline_cal(rhd,s,v,buf,nums)
-    @sync for p in procs(rhd.fpga)
+function offline_cal(s,v,buf,nums)
+    @sync for p in procs(s)
         @spawnat p begin
             cal!(localpart(s),v,buf,nums)
         end 
     end
 end
 
-function offline_sort(rhd,s,v,buf,nums)
-    @sync for p in procs(rhd.fpga)
+function offline_sort(s,v,buf,nums)
+    @sync for p in procs(s)
         @spawnat p begin
             onlinesort!(localpart(s),v,buf,nums)
         end 
