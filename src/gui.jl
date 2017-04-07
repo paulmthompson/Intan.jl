@@ -341,6 +341,45 @@ push!(mb,opopts)
 push!(mb,svopts)
 grid[4,1]=mb
 
+#Table of Values Popup
+table_grid=Grid()
+
+table_list=ListStore(Int32,Int32,Int32,Int32,Bool)
+for i=1:size(r.v,2)
+    push!(table_list,(i,125,0,0,true))
+end
+
+table_tv=TreeView(TreeModel(table_list))
+table_rtext=CellRendererText()
+table_rtog=CellRendererToggle()
+
+table_c1 = TreeViewColumn("Channel",table_rtext,Dict([("text",0)]))
+table_c2 = TreeViewColumn("Gain", table_rtext, Dict([("text",1)]))
+table_c3 = TreeViewColumn("Threshold", table_rtext, Dict([("text",2)]))
+table_c4 = TreeViewColumn("Reference", table_rtext, Dict([("text",3)]))
+table_c5 = TreeViewColumn("Enabled",table_rtog,Dict([("active",4)]))
+
+push!(table_tv,table_c1)
+push!(table_tv,table_c2)
+push!(table_tv,table_c3)
+push!(table_tv,table_c4)
+push!(table_tv,table_c5)
+
+table_scroll=ScrolledWindow()
+Gtk.GAccessor.min_content_height(table_scroll,350)
+Gtk.GAccessor.min_content_width(table_scroll,175)
+push!(table_scroll,table_tv)
+
+table_grid[1,1]=table_scroll
+
+table_win=Window(table_grid)
+setproperty!(table_win, :title, "Parameter List")
+
+showall(table_win)
+visible(table_win,false)
+
+
+
 # Reference popup
 ref_grid=Grid()
 
