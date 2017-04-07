@@ -284,21 +284,17 @@ rbs2[7]=RadioButton(rbs2[6],"Nothing")
     #MENU ITEMS
     
     #SORTING
-    sortopts = MenuItem("_Sorting")
+    sortopts = MenuItem("_File")
     sortmenu = Menu(sortopts)
     load_sort_ = MenuItem("Load Sorting Parameters")
     push!(sortmenu,load_sort_)
     save_sort_ = MenuItem("Save Sorting Parameters")
-    push!(sortmenu,save_sort_)
-	
-    #Reference Electrode
-    refopts = MenuItem("_Reference Electrodes")
-    refmenu = Menu(refopts)
-    define_ref_ = MenuItem("Define Reference Configuration")
-    push!(refmenu,define_ref_)
-	
-    #Export
+push!(sortmenu,save_sort_)
+
+#Export
+
 exopts = MenuItem("_Export")
+push!(sortmenu,exopts)
     exmenu = Menu(exopts)
     export_plex_ = MenuItem("Plexon")
     push!(exmenu,export_plex_)
@@ -310,6 +306,15 @@ exopts = MenuItem("_Export")
     push!(exmenu,export_jld_)
 export_mat_ = MenuItem("MAT")
 push!(exmenu,export_mat_)
+
+viewopts = MenuItem("_View")
+viewmenu = Menu(viewopts)
+	
+    define_ref_ = MenuItem("Reference Configuration")
+push!(viewmenu,define_ref_)
+
+sv_open = MenuItem("Sort Viewer")
+push!(viewmenu,sv_open)
 
 #Options
 opopts = MenuItem("_Options")
@@ -325,20 +330,11 @@ push!(op_align_menu,op_align_cross)
 
 op_band = MenuItem("Bandwidth")
 push!(opmenu,op_band)
-
-#Autosort
-    svopts = MenuItem("_Sort View")
-svmenu = Menu(svopts)
-
-sv_open = MenuItem("Sort Viewer")
-push!(svmenu,sv_open)
     
     mb = MenuBar()
     push!(mb,sortopts)
-push!(mb,refopts)
-push!(mb,exopts)
+push!(mb,viewopts)
 push!(mb,opopts)
-push!(mb,svopts)
 grid[4,1]=mb
 
 #Table of Values Popup
