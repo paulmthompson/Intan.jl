@@ -9,13 +9,20 @@ draw_spike32(rhd::RHD2000,han::Gui_Handles)=draw_spike_n(rhd,han,6,6,32)
 draw_spike64(rhd::RHD2000,han::Gui_Handles)=draw_spike_n(rhd,han,6,11,64)
 
 function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
-
+    
     k_in=num_chan*(han.num16)-num_chan+1
+
+    if (k_in+num_chan-1)>size(rhd.v,2)
+        num_chan=(size(rhd.v,2)-k_in+1)
+    end
+
+    num_plot =n_col*n_row
+    
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
     xwidth=width(ctx)
     myheight=height(ctx)
-    if num_chan<64
+    if num_plot<64
       yheight=myheight-300
     else
       yheight=myheight
@@ -36,8 +43,8 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
                             o=han.offset[chan]
 
                             #x and y position for channel location
-			    startx=div(rem(chan-1,num_chan),n_row)*han.wave_points/2+1
-			    starty=yheight/n_row*(rem(rem(chan-1,num_chan),n_row))+yheight/n_row/2
+			    startx=div(rem(chan-1,num_plot),n_row)*han.wave_points/2+1
+			    starty=yheight/n_row*(rem(rem(chan-1,num_plot),n_row))+yheight/n_row/2
 
                             #Max and min extents for line to stay within bounding box
                             ymax=starty+yheight/n_row/2
