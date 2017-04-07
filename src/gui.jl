@@ -357,6 +357,7 @@ setproperty!(table_rtext3, :editable, true)
 table_rtext4=CellRendererText()
 setproperty!(table_rtext4, :editable, true)
 table_rtog=CellRendererToggle()
+setproperty!(table_rtog, :activatable, true)
 
 table_c1 = TreeViewColumn("Channel",table_rtext1,Dict([("text",0)]))
 table_c2 = TreeViewColumn("Gain", table_rtext2, Dict([("text",1)]))
@@ -719,7 +720,7 @@ end
 id = signal_connect(table_col_cb, table_rtext2,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,2))
 id = signal_connect(table_col_cb, table_rtext3,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
 id = signal_connect(table_col_cb, table_rtext4,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
-
+id = signal_connect(table_en_cb, table_rtog, "toggled",Void,(Ptr{UInt8},),false,(handles,r))
 
 resize!(handles.win,1200,800)
 
@@ -738,6 +739,27 @@ function table_col_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,RH
 
     setindex!(han.table_widgets.list,num,iter,col)
 
+    nothing
+end
+
+function table_en_cb(widget::Ptr,path,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    #selmodel = Gtk.GAccessor.selection(han.table_widgets.tv)
+
+    #iter=Gtk.selected(selmodel)
+
+    #val=getindex(han.table_widgets.list,1,5)
+
+    #println(val)
+
+    num=parse(Int64,unsafe_string(path))+1
+
+    val=getindex(han.table_widgets.list,num,5)
+
+    setindex!(han.table_widgets.list,!val,num,5)
+    
     nothing
 end
 
