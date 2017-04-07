@@ -9,6 +9,7 @@ export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
 
 include("types.jl")
 include("constants.jl")
+include("gtk_helpers.jl")
 include("rhd2000evalboard.jl")
 include("rhd2000registers.jl")
 include("gui.jl")

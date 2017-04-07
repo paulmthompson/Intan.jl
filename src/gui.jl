@@ -438,14 +438,14 @@ showall(popupmenu)
 
 #Event
 popup_event = Menu()
-event_handles=Array(Gtk.GtkMenuItemLeaf,0)
+event_handles=Array(CheckMenuItemLeaf,0)
 for i=1:8
-    push!(event_handles,MenuItem(string("Analog ",i)))
+    push!(event_handles,CheckMenuItem(string("Analog ",i)))
     push!(popup_event,event_handles[i])
 end
 
 for i=1:16
-    push!(event_handles,MenuItem(string("TTL ",i)))
+    push!(event_handles,CheckMenuItem(string("TTL ",i)))
     push!(popup_event,event_handles[8+i])
 end
 
@@ -469,27 +469,33 @@ push!(popupmenu_scope,popupmenu_thres)
 
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
-scope_v_handles=Array(Gtk.GtkMenuItemLeaf,0)
+scope_v_handles=Array(RadioMenuItemLeaf,0)
 voltage_scales=[1, 50, 100, 200, 500]
-for i=1:5
-    push!(scope_v_handles,MenuItem(string(voltage_scales[i]))) 
+push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1]))) 
+push!(popupmenu_voltage_select,scope_v_handles[1])
+for i=2:5
+    push!(scope_v_handles,RadioMenuItem(scope_v_handles[i-1],string(voltage_scales[i]))) 
     push!(popupmenu_voltage_select,scope_v_handles[i])
 end
 
 popupmenu_time_select=Menu(popupmenu_time)
-scope_t_handles=Array(Gtk.GtkMenuItemLeaf,0)
+scope_t_handles=Array(RadioMenuItemLeaf,0)
 time_scales=[1, 2, 3, 4, 5]
-for i=1:5
-    push!(scope_t_handles,MenuItem(string(time_scales[i]))) 
+push!(scope_t_handles,RadioMenuItem(string(time_scales[1]))) 
+push!(popupmenu_time_select,scope_t_handles[1])
+for i=2:5
+    push!(scope_t_handles,RadioMenuItem(scope_t_handles[i-1],string(time_scales[i]))) 
     push!(popupmenu_time_select,scope_t_handles[i])
 end
 
 popupmenu_thres_select=Menu(popupmenu_thres)
-scope_thres_handles=Array(Gtk.GtkMenuItemLeaf,0)
-push!(scope_thres_handles,MenuItem("On"))
+scope_thres_handles=Array(RadioMenuItemLeaf,0)
+push!(scope_thres_handles,RadioMenuItem("On"))
 push!(popupmenu_thres_select,scope_thres_handles[1])
-push!(scope_thres_handles,MenuItem("Off"))
+push!(scope_thres_handles,RadioMenuItem(scope_thres_handles[1],"Off"))
 push!(popupmenu_thres_select,scope_thres_handles[2])
+
+set_active!(scope_thres_handles[2])
 
 showall(popupmenu_scope)   
 
