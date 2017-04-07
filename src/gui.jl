@@ -350,6 +350,7 @@ end
 
 table_tv=TreeView(TreeModel(table_list))
 table_rtext=CellRendererText()
+setproperty!(table_rtext, :editable, true)
 table_rtog=CellRendererToggle()
 
 table_c1 = TreeViewColumn("Channel",table_rtext,Dict([("text",0)]))
@@ -365,8 +366,8 @@ push!(table_tv,table_c4)
 push!(table_tv,table_c5)
 
 table_scroll=ScrolledWindow()
-Gtk.GAccessor.min_content_height(table_scroll,350)
-Gtk.GAccessor.min_content_width(table_scroll,175)
+Gtk.GAccessor.min_content_height(table_scroll,500)
+Gtk.GAccessor.min_content_width(table_scroll,500)
 push!(table_scroll,table_tv)
 
 table_grid[1,1]=table_scroll
@@ -568,7 +569,7 @@ thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
-table_widgets=Table_Widgets(table_win)
+table_widgets=Table_Widgets(table_win,table_tv,table_list)
 
 sleep(2.0)
 
@@ -710,12 +711,27 @@ signal_connect(table_win, :delete_event) do widget, event
     true
 end
 
+id = signal_connect(table_gain_cb, table_rtext,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r))
+
 resize!(handles.win,1200,800)
 
 handles  
 end
 
+function table_gain_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,RHD2000})
 
+    han,rhd = user_data
+
+    selmodel = Gtk.GAccessor.selection(han.table_widgets.tv)
+
+    iter=Gtk.selected(selmodel)
+
+    num=parse(Int64,unsafe_string(new_text))
+
+    setindex!(han.table_widgets.list,num,iter,2)
+
+    nothing
+end
 
 #Drawing
 function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})

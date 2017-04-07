@@ -284,6 +284,8 @@ end
 
 type Table_Widgets
     win::Gtk.GtkWindowLeaf
+    tv::Gtk.GtkTreeViewLeaf
+    list::Gtk.GtkListStoreLeaf
 end
 
 type Gui_Handles
