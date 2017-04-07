@@ -282,6 +282,10 @@ type Spike_Widgets
     pause::Gtk.GtkToggleButtonLeaf
 end
 
+type Table_Widgets
+    win::Gtk.GtkWindowLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     
@@ -408,6 +412,7 @@ type Gui_Handles
     spike_widgets::Spike_Widgets
     sortview_widgets::SortView
     band_widgets::Band_Widgets
+    table_widgets::Table_Widgets
 end
 
 #=

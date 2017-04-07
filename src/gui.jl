@@ -313,6 +313,9 @@ viewmenu = Menu(viewopts)
     define_ref_ = MenuItem("Reference Configuration")
 push!(viewmenu,define_ref_)
 
+define_params = MenuItem("Parameter Table")
+push!(viewmenu,define_params)
+
 sv_open = MenuItem("Sort Viewer")
 push!(viewmenu,sv_open)
 
@@ -565,6 +568,7 @@ thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
+table_widgets=Table_Widgets(table_win)
 
 sleep(2.0)
 
@@ -583,7 +587,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets)
+                    sortview_handles,band_widgets,table_widgets)
 
 id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
@@ -697,10 +701,21 @@ signal_connect(sortview_handles.win, :delete_event) do widget, event
     true
 end
 
+#Parameter Table
+
+id = signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
+
+signal_connect(table_win, :delete_event) do widget, event
+    visible(table_win,false)
+    true
+end
+
 resize!(handles.win,1200,800)
 
 handles  
 end
+
+
 
 #Drawing
 function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})
@@ -1410,6 +1425,14 @@ function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
 
     visible(han.ref_win,true)
+    nothing
+end
+
+function table_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    visible(han.table_widgets.win,true)
     nothing
 end
 
