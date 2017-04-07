@@ -349,14 +349,19 @@ for i=1:size(r.v,2)
 end
 
 table_tv=TreeView(TreeModel(table_list))
-table_rtext=CellRendererText()
-setproperty!(table_rtext, :editable, true)
+table_rtext1=CellRendererText()
+table_rtext2=CellRendererText()
+setproperty!(table_rtext2, :editable, true)
+table_rtext3=CellRendererText()
+setproperty!(table_rtext3, :editable, true)
+table_rtext4=CellRendererText()
+setproperty!(table_rtext4, :editable, true)
 table_rtog=CellRendererToggle()
 
-table_c1 = TreeViewColumn("Channel",table_rtext,Dict([("text",0)]))
-table_c2 = TreeViewColumn("Gain", table_rtext, Dict([("text",1)]))
-table_c3 = TreeViewColumn("Threshold", table_rtext, Dict([("text",2)]))
-table_c4 = TreeViewColumn("Reference", table_rtext, Dict([("text",3)]))
+table_c1 = TreeViewColumn("Channel",table_rtext1,Dict([("text",0)]))
+table_c2 = TreeViewColumn("Gain", table_rtext2, Dict([("text",1)]))
+table_c3 = TreeViewColumn("Threshold", table_rtext3, Dict([("text",2)]))
+table_c4 = TreeViewColumn("Reference", table_rtext4, Dict([("text",3)]))
 table_c5 = TreeViewColumn("Enabled",table_rtog,Dict([("active",4)]))
 
 push!(table_tv,table_c1)
@@ -711,16 +716,19 @@ signal_connect(table_win, :delete_event) do widget, event
     true
 end
 
-id = signal_connect(table_gain_cb, table_rtext,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r))
+id = signal_connect(table_col_cb, table_rtext2,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,2))
+id = signal_connect(table_col_cb, table_rtext3,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
+id = signal_connect(table_col_cb, table_rtext4,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
+
 
 resize!(handles.win,1200,800)
 
 handles  
 end
 
-function table_gain_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,RHD2000})
+function table_col_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,RHD2000,Int64})
 
-    han,rhd = user_data
+    han,rhd,col = user_data
 
     selmodel = Gtk.GAccessor.selection(han.table_widgets.tv)
 
@@ -728,7 +736,7 @@ function table_gain_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,R
 
     num=parse(Int64,unsafe_string(new_text))
 
-    setindex!(han.table_widgets.list,num,iter,2)
+    setindex!(han.table_widgets.list,num,iter,col)
 
     nothing
 end
