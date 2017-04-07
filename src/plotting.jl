@@ -104,14 +104,20 @@ end
 
 function draw_raster_n(rhd::RHD2000,han::Gui_Handles,num_chan::Int64)
 
+    num_plot=num_chan
+    
     k_in=num_chan*(han.num16)-num_chan+1
+
+    if (k_in+num_chan-1)>size(rhd.v,2)
+        num_chan=(size(rhd.v,2)-k_in+1)
+    end
     
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=getgc(han.c)
 
     xwidth=width(ctx)
     myheight=height(ctx)
-    if num_chan<64
+    if num_plot<64
         yheight=300
         myoff=myheight-300.0
     else
