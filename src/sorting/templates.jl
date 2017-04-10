@@ -34,11 +34,62 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     elseif event.button==3
         if han.pause
             generate_mask(han,x1,y1,x2,y2)
+
+            #Regen template with spikes in currently selected cluster
+            (mymean,mystd) = regen_template(han,clus)
+
+            change_cluster(han.temp,mymean,mystd,clus)
+            setproperty!(han.adj_sort, :value, 1.0)
+
             replot_spikes(han)
+            han.c_changed=true
         end
     end
     
     nothing
+end
+
+function regen_template(han,clus)
+
+    mymean=zeros(Float64,size(han.spike_buf,1)-1)
+    mysum=zeros(Int64,size(han.spike_buf,1)-1)
+    mybounds=zeros(Float64,size(han.spike_buf,1)-1,2)
+
+    hits=0
+    
+    for i=1:han.buf_count
+
+        if (han.buf_mask[i])&&(han.buf_clus[i]==clus)
+            hits += 1
+            for ii=1:length(mymean)
+                mysum[ii] += han.spike_buf[ii,i]
+
+                if hits==1
+                    mybounds[ii,1]=han.spike_buf[ii,i]
+                    mybounds[ii,2]=han.spike_buf[ii,i]
+                else
+                    if han.spike_buf[ii,i]>mybounds[ii,1]
+                        mybounds[ii,1]=han.spike_buf[ii,i]
+                    end
+                    if han.spike_buf[ii,i]<mybounds[ii,2]
+                        mybounds[ii,2]=han.spike_buf[ii,i]
+                    end
+                end
+            end
+        end
+    end
+
+    if hits==0
+        hits=1
+    end
+    
+    for i=1:length(mymean)
+        mymean[i] = mysum[i]/hits
+        mybounds[i,2] = abs(mymean[i]-mybounds[i,2])
+        mybounds[i,1] = abs(mybounds[i,1] - mymean[i])
+    end
+
+    (mymean,mybounds)
 end
 
 #Delete clusters
