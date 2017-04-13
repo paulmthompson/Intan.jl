@@ -35,14 +35,18 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         if han.pause
             generate_mask(han,x1,y1,x2,y2)
 
-            #Regen template with spikes in currently selected cluster
-            (mymean,mystd) = regen_template(han,clus)
+            if clus>0
+                #Regen template with spikes in currently selected cluster
+                (mymean,mystd) = regen_template(han,clus)
 
-            change_cluster(han.temp,mymean,mystd,clus)
-            setproperty!(han.adj_sort, :value, 1.0)
+                change_cluster(han.temp,mymean,mystd,clus)
+                setproperty!(han.adj_sort, :value, 1.0)
+
+                han.c_changed=true
+            end
 
             replot_spikes(han)
-            han.c_changed=true
+            
         end
     end
     
