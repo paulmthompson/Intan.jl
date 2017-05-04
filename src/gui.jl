@@ -577,7 +577,7 @@ spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 
-sleep(2.0)
+sleep(1.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
@@ -869,7 +869,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 		draw_spike(rhd,han)
 	    end
             if han.thres_changed
-                thres_changed(han,s)
+                thres_changed(han,s,fpga)
             end
             if han.show_thres
                 plot_thres(han)
@@ -1266,15 +1266,25 @@ end
 #=
 Set Threshold for sorting equal to GUI threshold
 =#
-function thres_changed(han::Gui_Handles,s)
+function thres_changed(han::Gui_Handles,s,fpga)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
 
     update_thres(han,s)
+
+    send_thres_to_ic(han,fpga)
     
     han.thres_changed=false
     
+    nothing
+end
+
+function send_thres_to_ic(han::Gui_Handles,fpga::Array{FPGA,1})
+    nothing
+end
+
+function send_thres_to_ic(han::Gui_Handles,fpga::DArray{FPGA,1,Array{FPGA,1}})
     nothing
 end
 
