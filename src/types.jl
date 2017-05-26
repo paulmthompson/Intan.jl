@@ -38,13 +38,6 @@ function make_save_structure(save_full::Bool)
     out
 end
 
-type WIFI
-    enabled::Bool
-    buff::Int64
-end
-
-WIFI()=WIFI(false,1)
-
 type register
     sampleRate::Cdouble
 

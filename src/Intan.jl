@@ -19,7 +19,6 @@ include("filters.jl")
 include("task_list.jl")
 include("save_load.jl")
 include("benchmark.jl")
-include("wifi.jl")
 
 #Spike Sorting
 include("sorting/windows.jl")
