@@ -69,4 +69,58 @@ The buttons used to start acquisition are located in the top right of the GUI. T
 
 The "Run" button will begin acquisition with the evaluation board. After clicking the run button, the experimental timer should start climbing on the top right of the GUI. You will see that the "Calibrate button" is checked at this point, and data is not being displayed. At first, the data is being used by the software to start to find optimum threshold and sorting values. This calibration period only needs to last a second or so. To start data visualization, uncheck the "calibrate" box.
 
+*******************
+Data Visualization
+*******************
+
+===================
+Threshold and Gain
+===================
+
+Now waveforms should start to appear in the single channel and multi channel displays. Only waveforms (snippets of the raw voltage signal from a channel) crossing a threshold value are displayed. The user can manipulate this signal in two important ways: 1) changing the threshold value necessary for a waveform to be display, and 2) changing the gain of the incoming voltage signal. The current threshold and gain values are displayed to the left of the single channel display. The user can change the gain value (make the signal larger or smaller) by changing the value in the box to the left of the display. The threshold can be adjusted by dragging the threshold slider, located immediately to the left of the display.
+
+The gain can be adjusted in multiples of 10 by selecting the x10 box. Additionally, the gain for every channel, not just the one displayed, can be modified by first selecting the "all channels" box under gain (remember to turn this off when you are done using it!)
+
+The threshold can be displayed as a line across the single channel display by checking the "show" box in the threshold pain. Additionally, the threshold for all channels can be adjusted by selecting the "all channels" box under threshold (remember to turn this off when you are done using it!)
+
+============================
+Selecting different channels
+============================
+
+You can change the channel that is displayed in the single channel display by 1) left-clicking on the channel in the multi-channel display or 2) dragging the slider under the left pane to the desired channel value. Either way, the single channel that is displayed should change, as indicated by the number displayed in the top left of the single channel display, and by the purple box drawn around the selected channel in the mutli-channel display. Note that the slider under the left pane only allows you to select channels visble on the multi-channel display to the left. For instance, if there are 32 channels total, but you are only using the 16-channel display, you can only select channels 1-16. To see the second 16 channels (17-32), you can move the slider located under the multichannel display to change which channels are visualized.
+
+===============
+Other displays
+===============
+
+The buttons on the right side of the right display allow the user to change which additional visualizations are available. Depending on their size, multiple can be shown at once.
+
+--------------------------------
+16, 32, and 64 channel displays
+--------------------------------
+
+Waveforms from 16, 32, or 64 channels can be displayed simultaneously. These work the same as the 16 channel display in that the selected single channel is highlighted in purple, and you can select a single channel by clicking on it. If a channel is not needed to be visualized, the user can right-click on that channel and selected "disable".
+
+---------------------------
+16, 32, 64 channel rasters
+---------------------------
+
+Raster plots are temporal event plots, where each event (a waveform detected on that channel) is displayed as a vertical bar at approximately the time relative to when the screen refreshed. Each raster displays about ~10 seconds worth spikes. Each spike will be color coded based on the unit it is assigned to during spike sorting.
+
+-----------
+Soft Scope
+-----------
+
+This is a digital oscilloscope that shows the raw voltage trace for the channel that is displayed in the single channel window. By right-clicking, the user can change the voltage-gain, time divisions, and whether or not the threshold will also be displayed. Asterisks are shown at the bottom of the soft scope to indicate signals that were identified as threshold crossings.
+
+-------
+Events 
+-------
+
+This display can be used to visualize data that is received on either the analog-to-digital convertor on the Intan evaluation board, or as a TTL event on the evaluation board. Up to 6 different channels can be displayed at once. To display an event, right click on the section of the plot wher eyou would like that signal to be displayed and select the channel from the dialogue box. 
+
+**************
+Spike Sorting
+**************
+
 
