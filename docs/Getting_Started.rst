@@ -73,11 +73,13 @@ The "Run" button will begin acquisition with the evaluation board. After clickin
 Data Visualization
 *******************
 
+Now waveforms should start to appear in the single channel and multi channel displays. Only waveforms (snippets of the raw voltage signal from a channel) crossing a threshold value are displayed. The user can right-click in this window at any time to refresh the display.
+
 ===================
 Threshold and Gain
 ===================
 
-Now waveforms should start to appear in the single channel and multi channel displays. Only waveforms (snippets of the raw voltage signal from a channel) crossing a threshold value are displayed. The user can manipulate this signal in two important ways: 1) changing the threshold value necessary for a waveform to be display, and 2) changing the gain of the incoming voltage signal. The current threshold and gain values are displayed to the left of the single channel display. The user can change the gain value (make the signal larger or smaller) by changing the value in the box to the left of the display. The threshold can be adjusted by dragging the threshold slider, located immediately to the left of the display.
+The user can manipulate this signal in two important ways: 1) changing the threshold value necessary for a waveform to be display, and 2) changing the gain of the incoming voltage signal. The current threshold and gain values are displayed to the left of the single channel display. The user can change the gain value (make the signal larger or smaller) by changing the value in the box to the left of the display. The threshold can be adjusted by dragging the threshold slider, located immediately to the left of the display.
 
 The gain can be adjusted in multiples of 10 by selecting the x10 box. Additionally, the gain for every channel, not just the one displayed, can be modified by first selecting the "all channels" box under gain (remember to turn this off when you are done using it!)
 
@@ -101,9 +103,9 @@ The buttons on the right side of the right display allow the user to change whic
 
 Waveforms from 16, 32, or 64 channels can be displayed simultaneously. These work the same as the 16 channel display in that the selected single channel is highlighted in purple, and you can select a single channel by clicking on it. If a channel is not needed to be visualized, the user can right-click on that channel and selected "disable".
 
----------------------------
-16, 32, 64 channel rasters
----------------------------
+-------------------------------
+16, 32, and 64 channel rasters
+-------------------------------
 
 Raster plots are temporal event plots, where each event (a waveform detected on that channel) is displayed as a vertical bar at approximately the time relative to when the screen refreshed. Each raster displays about ~10 seconds worth spikes. Each spike will be color coded based on the unit it is assigned to during spike sorting.
 
@@ -123,4 +125,50 @@ This display can be used to visualize data that is received on either the analog
 Spike Sorting
 **************
 
+The general technique used by Intan.jl for spike sorting is 1) selecting waveforms thought to belong to an individual neuron 2) building a template from these waveforms, and 3) performing template matching with this template, and 4) if it is a match, assigning that waveform as belonging to that individual neuron. The user can create as many separate templates as necessary for a single channel.
+
+The "cluster" dialogue box at the bottom left indicates which cluster, or unit, is currently selected. By default, a channel will only have the 0 cluster, which indicates that there are no units and consequently no template matching that will be performed. As you add units, this list will be populated with more units (1, 2, 3 etc). You can click on each unit to make it the "active unit."
+
+===================
+Selecting Waveforms
+===================
+
+At any time, you can left-click in the single channel display, hold, and drag. You will see a rubberband created while doing this. Any units that cross this rubber band when you let go of the left-click will be assigned to the currently active cluster, and a template will be generated from those waveforms. Right now, selecting units with the 0 cluster selected should do nothing.
+
+=====================
+Collecting Templates
+=====================
+
+By default, the single display will be continuously updated as new waveforms stream in, and will automatically refresh about every 10 seconds. This can make unit selection difficult; therefore, you can select the "Collect Templates" button to refresh the display followed by more waveforms continuing to be plotted in real time. The "collect templates" button will now read "stop collection". Once "stop collection" is selected, the single display will freeze. While data will continue to stream in, the user can manipulate these units on the display.
+
+In the "collect units" mode, the right-click now will also generate a rubberband if the user clicks, holds and drags. Any units that cross this rubber band when it is released will be "masked" and disappear from the display. This can be used to clear obvious noise from the display before moving onto template generation. This mask feature works when the "0" cluster is selected.
+
+=============
+Adding Units
+=============
+
+--------------------
+Selecting Waveforms
+--------------------
+
+To create a new unit, first click the "add unit" button. In the cluster list, you should see a new unit appear with the number 1, and it will be automatically selected. Now any units that are selected with the left click rubber band will be assigned to that unit. Left-click, drag and release to select a group of units, and you will see the waveforms turn the same color as the new cluster (yellow for cluster 1). Of note, the user should also see each unit turn that color in real time, so that the user has real time feedback about which units will be selected.
+
+----------------------
+Deselecting Waveforms
+----------------------
+
+The user can also use the right-click rubberband to remove units from the display. If unit 0 is selected, these units will be removed from the display. However, if the current unit is selected waveforms not belonging to that unit will be removed from the display, but waveforms that were assigned to that unit will be removed from the display and the template will be recalculated with those units subtracted. In this way, the user can always be generous in their first selection and "prune" away unwanted waveforms to create the best template.
+
+=================
+Resuming Display
+=================
+
+
+================
+Deleting Units
+================
+
+=========================
+Modifying Template Bounds
+=========================
 
