@@ -7,128 +7,66 @@ Getting Started
 Overview
 *********
 
-A simple GUI is under development that will control 1) data acquisition, 2) visualization, 3) automatic and manual spike sorting, and 4) experimental control.
+This brief guide describes how to start the GUI, begin collecting extracellular electrophysiological data, and use some of the online spike sorting tools. Additional more comprehensive documentation can be found in later sections.
 
-.. image:: GUI.png
+*****************
+Connecting Intan
+*****************
 
 **************
 Creating GUI
 **************
 
-The GUI can easily be created from an IJulia notebook. The user must specify 1) which amplifiers are connected to which ports, 2) what experimental control paradigm will be used, 3) how data should be saved and 4) if the GUI should be run in debug mode. These are used to create an RHD2000 data structure, which is then used to construct the GUI. Every initialization requires the amp structure and task file. Everything else is given as keywords. For example:
+Start the Julia terminal.Then load the Intan package:
 
-.. code-block:: julia 
+.. code-block:: julia
 
-	#First create amplifier array:
-	myamp=RHD2164("PortA1")
+	using Intan
 
-	#Assign amplifiers to FPGA:
-	fpga_id=1
-	myfpga=FPGA(fpga_id,myamp)
 
-	#Specify a task file (NoTask is a valid option)
-	mt=Task_NoTask()
+The GUI can be started with the following line of code:
 
-	#Specifiy how neural data will be saved (Save nothing, spike shapes or entire recording)
-	#mys=SaveAll()
+.. code-block:: julia
 
-	#Initialize evaluation board setup
-	myrhd=RHD2000([myfpga],mt, sav=mys)
+	Intan_GUI()
 
-	#Creates the GUI
-	handles = makegui(myrhd);
 
+This will create a GUI with the default configuration file. The configuration file specifies how many evaluation boards and headstages are connected, what behavioral task is to be run, how data is to be saved, etc. The default assumes that a 64 channel RHD2164 headstage is connected to the Port A1 of the Intan Evaluation board.
+
+These files are simple and typically only a few lines of code. The user can create their own and then load it passing the path to the file as an argument to Intan_GUI:
+
+.. code-block:: julia
+
+	Intan_GUI("/path/to/your/configuration/file.jl")
+
+
+More documentation on designing the appropriate configuration can be found in its own section of this guide.
+
+*******************
+Interface Overview
+*******************
+
+Now the interface should appear. The GUI is divided into several regions by default:
+
+.. image:: GUI.png
+
+
+The far left pane contains the most commonly used buttons for online spike sorting and data visualization. This pane also contains the buttons that start the data acquisition at the top.
+
+The upper left pane shows a magnified view of a single channel. By default this shows the snippet of voltage surrounding a threshold crossing. The slider to set that threshold crossing is located on the left hand side. In this view, waveforms assigned to particular clusters (single units) will be assigned different colors. 
+
+The lower left pane shows spike sorting specific visualizations from the single channel highlighted above. These include the templates used for online template matching, and the color coded spike rasters for each individual unit.
+
+The right pane is used for additional visualizations of incoming data. Some of these include 1) multiple channel displays, 2) multiple channel spike rasters, 3) digital oscilloscope and 4) digital events and analog signals from data given to the TTL and ADC inputs to the Intan evaluation board. One the right side of this pane are the buttons used to select which of these are displayed.
+
+Finally, the top menubar has additional options, such as saving and loading sorting parameters, changing sorting options, and defining reference configurations.
 
 *****************
 Data Acquisition
 *****************
 
-===================
-Connecting to Intan
-===================
+The buttons used to start acquisition are located in the top right of the GUI. To begin data acquisition, first communication with the evaluation board and headstages must be established. This is done by clicking on the "Init" button. The output of the Julia terminal should indicate if the board is found and initialized correctly.
 
-The "Init" button will connect to the Intan board. The output should indicate if the board is found and initialized correctly. The board still needs to be initialized in debug mode.
-
-The "Run" button will begin acquisition with the evaluation board. The "calibration" button will be checked by default. As long as this is checked, detection thresholds will first be calculated, followed by any values that need calibrated for feature extraction, dimensionality reduction, or clustering. Unchecking the calibration button will cause normal data acquisition to start.
-
-**************
-Visualization
-**************
-
-There are two main canvases: the left canvas is a zoomed in view of one channel, while the right canvas shows 16 channels at a time. Each spike that was detected and clustered will be plotted to these canvases in real time.
-
-The slider underneath the left canvas selects which of the 16 channels from the right canvas will be displayed. The slider underneath the right canvas selects which group of 16 channels from the total channel count will be displayed.
-
-The slider to the right of the left canvas adjusts the scaling of the channel of interest in both the left canvas and right canvas. This only effects plotting, but not sorting.
-
-**************
-Spike Sorting
-**************
-
-Sorted spikes are plotted in the canvases with their colors indicating the cluster they are assigned to.
-
-=======
-Manual
-=======
-
-Spike clusters can be selected manually. For each channel, a cluster can be specified with a series of lines. A spike that crosses those lines will be assigned to that cluster. A new line for the selected cluster can be specified by left clicking, moving and releases. Right click allows the user to cycle through the lines of each cluster. Middle click clicks through clusters.
-
-=========
-Automatic
-=========
-
-Intan.jl is integrated with the SpikeSorting.jl package for automatic spike sorting of multi-channel recordings. None of the automatic methods currently allow for any manual manipulation.
-
-********************
-Experimental Control
-********************
-
-Intan.jl can also be used for experimental control, such as what is displayed in a separate GUI, closed loop control of stimulation, or real time processing of incoming signals. The Task_NoTask datastructure can be used when just pure recording is needed. User defined tasks can be created and must have the following components.
-
-====================
-Task Data Structure
-====================
-
-Every task will need its own data structure to store whatever variables are necessary for processing during the task. This should also store whatever additional variables besides neural signals that need to be logged. 
-
-.. code-block:: julia 
-
-	type Task_NoTask <: Task
-	end
-
-===============
-Initialization
-===============
-
-An "init_task" initialization function will build all necessary elements before anything starts running (external boards, creating GUIs etc).
-
-.. code-block:: julia 
-
-	function init_task(myt::Task_NoTask,rhd::RHD2000)
-	end
-
-====================
-Experimental Control
-====================
-
-The "do_task" function will implement the control logic of the task such as updating GUIs, modifying the data structure, talking to external boards. It is called immediately after spike sorting and before logging.
-
-.. code-block:: julia 
-
-	function do_task(myt::Task_NoTask,rhd::RHD2000,myread)
-	end
-
-The "myread" variable is a boolean that indicates if data was read from the Intan board or not. If you only want your experimental control to run every time new data is acquired (for instance every 20 ms when sampling at 30khz), then place your methods inside a conditional myread==true block of code.
-
-=================
-Logging Function
-=================
-
-The "save_task" function will save the appropriate elements of the data structure, as well as specifying what analog streams from either the Intan or other external DAQs.
-
-.. code-block:: julia 
-
-	function save_task(myt::Task_NoTask,rhd::RHD2000)
-	end
+The "Run" button will begin acquisition with the evaluation board. After clicking the run button, the experimental timer should start climbing on the top right of the GUI. You will see that the "Calibrate button" is checked at this point, and data is not being displayed. At first, the data is being used by the software to start to find optimum threshold and sorting values. This calibration period only needs to last a second or so. To start data visualization, uncheck the "calibrate" box.
 
 
