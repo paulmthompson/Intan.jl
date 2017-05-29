@@ -69,6 +69,10 @@ The buttons used to start acquisition are located in the top right of the GUI. T
 
 The "Run" button will begin acquisition with the evaluation board. After clicking the run button, the experimental timer should start climbing on the top right of the GUI. You will see that the "Calibrate button" is checked at this point, and data is not being displayed. At first, the data is being used by the software to start to find optimum threshold and sorting values. This calibration period only needs to last a second or so. To start data visualization, uncheck the "calibrate" box.
 
+.. only:: html
+
+   .. figure:: pics/GUI_control.gif
+
 *******************
 Data Visualization
 *******************
