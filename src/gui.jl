@@ -1443,7 +1443,7 @@ function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     nothing
 end
 
-function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Sorting})
+function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
 
     han, rhd, s = user_data
 
@@ -1551,7 +1551,7 @@ function change_bandwidth_fpga(fpgas::DArray,lower,upper,dsp_lower)
     nothing
 end
 
-function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Sorting})
+function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
 
     han, rhd, s = user_data
 
