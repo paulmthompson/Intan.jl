@@ -1679,8 +1679,8 @@ function draw_rb(han::Gui_Handles)
 
         #Find selected waveforms and plot
         if (han.clus>0)&((han.buf_count>0)&(han.pause))
-            get_selected_waveforms(han)
-            plot_selected_waveforms(han)
+            get_selected_waveforms(han,han.spike_buf)
+            plot_selected_waveforms(han,han.spike_buf)
         end
         han.rb.pos1=han.rb.pos2 
     end
@@ -1688,10 +1688,9 @@ function draw_rb(han::Gui_Handles)
     nothing
 end
 
-function get_selected_waveforms(han::Gui_Handles)
+function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
     (x1,x2,y1,y2)=coordinate_transform(han,han.rb.pos0.x,han.rb.pos0.y,han.rb.pos2.x,han.rb.pos2.y)
-    input=han.spike_buf
 
     if x1<3
         x1=2
@@ -1720,7 +1719,7 @@ function get_selected_waveforms(han::Gui_Handles)
     nothing
 end
 
-function plot_selected_waveforms(han::Gui_Handles)
+function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
     ctx=han.ctx2
     s=han.scale[han.spike,1]
@@ -1733,9 +1732,9 @@ function plot_selected_waveforms(han::Gui_Handles)
     
     for j=1:han.buf_count
         if (!han.selected[j])&(han.plotted[j])
-            move_to(ctx,1,(han.spike_buf[1,j]-o))
-            for jj=2:size(han.spike_buf,1)
-                line_to(ctx,jj,han.spike_buf[jj,j]-o)
+            move_to(ctx,1,(input[1,j]-o))
+            for jj=2:size(input,1)
+                line_to(ctx,jj,input[jj,j]-o)
             end
             han.plotted[j]=false
         end
@@ -1744,9 +1743,9 @@ function plot_selected_waveforms(han::Gui_Handles)
 
     for i=1:han.buf_count
         if (han.selected[i])&(!han.plotted[i])
-            move_to(ctx,1,(han.spike_buf[1,i]-o))
-            for jj=2:size(han.spike_buf,1)
-                line_to(ctx,jj,han.spike_buf[jj,i]-o)
+            move_to(ctx,1,(input[1,i]-o))
+            for jj=2:size(input,1)
+                line_to(ctx,jj,input[jj,i]-o)
             end
             han.plotted[i]=true
         end
