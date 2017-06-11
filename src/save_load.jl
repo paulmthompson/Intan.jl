@@ -237,6 +237,41 @@ function parse_v(fname="v.bin")
     v
 end
 
+function read_single_v(rhd::RHD2000,chan)
+
+    fname=rhd.save.v
+
+    myheader=read_v_header(fname)
+
+    f=open(fname,"r+")
+
+    seekend(f)
+
+    l=position(f)-10
+    v=zeros(Int16,div(l,2*myheader.num_channels))
+
+    seek(f,10)
+
+    count=0
+    while eof(f)==false
+        for i=1:myheader.num_channels
+            if i==chan
+                for j=1:myheader.samples_per_block
+                    v[count+j]=read(f,Int16)
+                end
+            else
+                for j=1:myheader.samples_per_block
+                    read(f,Int16)
+                end
+            end
+        end
+        count+=myheader.samples_per_block
+    end
+    close(f)
+    
+    v
+end
+
 function save_v_mat(in_name="v.bin",out_name="v.mat")
 
     v=parse_v(in_name)
