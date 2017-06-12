@@ -1701,13 +1701,35 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
             close(f)
         end
     end
+    
+    for i=1:chan_num
+        if isfile(string(filepath,"cluster/",i,".bin"))
+            f=open(string(filepath,"cluster/",i,".bin"),"r")
+            for j=1:length(han.temp.templates)
+                s[i].c.templates[j]=read(f,Float64)
+            end
+            for j=1:length(han.temp.sig_min)
+                s[i].c.sig_min[j]=read(f,Float64)
+            end
+            for j=1:length(han.temp.sig_max)
+                s[i].c.sig_max[j]=read(f,Float64)
+            end
+            s[i].c.misses=read(f,Int64)
+            s[i].c.num=read(f,Int64)
+            for j=1:length(han.temp.tol)
+                s[i].c.tol[j]=read(f,Float64)
+            end
+            han.total_clus[i]=s[i].c.num
+            close(f)
+        end
+    end
 
-    #Sorting
-
-    #=
+    get_thres(han,s)
+    get_cluster(han,s)
     update_treeview(han)
+    select_unit(han)
+    draw_templates(han)
     update_ref(rhd,han)
-    =#
 
     nothing
 end
