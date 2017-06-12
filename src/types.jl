@@ -20,6 +20,7 @@ type SaveOpt
     adc::String
     ttl::String
     folder::String
+    backup::String
 end
 
 SaveAll()=make_save_structure(true)
@@ -28,12 +29,12 @@ SaveNone()=make_save_structure(false)
 function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t)
+        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t,string(t,"/.backup/"))
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t)
+        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t,string(t,"\\.backup\\"))
     end
     out
 end

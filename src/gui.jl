@@ -548,6 +548,7 @@ showall(popupmenu_scope)
 #Prepare saving headers
 
 mkdir(r.save.folder)
+mkdir(r.save.backup)
 
 if r.save.save_full
     prepare_v_header(r)
