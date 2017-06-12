@@ -1,11 +1,13 @@
 
 module Intan
 
-using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD
+using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
 
 import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSorting.rb_draw, SpikeSorting.identity_matrix, SpikeSorting.select_color
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
+
+typealias MyFilter DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
 
 include("types.jl")
 include("constants.jl")

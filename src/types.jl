@@ -13,6 +13,11 @@ type Debug
     maxind::Int64
 end
 
+type Intan_Filter
+    chan::Int64
+    filt::MyFilter
+end
+
 type SaveOpt
     save_full::Bool
     v::String
