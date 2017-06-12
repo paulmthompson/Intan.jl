@@ -551,6 +551,7 @@ mkdir(r.save.folder)
 mkdir(r.save.backup)
 mkdir(string(r.save.backup,"/thres"))
 mkdir(string(r.save.backup,"/gain"))
+mkdir(string(r.save.backup,"/cluster"))
 
 if r.save.save_full
     prepare_v_header(r)
@@ -867,6 +868,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             end
             if han.c_changed
                 send_clus(s,han)
+                backup_clus(han.temp,han.spike,rhd.save.backup)
             end
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
@@ -996,6 +998,17 @@ function get_cluster{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
     han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,nn)
+end
+
+function backup_clus(myclus,chan,backup)
+
+    f=open(string(backup,"/cluster/",chan,".bin"),"w")
+    for i in fieldnames(myclus)
+        write(f,getfield(myclus,i))
+    end
+    close(f)
+    
+    nothing
 end
 
 function send_clus{T<:Sorting}(s::Array{T,1},han::Gui_Handles)
