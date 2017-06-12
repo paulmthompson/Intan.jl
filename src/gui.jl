@@ -550,6 +550,7 @@ showall(popupmenu_scope)
 mkdir(r.save.folder)
 mkdir(r.save.backup)
 mkdir(string(r.save.backup,"/thres"))
+mkdir(string(r.save.backup,"/gain"))
 
 if r.save.save_full
     prepare_v_header(r)
@@ -633,7 +634,7 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
-id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
+id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
@@ -1346,9 +1347,9 @@ Set threshold in GUI handles equal to RHD
 =# 
 
 #Gain
-function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, = user_data
+    han, rhd = user_data
 
     mygain=getproperty(han.gain,:active,Bool)
 
@@ -1362,6 +1363,10 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
         han.scale[han.spike,1]=-1*gainval/1000
         han.scale[han.spike,2]=-.2*gainval/1000
     end
+
+    f=open(string(rhd.save.backup,"/gain/",han.spike,".bin"),"w")
+    write(f,han.scale[han.spike,1])
+    close(f)
 
     han.thres_changed=true
 
