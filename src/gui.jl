@@ -549,6 +549,7 @@ showall(popupmenu_scope)
 
 mkdir(r.save.folder)
 mkdir(r.save.backup)
+mkdir(string(r.save.backup,"/thres"))
 
 if r.save.save_full
     prepare_v_header(r)
@@ -870,7 +871,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 		draw_spike(rhd,han)
 	    end
             if han.thres_changed
-                thres_changed(han,s,fpga)
+                thres_changed(han,s,fpga,rhd.save.backup)
             end
             if han.show_thres
                 plot_thres(han)
@@ -1267,7 +1268,7 @@ end
 #=
 Set Threshold for sorting equal to GUI threshold
 =#
-function thres_changed(han::Gui_Handles,s,fpga)
+function thres_changed(han::Gui_Handles,s,fpga,backup)
 
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
@@ -1275,6 +1276,13 @@ function thres_changed(han::Gui_Handles,s,fpga)
     update_thres(han,s)
 
     send_thres_to_ic(han,fpga)
+
+    #linux
+    f=open(string(backup,"/thres/",han.spike,".bin"),"w")
+
+    write(f,han.thres)
+
+    close(f)
     
     han.thres_changed=false
     
