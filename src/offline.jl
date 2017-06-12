@@ -58,6 +58,11 @@ function fillFromOffline!(rhd::RHD2000)
         rhd.time[j,1]=toff+j
     end
 
+    #Filter
+    for i=1:length(rhd.filts)
+        apply_filter(rhd,rhd.filts[i].filt,rhd.filts[i].chan)
+    end
+
     if rhd.debug.ind>=rhd.debug.maxind
         rhd.debug.ind=1
     end
