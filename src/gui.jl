@@ -290,6 +290,8 @@ rbs2[7]=RadioButton(rbs2[6],"Nothing")
     push!(sortmenu,load_sort_)
     save_sort_ = MenuItem("Save Sorting Parameters")
 push!(sortmenu,save_sort_)
+load_backup_ = MenuItem("Recover Parameters from Backup")
+push!(sortmenu,load_backup_)
 
 #Export
 
@@ -549,9 +551,13 @@ showall(popupmenu_scope)
 
 mkdir(r.save.folder)
 mkdir(r.save.backup)
-mkdir(string(r.save.backup,"/thres"))
-mkdir(string(r.save.backup,"/gain"))
-mkdir(string(r.save.backup,"/cluster"))
+mkdir(string(r.save.backup,"thres"))
+mkdir(string(r.save.backup,"gain"))
+mkdir(string(r.save.backup,"cluster"))
+
+f=open(string(r.save.backup,"backup.bin"),"w")
+write(f,1)
+close(f)
 
 if r.save.save_full
     prepare_v_header(r)
@@ -643,6 +649,7 @@ id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handle
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r,s))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r,s))
+id = signal_connect(load_backup_cb, load_backup_, "activate",Void,(),false,(handles,r,s))
 id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
@@ -725,6 +732,10 @@ id = signal_connect(table_col_cb, table_rtext2,"edited",Void,(Ptr{UInt8},Ptr{UIn
 id = signal_connect(table_col_cb, table_rtext3,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
 id = signal_connect(table_col_cb, table_rtext4,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
 id = signal_connect(table_en_cb, table_rtog, "toggled",Void,(Ptr{UInt8},),false,(handles,r))
+
+f=open(string(r.save.backup,"enabled.bin"),"w")
+write(f,handles.enabled)
+close(f)
 
 resize!(handles.win,1200,800)
 
@@ -1628,6 +1639,44 @@ function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
     nothing
 end
 
+function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+
+    han, rhd, s = user_data
+
+    filepath=open_dialog("Select Backup File",han.win)
+
+    filepath=filepath[1:(end-10)]
+    println(filepath)
+    #Enabled
+
+    f=open(string(filepath,"enabled.bin"),"r")
+
+    seekend(f)
+    chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
+
+    seekstart(f)
+    for i=1:(chan_num)
+       han.enabled[i]=read(f,UInt8)
+    end
+
+    close(f)
+
+    #Reference
+    
+    #Gain
+
+    #Thres
+
+    #Sorting
+
+    #=
+    update_treeview(han)
+    update_ref(rhd,han)
+    =#
+
+    nothing
+end
+
 function update_ref(rhd::RHD2000,han::Gui_Handles)
 
     selmodel_l=Gtk.GAccessor.selection(han.ref_tv1)
@@ -1962,7 +2011,7 @@ function enable_disable(han::Gui_Handles,en::Bool,backup)
 
     if inmulti
         han.enabled[han.chan_per_display*han.num16-han.chan_per_display+count]=en
-        f=open(string(backup,"/enabled.bin"),"w")
+        f=open(string(backup,"enabled.bin"),"w")
         write(f,han.enabled)
         close(f)
     end
