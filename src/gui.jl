@@ -1662,6 +1662,13 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
     close(f)
 
     #Reference
+    if isfile(string(filepath,"ref.bin"))
+        f=open(string(filepath,"ref.bin"),"r")
+        for i=1:(chan_num)
+            rhd.refs[i]=read(f,Int64)
+        end
+        close(f)
+    end
     
     #Gain
 
@@ -2224,7 +2231,7 @@ function ref_b3_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
         end
     end
 
-    f=open(string(rhd.save.backup,"/ref.bin"),"w")
+    f=open(string(rhd.save.backup,"ref.bin"),"w")
     write(f,rhd.refs)
     close(f)
 
