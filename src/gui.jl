@@ -1390,14 +1390,20 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
         han.scale[:,2]=-.2*gainval/1000
+
+        for i=1:size(han.scale,1)
+            f=open(string(rhd.save.backup,"gain/",i,".bin"),"w")
+            write(f,han.scale[i,1])
+            close(f)
+        end
     else
         han.scale[han.spike,1]=-1*gainval/1000
         han.scale[han.spike,2]=-.2*gainval/1000
+        
+        f=open(string(rhd.save.backup,"gain/",han.spike,".bin"),"w")
+        write(f,han.scale[han.spike,1])
+        close(f)
     end
-
-    f=open(string(rhd.save.backup,"gain/",han.spike,".bin"),"w")
-    write(f,han.scale[han.spike,1])
-    close(f)
 
     han.thres_changed=true
 
