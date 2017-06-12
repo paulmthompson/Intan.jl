@@ -1298,17 +1298,10 @@ function thres_changed(han::Gui_Handles,s,fpga,backup)
     mythres=getproperty(han.adj_thres,:value,Int)
     han.thres=mythres
 
-    update_thres(han,s)
+    update_thres(han,s,backup)
 
     send_thres_to_ic(han,fpga)
 
-    #linux
-    f=open(string(backup,"/thres/",han.spike,".bin"),"w")
-
-    write(f,han.thres)
-
-    close(f)
-    
     han.thres_changed=false
     
     nothing
@@ -1322,16 +1315,24 @@ function send_thres_to_ic(han::Gui_Handles,fpga::DArray{FPGA,1,Array{FPGA,1}})
     nothing
 end
 
-function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
+function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
     if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
         @sync begin
             for p in procs(s)
                 @async remotecall_wait((ss)->set_multiple_thres(localpart(ss),han,localindexes(ss)),p,s)
             end
         end
+        for i=1:size(han.scale,1)
+            f=open(string(backup,"thres/",i,".bin"),"w")
+            write(f,-1*han.thres/han.scale[i,1]+h.offset[i])
+            close(f)
+        end
     else
         (nn,mycore)=get_thres_id(s,han.spike)
         remotecall_wait(((x,h,num)->localpart(x)[num].thres=-1*h.thres/h.scale[h.spike,1]+h.offset[h.spike]),mycore,s,han,nn)
+        f=open(string(backup,"thres/",han.spike,".bin"),"w")
+        write(f,-1*han.thres/han.scale[han.spike,1]+h.offset[han.spike])
+        close(f)
     end
 end
 
@@ -1356,13 +1357,19 @@ function set_multiple_thres(s::Array,han::Gui_Handles,inds)
     end 
 end
 
-function update_thres(han::Gui_Handles,s::Array)
+function update_thres(han::Gui_Handles,s::Array,backup)
     if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
         @inbounds for i=1:length(s)
             s[i].thres=-1*han.thres/han.scale[i,1]+han.offset[i]
+            f=open(string(backup,"thres/",i,".bin"),"w")
+            write(f,s[i].thres)
+            close(f)
         end    
     else
         @inbounds s[han.spike].thres=-1*han.thres/han.scale[han.spike,1]+han.offset[han.spike]
+        f=open(string(backup,"thres/",han.spike,".bin"),"w")
+        write(f,s[han.spike].thres)
+        close(f)
     end
 end
 
@@ -1676,10 +1683,18 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
             f=open(string(filepath,"gain/",i,".bin"),"r")
             han.scale[i,1]=read(f,Float64)
             han.scale[i,2]=han.scale[i,1]*.2
+            close(f)
         end
     end
 
     #Thres
+    for i=1:chan_num
+        if isfile(string(filepath,"thres/",i,".bin"))
+            f=open(string(filepath,"thres/",i,".bin"),"r")
+            s[i].thres=read(f,Float64)
+            close(f)
+        end
+    end
 
     #Sorting
 
