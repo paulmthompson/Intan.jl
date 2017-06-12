@@ -213,13 +213,13 @@ press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-Intan.popup_enable_cb(handles.run.handle,(handles,))
+Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
     @fact handles.enabled[handles.spike] --> true
 end
 
-Intan.popup_disable_cb(handles.run.handle,(handles,))
+Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
     @fact handles.enabled[handles.spike] --> false
@@ -233,13 +233,13 @@ press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-Intan.popup_enable_cb(handles.run.handle,(handles,))
+Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
     @fact handles.enabled[handles.spike] --> true
 end
 
-Intan.popup_disable_cb(handles.run.handle,(handles,))
+Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
     @fact handles.enabled[handles.spike] --> false

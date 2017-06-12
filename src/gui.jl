@@ -634,8 +634,8 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,))
-id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,))
-id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,))
+id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
+id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
@@ -1928,11 +1928,11 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
 end
 
-popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles})=enable_disable(d[1],true)
+popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],true,d[2].save.backup)
 
-popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles})=enable_disable(d[1],false)
+popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],false,d[2].save.backup)
 
-function enable_disable(han::Gui_Handles,en::Bool)
+function enable_disable(han::Gui_Handles,en::Bool,backup)
 
     if han.c_right_top==1 #16 channel
         (inmulti,count)=check_multi(han,4,4,16,han.mim[1],han.mim[2])
@@ -1944,6 +1944,9 @@ function enable_disable(han::Gui_Handles,en::Bool)
 
     if inmulti
         han.enabled[han.chan_per_display*han.num16-han.chan_per_display+count]=en
+        f=open(string(backup,"/enabled.bin"),"w")
+        write(f,han.enabled)
+        close(f)
     end
 
     nothing
