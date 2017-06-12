@@ -1388,7 +1388,7 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         han.scale[han.spike,2]=-.2*gainval/1000
     end
 
-    f=open(string(rhd.save.backup,"/gain/",han.spike,".bin"),"w")
+    f=open(string(rhd.save.backup,"gain/",han.spike,".bin"),"w")
     write(f,han.scale[han.spike,1])
     close(f)
 
@@ -1671,6 +1671,13 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
     end
     
     #Gain
+    for i=1:chan_num
+        if isfile(string(filepath,"gain/",i,".bin"))
+            f=open(string(filepath,"gain/",i,".bin"),"r")
+            han.scale[i,1]=read(f,Float64)
+            han.scale[i,2]=han.scale[i,1]*.2
+        end
+    end
 
     #Thres
 
