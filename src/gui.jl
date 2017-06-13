@@ -2599,9 +2599,14 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     for i=0:(length(han.band_widgets.list)-1)
         if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
+            #Replace Table values
             setindex!(han.band_widgets.list,filt_type,i+1,2)
             setindex!(han.band_widgets.list,wn1,i+1,3)
             setindex!(han.band_widgets.list,wn2,i+1,4)
+
+            #Replace actual filter
+            myfilt=make_filter(rhd,filt_type,wn1,wn2)
+            rhd.filts[i+1]=Intan_Filter(rhd.filts[i+1].chan,myfilt)
         end
     end
 
