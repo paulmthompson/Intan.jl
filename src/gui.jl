@@ -725,6 +725,8 @@ id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
 
+id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
+
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
 end
@@ -2550,4 +2552,22 @@ end
 function change_button_label(button,mylabel)
     hi=Gtk.GAccessor.child(button)
     Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
+end
+
+function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    #Create Filter
+    han,rhd = user_data
+
+    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+
+    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+
+    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
+    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+
+    push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
+
+    
+    nothing
 end
