@@ -519,6 +519,9 @@ filt_c2 = TreeViewColumn("Filter",filt_rtext2,Dict([("text",1)]))
 filt_c3 = TreeViewColumn("Wn1",filt_rtext3,Dict([("text",2)]))
 filt_c4 = TreeViewColumn("Wn2",filt_rtext4,Dict([("text",3)]))
 
+filt_tv_s = Gtk.GAccessor.selection(filt_tv)
+Gtk.GAccessor.mode(filt_tv_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
+
 push!(filt_tv,filt_c1)
 push!(filt_tv,filt_c2)
 push!(filt_tv,filt_c3)
@@ -726,6 +729,7 @@ id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
 
 id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
+id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -2579,5 +2583,28 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
     end
 
+    nothing
+end
+
+function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+
+    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+
+    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
+    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+
+    for i=0:(length(han.band_widgets.list)-1)
+        if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
+            setindex!(han.band_widgets.list,filt_type,i+1,2)
+            setindex!(han.band_widgets.list,wn1,i+1,3)
+            setindex!(han.band_widgets.list,wn2,i+1,4)
+        end
+    end
+
+    
     nothing
 end
