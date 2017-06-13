@@ -2558,7 +2558,7 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     #Create Filter
     han,rhd = user_data
-
+    
     filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
 
     chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
@@ -2566,12 +2566,18 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
     wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
 
-    myfilt=make_filter(rhd,filt_type,wn1,wn2)
+    if (getproperty(han.band_widgets.sw_check,:active,Bool))
+        for i=1:size(rhd.v,2)
+            myfilt=make_filter(rhd,filt_type,wn1,wn2)
+            push!(rhd.filts,Intan_Filter(i,myfilt))
+            push!(han.band_widgets.list,(i,filt_type,wn1,wn2))
+        end
+    else
+        #add new filter
+        myfilt=make_filter(rhd,filt_type,wn1,wn2)
+        push!(rhd.filts,Intan_Filter(chan_num,myfilt))
+        push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
+    end
 
-    push!(rhd.filts,Intan_Filter(chan_num,myfilt))
-
-    push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
-
-    
     nothing
 end
