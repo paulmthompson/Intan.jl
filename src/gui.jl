@@ -2566,6 +2566,10 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
     wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
 
+    myfilt=make_filter(rhd,filt_type,wn1,wn2)
+
+    push!(rhd.filts,Intan_Filter(chan_num,myfilt))
+
     push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
 
     

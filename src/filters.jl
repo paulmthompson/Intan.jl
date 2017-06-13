@@ -3,15 +3,15 @@
 Filters and Decoding Algorithms
 =#
 
-function make_filter(rhd::RHD2000,filter_type::Int64,wn1,wn2=0.0)
+function make_filter(rhd::RHD2000,filter_type::String,wn1,wn2=0.0)
 
-    if filter_type == 1
-        responsetype = HighPass(wn1; fs = rhd.sr)
-    elseif filter_type == 2
-        responsetype = LowPass(wn1; fs = rhd.sr)
-    elseif filter_type == 3
-        responsetype = BandPass(wn1,wn2; fs=rhd.sr)
-    elseif filter_type == 4
+    if filter_type == "High Pass"
+        responsetype = Highpass(wn1; fs = rhd.sr)
+    elseif filter_type == "Low Pass"
+        responsetype = Lowpass(wn1; fs = rhd.sr)
+    elseif filter_type == "BandPass"
+        responsetype = Bandpass(wn1,wn2; fs=rhd.sr)
+    elseif filter_type == "BandStop"
         responsetype = Bandstop(wn1,wn2; fs=rhd.sr)
     end
     designmethod=Butterworth(4)
