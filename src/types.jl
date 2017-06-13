@@ -254,6 +254,17 @@ type Band_Widgets
     sb2::Gtk.GtkSpinButtonLeaf
     sb3::Gtk.GtkSpinButtonLeaf
     b1::Gtk.GtkButtonLeaf
+
+    sw_box::Gtk.GtkComboBoxTextLeaf
+    wn_sb1::Gtk.GtkSpinButtonLeaf
+    wn_sb2::Gtk.GtkSpinButtonLeaf
+    sw_chan_sb::Gtk.GtkSpinButtonLeaf
+    add_b::Gtk.GtkButtonLeaf
+    re_b::Gtk.GtkButtonLeaf
+    sw_check::Gtk.GtkCheckButtonLeaf
+
+    tv::Gtk.GtkTreeViewLeaf
+    list::Gtk.GtkListStoreLeaf
 end
 
 type Sort_Widgets

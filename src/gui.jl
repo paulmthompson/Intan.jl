@@ -443,27 +443,96 @@ visible(ref_win,false)
 
 #Bandwidth Adjustment
 
+band_hw_frame=Frame("Hardware Filters")
 band_grid=Grid()
+band_hw_grid=Grid()
+band_grid[1,1]=band_hw_frame
+push!(band_hw_frame,band_hw_grid)
+
 band_sb1=SpinButton(0:1000)
 setproperty!(band_sb1,:value,300)
-band_grid[1,1]=band_sb1
-band_grid[2,1]=Label("Lower Bandwidth")
+band_hw_grid[1,1]=band_sb1
+band_hw_grid[2,1]=Label("Lower Bandwidth")
 
 band_sb2=SpinButton(1000:10000)
 setproperty!(band_sb2,:value,5000)
-band_grid[1,2]=band_sb2
-band_grid[2,2]=Label("Higher BandWidth")
+band_hw_grid[1,2]=band_sb2
+band_hw_grid[2,2]=Label("Higher BandWidth")
 
 band_sb3=SpinButton(0:1000)
 setproperty!(band_sb3,:value,300)
-band_grid[1,3]=band_sb3
-band_grid[2,3]=Label("DSP High Pass")
+band_hw_grid[1,3]=band_sb3
+band_hw_grid[2,3]=Label("DSP High Pass")
 
 band_b1=Button("Update")
-band_grid[1,4]=band_b1
+band_hw_grid[1,4]=band_b1
+
+band_sw_frame=Frame("Software Filters")
+band_sw_grid=Grid()
+band_grid[1,2]=band_sw_frame
+push!(band_sw_frame,band_sw_grid)
+
+filter_combo = ComboBoxText()
+for choice in ["High Pass"; "Low Pass"; "BandPass"; "BandStop"]
+    push!(filter_combo,choice)
+end
+
+band_sw_grid[1,1]=filter_combo
+
+band_sw_sb1=SpinButton(0:10000)
+setproperty!(band_sw_sb1,:value,10)
+band_sw_grid[1,2]=band_sw_sb1
+band_sw_grid[2,2]=Label("Cutoff Freq 1")
+
+band_sw_sb2=SpinButton(0:10000)
+setproperty!(band_sw_sb2,:value,10)
+band_sw_grid[1,3]=band_sw_sb2
+band_sw_grid[2,3]=Label("Cutoff Freq 2")
+
+band_sw_sb3=SpinButton(1:size(r.v,2))
+setproperty!(band_sw_sb3,:value,1)
+band_sw_grid[1,4]=band_sw_sb3
+band_sw_grid[2,4]=Label("Channel Number")
+
+band_sw_b1=Button("Add New")
+band_sw_grid[1,5]=band_sw_b1
+
+band_sw_b2=Button("Replace")
+band_sw_grid[2,5]=band_sw_b2
+
+band_sw_check=CheckButton()
+band_sw_grid[1,6]=band_sw_check
+band_sw_grid[2,6]=Label("Apply to all Channels")
+
+filt_list = ListStore(Int32,String,Int32,Int32)
+
+#push!(filt_list,(1,"Highpass",1,0))
+
+filt_tv = TreeView(TreeModel(filt_list))
+filt_rtext1=CellRendererText()
+filt_rtext2=CellRendererText()
+filt_rtext3=CellRendererText()
+filt_rtext4=CellRendererText()
+
+filt_c1 = TreeViewColumn("Channel",filt_rtext1,Dict([("text",0)]))
+filt_c2 = TreeViewColumn("Filter",filt_rtext2,Dict([("text",1)]))
+filt_c3 = TreeViewColumn("Wn1",filt_rtext3,Dict([("text",2)]))
+filt_c4 = TreeViewColumn("Wn2",filt_rtext4,Dict([("text",3)]))
+
+push!(filt_tv,filt_c1)
+push!(filt_tv,filt_c2)
+push!(filt_tv,filt_c3)
+push!(filt_tv,filt_c4)
+
+filt_scroll=ScrolledWindow()
+Gtk.GAccessor.min_content_height(filt_scroll,500)
+Gtk.GAccessor.min_content_width(filt_scroll,250)
+push!(filt_scroll,filt_tv)
+
+band_grid[2,2]=filt_scroll
 
 band_win=Window(band_grid)
-setproperty!(band_win, :title, "Bandwidth Adjustment")
+setproperty!(band_win, :title, "Filtering")
 
 showall(band_win)
 visible(band_win,false)
@@ -584,7 +653,7 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
-band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1)
+band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 
 sleep(1.0)
