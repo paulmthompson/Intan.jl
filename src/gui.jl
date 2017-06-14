@@ -264,14 +264,15 @@ setproperty!(c_rb,:vexpand,true)
     push!(vbox_42,vbox_rb_lower)
     push!(vbox_rb_lower,Label("Lower Panel"))
     
-    rbs2=Array(RadioButton,7)
+    rbs2=Array(RadioButton,8)
     rbs2[1]=RadioButton("Events",active=true)
     rbs2[2]=RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=RadioButton(rbs2[2],"32 Raster")
     rbs2[4]=RadioButton(rbs2[3],"Soft Scope")
 rbs2[5]=RadioButton(rbs2[4],"64 Channel")
 rbs2[6]=RadioButton(rbs2[5],"64 Raster")
-rbs2[7]=RadioButton(rbs2[6],"Nothing")
+rbs2[7]=RadioButton(rbs2[6],"Spectrogram")
+rbs2[8]=RadioButton(rbs2[7],"Nothing")
 
     push!(vbox_rb_lower,rbs2[1])
     push!(vbox_rb_lower,rbs2[2])
@@ -279,7 +280,8 @@ rbs2[7]=RadioButton(rbs2[6],"Nothing")
     push!(vbox_rb_lower,rbs2[4])
     push!(vbox_rb_lower,rbs2[5])
     push!(vbox_rb_lower,rbs2[6])
-    push!(vbox_rb_lower,rbs2[7])
+push!(vbox_rb_lower,rbs2[7])
+push!(vbox_rb_lower,rbs2[8])
 		
     #MENU ITEMS
     
@@ -320,6 +322,9 @@ push!(viewmenu,define_params)
 
 sv_open = MenuItem("Sort Viewer")
 push!(viewmenu,sv_open)
+
+spect_open = MenuItem("Spectrogram")
+push!(viewmenu,spect_open)
 
 #Options
 opopts = MenuItem("_Options")
@@ -385,8 +390,6 @@ setproperty!(table_win, :title, "Parameter List")
 
 showall(table_win)
 visible(table_win,false)
-
-
 
 # Reference popup
 ref_grid=Grid()
@@ -676,7 +679,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets)
+                    sortview_handles,band_widgets,table_widgets,rand(Int8,r.sr))
 
 id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
@@ -716,6 +719,9 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
+
+id = signal_connect(spect_cb, spect_open, "activate", Void, (),false,(handles,r))
+
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
@@ -745,7 +751,7 @@ for i=1:5
     id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,i))
 end
 
-for i=1:7
+for i=1:8
     id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,i))
 end
 
@@ -943,6 +949,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 		draw_spike64(rhd,han)
             elseif han.c_right_bottom==6
                 draw_raster64(rhd,han)
+            elseif han.c_right_bottom==7
+                draw_spectrogram(rhd,han)
             else 
             end
 
@@ -2199,7 +2207,7 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
             end
         else
             if (han.c_right_bottom == 5)|(han.c_right_bottom == 6)
-                setproperty!(han.rb2[7],:active,true)
+                setproperty!(han.rb2[8],:active,true)
             end
         end
     end
@@ -2231,6 +2239,10 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
             if han.c_right_top != 4
                 setproperty!(han.rb1[4],:active,true)
             end
+        elseif event_id == 7
+            ctx=getgc(han.c)
+            han.c.back.ptr = CairoRGBSurface(width(ctx),height(ctx)).ptr
+            han.c.backcc = CairoContext(han.c.back)
         else
             if (han.c_right_top == 3)|(han.c_right_top == 4)
                 setproperty!(han.rb1[1],:active,true)
@@ -2611,5 +2623,11 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     
+    nothing
+end
+
+function spect_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+
     nothing
 end

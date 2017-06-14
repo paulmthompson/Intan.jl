@@ -427,6 +427,8 @@ type Gui_Handles
     sortview_widgets::SortView
     band_widgets::Band_Widgets
     table_widgets::Table_Widgets
+
+    v_s::Array{Int16,1}
 end
 
 #=
