@@ -323,9 +323,6 @@ push!(viewmenu,define_params)
 sv_open = MenuItem("Sort Viewer")
 push!(viewmenu,sv_open)
 
-spect_open = MenuItem("Spectrogram")
-push!(viewmenu,spect_open)
-
 #Options
 opopts = MenuItem("_Options")
 opmenu = Menu(opopts)
@@ -719,8 +716,6 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
-
-id = signal_connect(spect_cb, spect_open, "activate", Void, (),false,(handles,r))
 
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
@@ -2623,11 +2618,5 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     
-    nothing
-end
-
-function spect_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-
     nothing
 end
