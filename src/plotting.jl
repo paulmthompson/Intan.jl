@@ -536,6 +536,8 @@ function clear_c(han::Gui_Handles)
     elseif han.c_right_bottom==4
         prepare_scope(ctx,han)
     elseif han.c_right_bottom==5
+    elseif han.c_right_bottom==7
+        prepare_spectrogram(ctx,han)
     else
         
     end
@@ -623,6 +625,46 @@ function prepare_events(ctx,han)
 end
 
 function prepare_scope(ctx,han)
+end
+
+function prepare_spectrogram(ctx,han)
+
+    myheight=height(ctx)
+    mywidth=width(ctx)
+
+    set_source_rgb(ctx,1.0,1.0,1.0)
+
+    move_to(ctx,50.0,myheight-35)
+    show_text(ctx,"-1")
+
+    move_to(ctx,50.0,myheight-35)
+    show_text(ctx,"-1.0")
+
+    move_to(ctx,(mywidth-50.0)/2+50,myheight-35)
+    show_text(ctx,"-0.5")
+
+    move_to(ctx,mywidth-20.0,myheight-35)
+    show_text(ctx,"0.0")
+
+    move_to(ctx,mywidth/2,myheight-20)
+    show_text(ctx,"Time (s)")
+
+    move_to(ctx,10.0,myheight-140)
+    rotate(ctx,-pi/2)
+    show_text(ctx,"Frequency")
+    identity_matrix(ctx)
+
+    move_to(ctx,35.0,myheight-50.0)
+    rotate(ctx,-pi/2)
+    show_text(ctx,"0.0")
+    identity_matrix(ctx)
+
+    move_to(ctx,35.0,myheight-50-125)
+    rotate(ctx,-pi/2)
+    show_text(ctx,"7500")
+    identity_matrix(ctx)
+    
+    nothing
 end
 
 function line(ctx,x1,x2,y1,y2)
@@ -829,7 +871,7 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     data = ccall((:cairo_image_surface_get_data,Cairo._jl_libcairo),Ptr{UInt32},(Ptr{Void},),x.ptr)
     
     c_h=round(Int64,height(ctx))
-    c_w=round(Int64,width(ctx))
+    c_w=round(Int64,width(ctx))-50
 
     for i=(size(rhd.v,1)+1):rhd.sr
         han.v_s[i-SAMPLES_PER_DATA_BLOCK] = han.v_s[i]
@@ -847,7 +889,7 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     in_h = size(S,1)
 
     scale_w = c_w / in_w
-    scale_h = 300 / in_h
+    scale_h = 250 / in_h
 
     mymin=minimum(S)
     mymax=maximum(S)
@@ -872,10 +914,10 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
         end
     end
     
-    for h=1:300
+    for h=1:250
         for w=1:c_w
             val = rgb_mat[ceil(Int,h/scale_h),ceil(Int,w/scale_w)]
-            unsafe_store!(data,val,(c_h-h)*c_w+w)
+            unsafe_store!(data,val,(c_h-h-50)*(c_w+50)+w+50)
         end
     end
     
