@@ -36,16 +36,16 @@ function makegui(r::RHD2000,s,task,fpga)
     #GAIN
     frame1_2=Frame("Gain")
     vbox1_2[1,2]=frame1_2
-    vbox1_2_1=Box(:v)
+    vbox1_2_1=Grid()
     push!(frame1_2,vbox1_2_1)
 
     sb2=SpinButton(1:1000)
     setproperty!(sb2,:value,1)
-    push!(vbox1_2_1,sb2)
+    vbox1_2_1[1,1]=sb2
 
     gain_checkbox=CheckButton()
     add_button_label(gain_checkbox," x 10")
-    push!(vbox1_2_1,gain_checkbox)
+    vbox1_2_1[2,1]=gain_checkbox
 
     sb_offset=SpinButton(-1000:1000)
     setproperty!(sb_offset,:value,0)
@@ -53,7 +53,7 @@ function makegui(r::RHD2000,s,task,fpga)
     button_gain = CheckButton()
     add_button_label(button_gain,"All Channels")
     setproperty!(button_gain,:active,false)
-    push!(vbox1_2_1,button_gain)
+    vbox1_2_1[1,2]=button_gain
     
 		
     #THRESHOLD
@@ -62,8 +62,9 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox1_3_1=Box(:v)
     push!(frame1_3,vbox1_3_1)
     
-    sb=SpinButton(-300:300)
-    setproperty!(sb,:value,0)
+    #sb=SpinButton(-300:300)
+    #setproperty!(sb,:value,0)
+    sb=Label("0")
     push!(vbox1_3_1,sb)
 
     button_thres_all = CheckButton()
@@ -654,7 +655,7 @@ end
 
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1)
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
-gain_widgets=Gain_Widgets(sb2,sb,gain_checkbox,button_gain)
+gain_widgets=Gain_Widgets(sb2,sb_offset,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
@@ -1345,7 +1346,7 @@ function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     han,  = user_data
 
     mythres=getproperty(han.adj_thres,:value,Int)
-    setproperty!(han.sb,:value,mythres)
+    setproperty!(han.sb,:label,string(mythres))
     han.thres_changed=true
 
     nothing

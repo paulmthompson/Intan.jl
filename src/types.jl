@@ -339,7 +339,7 @@ type Gui_Handles
     clus::Int64
     total_clus::Array{Int64,1}
     
-    sb::Gtk.GtkSpinButtonLeaf
+    sb::Gtk.GtkLabelLeaf
     
     gain::Gtk.GtkCheckButtonLeaf
     gainbox::Gtk.GtkSpinButtonLeaf
