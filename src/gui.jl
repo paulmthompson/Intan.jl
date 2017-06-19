@@ -2438,6 +2438,10 @@ end
 
 function generate_mask(han::Gui_Handles,x1,y1,x2,y2)
 
+    #Bounds check
+    x1 = x1 < 2 ? 2 : x1
+    x2 = x2 > size(han.spike_buf,2)-2 ? size(han.spike_buf,2)-2 : x2 
+    
     for i=1:han.buf_count
         for j=(x1-1):(x2+1)
             if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,han.spike_buf[j,i],han.spike_buf[j+1,i])
