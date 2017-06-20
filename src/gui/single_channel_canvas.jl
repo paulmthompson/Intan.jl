@@ -321,6 +321,50 @@ function replot_spikes(han::Gui_Handles)
     nothing
 end
 
+
+function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
+
+    ctx=han.ctx2
+    s=han.scale[han.spike,1]
+    o=han.offset[han.spike]
+
+    set_line_width(ctx,2.0)
+    set_source(ctx,han.ctx2s)
+    Cairo.translate(ctx,0.0,han.h2/2)
+    scale(ctx,han.w2/han.wave_points,s)
+    
+    for j=1:han.buf_count
+        if (!han.selected[j])&(han.plotted[j])
+            move_to(ctx,1,(input[1,j]-o))
+            for jj=2:size(input,1)
+                line_to(ctx,jj,input[jj,j]-o)
+            end
+            han.plotted[j]=false
+        end
+    end
+    stroke(ctx)
+
+    for i=1:han.buf_count
+        if (han.selected[i])&(!han.plotted[i])
+            move_to(ctx,1,(input[1,i]-o))
+            for jj=2:size(input,1)
+                line_to(ctx,jj,input[jj,i]-o)
+            end
+            han.plotted[i]=true
+        end
+    end
+    set_line_width(ctx,0.5)
+    if han.click_button==1
+        select_color(ctx,han.clus+1)
+    elseif han.click_button==3
+        select_color(ctx,1)
+    end
+    stroke(ctx)
+
+    identity_matrix(ctx)
+    nothing
+end
+
 #=
 Callback for how mouse interacts with canvas
 =#

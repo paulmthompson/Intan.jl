@@ -1,5 +1,36 @@
 
 
+
+
+
+#=
+Enable or display display for particular channel in multi-channel display
+=#
+
+popup_enable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],true,d[2].save.backup)
+
+popup_disable_cb(w::Ptr,d::Tuple{Gui_Handles,RHD2000})=enable_disable(d[1],false,d[2].save.backup)
+
+function enable_disable(han::Gui_Handles,en::Bool,backup)
+
+    if han.c_right_top==1 #16 channel
+        (inmulti,count)=check_multi(han,4,4,16,han.mim[1],han.mim[2])
+    elseif han.c_right_top==2 # 32 channel
+        (inmulti,count)=check_multi(han,6,6,32,han.mim[1],han.mim[2])
+    else #64 channel
+        (inmulti,count)=check_multi(han,11,6,64,han.mim[1],han.mim[2])
+    end
+
+    if inmulti
+        han.enabled[han.chan_per_display*han.num16-han.chan_per_display+count]=en
+        f=open(string(backup,"enabled.bin"),"w")
+        write(f,han.enabled)
+        close(f)
+    end
+
+    nothing
+end
+
 #=
 Plotting multi channel spike display
 =#
