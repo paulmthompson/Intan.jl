@@ -53,9 +53,6 @@ function rubberband_start(han::Gui_Handles, x, y, button_num=1)
     nothing
 end
 
-
-
-
 function rubberband_move(han::Gui_Handles, x, y)
     
     han.rb.moved = true
@@ -165,5 +162,36 @@ function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
         end
     end
     
+    nothing
+end
+
+#=
+Callback for how mouse interacts with canvas
+=#
+function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+    event = unsafe_load(param_tuple)
+
+    han.click_button=event.button
+    
+    if event.button == 1 #left click captures window
+        han.mi=(event.x,event.y)
+        rubberband_start(han,event.x,event.y)
+    elseif event.button == 3 #right click refreshes window
+        if !han.pause
+            clear_c2(han.c2,han.spike)
+            han.ctx2=getgc(han.c2)
+            han.ctx2s=copy(han.ctx2)
+            han.buf_ind=1
+            han.buf_count=1
+            if han.sort_cb
+                draw_templates(han)
+            end
+        else
+            han.mi=(event.x,event.y)
+            rubberband_start(han,event.x,event.y,3)
+        end
+    end
     nothing
 end

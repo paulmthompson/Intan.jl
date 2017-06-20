@@ -1172,18 +1172,6 @@ function highlight_channel(han::Gui_Handles,old_spike)
     nothing
 end
 
-function draw_box(x1,y1,x2,y2,mycolor,linewidth,ctx)
-    move_to(ctx,x1,y1)
-    line_to(ctx,x2,y1)
-    line_to(ctx,x2,y2)
-    line_to(ctx,x1,y2)
-    line_to(ctx,x1,y1)
-    set_source_rgb(ctx,mycolor[1],mycolor[2],mycolor[3])
-    set_line_width(ctx,linewidth)
-    stroke(ctx)
-    nothing
-end
-
 function set_audio(fpga::Array,ii,refs)
 
     selectDacDataStream(fpga[1],0,div(ii-1,32))
@@ -2199,34 +2187,6 @@ function ref_b3_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     write(f,rhd.refs)
     close(f)
 
-    nothing
-end
-
-function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-    event = unsafe_load(param_tuple)
-
-    han.click_button=event.button
-    
-    if event.button == 1 #left click captures window
-        han.mi=(event.x,event.y)
-        rubberband_start(han,event.x,event.y)
-    elseif event.button == 3 #right click refreshes window
-        if !han.pause
-            clear_c2(han.c2,han.spike)
-            han.ctx2=getgc(han.c2)
-            han.ctx2s=copy(han.ctx2)
-            han.buf_ind=1
-            han.buf_count=1
-            if han.sort_cb
-                draw_templates(han)
-            end
-        else
-            han.mi=(event.x,event.y)
-            rubberband_start(han,event.x,event.y,3)
-        end
-    end
     nothing
 end
 
