@@ -2034,33 +2034,6 @@ function enable_disable(han::Gui_Handles,en::Bool,backup)
     nothing
 end
 
-function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
-
-    han, event_id = user_data
-
-    ctx=getgc(han.c)
-    myheight=height(ctx)
-
-    chan_id=1
-    if han.mim[2]<(myheight-250)
-        chan_id=1
-    elseif han.mim[2]<(myheight-200)
-        chan_id=2
-    elseif han.mim[2]<(myheight-150)
-        chan_id=3
-    elseif han.mim[2]<(myheight-100)
-        chan_id=4
-    elseif han.mim[2]<(myheight-50)
-        chan_id=5
-    else
-        chan_id=6
-    end
-        
-    han.events[chan_id]=event_id
-    
-    nothing
-end
-
 function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles})
 
     han, = user_data
