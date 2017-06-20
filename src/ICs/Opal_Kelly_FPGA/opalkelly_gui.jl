@@ -72,3 +72,50 @@ end
 function send_thres_to_ic(han::Gui_Handles,fpga::DArray{FPGA,1,Array{FPGA,1}})
     nothing
 end
+
+#=
+Select New Channel
+=#
+
+new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::Array{FPGA,1})=new_single_channel_fpga(han,rhd,s,fpga)
+    
+new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::DArray{FPGA,1,Array{FPGA,1}})=new_single_channel_fpga(han,rhd,s,fpga)
+
+function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
+
+    han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
+    
+    clear_c2(han.c2,han.spike)
+    han.ctx2=getgc(han.c2)
+    han.ctx2s=copy(han.ctx2)
+
+    #Audio output
+    set_audio(fpga,han,rhd)
+
+    #Display Gain
+    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+
+    #Display Threshold
+    get_thres(han,s)
+    
+    han.buf_ind=1
+    han.buf_count=1
+
+    #Get Cluster
+    get_cluster(han,s)
+
+    #Update treeview
+    update_treeview(han)
+
+    #update selected cluster
+    select_unit(han)
+
+    #Sort Button
+    if han.sort_cb
+        draw_templates(han)
+    end
+
+    han.spike_changed=false
+    
+    nothing
+end

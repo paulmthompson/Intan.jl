@@ -1009,49 +1009,6 @@ function update_c2(han::Gui_Handles)
     nothing
 end
 
-new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::Array{FPGA,1})=new_single_channel_fpga(han,rhd,s,fpga)
-    
-new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::DArray{FPGA,1,Array{FPGA,1}})=new_single_channel_fpga(han,rhd,s,fpga)
-
-function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
-
-    han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
-    
-    clear_c2(han.c2,han.spike)
-    han.ctx2=getgc(han.c2)
-    han.ctx2s=copy(han.ctx2)
-
-    #Audio output
-    set_audio(fpga,han,rhd)
-
-    #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
-
-    #Display Threshold
-    get_thres(han,s)
-    
-    han.buf_ind=1
-    han.buf_count=1
-
-    #Get Cluster
-    get_cluster(han,s)
-
-    #Update treeview
-    update_treeview(han)
-
-    #update selected cluster
-    select_unit(han)
-
-    #Sort Button
-    if han.sort_cb
-        draw_templates(han)
-    end
-
-    han.spike_changed=false
-    
-    nothing
-end
-
 function get_cluster{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
     han.temp=deepcopy(s[han.spike].c)
 end
@@ -1286,22 +1243,26 @@ function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 
     filepath=save_dialog("Save configuration",han.win)
 
-    if filepath[end-3:end]==".jld"
-    else
-        filepath=string(filepath,".jld")
+    if filepath != ""
+
+        if filepath[end-3:end]==".jld"
+        else
+            filepath=string(filepath,".jld")
+        end
+    
+        file = jldopen(filepath, "w")
+    
+        write(file, "Gain", han.scale)
+        write(file, "Offset", han.offset)
+        write(file, "Sorting", s)
+        write(file, "total_clus",han.total_clus)
+        write(file, "Enabled", han.enabled)
+        write(file, "Reference",rhd.refs)
+        
+        close(file)
+
     end
     
-    file = jldopen(filepath, "w")
-    
-    write(file, "Gain", han.scale)
-    write(file, "Offset", han.offset)
-    write(file, "Sorting", s)
-    write(file, "total_clus",han.total_clus)
-    write(file, "Enabled", han.enabled)
-    write(file, "Reference",rhd.refs)
-
-    close(file)
-
     nothing
 end
 
@@ -1311,46 +1272,50 @@ function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 
     filepath=open_dialog("Load Configuration",han.win)
 
-    c = jldopen(filepath, "r") do file
-        g=read(file,"Gain")
+    if filepath != ""
 
-        for i=1:length(g)
-            han.scale[i]=g[i]
+        c = jldopen(filepath, "r") do file
+            g=read(file,"Gain")
+
+            for i=1:length(g)
+                han.scale[i]=g[i]
+            end
+            
+            o=read(file,"Offset")
+            
+            for i=1:length(o)
+                han.offset[i]=o[i]
+            end
+            
+            s_saved=read(file,"Sorting")
+            
+            for i=1:length(s)
+                s[i]=s_saved[i]
+            end
+            
+            total_clus=read(file,"total_clus")
+            for i=1:length(total_clus)
+                han.total_clus[i]=total_clus[i]
+            end
+            
+            e=read(file,"Enabled")
+            
+            for i=1:length(e)
+                han.enabled[i]=e[i]
+            end
+            
+            refs=read(file,"Reference")
+            
+            for i=1:length(refs)
+                rhd.refs[i]=refs[i]
+            end
         end
 
-        o=read(file,"Offset")
+        update_treeview(han)
 
-        for i=1:length(o)
-            han.offset[i]=o[i]
-        end
+        update_ref(rhd,han)
 
-        s_saved=read(file,"Sorting")
-
-        for i=1:length(s)
-            s[i]=s_saved[i]
-        end
-
-        total_clus=read(file,"total_clus")
-        for i=1:length(total_clus)
-            han.total_clus[i]=total_clus[i]
-        end
-
-        e=read(file,"Enabled")
-
-        for i=1:length(e)
-            han.enabled[i]=e[i]
-        end
-
-        refs=read(file,"Reference")
-
-        for i=1:length(refs)
-            rhd.refs[i]=refs[i]
-        end
     end
-
-    update_treeview(han)
-
-    update_ref(rhd,han)
 
     nothing
 end
