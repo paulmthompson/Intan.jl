@@ -156,83 +156,6 @@ draw_raster32(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,32)
 
 draw_raster64(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,64)
 
-#=
-Single maximized channel plotting
-=#
-
-function draw_spike(rhd::RHD2000,han::Gui_Handles)
-
-    spike_num=han.spike
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
-    reads=han.draws
-
-    #ctx=han.ctx2s
-    ctx=copy(han.ctx2s)
-    paint_with_alpha(ctx,0.0)
-
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
-    
-    for i=1:rhd.nums[spike_num]
-
-        kk=rhd.buf[i,spike_num].inds.start
-        k_end=rhd.buf[i,spike_num].inds.stop
-        if (kk>0) & (k_end<size(rhd.v,1))
-        
-            move_to(ctx,1,rhd.v[kk,spike_num]-o)
-            
-            for k=2:han.wave_points
-                y = rhd.v[kk+k-1,spike_num]-o
-                line_to(ctx,k,y)
-            end
-			
-	    set_line_width(ctx,0.5);
-	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
-	    stroke(ctx)
-
-            #Add spike to buffer
-            if han.buf_count > 0
-                mycount=1
-                for k=1:han.wave_points
-                    han.spike_buf[mycount,han.buf_ind] = rhd.v[kk+k-1,spike_num]
-                    mycount+=1
-                end
-                han.buf_clus[han.buf_ind] = rhd.buf[i,spike_num].id-1
-                han.buf_count+=1
-                han.buf_ind+=1
-                if han.buf_count>500
-                    han.buf_count=500
-                end
-                if han.buf_ind>500
-                    han.buf_ind=1
-                end
-            end
-
-            update_isi(rhd,han,i)
-        end
-    end
-
-    identity_matrix(ctx)
-
-    set_source(han.ctx2s,ctx)
-    mask_surface(han.ctx2s,ctx,0.0,0.0)
-    fill(han.ctx2s)
-
-    set_source(han.ctx2,ctx)
-    mask_surface(han.ctx2,ctx,0.0,0.0)
-    fill(han.ctx2)
-    
-    #set_source(han.ctx2,han.ctx2s)
-    #paint(han.ctx2)
-    
-    nothing
-end
-
-function mask_surface(ctx,s,x,y)
-    ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
-end
-
 function update_isi(rhd::RHD2000,han::Gui_Handles,i)
 
     spike_num=han.spike
@@ -492,51 +415,6 @@ function clear_c3(c3,num)
     nothing
 end
 
-#Replots spikes assigned to specified cluster 
-function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
-
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
-
-    set_line_width(ctx,2.0)
-    set_source(ctx,han.ctx2s)
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
-
-    #Plot Noise
-    @inbounds for i=1:han.buf_ind
-
-        if han.buf_clus[i]==-1
-            move_to(ctx,1,(han.spike_buf[1,i]-o))
-            for j=2:size(han.spike_buf,1)
-                line_to(ctx,j,han.spike_buf[j,i]-o)
-            end
-            han.buf_clus[i]=0
-        end
-    end
-    stroke(ctx)
-
-    #Plot New color
-    select_color(ctx,clus+1)
-    
-    @inbounds for i=1:han.buf_ind
-
-        if han.buf_clus[i]==clus
-            move_to(ctx,1,(han.spike_buf[1,i]-o))
-            for j=2:size(han.spike_buf,1)
-                line_to(ctx,j,han.spike_buf[j,i]-o)
-            end
-        end
-    end
-    set_line_width(ctx,0.5);
-    stroke(ctx)
-
-    identity_matrix(ctx)
-    reveal(han.c2)
-
-    nothing
-end
-
 function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
     ctx=Cairo.getgc(han.c3)
@@ -600,36 +478,3 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-function replot_spikes(han::Gui_Handles)
-
-    clear_c2(han.c2,han.spike)
-    han.ctx2=getgc(han.c2)
-    han.ctx2s=copy(han.ctx2)
-
-    ctx=han.ctx2s
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
-
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
-
-    for i=1:(han.total_clus[han.spike]+1)
-        for j=1:han.buf_ind
-            if (han.buf_clus[j]==(i-1))&(han.buf_mask[j])
-                move_to(ctx,1,(han.spike_buf[1,j]-o))
-                for jj=2:size(han.spike_buf,1)
-                    line_to(ctx,jj,han.spike_buf[jj,j]-o)
-                end
-            end
-        end
-        set_line_width(ctx,0.5)
-        select_color(ctx,i)
-        stroke(ctx)
-    end
-    identity_matrix(ctx)
-    set_source(han.ctx2,ctx)
-    mask_surface(han.ctx2,ctx,0.0,0.0)
-    fill(han.ctx2)
-    reveal(han.c2)
-    nothing
-end
