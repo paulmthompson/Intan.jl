@@ -265,6 +265,9 @@ type Band_Widgets
     re_b::Gtk.GtkButtonLeaf
     sw_check::Gtk.GtkCheckButtonLeaf
 
+    wn_sb1_l::Gtk.GtkLabelLeaf
+    wn_sb2_l::Gtk.GtkLabelLeaf
+
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf
 end

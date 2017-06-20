@@ -38,6 +38,37 @@ end
 Callbacks
 =#
 
+function filter_type_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    filter_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+
+    if filter_type == "High Pass"
+        Gtk.visible(han.band_widgets.wn_sb1,true)
+        Gtk.visible(han.band_widgets.wn_sb2,false)
+        setproperty!(han.band_widgets.wn_sb1_l,:label,"High Pass Cutoff")
+        setproperty!(han.band_widgets.wn_sb2_l,:label,"")
+    elseif filter_type == "Low Pass"
+        Gtk.visible(han.band_widgets.wn_sb1,true)
+        Gtk.visible(han.band_widgets.wn_sb2,false)
+        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Pass Cutoff")
+        setproperty!(han.band_widgets.wn_sb2_l,:label,"")
+    elseif filter_type == "BandPass"
+        Gtk.visible(han.band_widgets.wn_sb1,true)
+        Gtk.visible(han.band_widgets.wn_sb2,true)
+        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
+        setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
+    elseif filter_type == "BandStop"
+        Gtk.visible(han.band_widgets.wn_sb1,true)
+        Gtk.visible(han.band_widgets.wn_sb2,true)
+        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
+        setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
+    end
+    
+    nothing
+end
+
 function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     #Create Filter

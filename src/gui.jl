@@ -483,12 +483,14 @@ band_sw_grid[1,1]=filter_combo
 band_sw_sb1=SpinButton(0:10000)
 setproperty!(band_sw_sb1,:value,10)
 band_sw_grid[1,2]=band_sw_sb1
-band_sw_grid[2,2]=Label("Cutoff Freq 1")
+band_sw_sb1_l=Label("Cutoff Freq 1")
+band_sw_grid[2,2]=band_sw_sb1_l
 
 band_sw_sb2=SpinButton(0:10000)
 setproperty!(band_sw_sb2,:value,10)
 band_sw_grid[1,3]=band_sw_sb2
-band_sw_grid[2,3]=Label("Cutoff Freq 2")
+band_sw_sb2_l=Label("Cutoff Freq 2")
+band_sw_grid[2,3]=band_sw_sb2_l
 
 band_sw_sb3=SpinButton(1:size(r.v,2))
 setproperty!(band_sw_sb3,:value,1)
@@ -657,7 +659,7 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb_offset,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
-band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,filt_tv,filt_list)
+band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 
 sleep(1.0)
@@ -703,7 +705,9 @@ id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEv
 
 id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
 
-    id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
+id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
+
+id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
 
     id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
 id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
