@@ -1326,79 +1326,81 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 
     filepath=open_dialog("Select Backup File",han.win)
 
-    filepath=filepath[1:(end-10)]
-    println(filepath)
-    #Enabled
+    if filepath != ""
 
-    f=open(string(filepath,"enabled.bin"),"r")
+        filepath=filepath[1:(end-10)]
+        println(filepath)
+        #Enabled
 
-    seekend(f)
-    chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
+        f=open(string(filepath,"enabled.bin"),"r")
 
-    seekstart(f)
-    for i=1:(chan_num)
-       han.enabled[i]=read(f,UInt8)
-    end
-
-    close(f)
-
-    #Reference
-    if isfile(string(filepath,"ref.bin"))
-        f=open(string(filepath,"ref.bin"),"r")
+        seekend(f)
+        chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
+        
+        seekstart(f)
         for i=1:(chan_num)
-            rhd.refs[i]=read(f,Int64)
+            han.enabled[i]=read(f,UInt8)
         end
+        
         close(f)
-    end
-    
-    #Gain
-    for i=1:chan_num
-        if isfile(string(filepath,"gain/",i,".bin"))
-            f=open(string(filepath,"gain/",i,".bin"),"r")
-            han.scale[i,1]=read(f,Float64)
-            han.scale[i,2]=han.scale[i,1]*.2
+        
+        #Reference
+        if isfile(string(filepath,"ref.bin"))
+            f=open(string(filepath,"ref.bin"),"r")
+            for i=1:(chan_num)
+                rhd.refs[i]=read(f,Int64)
+            end
             close(f)
         end
-    end
-
-    #Thres
-    for i=1:chan_num
-        if isfile(string(filepath,"thres/",i,".bin"))
-            f=open(string(filepath,"thres/",i,".bin"),"r")
-            s[i].thres=read(f,Float64)
-            close(f)
+        
+        #Gain
+        for i=1:chan_num
+            if isfile(string(filepath,"gain/",i,".bin"))
+                f=open(string(filepath,"gain/",i,".bin"),"r")
+                han.scale[i,1]=read(f,Float64)
+                han.scale[i,2]=han.scale[i,1]*.2
+                close(f)
+            end
         end
-    end
-    
-    for i=1:chan_num
-        if isfile(string(filepath,"cluster/",i,".bin"))
-            f=open(string(filepath,"cluster/",i,".bin"),"r")
-            for j=1:length(han.temp.templates)
-                s[i].c.templates[j]=read(f,Float64)
+        
+        #Thres
+        for i=1:chan_num
+            if isfile(string(filepath,"thres/",i,".bin"))
+                f=open(string(filepath,"thres/",i,".bin"),"r")
+                s[i].thres=read(f,Float64)
+                close(f)
             end
-            for j=1:length(han.temp.sig_min)
-                s[i].c.sig_min[j]=read(f,Float64)
-            end
-            for j=1:length(han.temp.sig_max)
-                s[i].c.sig_max[j]=read(f,Float64)
-            end
-            s[i].c.misses=read(f,Int64)
-            s[i].c.num=read(f,Int64)
-            for j=1:length(han.temp.tol)
-                s[i].c.tol[j]=read(f,Float64)
-            end
-            han.total_clus[i]=s[i].c.num
-            close(f)
         end
+        
+        for i=1:chan_num
+            if isfile(string(filepath,"cluster/",i,".bin"))
+                f=open(string(filepath,"cluster/",i,".bin"),"r")
+                for j=1:length(han.temp.templates)
+                    s[i].c.templates[j]=read(f,Float64)
+                end
+                for j=1:length(han.temp.sig_min)
+                    s[i].c.sig_min[j]=read(f,Float64)
+                end
+                for j=1:length(han.temp.sig_max)
+                    s[i].c.sig_max[j]=read(f,Float64)
+                end
+                s[i].c.misses=read(f,Int64)
+                s[i].c.num=read(f,Int64)
+                for j=1:length(han.temp.tol)
+                    s[i].c.tol[j]=read(f,Float64)
+                end
+                han.total_clus[i]=s[i].c.num
+                close(f)
+            end
+        end
+        
+        get_thres(han,s)
+        get_cluster(han,s)
+        update_treeview(han)
+        select_unit(han)
+        draw_templates(han)
+        update_ref(rhd,han)
     end
-
-    get_thres(han,s)
-    get_cluster(han,s)
-    update_treeview(han)
-    select_unit(han)
-    draw_templates(han)
-    update_ref(rhd,han)
-
     nothing
 end
 
