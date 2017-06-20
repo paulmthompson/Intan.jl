@@ -33,7 +33,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         end
     elseif event.button==3
         if han.pause
-            generate_mask(han,x1,y1,x2,y2)
+            generate_mask(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
 
             if clus>0
                 #Regen template with spikes in currently selected cluster

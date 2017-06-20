@@ -2436,16 +2436,16 @@ function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Fl
     (x1,x2,y1,y2)
 end
 
-function generate_mask(han::Gui_Handles,x1,y1,x2,y2)
+function generate_mask{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
 
     #Bounds check
     x1 = x1 < 2 ? 2 : x1
-    x2 = x2 > size(han.spike_buf,2)-2 ? size(han.spike_buf,2)-2 : x2 
+    x2 = x2 > size(input,2)-2 ? size(input,2)-2 : x2 
     
-    for i=1:han.buf_count
+    for i=1:count
         for j=(x1-1):(x2+1)
-            if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,han.spike_buf[j,i],han.spike_buf[j+1,i])
-                han.buf_mask[i]=false
+            if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i])
+                mask[i]=false
             end
         end
     end
