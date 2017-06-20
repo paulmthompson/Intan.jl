@@ -1530,40 +1530,6 @@ function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
     nothing
 end
 
-
-
-function band_adj_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-    han, rhd = user_data
-
-    visible(han.band_widgets.win,true)
-end
-
-function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
-
-    han, myic = user_data
-
-    lower=getproperty(han.band_widgets.sb1,:value,Int64)
-    upper=getproperty(han.band_widgets.sb2,:value,Int64)
-    dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
-
-    change_bandwidth(myic,lower,upper,dsp_lower)
-    
-    nothing
-end
-
-function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,DArray{I,1,Array{I,1}}})
-
-    han, myic = user_data
-
-    lower=getproperty(han.band_widgets.sb1,:value,Int64)
-    upper=getproperty(han.band_widgets.sb2,:value,Int64)
-    dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
-
-    change_bandwidth(myic,lower,upper,dsp_lower)
-    
-    nothing
-end                    
-
 change_bandwidth(fpgas::Array{FPGA,1},lower,upper,dsp_lower)=change_bandwidth_fpga(fpgas,lower,upper,dsp_lower)
 
 change_bandwidth(fpgas::DArray{FPGA,1,Array{FPGA,1}},lower,upper,dsp_lower)=change_bandwidth_fpga(fpgas,lower,upper,dsp_lower)
@@ -1918,60 +1884,4 @@ function get_template_dims(han::Gui_Handles,clus)
     xbounds=linspace(0.0,mywidth,total_clus+1)
 
     (xbounds[clus],xbounds[clus+1],0.0,130.0)
-end
-
-function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    #Create Filter
-    han,rhd = user_data
-    
-    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
-
-    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
-
-    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
-    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
-
-    if (getproperty(han.band_widgets.sw_check,:active,Bool))
-        for i=1:size(rhd.v,2)
-            myfilt=make_filter(rhd,filt_type,wn1,wn2)
-            push!(rhd.filts,Intan_Filter(i,myfilt))
-            push!(han.band_widgets.list,(i,filt_type,wn1,wn2))
-        end
-    else
-        #add new filter
-        myfilt=make_filter(rhd,filt_type,wn1,wn2)
-        push!(rhd.filts,Intan_Filter(chan_num,myfilt))
-        push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
-    end
-
-    nothing
-end
-
-function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han,rhd = user_data
-
-    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
-
-    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
-
-    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
-    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
-
-    for i=0:(length(han.band_widgets.list)-1)
-        if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
-            #Replace Table values
-            setindex!(han.band_widgets.list,filt_type,i+1,2)
-            setindex!(han.band_widgets.list,wn1,i+1,3)
-            setindex!(han.band_widgets.list,wn2,i+1,4)
-
-            #Replace actual filter
-            myfilt=make_filter(rhd,filt_type,wn1,wn2)
-            rhd.filts[i+1]=Intan_Filter(rhd.filts[i+1].chan,myfilt)
-        end
-    end
-
-    
-    nothing
 end
