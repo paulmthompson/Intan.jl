@@ -174,6 +174,7 @@ In the main single channel, we need to be able to plot under multiple conditions
 
 -Replot all spikes in paused display
 --After right-click rubber band to mask waveform
+--After left-click rubber band creates new cluster
 
 -Incrementally plot spikes while rubber band is in use
 --Should plot spikes that were just selected in selected color
@@ -263,6 +264,10 @@ After rubberband is released and new template is created, replot all waveforms i
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     clear_c2(han.c2,han.spike)
+    han.ctx2=getgc(han.c2)
+    han.ctx2s=copy(han.ctx2)
+
+    ctx=han.ctx2s
     
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
@@ -293,6 +298,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     end
 
     identity_matrix(ctx)
+    set_source(han.ctx2,ctx)
+    mask_surface(han.ctx2,ctx,0.0,0.0)
+    fill(han.ctx2)
     reveal(han.c2)
 
     nothing
