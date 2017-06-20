@@ -274,20 +274,22 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     for jj=-1:han.clus[han.spike]
 
         for i=1:han.buf_ind
+            if han.buf_clus[i]==-1
+                han.buf_clus[i]=0
+            end
             if (han.buf_clus[i]==jj)&(han.buf_mask[i])
                 move_to(ctx,1,(han.spike_buf[1,i]-o))
                 for j=2:size(han.spike_buf,1)
                     line_to(ctx,j,han.spike_buf[j,i]-o)
                 end
             end
-            if han.buf_clus[i]==-1
-                han.buf_clus[i]=0
-            end
         end
 
-        mycolor = (jj < 1) ? 1 : jj+1
-        select_color(ctx,mycolor)
-        stroke(ctx)
+        if jj>-1
+            mycolor = (jj < 1) ? 1 : jj+1
+            select_color(ctx,mycolor)
+            stroke(ctx)
+        end
     end
 
     identity_matrix(ctx)
