@@ -24,3 +24,15 @@ GtkRadioMenuItem(label::String) = GtkRadioMenuItem(ccall((:gtk_radio_menu_item_n
 GtkRadioMenuItem(group::GtkRadioMenuItem,title::String) = GtkRadioMenuItem(ccall((:gtk_radio_menu_item_new_with_label_from_widget,Gtk.libgtk),Ptr{GObject},(Ptr{GObject},Ptr{UInt8}),group,string(title)))
 
 set_active!(group::GtkRadioMenuItem) = ccall((:gtk_check_menu_item_set_active,Gtk.libgtk),Void,(Ptr{GObject},Bool),group,true)
+
+function add_button_label(button,mylabel)
+    b_label=Label(mylabel)
+    Gtk.GAccessor.markup(b_label, string("""<span size="x-small">""",mylabel,"</span>"))
+    push!(button,b_label)
+    show(b_label)
+end
+
+function change_button_label(button,mylabel)
+    hi=Gtk.GAccessor.child(button)
+    Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
+end
