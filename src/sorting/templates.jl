@@ -16,12 +16,12 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         if (clus==0) #do nothing if zeroth cluster    
         elseif (han.temp.num < clus) #new cluster
 
-            (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
             add_new_cluster(han.temp,mymean,mystd)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
         else #replace old cluster
-            (mymean,mystd)=make_cluster(han,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
             change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
@@ -324,10 +324,9 @@ function delete_cluster(c::ClusterTemplate,n::Int64)
     nothing
 end
 
-function make_cluster(han::Gui_Handles,x1,y1,x2,y2)
+function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
     
     hits=0
-    input=han.spike_buf
     mymean=zeros(Float64,size(input,1)-1)
     mysum=zeros(Int64,size(input,1)-1)
     mystd=zeros(Float64,size(input,1)-1)
@@ -340,9 +339,9 @@ function make_cluster(han::Gui_Handles,x1,y1,x2,y2)
         x2=size(input,1)-3
     end
     
-    for i=1:han.buf_count
+    for i=1:count
         for j=(x1-1):(x2+1)
-            if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))&(han.buf_mask[i])
+            if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))&(mask[i])
                 hits+=1
                 for ii=1:length(mymean)
                     mysum[ii] += input[ii,i]

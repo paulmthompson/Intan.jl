@@ -2446,6 +2446,7 @@ function generate_mask{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
         for j=(x1-1):(x2+1)
             if SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i])
                 mask[i]=false
+                break
             end
         end
     end
