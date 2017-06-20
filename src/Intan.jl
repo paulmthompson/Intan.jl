@@ -12,6 +12,7 @@ typealias MyFilter DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float6
 include("types.jl")
 include("constants.jl")
 include("gtk_helpers.jl")
+include("single_channel_canvas.jl")
 include("rhd2000evalboard.jl")
 include("rhd2000registers.jl")
 include("gui.jl")
