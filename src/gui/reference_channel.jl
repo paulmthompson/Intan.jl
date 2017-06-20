@@ -21,6 +21,14 @@ end
 Callbacks for reference channel selection
 =#
 
+function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    visible(han.ref_win,true)
+    nothing
+end
+
 function ref_b1_cb(widget::Ptr, user_data::Tuple{Gui_Handles})
 
     han, = user_data

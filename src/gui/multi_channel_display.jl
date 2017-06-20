@@ -1,8 +1,4 @@
 
-
-
-
-
 #=
 Enable or display display for particular channel in multi-channel display
 =#
@@ -133,6 +129,38 @@ function find_max_id(rhd::RHD2000,han::Gui_Handles,k,num)
         end
     end
     maxid
+end
+
+#=
+Highlight selected channel
+=#
+
+function highlight_channel(han::Gui_Handles,old_spike)
+
+    ctx = getgc(han.c)
+    
+    if han.c_right_top==1
+
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,4,4,16,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,4,4,16,han.num)
+        
+    elseif han.c_right_top==2
+
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,6,32,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,6,32,han.num)
+        
+    elseif han.c_right_top==3
+        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,11,64,old_spike)
+        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
+    end
+
+    if han.c_right_top<4
+        draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
+        draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
+        draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
+    end
+
+    nothing
 end
 
 #=

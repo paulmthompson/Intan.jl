@@ -819,34 +819,6 @@ resize!(handles.win,1200,800)
 handles  
 end
 
-function table_col_cb(widget::Ptr, path,new_text,user_data::Tuple{Gui_Handles,RHD2000,Int64})
-
-    han,rhd,col = user_data
-
-    selmodel = Gtk.GAccessor.selection(han.table_widgets.tv)
-
-    iter=Gtk.selected(selmodel)
-
-    num=parse(Int64,unsafe_string(new_text))
-
-    setindex!(han.table_widgets.list,num,iter,col)
-
-    nothing
-end
-
-function table_en_cb(widget::Ptr,path,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han,rhd = user_data
-
-    num=parse(Int64,unsafe_string(path))+1
-
-    val=getindex(han.table_widgets.list,num,5)
-
-    setindex!(han.table_widgets.list,!val,num,5)
-    
-    nothing
-end
-
 #Drawing
 function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})
     
@@ -1141,34 +1113,6 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
         draw_templates(han)
     end
     
-    nothing
-end
-
-function highlight_channel(han::Gui_Handles,old_spike)
-
-    ctx = getgc(han.c)
-    
-    if han.c_right_top==1
-
-        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,4,4,16,old_spike)
-        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,4,4,16,han.num)
-        
-    elseif han.c_right_top==2
-
-        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,6,32,old_spike)
-        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,6,32,han.num)
-        
-    elseif han.c_right_top==3
-        (x1_i,x2_i,y1_i,y2_i)=get_multi_dims(han,6,11,64,old_spike)
-        (x1_f,x2_f,y1_f,y2_f)=get_multi_dims(han,6,11,64,han.num)
-    end
-
-    if han.c_right_top<4
-        draw_box(x1_i,y1_i,x2_i,y2_i,(0.0,0.0,0.0),2.0,ctx)
-        draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
-        draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
-    end
-
     nothing
 end
 
@@ -1586,30 +1530,7 @@ function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
     nothing
 end
 
-function ref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, rhd = user_data
-
-    visible(han.ref_win,true)
-    nothing
-end
-
-function table_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    for i=1:size(rhd.v,2)
-
-        setindex!(han.table_widgets.list,round(Int64,han.scale[i,1]*-1000),i,2)
-        setindex!(han.table_widgets.list,han.thres,i,3)
-        setindex!(han.table_widgets.list,rhd.refs[i],i,4)
-        setindex!(han.table_widgets.list,han.enabled[i],i,5)
-
-    end
-
-    visible(han.table_widgets.win,true)
-    nothing
-end
 
 function band_adj_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han, rhd = user_data
