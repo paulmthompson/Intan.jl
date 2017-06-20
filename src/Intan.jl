@@ -22,7 +22,11 @@ include("gui/multi_channel_display.jl")
 include("gui/reference_channel.jl")
 include("gui/parameter_table.jl")
 include("gui/filters.jl")
+include("gui/thresholds.jl")
+
+#functions needed for evaluation board from Intan
 include("ICs/Opal_Kelly_FPGA/opalkelly_gui.jl")
+
 include("rhd2000evalboard.jl")
 include("rhd2000registers.jl")
 include("gui.jl")
