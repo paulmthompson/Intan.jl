@@ -262,41 +262,33 @@ After rubberband is released and new template is created, replot all waveforms i
 =#
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
+    clear_c2(han.c2,han.spike)
+    
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
 
-    set_line_width(ctx,2.0)
-    set_source(ctx,han.ctx2s)
+    set_line_width(ctx,0.5)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
 
-    #Plot Noise
-    @inbounds for i=1:han.buf_ind
+    for jj=-1:han.clus[han.spike]
 
-        if han.buf_clus[i]==-1
-            move_to(ctx,1,(han.spike_buf[1,i]-o))
-            for j=2:size(han.spike_buf,1)
-                line_to(ctx,j,han.spike_buf[j,i]-o)
+        for i=1:han.buf_ind
+            if (han.buf_clus[i]==jj)&(han.buf_mask[i])
+                move_to(ctx,1,(han.spike_buf[1,i]-o))
+                for j=2:size(han.spike_buf,1)
+                    line_to(ctx,j,han.spike_buf[j,i]-o)
+                end
             end
-            han.buf_clus[i]=0
-        end
-    end
-    stroke(ctx)
-
-    #Plot New color
-    select_color(ctx,clus+1)
-    
-    @inbounds for i=1:han.buf_ind
-
-        if han.buf_clus[i]==clus
-            move_to(ctx,1,(han.spike_buf[1,i]-o))
-            for j=2:size(han.spike_buf,1)
-                line_to(ctx,j,han.spike_buf[j,i]-o)
+            if han.buf_clus[i]==-1
+                han.buf_clus[i]=0
             end
         end
+
+        mycolor = (jj < 1) ? 1 : jj+1
+        select_color(ctx,mycolor)
+        stroke(ctx)
     end
-    set_line_width(ctx,0.5);
-    stroke(ctx)
 
     identity_matrix(ctx)
     reveal(han.c2)
