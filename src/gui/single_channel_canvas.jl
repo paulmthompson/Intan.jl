@@ -166,9 +166,24 @@ function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 end
 
 #=
-Plotting Methods
+PLOTTING METHODS
+
+In the main single channel, we need to be able to plot under multiple conditions
+
+-Online plotting of new spikes
+
+-Replot all spikes in paused display
+--After right-click rubber band to mask waveform
+
+-Incrementally plot spikes while rubber band is in use
+--Should plot spikes that were just selected in selected color
+--Should restore spikes that are no longer selected in previous color
+
 =#
 
+#=
+Online plotting of new spikes in non-paused display
+=#
 function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     spike_num=han.spike
@@ -242,7 +257,9 @@ function mask_surface(ctx,s,x,y)
     ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
 end
 
-#Replots spikes assigned to specified cluster 
+#=
+After rubberband is released and new template is created, replot all waveforms in paused display
+=#
 function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
 
     s=han.scale[han.spike,1]
@@ -287,6 +304,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     nothing
 end
 
+#=
+Redraw all spikes shown in paused view
+=#
 function replot_spikes(han::Gui_Handles)
 
     clear_c2(han.c2,han.spike)
@@ -321,7 +341,9 @@ function replot_spikes(han::Gui_Handles)
     nothing
 end
 
-
+#=
+Plot waveforms in new color that intersect rubberband
+=#
 function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
     ctx=han.ctx2
@@ -364,6 +386,9 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
     identity_matrix(ctx)
     nothing
 end
+
+
+
 
 #=
 Callback for how mouse interacts with canvas

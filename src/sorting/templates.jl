@@ -154,6 +154,10 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
         
         Gtk.GAccessor.active(han.pause_button,true)
         change_button_label(mybutton,"Collect Templates")
+
+        if han.buf_count==size(han.spike_buf,2)
+            han.buf_ind=han.buf_count
+        end
     end
     
     nothing
