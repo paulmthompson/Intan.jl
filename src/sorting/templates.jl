@@ -25,12 +25,16 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         if (clus==0) #do nothing if zeroth cluster    
         elseif (han.temp.num < clus) #new cluster
 
-            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
+            intersections=trues(han.buf_ind)
+            find_intersected_waveforms(han.spike_buf,intersections,han.buf_ind,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,!intersections)
             add_new_cluster(han.temp,mymean,mystd)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
         else #replace old cluster
-            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
+            intersections=trues(han.buf_ind)
+            find_intersected_waveforms(han.spike_buf,intersections,han.buf_ind,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,!intersections)
             change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
@@ -46,7 +50,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
             if clus>0
                 #Regen template with spikes in currently selected cluster
-                (mymean,mystd) = regen_template(han,clus)
+                (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,han.buf_clus.==clus)
 
                 change_cluster(han.temp,mymean,mystd,clus)
                 setproperty!(han.adj_sort, :value, 1.0)
@@ -60,49 +64,6 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     end
     
     nothing
-end
-
-function regen_template(han,clus)
-
-    mymean=zeros(Float64,size(han.spike_buf,1)-1)
-    mysum=zeros(Int64,size(han.spike_buf,1)-1)
-    mybounds=zeros(Float64,size(han.spike_buf,1)-1,2)
-
-    hits=0
-    
-    for i=1:han.buf_count
-
-        if (han.buf_mask[i])&&(han.buf_clus[i]==clus)
-            hits += 1
-            for ii=1:length(mymean)
-                mysum[ii] += han.spike_buf[ii,i]
-
-                if hits==1
-                    mybounds[ii,1]=han.spike_buf[ii,i]
-                    mybounds[ii,2]=han.spike_buf[ii,i]
-                else
-                    if han.spike_buf[ii,i]>mybounds[ii,1]
-                        mybounds[ii,1]=han.spike_buf[ii,i]
-                    end
-                    if han.spike_buf[ii,i]<mybounds[ii,2]
-                        mybounds[ii,2]=han.spike_buf[ii,i]
-                    end
-                end
-            end
-        end
-    end
-
-    if hits==0
-        hits=1
-    end
-    
-    for i=1:length(mymean)
-        mymean[i] = mysum[i]/hits
-        mybounds[i,2] = abs(mymean[i]-mybounds[i,2])
-        mybounds[i,1] = abs(mybounds[i,1] - mymean[i])
-    end
-
-    (mymean,mybounds)
 end
 
 #Delete clusters
@@ -343,40 +304,29 @@ function delete_cluster(c::ClusterTemplate,n::Int64)
     nothing
 end
 
-function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
+function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2,condition)
     
     hits=0
     mymean=zeros(Float64,size(input,1)-1)
     mysum=zeros(Int64,size(input,1)-1)
-    mystd=zeros(Float64,size(input,1)-1)
     mybounds=zeros(Float64,size(input,1)-1,2)
 
-    if x1<3
-        x1=2
-    end
-    if x2>(size(input,1)-3)
-        x2=size(input,1)-3
-    end
-    
     for i=1:count
-        for j=(x1-1):(x2+1)
-            if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))&(mask[i])
-                hits+=1
-                for ii=1:length(mymean)
-                    mysum[ii] += input[ii,i]
-                    if hits==1
+        if (condition[i])&&(mask[i])
+            hits+=1
+            for ii=1:length(mymean)
+                mysum[ii] += input[ii,i]
+                if hits==1
+                    mybounds[ii,1]=input[ii,i]
+                    mybounds[ii,2]=input[ii,i]
+                else
+                    if input[ii,i]>mybounds[ii,1]
                         mybounds[ii,1]=input[ii,i]
+                    end
+                    if input[ii,i]<mybounds[ii,2]
                         mybounds[ii,2]=input[ii,i]
-                    else
-                        if input[ii,i]>mybounds[ii,1]
-                            mybounds[ii,1]=input[ii,i]
-                        end
-                        if input[ii,i]<mybounds[ii,2]
-                            mybounds[ii,2]=input[ii,i]
-                        end
                     end
                 end
-                break
             end
         end
     end

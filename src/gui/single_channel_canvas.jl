@@ -138,7 +138,7 @@ function find_intersected_waveforms{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
 end
 
 #=
-Find waveforms 
+Find which of the intersected waveforms are in a different cluster and if that difference has already been plotted
 =#
 function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
