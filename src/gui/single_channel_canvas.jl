@@ -117,9 +117,9 @@ function clear_rb(han::Gui_Handles)
 end
 
 #=
-Find waveforms selected by rubberband and assign to mask
+Find waveforms that cross line defined by (x1,y1),(x2,y2)
 =#
-function generate_mask{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
+function find_intersected_waveforms{T}(input::Array{T,2},mask,count,x1,y1,x2,y2)
 
     #Bounds check
     x1 = x1 < 2 ? 2 : x1
@@ -144,30 +144,20 @@ function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
     (x1,x2,y1,y2)=coordinate_transform(han,han.rb.pos0.x,han.rb.pos0.y,han.rb.pos2.x,han.rb.pos2.y)
 
-    if x1<3
-        x1=2
-    end
-    if x2>(size(input,1)-3)
-        x2=size(input,1)-3
-    end
-    
-    for i=1:han.buf_count
-        intersected=false
+    intersection = trues(han.buf_ind)
+    find_intersected_waveforms(han.spike_buf,intersection,han.buf_ind,x1,y1,x2,y2)
+
+    for i=1:han.buf_ind
         if han.buf_mask[i]
-            for j=(x1-1):(x2+1)
-                if (SpikeSorting.intersect(x1,x2,j,j+1,y1,y2,input[j,i],input[j+1,i]))
-                    intersected=true
-                    han.selected[i]=true
-                    break
-                end
+            if !intersection[i]
+                han.selected[i]=true
             end
-            if (han.plotted[i])&(!intersected)
+            if (han.plotted[i])&(intersection[i])
                 han.selected[i]=false
-                break
             end
         end
     end
-    
+
     nothing
 end
 

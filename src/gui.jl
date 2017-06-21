@@ -206,8 +206,8 @@ function makegui(r::RHD2000,s,task,fpga)
     hbox_time=ButtonBox(:h)
     push!(frame_time,hbox_time)
 
-push!(hbox_time,h_label)
-    push!(hbox_time,mh_label)
+    push!(hbox_time,h_label)
+push!(hbox_time,mh_label)
 push!(hbox_time,m_label)
     push!(hbox_time,sm_label)
     push!(hbox_time,s_label)
@@ -782,6 +782,7 @@ Threshold callbacks
 
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
 id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
+
 
 #=
 Pause and Clear Callbacks
