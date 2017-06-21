@@ -92,7 +92,13 @@ function draw_rb(han::Gui_Handles)
         #Find selected waveforms and plot
         if (han.clus>0)&((han.buf_count>0)&(han.pause))
             get_selected_waveforms(han,han.spike_buf)
-            plot_selected_waveforms(han,han.spike_buf)
+            mycolor=1
+            if han.click_button==1
+                mycolor=han.clus+1
+            elseif han.click_button==3
+                mycolor=1
+            end
+            plot_selected_waveforms(han,han.spike_buf,mycolor)
         end
         han.rb.pos1=han.rb.pos2 
     end
@@ -195,7 +201,6 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     o=han.offset[han.spike]
     reads=han.draws
 
-    #ctx=han.ctx2s
     ctx=copy(han.ctx2s)
     paint_with_alpha(ctx,0.0)
 
@@ -251,55 +256,11 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     mask_surface(han.ctx2,ctx,0.0,0.0)
     fill(han.ctx2)
     
-    #set_source(han.ctx2,han.ctx2s)
-    #paint(han.ctx2)
-    
     nothing
 end
 
 function mask_surface(ctx,s,x,y)
     ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
-end
-
-#=
-After rubberband is released and new template is created, replot all waveforms in paused display
-=#
-function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
-
-    clear_c2(han.c2,han.spike)
-    han.ctx2=getgc(han.c2)
-    han.ctx2s=copy(han.ctx2)
-
-    ctx=han.ctx2s
-    
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
-
-    set_line_width(ctx,0.5)
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
-
-    for jj=0:han.clus[han.spike]
-
-        for i=1:han.buf_ind
-            if (han.buf_clus[i]==jj)&(han.buf_mask[i])
-                move_to(ctx,1,(han.spike_buf[1,i]-o))
-                for j=2:size(han.spike_buf,1)
-                    line_to(ctx,j,han.spike_buf[j,i]-o)
-                end
-            end
-        end
-        select_color(ctx,jj+1)
-        stroke(ctx)
-    end
-
-    identity_matrix(ctx)
-    set_source(han.ctx2,ctx)
-    mask_surface(han.ctx2,ctx,0.0,0.0)
-    fill(han.ctx2)
-    reveal(han.c2)
-
-    nothing
 end
 
 #=
@@ -340,9 +301,13 @@ function replot_all_spikes(han::Gui_Handles)
 end
 
 #=
-Plot waveforms in new color that intersect rubberband
+Plot waveforms in incremental way
+-Rubberband
+
+Selected - true if waveform is captured by incremental capture
+Plotted - true if waveform has been replotted in new color since start of incremental capture
 =#
-function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
+function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},mycolor)
 
     ctx=han.ctx2
     s=han.scale[han.spike,1]
@@ -352,7 +317,11 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
     set_source(ctx,han.ctx2s)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
-    
+
+    #=
+    Reset waveforms that have changed since the start but are
+    no longer selected
+    =#
     for j=1:han.buf_count
         if (!han.selected[j])&(han.plotted[j])
             move_to(ctx,1,(input[1,j]-o))
@@ -364,6 +333,10 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
     end
     stroke(ctx)
 
+    #=
+    Plot selected waveforms in new color that have not 
+    yet been plotting in new color
+    =#
     for i=1:han.buf_count
         if (han.selected[i])&(!han.plotted[i])
             move_to(ctx,1,(input[1,i]-o))
@@ -374,18 +347,12 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
         end
     end
     set_line_width(ctx,0.5)
-    if han.click_button==1
-        select_color(ctx,han.clus+1)
-    elseif han.click_button==3
-        select_color(ctx,1)
-    end
+    select_color(ctx,mycolor)
     stroke(ctx)
 
     identity_matrix(ctx)
     nothing
 end
-
-
 
 
 #=

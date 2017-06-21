@@ -655,7 +655,7 @@ for i=1:500
     scope_mat[i,3]=750.0
 end
 
-sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1)
+sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1,false)
 thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,sb_offset,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
@@ -707,7 +707,7 @@ Sort Slider Callbacks
 
 id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
 #id = signal_connect(slider_click_template,slider_sort, "drag-begin",Void,(Ptr{Void},),false,(handles,))
-#id = signal_connect(slider_release_template,slider_sort,"drag-end",Void,(Ptr{Void},),false,(handles,))
+id = signal_connect(slider_release_template,slider_sort,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 
 
 

@@ -2,6 +2,15 @@
 Template Matching Spike Sorting
 =#
 
+function slider_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    han.sort_widgets.slider_active = false
+    
+    nothing
+end
+
 function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
     han, = user_data
@@ -260,6 +269,10 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
     
     han, = user_data
 
+    if !han.sort_widgets.slider_active
+        han.sort_widgets.slider_active = true      
+    end
+
     myval=getproperty(han.adj_sort, :value, Float64) # primary display
 
     clus=han.clus
@@ -270,7 +283,9 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
 
         if ((han.buf_count>0)&(han.pause))
             template_cluster(han,clus,han.temp.templates[:,clus],han.temp.sig_min[:,clus],han.temp.sig_max[:,clus],han.temp.tol[clus])
-            plot_new_color(han.ctx2,han,clus)
+            replot_all_spikes(han)
+
+            #incremental plot 
         end
     end
     han.c_changed=true

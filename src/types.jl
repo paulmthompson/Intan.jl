@@ -273,11 +273,12 @@ type Band_Widgets
 end
 
 type Sort_Widgets
-   b1::Gtk.GtkButtonLeaf
-   b2::Gtk.GtkButtonLeaf
-   b3::Gtk.GtkButtonLeaf
-   b4::Gtk.GtkButtonLeaf
-   check::Gtk.GtkCheckButtonLeaf
+    b1::Gtk.GtkButtonLeaf
+    b2::Gtk.GtkButtonLeaf
+    b3::Gtk.GtkButtonLeaf
+    b4::Gtk.GtkButtonLeaf
+    check::Gtk.GtkCheckButtonLeaf
+    slider_active::Bool
 end
 
 type Thres_Widgets
