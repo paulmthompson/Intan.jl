@@ -701,7 +701,15 @@ id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEv
 
     setproperty!(slider_sort_label,:label,"Tolerance")
 
-    id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
+#=
+Sort Slider Callbacks
+=#
+
+id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
+#id = signal_connect(slider_click_template,slider_sort, "drag-begin",Void,(Ptr{Void},),false,(handles,))
+#id = signal_connect(slider_release_template,slider_sort,"drag-end",Void,(Ptr{Void},),false,(handles,))
+
+
 
 id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
 
@@ -717,7 +725,7 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
     id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
-    #id = signal_connect(sb_cb,sb,"value-changed", Void, (), false, (handles,))
+
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))

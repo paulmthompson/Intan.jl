@@ -29,7 +29,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
         if (clus>0)&((han.buf_count>0)&(han.pause))
             template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
-            plot_new_color(han.ctx2,han,clus)
+            replot_all_spikes(han)
         end
     elseif event.button==3
         if han.pause
@@ -45,7 +45,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
                 han.c_changed=true
             end
 
-            replot_spikes(han)
+            replot_all_spikes(han)
             
         end
     end
@@ -395,7 +395,7 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
         if mymisses<5 #If passes template matching, set as unit
             han.buf_clus[i]=clus
         elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
-            han.buf_clus[i]=-1
+            han.buf_clus[i]=0
         end
     end
 

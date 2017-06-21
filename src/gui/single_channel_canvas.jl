@@ -172,11 +172,14 @@ In the main single channel, we need to be able to plot under multiple conditions
 
 -Online plotting of new spikes
 
--Replot all spikes in paused display
---After right-click rubber band to mask waveform
---After left-click rubber band creates new cluster
+-Replot spikes in paused display
+--Replot all spikes in display
+---After right-click rubber band to mask waveform
+---After left-click rubber band creates new cluster
+--Replot spikes that have changed since last event
+---Using slider to adjust template bounds
 
--Incrementally plot spikes while rubber band is in use
+-Incrementally plot spikes while rubber band is in use in paused display
 --Should plot spikes that were just selected in selected color
 --Should restore spikes that are no longer selected in previous color
 
@@ -276,12 +279,9 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
 
-    for jj=-1:han.clus[han.spike]
+    for jj=0:han.clus[han.spike]
 
         for i=1:han.buf_ind
-            if han.buf_clus[i]==-1
-                han.buf_clus[i]=0
-            end
             if (han.buf_clus[i]==jj)&(han.buf_mask[i])
                 move_to(ctx,1,(han.spike_buf[1,i]-o))
                 for j=2:size(han.spike_buf,1)
@@ -289,12 +289,8 @@ function plot_new_color(ctx::Cairo.CairoContext,han::Gui_Handles,clus::Int64)
                 end
             end
         end
-
-        if jj>-1
-            mycolor = (jj < 1) ? 1 : jj+1
-            select_color(ctx,mycolor)
-            stroke(ctx)
-        end
+        select_color(ctx,jj+1)
+        stroke(ctx)
     end
 
     identity_matrix(ctx)
@@ -309,7 +305,7 @@ end
 #=
 Redraw all spikes shown in paused view
 =#
-function replot_spikes(han::Gui_Handles)
+function replot_all_spikes(han::Gui_Handles)
 
     clear_c2(han.c2,han.spike)
     han.ctx2=getgc(han.c2)
