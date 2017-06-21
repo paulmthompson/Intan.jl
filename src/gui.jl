@@ -681,7 +681,10 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,rand(Int8,r.sr))
 
-id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+#=
+Template Sorting Callbacks
+=#
+
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))
@@ -701,34 +704,53 @@ id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEv
 
     setproperty!(slider_sort_label,:label,"Tolerance")
 
+id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
+id = signal_connect(canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+
+
 #=
-Sort Slider Callbacks
+Window Callbacks
 =#
-
-id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
-#id = signal_connect(slider_click_template,slider_sort, "drag-begin",Void,(Ptr{Void},),false,(handles,))
-id = signal_connect(slider_release_template,slider_sort,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-
-
 
 id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
 
-id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
 
-id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
+#=
+ISI canvas callbacks
+=#
 
-    id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
-id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
-    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
-    id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
+
+
+#=
+Start Button Callbacks
+=#
+
+id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
 
-id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+
+#=
+Slider callbacks
+=#
+
+    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
+id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
+
+
+#=
+Enable/Disable callbacks
+=#
+
+id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
 id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
+
+
+#=
+Save Load Callbacks
+=#
 
 id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
 id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
@@ -736,14 +758,42 @@ id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handle
 id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r,s))
 id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r,s))
 id = signal_connect(load_backup_cb, load_backup_, "activate",Void,(),false,(handles,r,s))
-id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
-id = signal_connect(sb_off_cb, sb_offset, "value-changed",Void,(),false,(handles,r))
+
+
+#=
+Sort Slider Callbacks
+=#
+
+id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
+id = signal_connect(slider_release_template,slider_sort,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+
+
+#=
+Gain Callbacks
+=#
+
+id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
+id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,))
+
+
+#=
+Threshold callbacks
+=#
+
 id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
+id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
+
+#=
+Pause and Clear Callbacks
+=#
+
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
 
-id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
-id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
+
+#=
+Event Viewer Callbacks
+=#
 
 for i=1:8
     id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -755,6 +805,11 @@ end
 
 id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,-1))
 
+
+#=
+Radiobutton Callback
+=#
+
 for i=1:5
     id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,i))
 end
@@ -763,7 +818,20 @@ for i=1:8
     id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,i))
 end
 
-id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
+
+#=
+Filter Callback
+=#
+
+id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
+id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
+id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
+id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
+
+
+#=
+Soft Scope Callbacks
+=#
 
 for i=1:5
     signal_connect(scope_popup_v_cb,scope_v_handles[i],"activate",Void,(),false,(handles,i-1))
@@ -777,18 +845,20 @@ for i=1:2
     signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
-#Reference
 
-#id = signal_connect(ref_b1_cb, ref_button1, "clicked",Void,(),false,(handles,))
+#=
+Reference
+=#
+
+id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,))
 id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
-
-id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,))
 
 signal_connect(ref_win, :delete_event) do widget, event
     visible(ref_win, false)
     true
 end
+
 
 #Bandwidth Window
 
@@ -799,16 +869,9 @@ signal_connect(band_win, :delete_event) do widget, event
     true
 end
 
-#SortView
-
-id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,))
-
-signal_connect(sortview_handles.win, :delete_event) do widget, event
-    visible(sortview_handles.win, false)
-    true
-end
-
-#Parameter Table
+#=
+Parameter Table
+=#
 
 id = signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
 
@@ -822,6 +885,23 @@ id = signal_connect(table_col_cb, table_rtext3,"edited",Void,(Ptr{UInt8},Ptr{UIn
 id = signal_connect(table_col_cb, table_rtext4,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
 id = signal_connect(table_en_cb, table_rtog, "toggled",Void,(Ptr{UInt8},),false,(handles,r))
 
+
+#=
+Sortview Callbacks
+=#
+
+id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,))
+
+signal_connect(sortview_handles.win, :delete_event) do widget, event
+    visible(sortview_handles.win, false)
+    true
+end
+
+
+
+#=
+Backup
+=#
 f=open(string(r.save.backup,"enabled.bin"),"w")
 write(f,handles.enabled)
 close(f)
@@ -939,10 +1019,22 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
             if han.spike_changed
                 new_single_channel(han,rhd,s,fpga)
+
+                #Clear Sortview
             end
             if han.c_changed
                 send_clus(s,han)
                 backup_clus(han.temp,han.spike,rhd.save.backup)
+                
+                if visible(han.sortview_widgets.win)
+                    if !han.pause
+
+                    else
+                        #Refresh Screen
+                        SpikeSorting.replot_sort(han.sortview_widgets)
+                    end
+                end
+                
             end
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)
@@ -957,13 +1049,6 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 draw_rb(han)
             end
             draw_c3(rhd,han)
-            if visible(han.sortview_widgets.win)
-                if !han.pause
-
-                else
-
-                end
-            end
 	end	
 	han.draws+=1
 	if han.draws>500
