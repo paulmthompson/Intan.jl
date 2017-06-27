@@ -637,6 +637,7 @@ close(f)
 if r.save.save_full
     prepare_v_header(r)
     prepare_stamp_header(r)
+    prepare_ttl_header(r)
 else
     prepare_stamp_header(r)
 end
@@ -1310,7 +1311,7 @@ function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    write_plex(save_dialog("Export to Plex",han.win),rhd.save.v,rhd.save.ts)
+    write_plex(save_dialog("Export to Plex",han.win),rhd.save.v,rhd.save.ts,rhd.save.ttl)
 
     nothing
 end
