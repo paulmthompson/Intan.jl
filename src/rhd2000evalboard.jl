@@ -1254,12 +1254,15 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
     nothing
 end
 
-function queueToFile(rhd::RHD2000,task::Task)
+function queueToFile(rhd::RHD2000,task::Task,fpga)
 
     #write analog voltage traces
     if rhd.save.save_full
         f=open(rhd.save.v, "a+")
         write(f,rhd.v)
+        close(f)
+        f=open(rhd.save.ttl,"a+")
+        write(f,fpga[1].ttlin)
         close(f)
     end
 

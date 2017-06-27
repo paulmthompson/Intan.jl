@@ -49,7 +49,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             find_intersected_waveforms(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
 
             if clus>0
-                #Regen template with spikes in currently selected cluster
+                
                 (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,han.buf_clus.==clus)
 
                 change_cluster(han.temp,mymean,mystd,clus)
@@ -304,6 +304,13 @@ function delete_cluster(c::ClusterTemplate,n::Int64)
     nothing
 end
 
+#=
+Calculates the mean and bounds for a collection of spikes that
+1) are not hidden by the mask vector
+2) meet some condition
+
+examples of this condition could be whether the spikes are contained within a rubberband, or if they are part of a certain cluster already
+=#
 function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2,condition)
     
     hits=0

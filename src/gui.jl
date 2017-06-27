@@ -1071,7 +1071,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
         reveal(han.c2)
         reveal(han.c3)
 	#write to disk, clear buffers
-        queueToFile(rhd,task)
+        queueToFile(rhd,task,fpga)
     end
     sleep(.00001)
     #sleep(.02) #debug
