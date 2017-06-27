@@ -439,13 +439,13 @@ function parse_ttl(fname="ttl.bin")
         for i=1:myheader.num_channels
             y=x&(2^(i-1))
             if y>0
-                y_p=x_p&(2^(i-1))
-                if y_p==0
+                #y_p=x_p&(2^(i-1))
+                #if y_p==0
                     push!(ttl_times[i],count)
-                end
+                #end
             end
         end
-        x_p=x
+        #x_p=x
         count+=1
     end
     close(f)
