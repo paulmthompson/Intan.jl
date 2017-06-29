@@ -15,9 +15,9 @@ end
 function select_unit(han::Gui_Handles)
     clus=get_cluster_id(han)
     
-    old_clus=han.clus
+    old_clus=han.buf.selected_clus
 
-    han.clus=clus
+    han.buf.selected_clus=clus
     if clus>0
         mytol=han.temp.tol[clus]
         setproperty!(han.adj_sort, :value, mytol)
@@ -31,8 +31,8 @@ function select_unit(han::Gui_Handles)
         draw_box(x1_i,y1_i,x2_i,y2_i,(1.0,1.0,1.0),1.0,ctx)
     end
 
-    if han.clus>0
-        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.clus)
+    if han.buf.selected_clus>0
+        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.buf.selected_clus)
         draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
     end
         

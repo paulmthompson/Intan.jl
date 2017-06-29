@@ -321,8 +321,8 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     identity_matrix(ctx)
 
-    if han.clus>0
-        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.clus)
+    if han.buf.selected_clus>0
+        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.buf.selected_clus)
         draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
     end
 

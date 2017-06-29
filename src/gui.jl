@@ -669,18 +669,17 @@ sleep(1.0)
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
                     c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
                     false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),1,
-                    1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),0,zeros(Int64,length(r.nums)),
+                    1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums)),
                     sb,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),
                     trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
-                    false,false,zeros(Int16,s[1].s.win+1,500),1,1,false,zeros(Int64,500),
-                    trues(500),slider_sort,adj_sort,sort_list,sort_tv,
+                    false,false,false,slider_sort,adj_sort,sort_list,sort_tv,
                     button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
 #=
 Template Sorting Callbacks
@@ -1206,8 +1205,8 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
     if getproperty(widget,:active,Bool)
         han.pause=true
         change_button_label(widget,"Resume")
-        for i=1:length(han.buf_mask)
-            han.buf_mask[i]=true
+        for i=1:length(han.buf.mask)
+            han.buf.mask[i]=true
         end
     else
         han.pause=false
@@ -1233,7 +1232,6 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
     
         setproperty!(han.adj_thres,:upper,han.h2/2)
         setproperty!(han.adj_thres,:lower,-han.h2/2)
-
     end
     
     nothing
@@ -1297,9 +1295,6 @@ SortView Callbacks
 function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    han.sortview_widgets.buf.spikes=han.spike_buf
-    han.sortview_widgets.buf.clus=han.buf_clus
-    han.sortview_widgets.buf.count=han.buf_count
     visible(han.sortview_widgets.win,true)
     nothing
 end

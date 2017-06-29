@@ -342,7 +342,6 @@ type Gui_Handles
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
     
-    clus::Int64
     total_clus::Array{Int64,1}
     
     sb::Gtk.GtkLabelLeaf
@@ -390,14 +389,7 @@ type Gui_Handles
     
     hold::Bool
     
-    spike_buf::Array{Int16,2}
-    buf_ind::Int64
-    buf_count::Int64
-    
     pause::Bool
-    
-    buf_clus::Array{Int64,1}
-    buf_mask::Array{Bool,1}
     
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
@@ -433,6 +425,8 @@ type Gui_Handles
     sortview_widgets::SortView
     band_widgets::Band_Widgets
     table_widgets::Table_Widgets
+
+    buf::SpikeSorting.Buffer
 
     v_s::Array{Int16,1}
 end

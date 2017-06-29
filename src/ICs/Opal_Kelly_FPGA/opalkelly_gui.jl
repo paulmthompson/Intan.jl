@@ -98,8 +98,8 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
     #Display Threshold
     get_thres(han,s)
     
-    han.buf_ind=1
-    han.buf_count=1
+    han.buf.ind=1
+    han.buf.count=1
 
     #Get Cluster
     get_cluster(han,s)

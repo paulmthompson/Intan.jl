@@ -90,15 +90,15 @@ function draw_rb(han::Gui_Handles)
         stroke(ctx)   
 
         #Find selected waveforms and plot
-        if (han.clus>0)&((han.buf_count>0)&(han.pause))
-            get_selected_waveforms(han,han.spike_buf)
+        if (han.buf.selected_clus>0)&((han.buf.count>0)&(han.pause))
+            get_selected_waveforms(han,han.buf.spikes)
             mycolor=1
             if han.click_button==1
-                mycolor=han.clus+1
+                mycolor=han.buf.selected_clus+1
             elseif han.click_button==3
                 mycolor=1
             end
-            plot_selected_waveforms(han,han.spike_buf,mycolor)
+            plot_selected_waveforms(han,han.buf.spikes,mycolor)
         end
         han.rb.pos1=han.rb.pos2 
     end
@@ -144,11 +144,11 @@ function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
     (x1,x2,y1,y2)=coordinate_transform(han,han.rb.pos0.x,han.rb.pos0.y,han.rb.pos2.x,han.rb.pos2.y)
 
-    intersection = trues(han.buf_ind)
-    find_intersected_waveforms(han.spike_buf,intersection,han.buf_ind,x1,y1,x2,y2)
+    intersection = trues(han.buf.ind)
+    find_intersected_waveforms(han.buf.spikes,intersection,han.buf.ind,x1,y1,x2,y2)
 
-    for i=1:han.buf_ind
-        if han.buf_mask[i]
+    for i=1:han.buf.ind
+        if han.buf.mask[i]
             if !intersection[i]
                 han.selected[i]=true
             end
@@ -215,20 +215,20 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 	    stroke(ctx)
 
             #Add spike to buffer
-            if han.buf_count > 0
+            if han.buf.count > 0
                 mycount=1
                 for k=1:han.wave_points
-                    han.spike_buf[mycount,han.buf_ind] = rhd.v[kk+k-1,spike_num]
+                    han.buf.spikes[mycount,han.buf.ind] = rhd.v[kk+k-1,spike_num]
                     mycount+=1
                 end
-                han.buf_clus[han.buf_ind] = rhd.buf[i,spike_num].id-1
-                han.buf_count+=1
-                han.buf_ind+=1
-                if han.buf_count>500
-                    han.buf_count=500
+                han.buf.clus[han.buf.ind] = rhd.buf[i,spike_num].id-1
+                han.buf.count+=1
+                han.buf.ind+=1
+                if han.buf.count>500
+                    han.buf.count=500
                 end
-                if han.buf_ind>500
-                    han.buf_ind=1
+                if han.buf.ind>500
+                    han.buf.ind=1
                 end
             end
 
@@ -270,11 +270,11 @@ function replot_all_spikes(han::Gui_Handles)
     scale(ctx,han.w2/han.wave_points,s)
 
     for i=1:(han.total_clus[han.spike]+1)
-        for j=1:han.buf_ind
-            if (han.buf_clus[j]==(i-1))&(han.buf_mask[j])
-                move_to(ctx,1,(han.spike_buf[1,j]-o))
-                for jj=2:size(han.spike_buf,1)
-                    line_to(ctx,jj,han.spike_buf[jj,j]-o)
+        for j=1:han.buf.ind
+            if (han.buf.clus[j]==(i-1))&(han.buf.mask[j])
+                move_to(ctx,1,(han.buf.spikes[1,j]-o))
+                for jj=2:size(han.buf.spikes,1)
+                    line_to(ctx,jj,han.buf.spikes[jj,j]-o)
                 end
             end
         end
@@ -312,7 +312,7 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
     Reset waveforms that have changed since the start but are
     no longer selected
     =#
-    for j=1:han.buf_count
+    for j=1:han.buf.count
         if (!han.selected[j])&(han.plotted[j])
             move_to(ctx,1,(input[1,j]-o))
             for jj=2:size(input,1)
@@ -327,7 +327,7 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
     Plot selected waveforms in new color that have not 
     yet been plotting in new color
     =#
-    for i=1:han.buf_count
+    for i=1:han.buf.count
         if (han.selected[i])&(!han.plotted[i])
             move_to(ctx,1,(input[1,i]-o))
             for jj=2:size(input,1)
@@ -363,8 +363,8 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             clear_c2(han.c2,han.spike)
             han.ctx2=getgc(han.c2)
             han.ctx2s=copy(han.ctx2)
-            han.buf_ind=1
-            han.buf_count=1
+            han.buf.ind=1
+            han.buf.count=1
             if han.sort_cb
                 draw_templates(han)
             end

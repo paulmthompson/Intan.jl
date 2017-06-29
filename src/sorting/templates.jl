@@ -16,7 +16,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     han, = user_data
     event = unsafe_load(param_tuple)
 
-    clus=han.clus
+    clus=han.buf.selected_clus
 
     (x1,x2,y1,y2)=coordinate_transform(han,event)
     
@@ -25,32 +25,32 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         if (clus==0) #do nothing if zeroth cluster    
         elseif (han.temp.num < clus) #new cluster
 
-            intersections=trues(han.buf_ind)
-            find_intersected_waveforms(han.spike_buf,intersections,han.buf_ind,x1,y1,x2,y2)
-            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,!intersections)
+            intersections=trues(han.buf.ind)
+            find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
             add_new_cluster(han.temp,mymean,mystd)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
         else #replace old cluster
-            intersections=trues(han.buf_ind)
-            find_intersected_waveforms(han.spike_buf,intersections,han.buf_ind,x1,y1,x2,y2)
-            (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,!intersections)
+            intersections=trues(han.buf.ind)
+            find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
+            (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
             change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
         end
 
-        if (clus>0)&((han.buf_count>0)&(han.pause))
+        if (clus>0)&((han.buf.count>0)&(han.pause))
             template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
             replot_all_spikes(han)
         end
     elseif event.button==3
         if han.pause
-            find_intersected_waveforms(han.spike_buf,han.buf_mask,han.buf_count,x1,y1,x2,y2)
+            find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
 
             if clus>0
                 
-                (mymean,mystd)=make_cluster(han.spike_buf,han.buf_mask,han.buf_ind,x1,y1,x2,y2,han.buf_clus.==clus)
+                (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,han.buf.clus.==clus)
 
                 change_cluster(han.temp,mymean,mystd,clus)
                 setproperty!(han.adj_sort, :value, 1.0)
@@ -70,14 +70,14 @@ end
 function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
     
     han, = user_data
-    clus=han.clus
+    clus=han.buf.selected_clus
 
     if (clus<1) #do nothing if zeroth cluster selected      
     else
         delete_cluster(han.temp,clus)
         deleteat!(han.sort_list,han.total_clus[han.spike]+1)
         han.total_clus[han.spike] -= 1
-        han.clus = 0
+        han.buf.selected_clus = 0
         selmodel=Gtk.GAccessor.selection(han.sort_tv)
         select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
         han.c_changed=true
@@ -92,7 +92,7 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     
     #Add total number of units and go to that unit
     han.total_clus[han.spike] += 1
-    han.clus = han.total_clus[han.spike]
+    han.buf.selected_clus = han.total_clus[han.spike]
     push!(han.sort_list,(han.total_clus[han.spike],))
 
     selmodel=Gtk.GAccessor.selection(han.sort_tv)
@@ -115,8 +115,8 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
         clear_c2(han.c2,han.spike)
         han.ctx2=getgc(han.c2)
         han.ctx2s=copy(han.ctx2)
-        han.buf_ind=1
-        han.buf_count=1
+        han.buf.ind=1
+        han.buf.count=1
         han.hold=true
         han.pause=false
         change_button_label(mybutton,"Stop Collection")
@@ -125,12 +125,11 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
         Gtk.GAccessor.active(han.pause_button,true)
         change_button_label(mybutton,"Collect Templates")
 
-        if han.buf_count==size(han.spike_buf,2)
-            han.buf_ind=han.buf_count
+        if han.buf.count==size(han.buf.spikes,2)
+            han.buf.ind=han.buf.count
         end
 
         if visible(han.sortview_widgets.win)
-            han.sortview_widgets.buf.count = han.buf_count
             SpikeSorting.recalc_features(han.sortview_widgets)
             SpikeSorting.replot_sort(han.sortview_widgets)
         end
@@ -144,7 +143,7 @@ function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     han, = user_data
     ctx = han.ctx2s
 
-    clus=han.clus
+    clus=han.buf.selected_clus
 
     if clus>0
         s=han.scale[han.spike,1]
@@ -242,13 +241,13 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     myval=getproperty(han.adj_sort, :value, Float64) # primary display
 
-    clus=han.clus
+    clus=han.buf.selected_clus
     
     if clus>0
 
         han.temp.tol[clus] = myval
 
-        if ((han.buf_count>0)&(han.pause))
+        if ((han.buf.count>0)&(han.pause))
             template_cluster(han,clus,han.temp.templates[:,clus],han.temp.sig_min[:,clus],han.temp.sig_max[:,clus],han.temp.tol[clus])
             replot_all_spikes(han)
 
@@ -272,7 +271,7 @@ function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Arra
     nothing
 end
 
-function change_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,2},n::Int64)
+function change_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,2},n)
 
     for i=1:length(mymean)
         c.templates[i,n] = mymean[i]
@@ -283,7 +282,7 @@ function change_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array
     nothing
 end
 
-function delete_cluster(c::ClusterTemplate,n::Int64)
+function delete_cluster(c::ClusterTemplate,n)
 
     for i=1:size(c.templates,1)
         c.templates[i,n] = 0.0
@@ -357,13 +356,13 @@ function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2,condition)
     (mymean,mybounds)
 end
 
-function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},mymin::Array{Float64,1},mymax::Array{Float64,1},tol::Float64)
+function template_cluster(han::Gui_Handles,clus,mymean::Array{Float64,1},mymin::Array{Float64,1},mymax::Array{Float64,1},tol::Float64)
 
-    @inbounds for i=1:han.buf_ind
+    @inbounds for i=1:han.buf.ind
 
         mymisses=0
         for j=1:length(mymean)
-            if (han.spike_buf[j,i]<(mymean[j]-(mymin[j]*tol)))|(han.spike_buf[j,i]>(mymean[j]+(mymax[j]*tol)))
+            if (han.buf.spikes[j,i]<(mymean[j]-(mymin[j]*tol)))|(han.buf.spikes[j,i]>(mymean[j]+(mymax[j]*tol)))
                 mymisses+=1
                 if mymisses>5
                     break
@@ -371,9 +370,9 @@ function template_cluster(han::Gui_Handles,clus::Int64,mymean::Array{Float64,1},
             end
         end
         if mymisses<5 #If passes template matching, set as unit
-            han.buf_clus[i]=clus
-        elseif han.buf_clus[i]==clus #If did not pass, but was previously, set to noise cluster
-            han.buf_clus[i]=0
+            han.buf.clus[i]=clus
+        elseif han.buf.clus[i]==clus #If did not pass, but was previously, set to noise cluster
+            han.buf.clus[i]=0
         end
     end
 
