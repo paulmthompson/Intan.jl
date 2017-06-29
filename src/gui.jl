@@ -545,7 +545,7 @@ visible(band_win,false)
 
 #SortView
 
-sortview_handles = SpikeSorting.sort_gui()
+sortview_handles = SpikeSorting.sort_gui(s[1].s.win+1)
 visible(sortview_handles.win,false)
 
 #POPUP MENUS
@@ -1297,9 +1297,9 @@ SortView Callbacks
 function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    han.sortview_widgets.spike_buf=han.spike_buf
-    han.sortview_widgets.buf_clus=han.buf_clus
-    han.sortview_widgets.buf_count=han.buf_count
+    han.sortview_widgets.buf.spikes=han.spike_buf
+    han.sortview_widgets.buf.clus=han.buf_clus
+    han.sortview_widgets.buf.count=han.buf_count
     visible(han.sortview_widgets.win,true)
     nothing
 end

@@ -130,6 +130,7 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
         end
 
         if visible(han.sortview_widgets.win)
+            han.sortview_widgets.buf.count = han.buf_count
             SpikeSorting.recalc_features(han.sortview_widgets)
             SpikeSorting.replot_sort(han.sortview_widgets)
         end
