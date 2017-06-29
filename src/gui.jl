@@ -1027,6 +1027,11 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 send_clus(s,han)
                 backup_clus(han.temp,han.spike,rhd.save.backup)
                 
+                
+                
+            end
+            if han.buf.replot
+                replot_all_spikes(han)
                 if visible(han.sortview_widgets.win)
                     if !han.pause
 
@@ -1035,7 +1040,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                         SpikeSorting.replot_sort(han.sortview_widgets)
                     end
                 end
-                
+                han.buf.replot=false
             end
 	    if (han.num>0)&(!han.pause)                     
 		draw_spike(rhd,han)

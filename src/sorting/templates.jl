@@ -42,7 +42,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
         if (clus>0)&((han.buf.count>0)&(han.pause))
             template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
-            replot_all_spikes(han)
+            han.buf.replot=true
         end
     elseif event.button==3
         if han.pause
@@ -58,8 +58,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
                 han.c_changed=true
             end
 
-            replot_all_spikes(han)
-            
+            han.buf.replot=true     
         end
     end
     
