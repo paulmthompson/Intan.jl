@@ -25,30 +25,20 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         #Waveforms selected with a left click rubberband in the paused display will be used to form a cluster template for the currently selected cluster.
         
         if (clus==0) #do nothing if zeroth cluster    
-        elseif (han.temp.num < clus) #new cluster
+        else
+            #=
+            if (han.temp.num < clus) #new cluster
+                han.temp.num += 1
+            end
+            =#
 
-            intersections=trues(han.buf.ind)
-            find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
-            (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
-
-            han.temp.num += 1
-
-            change_cluster(han.temp,mymean,mystd,clus)
-            setproperty!(han.adj_sort, :value, 1.0)
-            han.c_changed=true
-        else #replace old cluster
-            intersections=trues(han.buf.ind)
-            find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
-            (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
-
+            han.buf.selected=trues(han.buf.ind)
+            find_intersected_waveforms(han.buf.spikes,han.buf.selected,han.buf.ind,x1,y1,x2,y2)
             
-            change_cluster(han.temp,mymean,mystd,clus)
-            setproperty!(han.adj_sort, :value, 1.0)
-            han.c_changed=true
+            han.buf.c_changed=true
         end
 
         if (clus>0)&((han.buf.count>0)&(han.pause))
-            template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
             han.buf.replot=true
         end
     elseif event.button==3
@@ -59,15 +49,9 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
 
             if clus>0
-                
-                (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,han.buf.clus.==clus)
-
-                change_cluster(han.temp,mymean,mystd,clus)
-                setproperty!(han.adj_sort, :value, 1.0)
-
-                han.c_changed=true
+                han.buf.selected=!(han.buf.clus.==clus)
+                han.buf.c_changed=true
             end
-
             han.buf.replot=true     
         end
     end
@@ -89,7 +73,7 @@ function b1_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
         han.buf.selected_clus = 0
         selmodel=Gtk.GAccessor.selection(han.sort_tv)
         select!(selmodel, Gtk.iter_from_index(han.sort_list,1))
-        han.c_changed=true
+        han.buf.c_changed=true
     end
     nothing
 end
@@ -101,6 +85,8 @@ function b2_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     
     #Add total number of units and go to that unit
     han.total_clus[han.spike] += 1
+    han.temp.num += 1
+    
     han.buf.selected_clus = han.total_clus[han.spike]
     push!(han.sort_list,(han.total_clus[han.spike],))
 
@@ -312,7 +298,7 @@ Calculates the mean and bounds for a collection of spikes that
 
 examples of this condition could be whether the spikes are contained within a rubberband, or if they are part of a certain cluster already
 =#
-function make_cluster{T}(input::Array{T,2},mask,count,x1,y1,x2,y2,condition)
+function make_cluster{T}(input::Array{T,2},mask,count,condition)
     
     hits=0
     mymean=zeros(Float64,size(input,1)-1)

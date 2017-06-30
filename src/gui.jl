@@ -1023,18 +1023,25 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
                 #Clear Sortview
             end
-            if han.c_changed
+            if han.buf.c_changed
 
                 #Find Cluster characteristics from selected waveforms
+                (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,!han.buf.selected)
                 
+                clus = han.buf.selected_clus
                 
                 #Apply cluster characteristics to handles cluster
+                change_cluster(han.temp,mymean,mystd,clus)
+                setproperty!(han.adj_sort, :value, 1.0)
 
-                #
+                if (clus>0)&((han.buf.count>0)&(han.pause))
+                    template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
+                end
                 
-                
+                #Send cluster information to sorting 
                 send_clus(s,han)
                 backup_clus(han.temp,han.spike,rhd.save.backup)
+                han.buf.c_changed=false
             end
             if han.buf.replot
                 replot_all_spikes(han)
@@ -1141,13 +1148,13 @@ end
 
 function send_clus{T<:Sorting}(s::Array{T,1},han::Gui_Handles)
     s[han.spike].c=deepcopy(han.temp)
-    han.c_changed=false
+    nothing
 end
 
 function send_clus{T<:Sorting}(s::DArray{T,1,Array{T,1}},han::Gui_Handles)
     (nn,mycore)=get_thres_id(s,han.spike)
     remotecall_wait(((x,tt,num)->localpart(x)[num].c=tt),mycore,s,han.temp,nn)
-    han.c_changed=false
+    nothing
 end
 
 function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
