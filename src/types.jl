@@ -276,7 +276,7 @@ type Sort_Widgets
     b1::Gtk.GtkButtonLeaf
     b2::Gtk.GtkButtonLeaf
     b3::Gtk.GtkButtonLeaf
-    b4::Gtk.GtkButtonLeaf
+    b4::Gtk.GtkToggleButtonLeaf
     check::Gtk.GtkCheckButtonLeaf
     slider_active::Bool
 end

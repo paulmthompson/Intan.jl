@@ -26,11 +26,6 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         
         if (clus==0) #do nothing if zeroth cluster    
         else
-            #=
-            if (han.temp.num < clus) #new cluster
-                han.temp.num += 1
-            end
-            =#
 
             han.buf.selected=trues(han.buf.ind)
             find_intersected_waveforms(han.buf.spikes,han.buf.selected,han.buf.ind,x1,y1,x2,y2)
@@ -133,49 +128,63 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     nothing
 end
 
-function b4_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
+function b4_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    ctx = han.ctx2s
-
-    clus=han.buf.selected_clus
-
-    if clus>0
-        s=han.scale[han.spike,1]
-        o=han.scale[han.spike]
-
-        Cairo.translate(ctx,0.0,han.h2/2)
-        scale(ctx,han.w2/han.wave_points,s)
-        
-        move_to(ctx,1.0,han.temp.templates[1,clus]+(han.temp.sig_max[1,clus]*han.temp.tol[clus])-o)
-
-        for i=2:size(han.temp.templates,1)
-            y=han.temp.templates[i,clus]+(han.temp.sig_max[i,clus]*han.temp.tol[clus])-o
-            line_to(ctx,i,y)
+    widget = convert(ToggleButton, widgetptr)
+    
+    #Untoggle 
+    if !getproperty(widget,:active,Bool)
+        han.buf.replot=true
+    else
+        #Toggling, so draw template
+        if han.pause
+            draw_template_bounds(han)
         end
-
-        y=han.temp.templates[end,clus]-(han.temp.sig_min[end,clus]*han.temp.tol[clus])-o
-        
-        line_to(ctx,size(han.temp.templates,1),y)
-
-        for i=(size(han.temp.templates,1)-1):-1:1
-            y=han.temp.templates[i,clus]-(han.temp.sig_min[i,clus]*han.temp.tol[clus])-o
-            line_to(ctx,i,y)
-        end
-
-        close_path(ctx)
-        
-        select_color(ctx,clus+1)
-        set_line_width(ctx,3.0)
-        stroke_preserve(ctx)
-
-        select_color(ctx,clus+1,.5)
-        fill(ctx)
     end
 
-    identity_matrix(ctx)
-
     nothing
+end
+
+function draw_template_bounds(han::Gui_Handles)
+
+    ctx = han.ctx2
+    clus=han.buf.selected_clus
+    
+     if clus>0
+            s=han.scale[han.spike,1]
+            o=han.scale[han.spike]
+            
+            Cairo.translate(ctx,0.0,han.h2/2)
+            scale(ctx,han.w2/han.wave_points,s)
+            
+            move_to(ctx,1.0,han.temp.templates[1,clus]+(han.temp.sig_max[1,clus]*han.temp.tol[clus])-o)
+            
+            for i=2:size(han.temp.templates,1)
+                y=han.temp.templates[i,clus]+(han.temp.sig_max[i,clus]*han.temp.tol[clus])-o
+                line_to(ctx,i,y)
+            end
+            
+            y=han.temp.templates[end,clus]-(han.temp.sig_min[end,clus]*han.temp.tol[clus])-o
+            
+            line_to(ctx,size(han.temp.templates,1),y)
+            
+            for i=(size(han.temp.templates,1)-1):-1:1
+                y=han.temp.templates[i,clus]-(han.temp.sig_min[i,clus]*han.temp.tol[clus])-o
+                line_to(ctx,i,y)
+            end
+            
+            close_path(ctx)
+            
+            select_color(ctx,clus+1)
+            set_line_width(ctx,3.0)
+            stroke_preserve(ctx)
+            
+            select_color(ctx,clus+1,.5)
+            fill(ctx)
+        end
+
+    identity_matrix(ctx)
 end
 
 function check_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
@@ -346,12 +355,12 @@ function template_cluster(han::Gui_Handles,clus,mymean::Array{Float64,1},mymin::
         for j=1:length(mymean)
             if (han.buf.spikes[j,i]<(mymean[j]-(mymin[j]*tol)))|(han.buf.spikes[j,i]>(mymean[j]+(mymax[j]*tol)))
                 mymisses+=1
-                if mymisses>5
+                if mymisses>1
                     break
                 end
             end
         end
-        if mymisses<5 #If passes template matching, set as unit
+        if mymisses<1 #If passes template matching, set as unit
             han.buf.clus[i]=clus
         elseif han.buf.clus[i]==clus #If did not pass, but was previously, set to noise cluster
             han.buf.clus[i]=0

@@ -101,7 +101,7 @@ function makegui(r::RHD2000,s,task,fpga)
     button_sort2 = Button()
     button_sort3 = Button()
 
-    button_sort4 = Button()
+    button_sort4 = ToggleButton()
     button_sort5 = Button()
 
     check_sort1 = CheckButton()
