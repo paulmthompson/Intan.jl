@@ -1024,11 +1024,17 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 #Clear Sortview
             end
             if han.c_changed
+
+                #Find Cluster characteristics from selected waveforms
+                
+                
+                #Apply cluster characteristics to handles cluster
+
+                #
+                
+                
                 send_clus(s,han)
                 backup_clus(han.temp,han.spike,rhd.save.backup)
-                
-                
-                
             end
             if han.buf.replot
                 replot_all_spikes(han)

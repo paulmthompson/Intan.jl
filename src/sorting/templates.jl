@@ -20,7 +20,9 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
     (x1,x2,y1,y2)=coordinate_transform(han,event)
     
-    if event.button==1 #Left click
+    if event.button==1
+
+        #Waveforms selected with a left click rubberband in the paused display will be used to form a cluster template for the currently selected cluster.
         
         if (clus==0) #do nothing if zeroth cluster    
         elseif (han.temp.num < clus) #new cluster
@@ -28,13 +30,18 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             intersections=trues(han.buf.ind)
             find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
             (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
-            add_new_cluster(han.temp,mymean,mystd)
+
+            han.temp.num += 1
+
+            change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
         else #replace old cluster
             intersections=trues(han.buf.ind)
             find_intersected_waveforms(han.buf.spikes,intersections,han.buf.ind,x1,y1,x2,y2)
             (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,x1,y1,x2,y2,!intersections)
+
+            
             change_cluster(han.temp,mymean,mystd,clus)
             setproperty!(han.adj_sort, :value, 1.0)
             han.c_changed=true
@@ -45,6 +52,9 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             han.buf.replot=true
         end
     elseif event.button==3
+
+        #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
+        
         if han.pause
             find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
 
@@ -254,19 +264,6 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
         end
     end
     han.c_changed=true
-    nothing
-end
-
-function add_new_cluster(c::ClusterTemplate,mymean::Array{Float64,1},mystd::Array{Float64,2})
-    
-    c.num += 1
-
-    for i=1:length(mymean)
-        c.templates[i,c.num] = mymean[i]
-        c.sig_max[i,c.num]= mystd[i,1]
-        c.sig_min[i,c.num]= mystd[i,2]
-    end
-
     nothing
 end
 
