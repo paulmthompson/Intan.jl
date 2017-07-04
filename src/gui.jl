@@ -577,9 +577,37 @@ showall(popup_event)
     
     setproperty!(grid, :column_spacing, 15) 
     setproperty!(grid, :row_spacing, 15) 
-    win = Window(grid, "Intan.jl GUI") |> showall
+win = Window(grid, "Intan.jl GUI") |> showall
 
-#Soft Scope
+#=
+Spectrogram Menus
+=#
+
+popupmenu_spect = Menu()
+popupmenu_spect_freq = MenuItem("Frequency Range")
+popupmenu_spect_win = MenuItem("Window Size")
+popupmenu_spect_overlap = MenuItem("Window Overlap")
+push!(popupmenu_spect,popupmenu_spect_freq)
+push!(popupmenu_spect,popupmenu_spect_win)
+push!(popupmenu_spect,popupmenu_spect_overlap)
+
+popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
+spect_f_handles=Array(RadioMenuItemLeaf,0)
+spect_f_options=[300; 1000; 3000; 7500; 15000]
+
+push!(spect_f_handles,RadioMenuItem(string(spect_f_options[1])))
+push!(popupmenu_spect_freq_select,spect_f_handles[1])
+
+for i=2:5
+    push!(spect_f_handles,RadioMenuItem(spect_f_handles[i-1],string(spect_f_options[i])))
+    push!(popupmenu_spect_freq_select,spect_f_handles[i])
+end
+
+showall(popupmenu_spect) 
+
+#=
+Soft Scope Menus
+=#
 
 popupmenu_scope = Menu()
 popupmenu_voltage=MenuItem("Voltage Scale")
@@ -673,7 +701,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums)),
                     sb,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),
                     trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
-                    s[1].s.win,1,1,popupmenu,popup_event,rbs,rbs2,scope_mat,sb_offset,
+                    s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
                     false,false,false,slider_sort,adj_sort,sort_list,sort_tv,
                     button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
@@ -1613,7 +1641,14 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             end
             
         elseif han.c_right_bottom==6 #64 channel raster - nothing
+        elseif han.c_right_bottom==7 #spectrogram
+            
+            if event.button == 3 #right click
+                popup(han.popup_spect,event)
+            end
+            
         else
+            
         end            
     end
     nothing

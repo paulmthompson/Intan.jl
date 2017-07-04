@@ -258,6 +258,8 @@ type Spectrogram
     win_width_s::Int64
     win_overlap_s::Int64
     out::Array{Float64,2}
+    f_div::Float64
+    t_div::Float64
 end
 
 function Spectrogram(fs)
@@ -270,12 +272,15 @@ function Spectrogram(fs)
     S = spectrogram(rand(Float64,fs),win_width_s,win_overlap_s; fs=fs, window=hanning)
     P = power(S)
 
+    f_div=freq(S).multiplier
+    t_div=time(S).step/time(S).divisor
+
     f_max=size(P,1)
     t_max=size(P,2)
 
     out=zeros(Float64,f_max,t_max)
 
-    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out)
+    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out,f_div,t_div)
 end
 
 type Band_Widgets
@@ -396,6 +401,7 @@ type Gui_Handles
     
     popup_ed::Gtk.GtkMenuLeaf
     popup_event::Gtk.GtkMenuLeaf
+    popup_spect::Gtk.GtkMenuLeaf
     
     rb1::Array{Gtk.GtkRadioButton,1}
     rb2::Array{Gtk.GtkRadioButton,1}
