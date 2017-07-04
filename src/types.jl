@@ -257,6 +257,7 @@ type Spectrogram
     win_overlap_t::Float64
     win_width_s::Int64
     win_overlap_s::Int64
+    out::Array{Float64,2}
 end
 
 function Spectrogram(fs)
@@ -272,7 +273,9 @@ function Spectrogram(fs)
     f_max=size(P,1)
     t_max=size(P,2)
 
-    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s)
+    out=zeros(Float64,f_max,t_max)
+
+    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out)
 end
 
 type Band_Widgets

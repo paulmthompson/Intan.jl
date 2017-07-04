@@ -60,16 +60,16 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
         count+=1
     end
 
-    S=plot_spectrogram(han.v_s,rhd.sr,han.spect)
+    plot_spectrogram(han.v_s,rhd.sr,han.spect)
 
-    in_w = spect.t_max
-    in_h = spect.f_max
+    in_w = han.spect.t_max
+    in_h = han.spect.f_max
 
     scale_w = c_w / in_w
     scale_h = 250 / in_h
 
-    mymin=minimum(S)
-    mymax=maximum(S)
+    mymin=minimum(han.spect.out)
+    mymax=maximum(han.spect.out)
     myrange=mymax-mymin
 
     rgb_mat = zeros(UInt32,in_h,in_w)
@@ -77,7 +77,7 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     for h=1:in_h
         for w=1:in_w
         
-            startround = (S[h,w]-mymin)/myrange*255
+            startround = (han.spect.out[h,w]-mymin)/myrange*255
             myinput::UInt8 = (startround >= 255) ? 255 : floor(UInt8,startround)+1
         
             myblue=jet_b[myinput]
@@ -104,5 +104,14 @@ end
 function plot_spectrogram(s,fs,spect)
 
     S = spectrogram(s,spect.win_width_s,spect.win_overlap_s; fs=fs, window=hanning)
-    log10(power(S))
+
+    temp = power(S)
+
+    for i=1:spect.f_max
+        for j=1:spect.t_max
+            spect.out[i,j]=log10(temp[i,j])
+        end
+    end
+    
+    nothing
 end
