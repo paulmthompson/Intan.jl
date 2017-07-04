@@ -662,6 +662,7 @@ gain_widgets=Gain_Widgets(sb2,sb_offset,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
+spect_widgets=Spectrogram(r.sr)
 
 sleep(1.0)
 
@@ -679,7 +680,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,sortview_handles.buf,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,spect_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
 #=
 Template Sorting Callbacks

@@ -60,10 +60,10 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
         count+=1
     end
 
-    S=plot_spectrogram(han.v_s,rhd.sr)
+    S=plot_spectrogram(han.v_s,rhd.sr,han.spect)
 
-    in_w = size(S,2)
-    in_h = size(S,1)
+    in_w = spect.t_max
+    in_h = spect.f_max
 
     scale_w = c_w / in_w
     scale_h = 250 / in_h
@@ -101,12 +101,8 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     nothing
 end
 
-function plot_spectrogram(s,fs)
-    win_width_t = .01
-    win_overlap_t = .002
-    
-    win_width_s=convert(Int, win_width_t*fs)
-    win_overlap_s=convert(Int, win_overlap_t*fs)
-    S = spectrogram(s,win_width_s,win_overlap_s; fs=fs, window=hanning)
+function plot_spectrogram(s,fs,spect)
+
+    S = spectrogram(s,spect.win_width_s,spect.win_overlap_s; fs=fs, window=hanning)
     log10(power(S))
 end

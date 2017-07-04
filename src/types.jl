@@ -250,6 +250,31 @@ function SoftScope(sr)
     SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false)
 end
 
+type Spectrogram
+    f_max::Int64
+    t_max::Int64
+    win_width_t::Float64
+    win_overlap_t::Float64
+    win_width_s::Int64
+    win_overlap_s::Int64
+end
+
+function Spectrogram(fs)
+    win_width_t = .01
+    win_overlap_t = .002
+
+    win_width_s=convert(Int, win_width_t*fs)
+    win_overlap_s=convert(Int, win_overlap_t*fs)
+
+    S = spectrogram(rand(Float64,fs),win_width_s,win_overlap_s; fs=fs, window=hanning)
+    P = power(S)
+
+    f_max=size(P,1)
+    t_max=size(P,2)
+
+    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s)
+end
+
 type Band_Widgets
     win::Gtk.GtkWindowLeaf
     sb1::Gtk.GtkSpinButtonLeaf
@@ -425,6 +450,7 @@ type Gui_Handles
     sortview_widgets::SortView
     band_widgets::Band_Widgets
     table_widgets::Table_Widgets
+    spect::Spectrogram
 
     buf::SpikeSorting.Buffer
 
