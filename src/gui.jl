@@ -603,6 +603,8 @@ for i=2:5
     push!(popupmenu_spect_freq_select,spect_f_handles[i])
 end
 
+set_active!(spect_f_handles[5])
+
 showall(popupmenu_spect) 
 
 #=
