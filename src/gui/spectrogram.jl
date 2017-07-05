@@ -115,3 +115,28 @@ function plot_spectrogram(s,fs,spect)
     
     nothing
 end
+
+function spect_popup_freq_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Int64})
+
+    han, event_id = user_data
+
+    if event_id == 0
+        f_max = 300
+    elseif event_id == 1
+        f_max = 1000
+    elseif event_id == 2
+        f_max = 3000
+    elseif event_id == 3
+        f_max = 7500
+    else
+        f_max = 15000
+    end
+
+    han.spect.f_max = ceil(Int64,f_max/han.spect.f_div)
+
+    if han.spect.f_max > size(han.spect.out,1)
+        han.spect.f_max = size(han.spect.out,1)
+    end
+
+    nothing
+end

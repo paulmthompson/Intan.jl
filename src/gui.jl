@@ -875,6 +875,13 @@ for i=1:2
     signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
+#=
+Spectrogram Callbacks
+=#
+
+for i=1:5
+    signal_connect(spect_popup_freq_cb,spect_f_handles[i],"activate",Void,(),false,(handles,i-1))
+end
 
 #=
 Reference
