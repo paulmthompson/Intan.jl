@@ -90,6 +90,10 @@ function makegui(r::RHD2000,s,task,fpga)
     button_clear=Button()
     add_button_label(button_clear,"Refresh")
     vbox_hold[1,2]=button_clear
+
+    button_restore=Button()
+    add_button_label(button_restore,"Restore")
+    vbox_hold[3,2]=button_restore
     
     #CLUSTER
     frame1_4=Frame("Clustering")
@@ -816,11 +820,12 @@ id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,
 
 
 #=
-Pause and Clear Callbacks
+Pause, Restore, and Clear Callbacks
 =#
 
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
+id = signal_connect(restore_button_cb,button_restore,"clicked",Void,(),false,(handles,))
 
 
 #=
@@ -1204,6 +1209,21 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     #Sort Button
     if han.sort_cb
         draw_templates(han)
+    end
+    
+    nothing
+end
+
+function restore_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    if han.pause
+        for i=1:han.buf.ind
+            han.buf.mask[i]=true
+        end
+
+        han.buf.replot=true
     end
     
     nothing
