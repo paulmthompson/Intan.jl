@@ -34,7 +34,7 @@ function prepare_spectrogram(ctx,han)
 
     move_to(ctx,35.0,myheight-50-125)
     rotate(ctx,-pi/2)
-    show_text(ctx,"7500")
+    show_text(ctx,string(round(Int64,han.spect.f_max*han.spect.f_div/2)))
     identity_matrix(ctx)
     
     nothing
