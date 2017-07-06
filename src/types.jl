@@ -352,6 +352,7 @@ type Single_Channel
     hold::Bool
     pause::Bool
     pause_button::Gtk.GtkToggleButtonLeaf
+    rb_button::Gtk.GtkToggleButtonLeaf
 end
 
 type Gui_Handles

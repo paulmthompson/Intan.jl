@@ -94,6 +94,10 @@ function makegui(r::RHD2000,s,task,fpga)
     button_restore=Button()
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
+
+    button_rb=ToggleButton()
+    add_button_label(button_rb,"RubberBand")
+    vbox_hold[1,3]=button_rb
     
     #CLUSTER
     frame1_4=Frame("Clustering")
@@ -700,7 +704,7 @@ spect_widgets=Spectrogram(r.sr)
 
 sleep(1.0)
 
-sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause)
+sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,

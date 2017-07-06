@@ -26,6 +26,7 @@ function CreateRHD2000Registers(sampleRate)
     r.absMode=0
     enableDsp(true,r)
     setDspCutoffFreq(300.0,r)
+    
 
     #Register 5 variables
     r.zcheckDacPower=0
@@ -49,7 +50,7 @@ function CreateRHD2000Registers(sampleRate)
     #these set RHdac and RLdac variables
     setUpperBandwidth(5000.0,r)
     setLowerBandwidth(300.0,r)
-    
+     
     powerUpAllAmps(r)
 
     r
