@@ -27,7 +27,7 @@ setproperty!(handles.cal,:active,false)
 Intan.cal_cb(handles.cal.handle,(handles,myrhd))
 sleep(1.0)
 
-myctx2=getgc(handles.c2)
+myctx2=getgc(handles.sc.c2)
 
 sleep(1.0)
 

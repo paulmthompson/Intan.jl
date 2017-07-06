@@ -178,7 +178,7 @@ Show threshold on canvas
 
 function plot_thres(han::Gui_Handles)
     
-    ctx = han.ctx2
+    ctx = han.sc.ctx2
 
     line(ctx,1,han.w2,han.h2/2-han.old_thres,han.h2/2-han.old_thres)
     set_line_width(ctx,5.0)
