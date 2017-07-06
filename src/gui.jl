@@ -1070,17 +1070,21 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             end
             if han.buf.c_changed
 
-                #Find Cluster characteristics from selected waveforms
-                (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,!han.buf.selected)
-                
                 clus = han.buf.selected_clus
-                
-                #Apply cluster characteristics to handles cluster
-                change_cluster(han.temp,mymean,mystd,clus)
-                setproperty!(han.adj_sort, :value, 1.0)
 
-                if (clus>0)&((han.buf.count>0)&(han.sc.pause))
-                    template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
+                if clus>0
+                
+                    #Find Cluster characteristics from selected waveforms
+                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,!han.buf.selected)
+                
+                    #Apply cluster characteristics to handles cluster
+                    change_cluster(han.temp,mymean,mystd,clus)
+                    setproperty!(han.adj_sort, :value, 1.0)
+
+                    if (han.buf.count>0)&(han.sc.pause)
+                        template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
+                    end
+
                 end
                 
                 #Send cluster information to sorting 
