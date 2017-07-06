@@ -93,7 +93,7 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
     set_audio(fpga,han,rhd)
 
     #Display Gain
-    setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+    setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
 
     #Display Threshold
     get_thres(han,s)

@@ -47,9 +47,6 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(gain_checkbox," x 10")
     vbox1_2_1[2,1]=gain_checkbox
 
-    sb_offset=SpinButton(-1000:1000)
-    setproperty!(sb_offset,:value,0)
-
     button_gain = CheckButton()
     add_button_label(button_gain,"All Channels")
     setproperty!(button_gain,:active,false)
@@ -704,8 +701,8 @@ for i=1:500
 end
 
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1,false)
-thres_widgets=Thres_Widgets(thres_slider,adj_thres,button_thres_all,button_thres)
-gain_widgets=Gain_Widgets(sb2,sb_offset,gain_checkbox,button_gain)
+thres_widgets=Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
+gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
@@ -713,21 +710,21 @@ spect_widgets=Spectrogram(r.sr)
 
 sleep(1.0)
 
-sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection)
+sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection,(0.0,0.0),false)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
                     c,width(getgc(c2)),height(getgc(c2)),
                     
-                    1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums)),
-                    sb,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),
-                    trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
-                    s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,sb_offset,
+                    1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums)),
+                    0,-1.*ones(Int64,6),
+                    trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
+                    s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
                     false,slider_sort,adj_sort,sort_list,sort_tv,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
-                    ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
+                    ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
@@ -1123,7 +1120,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             if han.thres_changed
                 thres_changed(han,s,fpga,rhd.save.backup)
             end
-            if han.show_thres
+            if han.sc.show_thres
                 plot_thres(han)
             end
             if han.sc.rb_active
@@ -1283,7 +1280,7 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
             han.scale[i,2] = -.125*.25
         end
 
-        setproperty!(han.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
+        setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
 
         han.spike_changed=true
     end
@@ -1356,29 +1353,6 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
         setproperty!(han.time.h_l,:label,string(this_h))
         han.time.h=this_h
     end
-
-    nothing
-end
-
-#Offset
-function sb_off_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-
-    mygain=getproperty(han.gain,:active,Bool)
-
-    offval=getproperty(han.offbox,:value,Int)
-    mythres=getproperty(han.adj_thres,:value,Int)
-
-    if mygain==true
-        for i=1:length(han.offset)
-            han.offset[i]=offval
-        end
-    else
-        han.offset[han.spike]=offval
-    end
-
-    han.thres_changed=true
 
     nothing
 end

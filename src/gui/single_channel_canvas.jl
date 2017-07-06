@@ -4,7 +4,7 @@
 Convert canvas coordinates to voltage vs time coordinates
 =#
 function coordinate_transform(han::Gui_Handles,event)
-    (x1,x2,y1,y2)=coordinate_transform(han,han.mi[1],han.mi[2],event.x,event.y)
+    (x1,x2,y1,y2)=coordinate_transform(han,han.sc.mi[1],han.sc.mi[2],event.x,event.y)
 end
 
 function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
@@ -356,7 +356,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     han.sc.click_button=event.button
     
     if event.button == 1 #left click captures window
-        han.mi=(event.x,event.y)
+        han.sc.mi=(event.x,event.y)
         rubberband_start(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
         if !han.sc.pause
@@ -369,7 +369,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                 draw_templates(han)
             end
         else
-            han.mi=(event.x,event.y)
+            han.sc.mi=(event.x,event.y)
             rubberband_start(han,event.x,event.y,3)
         end
     end

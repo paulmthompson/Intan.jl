@@ -15,7 +15,7 @@ sleep(1.0)
 
 facts() do
 
-    @fact handles.mi --> (0.0,0.0)
+    @fact handles.sc.mi --> (0.0,0.0)
     
 end
 

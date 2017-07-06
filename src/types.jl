@@ -315,6 +315,7 @@ type Sort_Widgets
 end
 
 type Thres_Widgets
+    sb::Gtk.GtkLabelLeaf
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
     all::Gtk.GtkCheckButtonLeaf
@@ -323,7 +324,6 @@ end
 
 type Gain_Widgets
     gainbox::Gtk.GtkSpinButtonLeaf
-    offbox::Gtk.GtkSpinButtonLeaf
     multiply::Gtk.GtkCheckButtonLeaf
     all::Gtk.GtkCheckButtonLeaf
 end
@@ -355,6 +355,8 @@ type Single_Channel
     rb_button::Gtk.GtkToggleButtonLeaf
     draw_button::Gtk.GtkToggleButtonLeaf
     selection_button::Gtk.GtkToggleButtonLeaf
+    mi::NTuple{2,Float64} #saved x,y position of mouse input
+    show_thres::Bool
 end
 
 type Gui_Handles
@@ -380,26 +382,16 @@ type Gui_Handles
     scale::Array{Float64,2}
     offset::Array{Int64,1}
     
-    mi::NTuple{2,Float64} #saved x,y position of mouse input
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
     
     total_clus::Array{Int64,1}
     
-    sb::Gtk.GtkLabelLeaf
-    
-    gain::Gtk.GtkCheckButtonLeaf
-    gainbox::Gtk.GtkSpinButtonLeaf
-    
     draws::Int64 #how many displays have occured since the last refresh
-    
-    thres_all::Gtk.GtkCheckButtonLeaf
     
     events::Array{Int64,1}
     
     enabled::Array{Bool,1}
-    
-    show_thres::Bool
-    
+
     time::mytime
     
     wave_points::Int64
@@ -416,13 +408,12 @@ type Gui_Handles
     
     scope::Array{Float64,2}
     
-    offbox::Gtk.GtkSpinButtonLeaf
-    
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
     thres_changed::Bool
     old_thres::Int64
     thres::Int64
+    
     spike_changed::Bool
     chan_per_display::Int64
 
@@ -447,8 +438,6 @@ type Gui_Handles
     ref_tv2::Gtk.GtkTreeViewLeaf
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
-    
-    gain_multiply::Gtk.GtkCheckButtonLeaf
     
     sort_cb::Bool
     soft::SoftScope

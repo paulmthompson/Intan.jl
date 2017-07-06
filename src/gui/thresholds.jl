@@ -20,7 +20,7 @@ end
 Functions used to update Sorting data structure with threshold from slider
 =#
 function update_thres(han::Gui_Handles,s::Array,backup)
-    if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
+    if (getproperty(han.thres_widgets.all,:active,Bool))|(getproperty(han.gain_widgets.all,:active,Bool))
         @inbounds for i=1:length(s)
             s[i].thres=-1*han.thres/han.scale[i,1]+han.offset[i]
             f=open(string(backup,"thres/",i,".bin"),"w")
@@ -36,7 +36,7 @@ function update_thres(han::Gui_Handles,s::Array,backup)
 end
 
 function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
-    if (getproperty(han.thres_all,:active,Bool))|(getproperty(han.gain,:active,Bool))
+    if (getproperty(han.thres_widgets.all,:active,Bool))|(getproperty(han.gain_widgets.all,:active,Bool))
         @sync begin
             for p in procs(s)
                 @async remotecall_wait((ss)->set_multiple_thres(localpart(ss),han,localindexes(ss)),p,s)
@@ -107,7 +107,7 @@ function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
     mywidget = convert(CheckButton, widget)
-    han.show_thres=getproperty(mywidget,:active,Bool)
+    han.sc.show_thres=getproperty(mywidget,:active,Bool)
     han.old_thres=getproperty(han.adj_thres,:value,Int)
     han.thres=getproperty(han.adj_thres,:value,Int)
 
@@ -119,7 +119,7 @@ function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     han,  = user_data
 
     mythres=getproperty(han.adj_thres,:value,Int)
-    setproperty!(han.sb,:label,string(mythres))
+    setproperty!(han.thres_widgets.sb,:label,string(mythres))
     han.thres_changed=true
 
     nothing
@@ -129,9 +129,9 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    mygain=getproperty(han.gain,:active,Bool)
+    mygain=getproperty(han.gain_widgets.all,:active,Bool)
 
-    gainval=getproperty(han.gainbox,:value,Int)
+    gainval=getproperty(han.gain_widgets.gainbox,:value,Int)
     mythres=getproperty(han.adj_thres,:value,Int)
 
     if mygain==true
@@ -161,12 +161,12 @@ function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
 
-    mygain=getproperty(han.gain_multiply,:active,Bool)
+    mygain=getproperty(han.gain_widgets.multiply,:active,Bool)
 
     if mygain
-        Gtk.GAccessor.increments(han.gainbox,10,10)
+        Gtk.GAccessor.increments(han.gain_widgets.gainbox,10,10)
     else
-        Gtk.GAccessor.increments(han.gainbox,1,1)
+        Gtk.GAccessor.increments(han.gain_widgets.gainbox,1,1)
     end
 
     nothing
