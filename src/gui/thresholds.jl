@@ -182,7 +182,7 @@ function plot_thres(han::Gui_Handles)
 
     line(ctx,1,han.w2,han.h2/2-han.old_thres,han.h2/2-han.old_thres)
     set_line_width(ctx,5.0)
-    set_source(ctx,han.ctx2s)
+    set_source(ctx,han.sc.ctx2s)
     stroke(ctx)
 
     line(ctx,1,han.w2,han.h2/2-han.thres,han.h2/2-han.thres)
