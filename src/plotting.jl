@@ -83,7 +83,7 @@ end
 
 function draw_isi(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.c3)
+    ctx=getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
@@ -268,7 +268,7 @@ end
 
 function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=Cairo.getgc(han.c3)
+    ctx=Cairo.getgc(han.sc.c3)
     mywidth=width(ctx)
 
     spike_num=han.spike
@@ -298,7 +298,7 @@ end
 
 function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.c3)
+    ctx=getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)

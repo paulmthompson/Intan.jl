@@ -339,6 +339,21 @@ type Table_Widgets
     list::Gtk.GtkListStoreLeaf
 end
 
+type Single_Channel
+    c2::Gtk.GtkCanvasLeaf
+    c3::Gtk.GtkCanvasLeaf
+    ctx2::Cairo.CairoContext
+    ctx2s::Cairo.CairoContext
+    rb_active::Bool
+    rb::RubberBand
+    click_button::Int64 
+    selected::Array{Bool,1}
+    plotted::Array{Bool,1}
+    hold::Bool
+    pause::Bool
+    pause_button::Gtk.GtkToggleButtonLeaf
+end
+
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     
@@ -352,18 +367,8 @@ type Gui_Handles
     adj2::Gtk.GtkAdjustmentLeaf
     
     c::Gtk.GtkCanvasLeaf
-    c2::Gtk.GtkCanvasLeaf
-    c3::Gtk.GtkCanvasLeaf
-    ctx2::Cairo.CairoContext
-    ctx2s::Cairo.CairoContext
     w2::Int64
     h2::Int64
-
-    rb_active::Bool
-    rb::RubberBand
-    selected::Array{Bool,1}
-    plotted::Array{Bool,1}
-    click_button::Int64
     
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
@@ -421,17 +426,11 @@ type Gui_Handles
     temp::ClusterTemplate
     c_changed::Bool
     
-    hold::Bool
-    
-    pause::Bool
-    
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
     
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
-    
-    pause_button::Gtk.GtkToggleButtonLeaf
     
     isi_ind::Int64
     isi_count::Int64
@@ -460,6 +459,8 @@ type Gui_Handles
     band_widgets::Band_Widgets
     table_widgets::Table_Widgets
     spect::Spectrogram
+
+    sc::Single_Channel
 
     buf::SpikeSorting.Buffer
 

@@ -9,7 +9,7 @@ end
 
 function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
     
-    ctx=han.ctx2
+    ctx=han.sc.ctx2
 
     myx=[1.0;collect(2:(han.wave_points-1)).*(han.w2/han.wave_points)]
     x1=indmin(abs(myx-xi1))
@@ -37,70 +37,70 @@ Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 
 function rubberband_start(han::Gui_Handles, x, y, button_num=1)
 
-    han.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
-    han.selected=falses(500)
-    han.plotted=falses(500)
+    han.sc.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
+    han.sc.selected=falses(500)
+    han.sc.plotted=falses(500)
 
     if button_num==1
-        push!((han.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
-        push!((han.c2.mouse, :motion), Gtk.default_mouse_cb)
-        push!((han.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+        push!((han.sc.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
+        push!((han.sc.c2.mouse, :motion), Gtk.default_mouse_cb)
+        push!((han.sc.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
     elseif button_num==3
-        push!((han.c2.mouse, :motion),  (c, event) -> rubberband_move(han,event.x, event.y))
-        push!((han.c2.mouse, :button3release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+        push!((han.sc.c2.mouse, :motion),  (c, event) -> rubberband_move(han,event.x, event.y))
+        push!((han.sc.c2.mouse, :button3release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
     end
-    han.rb_active=true
+    han.sc.rb_active=true
     nothing
 end
 
 function rubberband_move(han::Gui_Handles, x, y)
     
-    han.rb.moved = true
-    han.rb.pos2 = Vec2(x ,y)
+    han.sc.rb.moved = true
+    han.sc.rb.pos2 = Vec2(x ,y)
     nothing
 end
 
 function rubberband_stop(han::Gui_Handles, x, y,button_num)
 
     if button_num==1
-        pop!((han.c2.mouse, :button1motion))
-        pop!((han.c2.mouse, :motion))
-        pop!((han.c2.mouse, :button1release))
+        pop!((han.sc.c2.mouse, :button1motion))
+        pop!((han.sc.c2.mouse, :motion))
+        pop!((han.sc.c2.mouse, :button1release))
     elseif button_num==3
-        pop!((han.c2.mouse, :motion))
-        pop!((han.c2.mouse, :button3release))
+        pop!((han.sc.c2.mouse, :motion))
+        pop!((han.sc.c2.mouse, :button3release))
     end
         
-    han.rb.moved = false
-    han.rb_active=false
+    han.sc.rb.moved = false
+    han.sc.rb_active=false
     clear_rb(han)
     nothing
 end
 
 function draw_rb(han::Gui_Handles)
 
-    if han.rb.moved
+    if han.sc.rb.moved
 
-        ctx = han.ctx2
+        ctx = han.sc.ctx2
         clear_rb(han)
 
-        line(ctx,han.rb.pos0.x,han.rb.pos2.x,han.rb.pos0.y,han.rb.pos2.y)
+        line(ctx,han.sc.rb.pos0.x,han.sc.rb.pos2.x,han.sc.rb.pos0.y,han.sc.rb.pos2.y)
         set_line_width(ctx,1.0)
         set_source_rgb(ctx,1.0,1.0,1.0)
         stroke(ctx)   
 
         #Find selected waveforms and plot
-        if (han.buf.selected_clus>0)&((han.buf.count>0)&(han.pause))
+        if (han.buf.selected_clus>0)&((han.buf.count>0)&(han.sc.pause))
             get_selected_waveforms(han,han.buf.spikes)
             mycolor=1
-            if han.click_button==1
+            if han.sc.click_button==1
                 mycolor=han.buf.selected_clus+1
-            elseif han.click_button==3
+            elseif han.sc.click_button==3
                 mycolor=1
             end
             plot_selected_waveforms(han,han.buf.spikes,mycolor)
         end
-        han.rb.pos1=han.rb.pos2 
+        han.sc.rb.pos1=han.sc.rb.pos2 
     end
     
     nothing
@@ -108,10 +108,10 @@ end
 
 function clear_rb(han::Gui_Handles)
 
-    line(han.ctx2,han.rb.pos0.x,han.rb.pos1.x,han.rb.pos0.y,han.rb.pos1.y)
-    set_line_width(han.ctx2,2.0)
-    set_source(han.ctx2,han.ctx2s)
-    stroke(han.ctx2)
+    line(han.sc.ctx2,han.sc.rb.pos0.x,han.sc.rb.pos1.x,han.sc.rb.pos0.y,han.sc.rb.pos1.y)
+    set_line_width(han.sc.ctx2,2.0)
+    set_source(han.sc.ctx2,han.sc.ctx2s)
+    stroke(han.sc.ctx2)
     
     nothing
 end
@@ -142,7 +142,7 @@ Find which of the intersected waveforms are in a different cluster and if that d
 =#
 function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
-    (x1,x2,y1,y2)=coordinate_transform(han,han.rb.pos0.x,han.rb.pos0.y,han.rb.pos2.x,han.rb.pos2.y)
+    (x1,x2,y1,y2)=coordinate_transform(han,han.sc.rb.pos0.x,han.sc.rb.pos0.y,han.sc.rb.pos2.x,han.sc.rb.pos2.y)
 
     intersection = trues(han.buf.ind)
     find_intersected_waveforms(han.buf.spikes,intersection,han.buf.ind,x1,y1,x2,y2)
@@ -150,10 +150,10 @@ function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
     for i=1:han.buf.ind
         if han.buf.mask[i]
             if !intersection[i]
-                han.selected[i]=true
+                han.sc.selected[i]=true
             end
-            if (han.plotted[i])&(intersection[i])
-                han.selected[i]=false
+            if (han.sc.plotted[i])&(intersection[i])
+                han.sc.selected[i]=false
             end
         end
     end
@@ -191,7 +191,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     o=han.offset[han.spike]
     reads=han.draws
 
-    ctx=copy(han.ctx2s)
+    ctx=copy(han.sc.ctx2s)
     paint_with_alpha(ctx,0.0)
 
     Cairo.translate(ctx,0.0,han.h2/2)
@@ -238,13 +238,13 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     identity_matrix(ctx)
 
-    set_source(han.ctx2s,ctx)
-    mask_surface(han.ctx2s,ctx,0.0,0.0)
-    fill(han.ctx2s)
+    set_source(han.sc.ctx2s,ctx)
+    mask_surface(han.sc.ctx2s,ctx,0.0,0.0)
+    fill(han.sc.ctx2s)
 
-    set_source(han.ctx2,ctx)
-    mask_surface(han.ctx2,ctx,0.0,0.0)
-    fill(han.ctx2)
+    set_source(han.sc.ctx2,ctx)
+    mask_surface(han.sc.ctx2,ctx,0.0,0.0)
+    fill(han.sc.ctx2)
     
     nothing
 end
@@ -258,11 +258,11 @@ Redraw all spikes shown in paused view
 =#
 function replot_all_spikes(han::Gui_Handles)
 
-    clear_c2(han.c2,han.spike)
-    han.ctx2=getgc(han.c2)
-    han.ctx2s=copy(han.ctx2)
+    clear_c2(han.sc.c2,han.spike)
+    han.sc.ctx2=getgc(han.sc.c2)
+    han.sc.ctx2s=copy(han.sc.ctx2)
 
-    ctx=han.ctx2s
+    ctx=han.sc.ctx2s
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
 
@@ -283,10 +283,10 @@ function replot_all_spikes(han::Gui_Handles)
         stroke(ctx)
     end
     identity_matrix(ctx)
-    set_source(han.ctx2,ctx)
-    mask_surface(han.ctx2,ctx,0.0,0.0)
-    fill(han.ctx2)
-    reveal(han.c2)
+    set_source(han.sc.ctx2,ctx)
+    mask_surface(han.sc.ctx2,ctx,0.0,0.0)
+    fill(han.sc.ctx2)
+    reveal(han.sc.c2)
     nothing
 end
 
@@ -299,12 +299,12 @@ Plotted - true if waveform has been replotted in new color since start of increm
 =#
 function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},mycolor)
 
-    ctx=han.ctx2
+    ctx=han.sc.ctx2
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
 
     set_line_width(ctx,2.0)
-    set_source(ctx,han.ctx2s)
+    set_source(ctx,han.sc.ctx2s)
     Cairo.translate(ctx,0.0,han.h2/2)
     scale(ctx,han.w2/han.wave_points,s)
 
@@ -313,12 +313,12 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
     no longer selected
     =#
     for j=1:han.buf.count
-        if (!han.selected[j])&(han.plotted[j])
+        if (!han.sc.selected[j])&(han.sc.plotted[j])
             move_to(ctx,1,(input[1,j]-o))
             for jj=2:size(input,1)
                 line_to(ctx,jj,input[jj,j]-o)
             end
-            han.plotted[j]=false
+            han.sc.plotted[j]=false
         end
     end
     stroke(ctx)
@@ -328,12 +328,12 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
     yet been plotting in new color
     =#
     for i=1:han.buf.count
-        if (han.selected[i])&(!han.plotted[i])
+        if (han.sc.selected[i])&(!han.sc.plotted[i])
             move_to(ctx,1,(input[1,i]-o))
             for jj=2:size(input,1)
                 line_to(ctx,jj,input[jj,i]-o)
             end
-            han.plotted[i]=true
+            han.sc.plotted[i]=true
         end
     end
     set_line_width(ctx,0.5)
@@ -353,16 +353,16 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     han, = user_data
     event = unsafe_load(param_tuple)
 
-    han.click_button=event.button
+    han.sc.click_button=event.button
     
     if event.button == 1 #left click captures window
         han.mi=(event.x,event.y)
         rubberband_start(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
-        if !han.pause
-            clear_c2(han.c2,han.spike)
-            han.ctx2=getgc(han.c2)
-            han.ctx2s=copy(han.ctx2)
+        if !han.sc.pause
+            clear_c2(han.sc.c2,han.spike)
+            han.sc.ctx2=getgc(han.sc.c2)
+            han.sc.ctx2s=copy(han.sc.ctx2)
             han.buf.ind=1
             han.buf.count=1
             if han.sort_cb

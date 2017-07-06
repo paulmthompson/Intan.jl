@@ -700,21 +700,23 @@ spect_widgets=Spectrogram(r.sr)
 
 sleep(1.0)
 
+sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause)
+
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
-                    c,c2,c3,getgc(c2),copy(getgc(c2)),width(getgc(c2)),height(getgc(c2)),
-                    false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),falses(500),falses(500),1,
+                    c,width(getgc(c2)),height(getgc(c2)),
+                    
                     1,1,1,scales,offs,(0.0,0.0),(0.0,0.0),zeros(Int64,length(r.nums)),
                     sb,button_gain,sb2,0,button_thres_all,-1.*ones(Int64,6),
                     trues(length(r.nums)),false,mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,sb_offset,
                     adj_thres,thres_slider,false,0.0,0.0,false,16,ClusterTemplate(convert(Int64,s[1].s.win)),
-                    false,false,false,slider_sort,adj_sort,sort_list,sort_tv,
-                    button_pause,1,1,zeros(Int64,500),zeros(UInt32,20),
+                    false,slider_sort,adj_sort,sort_list,sort_tv,
+                    1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,gain_checkbox,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,spect_widgets,sortview_handles.buf,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,spect_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
 #=
 Template Sorting Callbacks
@@ -1077,7 +1079,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 change_cluster(han.temp,mymean,mystd,clus)
                 setproperty!(han.adj_sort, :value, 1.0)
 
-                if (clus>0)&((han.buf.count>0)&(han.pause))
+                if (clus>0)&((han.buf.count>0)&(han.sc.pause))
                     template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
                 end
                 
@@ -1089,7 +1091,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             if han.buf.replot
                 replot_all_spikes(han)
                 if visible(han.sortview_widgets.win)
-                    if !han.pause
+                    if !han.sc.pause
 
                     else
                         #Refresh Screen
@@ -1098,7 +1100,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 end
                 han.buf.replot=false
             end
-	    if (han.num>0)&(!han.pause)                     
+	    if (han.num>0)&(!han.sc.pause)                     
 		draw_spike(rhd,han)
 	    end
             if han.thres_changed
@@ -1107,7 +1109,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             if han.show_thres
                 plot_thres(han)
             end
-            if han.rb_active
+            if han.sc.rb_active
                 draw_rb(han)
             end
             draw_c3(rhd,han)
@@ -1118,19 +1120,19 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             if han.num16>0
 	        clear_c(han)
             end
-            if (!han.hold)&(!han.pause)
-	        clear_c2(han.c2,han.spike)
-                han.ctx2=getgc(han.c2)
-                han.ctx2s=copy(han.ctx2)
+            if (!han.sc.hold)&(!han.sc.pause)
+	        clear_c2(han.sc.c2,han.spike)
+                han.sc.ctx2=getgc(han.sc.c2)
+                han.sc.ctx2s=copy(han.sc.ctx2)
             end
-            clear_c3(han.c3,han.spike)
+            clear_c3(han.sc.c3,han.spike)
             #Sort Button
             if han.sort_cb
                 draw_templates(han)
             end
 	end
-        reveal(han.c2)
-        reveal(han.c3)
+        reveal(han.sc.c2)
+        reveal(han.sc.c3)
 	#write to disk, clear buffers
         queueToFile(rhd,task,fpga)
     end
@@ -1203,9 +1205,9 @@ end
 function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    clear_c2(han.c2,han.spike)
-    han.ctx2=getgc(han.c2)
-    han.ctx2s=copy(han.ctx2)
+    clear_c2(han.sc.c2,han.spike)
+    han.sc.ctx2=getgc(han.sc.c2)
+    han.sc.ctx2s=copy(han.sc.ctx2)
     #Sort Button
     if han.sort_cb
         draw_templates(han)
@@ -1218,7 +1220,7 @@ function restore_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
 
-    if han.pause
+    if han.sc.pause
         for i=1:han.buf.ind
             han.buf.mask[i]=true
         end
@@ -1279,15 +1281,15 @@ function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
     widget = convert(ToggleButton, widgetptr)
 
     if getproperty(widget,:active,Bool)
-        han.pause=true
+        han.sc.pause=true
         change_button_label(widget,"Resume")
         for i=1:length(han.buf.mask)
             han.buf.mask[i]=true
         end
     else
-        han.pause=false
+        han.sc.pause=false
         change_button_label(widget,"Pause")
-        han.hold=false
+        han.sc.hold=false
     end
 
     nothing
@@ -1297,14 +1299,14 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
 
     han, rhd = user_data
 
-    ctx=getgc(han.c2)
+    ctx=getgc(han.sc.c2)
 
     if (height(ctx)!=han.h2)|(width(ctx)!=han.w2)
 
-        han.ctx2=ctx
-        han.ctx2s=copy(han.ctx2)
-        han.w2=width(han.ctx2)
-        han.h2=height(han.ctx2)
+        han.sc.ctx2=ctx
+        han.sc.ctx2s=copy(han.sc.ctx2)
+        han.w2=width(han.sc.ctx2)
+        han.h2=height(han.sc.ctx2)
     
         setproperty!(han.adj_thres,:upper,han.h2/2)
         setproperty!(han.adj_thres,:lower,-han.h2/2)
@@ -1741,7 +1743,7 @@ end
 
 function check_c3_click(han::Gui_Handles,x,y)
 
-    ctx=getgc(han.c3)
+    ctx=getgc(han.sc.c3)
     mywidth=width(ctx)
     
     total_clus = max(han.total_clus[han.spike]+1,5)
@@ -1769,7 +1771,7 @@ end
 
 function get_template_dims(han::Gui_Handles,clus)
 
-    ctx=getgc(han.c3)
+    ctx=getgc(han.sc.c3)
     mywidth=width(ctx)
 
     total_clus = max(han.total_clus[han.spike]+1,5)

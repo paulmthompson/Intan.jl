@@ -33,14 +33,14 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
             han.buf.c_changed=true
         end
 
-        if (clus>0)&((han.buf.count>0)&(han.pause))
+        if (clus>0)&((han.buf.count>0)&(han.sc.pause))
             han.buf.replot=true
         end
     elseif event.button==3
 
         #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
         
-        if han.pause
+        if han.sc.pause
             find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
 
             if clus>0
@@ -97,22 +97,22 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     mybutton = convert(Button, widget)
 
-    if han.pause
-        Gtk.GAccessor.active(han.pause_button,false)
+    if han.sc.pause
+        Gtk.GAccessor.active(han.sc.pause_button,false)
     end
     
-    if !han.hold
-        clear_c2(han.c2,han.spike)
-        han.ctx2=getgc(han.c2)
-        han.ctx2s=copy(han.ctx2)
+    if !han.sc.hold
+        clear_c2(han.sc.c2,han.spike)
+        han.sc.ctx2=getgc(han.sc.c2)
+        han.sc.ctx2s=copy(han.sc.ctx2)
         han.buf.ind=1
         han.buf.count=1
-        han.hold=true
-        han.pause=false
+        han.sc.hold=true
+        han.sc.pause=false
         change_button_label(mybutton,"Stop Collection")
     else
         
-        Gtk.GAccessor.active(han.pause_button,true)
+        Gtk.GAccessor.active(han.sc.pause_button,true)
         change_button_label(mybutton,"Collect Templates")
 
         if han.buf.count==size(han.buf.spikes,2)
@@ -138,7 +138,7 @@ function b4_cb_template(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
         han.buf.replot=true
     else
         #Toggling, so draw template
-        if han.pause
+        if han.sc.pause
             draw_template_bounds(han)
         end
     end
@@ -148,7 +148,7 @@ end
 
 function draw_template_bounds(han::Gui_Handles)
 
-    ctx = han.ctx2
+    ctx = han.sc.ctx2
     clus=han.buf.selected_clus
     
      if clus>0
@@ -208,7 +208,7 @@ end
 
 function draw_templates(han::Gui_Handles)
 
-    ctx = han.ctx2s
+    ctx = han.sc.ctx2s
     mywidth=width(ctx)
     myheight=height(ctx)
 
@@ -251,7 +251,7 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
 
         han.temp.tol[clus] = myval
 
-        if ((han.buf.count>0)&(han.pause))
+        if ((han.buf.count>0)&(han.sc.pause))
             template_cluster(han,clus,han.temp.templates[:,clus],han.temp.sig_min[:,clus],han.temp.sig_max[:,clus],han.temp.tol[clus])
             replot_all_spikes(han)
 
@@ -372,7 +372,7 @@ end
 
 function draw_templates_c3(han::Gui_Handles)
 
-    ctx=getgc(han.c3)
+    ctx=getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
