@@ -98,6 +98,15 @@ function makegui(r::RHD2000,s,task,fpga)
     button_rb=ToggleButton()
     add_button_label(button_rb,"RubberBand")
     vbox_hold[1,3]=button_rb
+    Gtk.GAccessor.active(button_rb,true)
+
+    button_draw=ToggleButton()
+    add_button_label(button_draw,"Draw")
+    vbox_hold[2,3]=button_draw
+
+    button_selection=ToggleButton()
+    add_button_label(button_selection,"Selection")
+    vbox_hold[3,3]=button_selection
     
     #CLUSTER
     frame1_4=Frame("Clustering")
@@ -142,7 +151,7 @@ function makegui(r::RHD2000,s,task,fpga)
     Gtk.GAccessor.min_content_width(myscroll,100)
     push!(myscroll,sort_tv)
     vbox1_3_2[1,10]=myscroll
-    vbox1_3_2[1,11]=Canvas(150,10)
+    vbox1_3_2[1,11]=Canvas(180,10)
 
     vbox1_2[1,5]=frame1_4 |> showall
 
@@ -704,7 +713,7 @@ spect_widgets=Spectrogram(r.sr)
 
 sleep(1.0)
 
-sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb)
+sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
