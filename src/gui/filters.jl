@@ -176,6 +176,8 @@ function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     num=getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
 
+    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[num])+1)
+
     draw_filter_canvas(han,rhd,num)
     
     nothing

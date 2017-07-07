@@ -512,7 +512,7 @@ setproperty!(band_sw_sb3,:value,1)
 band_sw_grid[1,4]=band_sw_sb3
 band_sw_grid[2,4]=Label("Channel Number")
 
-band_sw_sb4=SpinButton(1:5)
+band_sw_sb4=SpinButton(1:1)
 setproperty!(band_sw_sb4,:value,1)
 band_sw_grid[1,5]=band_sw_sb4
 band_sw_grid[2,5]=Label("Filter Number")
