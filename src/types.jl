@@ -303,6 +303,10 @@ type Band_Widgets
     wn_sb1_l::Gtk.GtkLabelLeaf
     wn_sb2_l::Gtk.GtkLabelLeaf
 
+    output_box::Gtk.GtkComboBoxTextLeaf
+    filt_num_sb::Gtk.GtkSpinButtonLeaf
+    c::Gtk.GtkCanvasLeaf
+
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf
 end
