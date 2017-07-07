@@ -60,7 +60,9 @@ function fillFromOffline!(rhd::RHD2000)
 
     #Filter
     for i=1:length(rhd.filts)
-        apply_filter(rhd,rhd.filts[i].filt,rhd.filts[i].chan)
+        for j=1:length(rhd.filts[i])
+            apply_filter(rhd,rhd.filts[i][j].filt,rhd.filts[i][j].chan)
+        end
     end
 
     if rhd.debug.ind>=rhd.debug.maxind

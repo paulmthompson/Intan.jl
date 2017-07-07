@@ -81,16 +81,27 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
     wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
 
+    pos = 1
+    output = 0
+
     if (getproperty(han.band_widgets.sw_check,:active,Bool))
         for i=1:size(rhd.v,2)
             myfilt=make_filter(rhd,filt_type,wn1,wn2)
-            push!(rhd.filts,Intan_Filter(i,myfilt))
+            if pos > length(rhd.filts[i])
+                push!(rhd.filts[i],Intan_Filter(i,output,myfilt))
+            else
+                insert!(rhd.filts[i],pos,Intan_Filter(i,output,myfilt))
+            end
             push!(han.band_widgets.list,(i,filt_type,wn1,wn2))
         end
     else
         #add new filter
         myfilt=make_filter(rhd,filt_type,wn1,wn2)
-        push!(rhd.filts,Intan_Filter(chan_num,myfilt))
+        if pos>length(rhd.filts[chan_num])
+            push!(rhd.filts[chan_num],Intan_Filter(chan_num,output,myfilt))
+        else
+            insert!(rhd.filts[chan_num],pos,Intan_Filter(chan_num,output,myfilt))
+        end
         push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
     end
 
@@ -108,6 +119,10 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
     wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
 
+    pos = 1
+    
+    output = 0
+
     for i=0:(length(han.band_widgets.list)-1)
         if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
             #Replace Table values
@@ -117,7 +132,7 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
             #Replace actual filter
             myfilt=make_filter(rhd,filt_type,wn1,wn2)
-            rhd.filts[i+1]=Intan_Filter(rhd.filts[i+1].chan,myfilt)
+            rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,myfilt)
         end
     end
 
