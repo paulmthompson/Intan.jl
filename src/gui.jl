@@ -619,6 +619,20 @@ end
 
 set_active!(spect_f_handles[5])
 
+popupmenu_spect_win_select=Menu(popupmenu_spect_win)
+spect_w_handles=Array(RadioMenuItemLeaf,0)
+spect_w_options=[10; 50; 100]
+
+push!(spect_w_handles,RadioMenuItem(string(spect_w_options[1])))
+push!(popupmenu_spect_win_select,spect_w_handles[1])
+
+for i=2:3
+    push!(spect_w_handles,RadioMenuItem(spect_w_handles[i-1],string(spect_w_options[i])))
+    push!(popupmenu_spect_win_select,spect_w_handles[i])
+end
+
+set_active!(spect_w_handles[1])
+
 showall(popupmenu_spect) 
 
 #=
@@ -900,6 +914,10 @@ Spectrogram Callbacks
 
 for i=1:5
     signal_connect(spect_popup_freq_cb,spect_f_handles[i],"activate",Void,(),false,(handles,i-1))
+end
+
+for i=1:3
+    signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 #=

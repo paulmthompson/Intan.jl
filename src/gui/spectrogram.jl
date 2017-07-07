@@ -140,3 +140,21 @@ function spect_popup_freq_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     nothing
 end
+
+function spect_popup_win_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Int64})
+
+    han, event_id = user_data
+
+
+    if event_id == 0
+        mywin = .01
+    elseif event_id == 1
+        mywin = .05
+    else
+        mywin = .1
+    end
+
+    han.spect = Spectrogram(han.spect.fs; win_width_t = mywin, win_overlap_t = han.spect.win_overlap_t, f_max = han.spect.f_max*han.spect.f_div)
+    
+    nothing
+end

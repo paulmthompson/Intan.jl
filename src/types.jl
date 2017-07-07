@@ -260,12 +260,11 @@ type Spectrogram
     out::Array{Float64,2}
     f_div::Float64
     t_div::Float64
+    fs::Int64
 end
 
-function Spectrogram(fs)
-    win_width_t = .01
-    win_overlap_t = .002
-
+function Spectrogram(fs; win_width_t = .01,win_overlap_t = .002, f_max = 15000)
+    
     win_width_s=convert(Int, win_width_t*fs)
     win_overlap_s=convert(Int, win_overlap_t*fs)
 
@@ -275,12 +274,14 @@ function Spectrogram(fs)
     f_div=freq(S).multiplier
     t_div=time(S).step/time(S).divisor
 
-    f_max=size(P,1)
-    t_max=size(P,2)
+    f_max = ceil(Int64,f_max / f_div)
+
+    f_max = (f_max > size(P,1)) ? size(P,1) : f_max
+    t_max = size(P,2)
 
     out=zeros(Float64,f_max,t_max)
 
-    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out,f_div,t_div)
+    Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out,f_div,t_div,fs)
 end
 
 type Band_Widgets
