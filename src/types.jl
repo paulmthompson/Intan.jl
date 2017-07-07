@@ -16,6 +16,9 @@ end
 type Intan_Filter
     chan::Int64
     output::Int64
+    wn1::Int64
+    wn2::Int64
+    f_type::Int64
     filt::MyFilter
 end
 
@@ -306,6 +309,12 @@ type Band_Widgets
     output_box::Gtk.GtkComboBoxTextLeaf
     filt_num_sb::Gtk.GtkSpinButtonLeaf
     c::Gtk.GtkCanvasLeaf
+
+    wn1::Int64
+    wn2::Int64
+    f_type::Int64
+    f_pos::Int64
+    chan::Int64
 
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf

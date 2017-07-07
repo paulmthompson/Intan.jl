@@ -491,6 +491,7 @@ filter_combo = ComboBoxText()
 for choice in ["High Pass"; "Low Pass"; "BandPass"; "BandStop"]
     push!(filter_combo,choice)
 end
+setproperty!(filter_combo,:active,0)
 
 band_sw_grid[1,1]=filter_combo
 band_sw_grid[2,1]=Label("Filter Type")
@@ -498,13 +499,13 @@ band_sw_grid[2,1]=Label("Filter Type")
 band_sw_sb1=SpinButton(0:10000)
 setproperty!(band_sw_sb1,:value,10)
 band_sw_grid[1,2]=band_sw_sb1
-band_sw_sb1_l=Label("Cutoff Freq 1")
+band_sw_sb1_l=Label("High Pass Cutoff")
 band_sw_grid[2,2]=band_sw_sb1_l
 
 band_sw_sb2=SpinButton(0:10000)
 setproperty!(band_sw_sb2,:value,10)
 band_sw_grid[1,3]=band_sw_sb2
-band_sw_sb2_l=Label("Cutoff Freq 2")
+band_sw_sb2_l=Label("")
 band_sw_grid[2,3]=band_sw_sb2_l
 
 band_sw_sb3=SpinButton(1:size(r.v,2))
@@ -521,6 +522,7 @@ filter_combo_output = ComboBoxText()
 for choice in ["Spikes"; "LFP"]
     push!(filter_combo_output,choice)
 end
+setproperty!(filter_combo_output,:active,0)
 band_sw_grid[1,6]=filter_combo_output
 band_sw_grid[2,6]=Label("Output of Filter")
 
@@ -573,6 +575,7 @@ setproperty!(band_win, :title, "Filtering")
 
 showall(band_win)
 visible(band_win,false)
+Gtk.visible(band_sw_sb2,false)
 
 #SortView
 
@@ -735,7 +738,7 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
-band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,filt_tv,filt_list)
+band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,1,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
 
@@ -908,6 +911,8 @@ id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r)
 id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
 id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
 id = signal_connect(change_channel_cb,band_sw_sb3,"value-changed",Void,(),false,(handles,r))
+id = signal_connect(change_wn1_cb,band_sw_sb1,"value-changed",Void,(),false,(handles,))
+id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(handles,))
 
 
 #=

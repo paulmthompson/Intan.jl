@@ -3,15 +3,15 @@
 Filtering
 =#
 
-function make_filter(rhd::RHD2000,filter_type::String,wn1,wn2=0.0)
+function make_filter(rhd::RHD2000,filter_type::Int64,wn1,wn2=0.0)
 
-    if filter_type == "High Pass"
+    if filter_type == 1
         responsetype = Highpass(wn1; fs = rhd.sr)
-    elseif filter_type == "Low Pass"
+    elseif filter_type == 2
         responsetype = Lowpass(wn1; fs = rhd.sr)
-    elseif filter_type == "BandPass"
+    elseif filter_type == 3
         responsetype = Bandpass(wn1,wn2; fs=rhd.sr)
-    elseif filter_type == "BandStop"
+    elseif filter_type == 4
         responsetype = Bandstop(wn1,wn2; fs=rhd.sr)
     end
     designmethod=Butterworth(4)
@@ -42,24 +42,25 @@ function filter_type_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    filter_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+    filter_type = getproperty(han.band_widgets.sw_box,:active,Int64)+1
+    han.band_widgets.f_type = filter_type
 
-    if filter_type == "High Pass"
+    if filter_type == 1
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,false)
         setproperty!(han.band_widgets.wn_sb1_l,:label,"High Pass Cutoff")
         setproperty!(han.band_widgets.wn_sb2_l,:label,"")
-    elseif filter_type == "Low Pass"
+    elseif filter_type == 2
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,false)
         setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Pass Cutoff")
         setproperty!(han.band_widgets.wn_sb2_l,:label,"")
-    elseif filter_type == "BandPass"
+    elseif filter_type == 3
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,true)
         setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
         setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
-    elseif filter_type == "BandStop"
+    elseif filter_type == 4
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,true)
         setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
@@ -74,28 +75,24 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #Create Filter
     han,rhd = user_data
     
-    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+    filt_type = han.band_widgets.f_type
 
     chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
 
-    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
-    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+    wn1 = han.band_widgets.wn1
+    wn2 = han.band_widgets.wn2
 
     pos = getproperty(han.band_widgets.filt_num_sb,:value,Int64)
-    output_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.output_box))
-    if output_type == "LFP"
-        output=1
-    else
-        output=0
-    end
+    
+    output = getproperty(han.band_widgets.output_box,:active,Int64)
 
     if (getproperty(han.band_widgets.sw_check,:active,Bool))
         for i=1:size(rhd.v,2)
             myfilt=make_filter(rhd,filt_type,wn1,wn2)
             if pos > length(rhd.filts[i])
-                push!(rhd.filts[i],Intan_Filter(i,output,myfilt))
+                push!(rhd.filts[i],Intan_Filter(i,output,wn1,wn2,filt_type,myfilt))
             else
-                insert!(rhd.filts[i],pos,Intan_Filter(i,output,myfilt))
+                insert!(rhd.filts[i],pos,Intan_Filter(i,output,wn1,wn2,filt_type,myfilt))
             end
             push!(han.band_widgets.list,(i,filt_type,wn1,wn2))
         end
@@ -103,12 +100,15 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         #add new filter
         myfilt=make_filter(rhd,filt_type,wn1,wn2)
         if pos>length(rhd.filts[chan_num])
-            push!(rhd.filts[chan_num],Intan_Filter(chan_num,output,myfilt))
+            push!(rhd.filts[chan_num],Intan_Filter(chan_num,output,wn1,wn2,filt_type,myfilt))
         else
-            insert!(rhd.filts[chan_num],pos,Intan_Filter(chan_num,output,myfilt))
+            insert!(rhd.filts[chan_num],pos,Intan_Filter(chan_num,output,wn1,wn2,filt_type,myfilt))
         end
         push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
     end
+
+    draw_filter_canvas(han,rhd,chan_num)
+    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[num])+1)
 
     nothing
 end
@@ -117,21 +117,16 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
+    filt_type = han.band_widgets.f_type
 
     chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
 
-    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
-    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+    wn1 = han.band_widgets.wn1
+    wn2 = han.band_widgets.wn2
 
     pos = getproperty(han.band_widgets.filt_num_sb,:value,Int64)
 
-    output_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.output_box))
-    if output_type == "LFP"
-        output=1
-    else
-        output=0
-    end
+    output = getproperty(han.band_widgets.output_box,:active,Int64)
 
     for i=0:(length(han.band_widgets.list)-1)
         if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
@@ -143,10 +138,11 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             #Replace actual filter
             myfilt=make_filter(rhd,filt_type,wn1,wn2)
 
-            rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,myfilt)
+            rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
         end
     end
 
+    draw_filter_canvas(han,rhd,chan_num)
     
     nothing
 end
@@ -167,6 +163,25 @@ function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
 
     change_bandwidth(myic,lower,upper,dsp_lower)
     
+    nothing
+end
+
+function change_wn1_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    han.band_widgets.wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
+   
+    nothing
+end
+
+function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+    
+
     nothing
 end
 
@@ -206,7 +221,7 @@ function draw_filter_canvas(han::Gui_Handles,rhd,num)
             lr=1
         end  
 
-        draw_software_filter(han,num,ctx,i,lr)
+        draw_software_filter(rhd.filts[num][i],ctx,i,lr)
         
     end
 
@@ -228,7 +243,7 @@ function draw_hardware_filter(han,num,ctx)
     nothing
 end
 
-function draw_software_filter(han,num,ctx,i,lr)
+function draw_software_filter(myfilt,ctx,i,lr)
 
     yinit=85+(i-1)*80
 
@@ -244,16 +259,28 @@ function draw_software_filter(han,num,ctx,i,lr)
     end
     
     draw_box(x1,yinit+5,x2,yinit+45,(0.0,0.0,0.0),1.0,ctx)
-    move_to(ctx,x1+5,yinit+15)
-    filt_type = unsafe_string(Gtk.GAccessor.active_text(han.band_widgets.sw_box))
-    show_text(ctx,filt_type)
 
-    wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
-    wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
-    move_to(ctx,x1+5,yinit+25)
-    if (filt_type=="High Pass")|(filt_type=="Low Pass")
+    wn1 = myfilt.wn1
+    wn2 = myfilt.wn2
+    
+    move_to(ctx,x1+5,yinit+15)
+    if (myfilt.f_type==1)|(myfilt.f_type==2)
+        
+        if myfilt.f_type==1
+            show_text(ctx,"High Pass")
+        else
+            show_text(ctx,"Low Pass")
+        end
+        move_to(ctx,x1+5,yinit+25)
         show_text(ctx,string("Cutoff: ", wn1))
     else
+        
+        if myfilt.f_type==3
+            show_text(ctx,"BandPass")
+        else
+            show_text(ctx,"BandStop")
+        end
+        move_to(ctx,x1+5,yinit+25)
         show_text(ctx,string("Band: ", wn1, " - ", wn2))
     end
     
