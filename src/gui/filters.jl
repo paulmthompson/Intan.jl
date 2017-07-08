@@ -108,7 +108,7 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     end
 
     draw_filter_canvas(han,rhd,chan_num)
-    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[num])+1)
+    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[chan_num])+1)
 
     nothing
 end
@@ -181,7 +181,6 @@ function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
     
-
     nothing
 end
 
@@ -250,12 +249,18 @@ function draw_software_filter(myfilt,ctx,i,lr)
     if lr==0 #LFP left
         x1=25
         x2=100
+        line(ctx,x1,x1,yinit-40,yinit+5)
+        line(ctx,175,175,yinit-40,yinit+85)
+        line(ctx,x1,50,yinit-40,yinit-40)
+        line(ctx,150,175,yinit-40,yinit-40)
     elseif lr==1
         x1=50
         x2=150
+        line(ctx,100,100,yinit-40,yinit+5)
     else
         x1=100
         x2=175
+        line(ctx,x2,x2,yinit-40,yinit+5)
     end
     
     draw_box(x1,yinit+5,x2,yinit+45,(0.0,0.0,0.0),1.0,ctx)
