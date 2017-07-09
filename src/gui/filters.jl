@@ -77,14 +77,14 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     
     filt_type = han.band_widgets.f_type
 
-    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+    chan_num = han.band_widgets.chan
 
     wn1 = han.band_widgets.wn1
     wn2 = han.band_widgets.wn2
 
-    pos = getproperty(han.band_widgets.filt_num_sb,:value,Int64)
+    pos = han.band_widgets.f_pos
     
-    output = getproperty(han.band_widgets.output_box,:active,Int64)
+    output = han.band_widgets.f_out
 
     if (getproperty(han.band_widgets.sw_check,:active,Bool))
         for i=1:size(rhd.v,2)
@@ -94,7 +94,6 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             else
                 insert!(rhd.filts[i],pos,Intan_Filter(i,output,wn1,wn2,filt_type,myfilt))
             end
-            push!(han.band_widgets.list,(i,filt_type,wn1,wn2))
         end
     else
         #add new filter
@@ -104,7 +103,6 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         else
             insert!(rhd.filts[chan_num],pos,Intan_Filter(chan_num,output,wn1,wn2,filt_type,myfilt))
         end
-        push!(han.band_widgets.list,(chan_num,filt_type,wn1,wn2))
     end
 
     draw_filter_canvas(han,rhd,chan_num)
@@ -119,28 +117,19 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     filt_type = han.band_widgets.f_type
 
-    chan_num = getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+    chan_num = han.band_widgets.chan
 
     wn1 = han.band_widgets.wn1
     wn2 = han.band_widgets.wn2
 
-    pos = getproperty(han.band_widgets.filt_num_sb,:value,Int64)
+    pos = han.band_widgets.f_pos
 
-    output = getproperty(han.band_widgets.output_box,:active,Int64)
+    output = han.band_widgets.f_out
 
-    for i=0:(length(han.band_widgets.list)-1)
-        if is_selected(han.band_widgets.list,han.band_widgets.tv,i)
-            #Replace Table values
-            setindex!(han.band_widgets.list,filt_type,i+1,2)
-            setindex!(han.band_widgets.list,wn1,i+1,3)
-            setindex!(han.band_widgets.list,wn2,i+1,4)
 
-            #Replace actual filter
-            myfilt=make_filter(rhd,filt_type,wn1,wn2)
+    myfilt=make_filter(rhd,filt_type,wn1,wn2)
 
-            rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
-        end
-    end
+    rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
 
     draw_filter_canvas(han,rhd,chan_num)
     
@@ -181,6 +170,24 @@ function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
     
+    nothing
+end
+
+function change_pos_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    han.band_widgets.f_pos=getproperty!(han.band_widgets.filt_num_sb,:value,Int64)
+
+    nothing
+end
+
+function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+
+    han, = user_data
+
+    han.band_widgets.f_out = getproperty(han.band_widgets.output_box,:active,Int64)
+
     nothing
 end
 

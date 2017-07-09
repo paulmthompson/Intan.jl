@@ -314,6 +314,7 @@ type Band_Widgets
     wn2::Int64
     f_type::Int64
     f_pos::Int64
+    f_out::Int64
     chan::Int64
 
     tv::Gtk.GtkTreeViewLeaf
