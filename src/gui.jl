@@ -919,6 +919,7 @@ id = signal_connect(change_wn1_cb,band_sw_sb1,"value-changed",Void,(),false,(han
 id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(handles,r))
 id = signal_connect(change_filt_output_cb,filter_combo_output,"changed",Void,(),false,(handles,r))
 id = signal_connect(change_pos_cb,band_sw_sb4,"value-changed",Void,(),false,(r,handles))
+id = signal_connect(delete_filter_cb,band_sw_b_delete,"clicked",Void,(),false,(handles,r))
 
 #=
 Soft Scope Callbacks

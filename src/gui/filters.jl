@@ -198,6 +198,25 @@ function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000}
     nothing
 end
 
+function delete_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    if han.band_widgets.f_pos > length(rhd.filts[han.band_widgets.chan])
+    else
+
+        deleteat!(rhd.filts[han.band_widgets.chan],han.band_widgets.f_pos)
+
+        setproperty!(han.band_widgets.filt_num_sb,:value,1)
+        
+        Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
+
+        draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
+    end
+
+    nothing
+end
+
 function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
