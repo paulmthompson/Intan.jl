@@ -126,12 +126,11 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     output = han.band_widgets.f_out
 
-
     myfilt=make_filter(rhd,filt_type,wn1,wn2)
 
     rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
 
-    draw_filter_canvas(han,rhd,chan_num)
+    draw_filter_canvas(han,rhd,pos)
     
     nothing
 end
@@ -155,39 +154,47 @@ function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
     nothing
 end
 
-function change_wn1_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+function change_wn1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, = user_data
+    han,rhd = user_data
 
     han.band_widgets.wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
+
+    draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
    
     nothing
 end
 
-function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, = user_data
+    han,rhd = user_data
 
     han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+
+    draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
     
     nothing
 end
 
-function change_pos_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+function change_pos_cb(widget::Ptr,user_data::Tuple{RHD2000,Gui_Handles})
 
-    han, = user_data
+    rhd, han = user_data
 
-    han.band_widgets.f_pos=getproperty!(han.band_widgets.filt_num_sb,:value,Int64)
+    han.band_widgets.f_pos=getproperty(han.band_widgets.filt_num_sb,:value,Int64)
+
+    draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
 
     nothing
 end
 
-function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
+function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
-    han, = user_data
+    han,rhd = user_data
 
     han.band_widgets.f_out = getproperty(han.band_widgets.output_box,:active,Int64)
 
+    draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
+    
     nothing
 end
 
@@ -195,16 +202,18 @@ function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    num=getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+    han.band_widgets.chan=getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
 
-    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[num])+1)
+    Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
 
-    draw_filter_canvas(han,rhd,num)
+    setproperty!(han.band_widgets.filt_num_sb,:value,1)
+
+    draw_filter_canvas(han,rhd,1)
     
     nothing
 end
 
-function draw_filter_canvas(han::Gui_Handles,rhd,num)
+function draw_filter_canvas(han::Gui_Handles,rhd,pos)
 
     ctx = getgc(han.band_widgets.c)
 
@@ -212,9 +221,12 @@ function draw_filter_canvas(han::Gui_Handles,rhd,num)
     paint(ctx)
     set_source_rgb(ctx,0.0,0.0,0.0)
 
+    num=han.band_widgets.chan
+
     draw_hardware_filter(han,num,ctx)
 
     split=false
+    lr=1
     
     for i=1:length(rhd.filts[num])
 
@@ -227,8 +239,23 @@ function draw_filter_canvas(han::Gui_Handles,rhd,num)
             lr=1
         end  
 
-        draw_software_filter(rhd.filts[num][i],ctx,i,lr)
-        
+        if i != pos
+            draw_software_filter(rhd.filts[num][i],ctx,i,lr,(0.0,0.0,0.0),false)
+        else
+            draw_software_filter(Intan_Filter(num,han.band_widgets.f_out,han.band_widgets.wn1,han.band_widgets.wn2,han.band_widgets.f_type,make_filter(rhd,1,10,10)),ctx,i,lr,(1.0,0.0,0.0),false)
+        end
+    end
+
+    if pos>length(rhd.filts[num])
+        if han.band_widgets.f_out==1
+            lr=0
+            split=true
+        elseif split
+            lr=2
+        else
+            lr=1
+        end 
+        draw_software_filter(Intan_Filter(num,han.band_widgets.f_out,han.band_widgets.wn1,han.band_widgets.wn2,han.band_widgets.f_type,make_filter(rhd,1,10,10)),ctx,pos,lr,(1.0,0.0,0.0),true)
     end
 
     reveal(han.band_widgets.c)
@@ -249,7 +276,7 @@ function draw_hardware_filter(han,num,ctx)
     nothing
 end
 
-function draw_software_filter(myfilt,ctx,i,lr)
+function draw_software_filter(myfilt,ctx,i,lr,mycolor,myselect)
 
     yinit=85+(i-1)*80
 
@@ -269,8 +296,18 @@ function draw_software_filter(myfilt,ctx,i,lr)
         x2=175
         line(ctx,x2,x2,yinit-40,yinit+5)
     end
-    
-    draw_box(x1,yinit+5,x2,yinit+45,(0.0,0.0,0.0),1.0,ctx)
+
+    if myselect
+        dashes=[5.0,5.0,5.0]
+        set_dash(ctx,dashes,0.0)
+    end
+        
+    draw_box(x1,yinit+5,x2,yinit+45,mycolor,1.0,ctx)
+
+    if myselect
+        set_dash(ctx,Float64[])
+    end
+
 
     wn1 = myfilt.wn1
     wn2 = myfilt.wn2

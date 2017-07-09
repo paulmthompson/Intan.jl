@@ -904,15 +904,21 @@ end
 Filter Callback
 =#
 
+signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,fpga))
+
+signal_connect(band_win, :delete_event) do widget, event
+    visible(band_win, false)
+    true
+end
 id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
 id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
 id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
 id = signal_connect(change_channel_cb,band_sw_sb3,"value-changed",Void,(),false,(handles,r))
-id = signal_connect(change_wn1_cb,band_sw_sb1,"value-changed",Void,(),false,(handles,))
-id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(handles,))
-id = signal_connect(change_filt_output_cb,filter_combo_output,"changed",Void,(),false,(handles,))
-id = signal_connect(change_pos_cb,band_sw_sb4,"value-changed",Void,(),false,(handles,))
+id = signal_connect(change_wn1_cb,band_sw_sb1,"value-changed",Void,(),false,(handles,r))
+id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(handles,r))
+id = signal_connect(change_filt_output_cb,filter_combo_output,"changed",Void,(),false,(handles,r))
+id = signal_connect(change_pos_cb,band_sw_sb4,"value-changed",Void,(),false,(r,handles))
 
 #=
 Soft Scope Callbacks
@@ -952,16 +958,6 @@ id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
 
 signal_connect(ref_win, :delete_event) do widget, event
     visible(ref_win, false)
-    true
-end
-
-
-#Bandwidth Window
-
-signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,fpga))
-
-signal_connect(band_win, :delete_event) do widget, event
-    visible(band_win, false)
     true
 end
 
