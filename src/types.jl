@@ -384,6 +384,7 @@ type Single_Channel
     show_thres::Bool
     w2::Int64
     h2::Int64
+    wave_points::Int64
 end
 
 type Gui_Handles

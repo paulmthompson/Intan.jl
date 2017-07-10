@@ -156,7 +156,7 @@ function draw_template_bounds(han::Gui_Handles)
             o=han.scale[han.spike]
             
             Cairo.translate(ctx,0.0,han.sc.h2/2)
-            scale(ctx,han.sc.w2/han.wave_points,s)
+            scale(ctx,han.sc.w2/han.sc.wave_points,s)
             
             move_to(ctx,1.0,han.temp.templates[1,clus]+(han.temp.sig_max[1,clus]*han.temp.tol[clus])-o)
             
