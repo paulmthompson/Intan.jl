@@ -310,6 +310,9 @@ push!(sortmenu,save_sort_)
 load_backup_ = MenuItem("Recover Parameters from Backup")
 push!(sortmenu,load_backup_)
 
+saving_pref_=MenuItem("Saving Preferences")
+push!(sortmenu,saving_pref_)
+
 #Export
 
 exopts = MenuItem("_Export")
@@ -580,6 +583,28 @@ Gtk.visible(band_sw_sb2,false)
 sortview_handles = SpikeSorting.sort_gui(s[1].s.win+1)
 visible(sortview_handles.win,false)
 
+#=
+Save Preferences Window
+=#
+
+save_grid=Grid()
+
+save_check_volt=CheckButton("Analog Voltage")
+save_grid[1,1]=save_check_volt
+
+save_check_lfp=CheckButton("LFP")
+save_grid[1,2]=save_check_lfp
+
+save_check_ttlin=CheckButton("TTL input")
+save_grid[1,3]=save_check_ttlin
+
+save_pref_win=Window(save_grid)
+setproperty!(save_pref_win, :title, "Filtering")
+
+showall(save_pref_win)
+visible(save_pref_win,false)
+
+
 #POPUP MENUS
 
 #Enable-Disable
@@ -739,6 +764,7 @@ spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
+save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin)
 
 sleep(1.0)
 
@@ -758,7 +784,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,spect_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
 #=
 Template Sorting Callbacks
@@ -920,6 +946,20 @@ id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(han
 id = signal_connect(change_filt_output_cb,filter_combo_output,"changed",Void,(),false,(handles,r))
 id = signal_connect(change_pos_cb,band_sw_sb4,"value-changed",Void,(),false,(r,handles))
 id = signal_connect(delete_filter_cb,band_sw_b_delete,"clicked",Void,(),false,(handles,r))
+
+#=
+Save Preferences Callbacks
+=#
+
+signal_connect(saving_pref_cb,saving_pref_,"activate",Void,(),false,(handles,r))
+
+signal_connect(save_pref_win, :delete_event) do widget, event
+    visible(save_pref_win, false)
+    true
+end
+id=signal_connect(save_volt_cb,save_check_volt,"clicked",Void,(),false,(handles,r))
+id=signal_connect(save_lfp_cb,save_check_lfp,"clicked",Void,(),false,(handles,r))
+id=signal_connect(save_ttlin_cb,save_check_ttlin,"clicked",Void,(),false,(handles,r))
 
 #=
 Soft Scope Callbacks
@@ -1405,204 +1445,6 @@ function sv_open_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     nothing
 end
 
-#=
-Export Callbacks
-=#
-function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    write_plex(save_dialog("Export to Plex",han.win),rhd.save.v,rhd.save.ts,rhd.save.ttl)
-
-    nothing
-end
-
-function export_jld_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han,rhd = user_data
-
-    #get prefix for exported data name
-
-    #find out what to export
-
-    #call appropriate save functions based on above
-    
-    nothing
-end
-
-function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han,rhd = user_data
-
-    nothing
-end
-
-function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
-
-    han, rhd, s = user_data
-
-    filepath=save_dialog("Save configuration",han.win)
-
-    if filepath != ""
-
-        if filepath[end-3:end]==".jld"
-        else
-            filepath=string(filepath,".jld")
-        end
-    
-        file = jldopen(filepath, "w")
-    
-        write(file, "Gain", han.scale)
-        write(file, "Offset", han.offset)
-        write(file, "Sorting", s)
-        write(file, "total_clus",han.total_clus)
-        write(file, "Enabled", han.enabled)
-        write(file, "Reference",rhd.refs)
-        
-        close(file)
-
-    end
-    
-    nothing
-end
-
-function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
-
-    han, rhd, s = user_data
-
-    filepath=open_dialog("Load Configuration",han.win)
-
-    if filepath != ""
-
-        c = jldopen(filepath, "r") do file
-            g=read(file,"Gain")
-
-            for i=1:length(g)
-                han.scale[i]=g[i]
-            end
-            
-            o=read(file,"Offset")
-            
-            for i=1:length(o)
-                han.offset[i]=o[i]
-            end
-            
-            s_saved=read(file,"Sorting")
-            
-            for i=1:length(s)
-                s[i]=s_saved[i]
-            end
-            
-            total_clus=read(file,"total_clus")
-            for i=1:length(total_clus)
-                han.total_clus[i]=total_clus[i]
-            end
-            
-            e=read(file,"Enabled")
-            
-            for i=1:length(e)
-                han.enabled[i]=e[i]
-            end
-            
-            refs=read(file,"Reference")
-            
-            for i=1:length(refs)
-                rhd.refs[i]=refs[i]
-            end
-        end
-
-        update_treeview(han)
-
-        update_ref(rhd,han)
-
-    end
-
-    nothing
-end
-
-function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
-
-    han, rhd, s = user_data
-
-    filepath=open_dialog("Select Backup File",han.win)
-
-    if filepath != ""
-
-        filepath=filepath[1:(end-10)]
-        println(filepath)
-        #Enabled
-
-        f=open(string(filepath,"enabled.bin"),"r")
-
-        seekend(f)
-        chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
-        
-        seekstart(f)
-        for i=1:(chan_num)
-            han.enabled[i]=read(f,UInt8)
-        end
-        
-        close(f)
-        
-        #Reference
-        if isfile(string(filepath,"ref.bin"))
-            f=open(string(filepath,"ref.bin"),"r")
-            for i=1:(chan_num)
-                rhd.refs[i]=read(f,Int64)
-            end
-            close(f)
-        end
-        
-        #Gain
-        for i=1:chan_num
-            if isfile(string(filepath,"gain/",i,".bin"))
-                f=open(string(filepath,"gain/",i,".bin"),"r")
-                han.scale[i,1]=read(f,Float64)
-                han.scale[i,2]=han.scale[i,1]*.2
-                close(f)
-            end
-        end
-        
-        #Thres
-        for i=1:chan_num
-            if isfile(string(filepath,"thres/",i,".bin"))
-                f=open(string(filepath,"thres/",i,".bin"),"r")
-                s[i].thres=read(f,Float64)
-                close(f)
-            end
-        end
-        
-        for i=1:chan_num
-            if isfile(string(filepath,"cluster/",i,".bin"))
-                f=open(string(filepath,"cluster/",i,".bin"),"r")
-                for j=1:length(han.temp.templates)
-                    s[i].c.templates[j]=read(f,Float64)
-                end
-                for j=1:length(han.temp.sig_min)
-                    s[i].c.sig_min[j]=read(f,Float64)
-                end
-                for j=1:length(han.temp.sig_max)
-                    s[i].c.sig_max[j]=read(f,Float64)
-                end
-                s[i].c.misses=read(f,Int64)
-                s[i].c.num=read(f,Int64)
-                for j=1:length(han.temp.tol)
-                    s[i].c.tol[j]=read(f,Float64)
-                end
-                han.total_clus[i]=s[i].c.num
-                close(f)
-            end
-        end
-        
-        get_thres(han,s)
-        get_cluster(han,s)
-        update_treeview(han)
-        select_unit(han)
-        draw_templates(han)
-        update_ref(rhd,han)
-    end
-    nothing
-end
 
 #=
 Right Canvas Callbacks

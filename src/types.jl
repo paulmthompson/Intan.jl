@@ -355,6 +355,13 @@ type Table_Widgets
     list::Gtk.GtkListStoreLeaf
 end
 
+type Save_Widgets
+    win::Gtk.GtkWindowLeaf
+    volt::Gtk.GtkCheckButtonLeaf
+    lfp::Gtk.GtkCheckButtonLeaf
+    ttlin::Gtk.GtkCheckButtonLeaf
+end
+
 type Single_Channel
     c2::Gtk.GtkCanvasLeaf
     c3::Gtk.GtkCanvasLeaf
@@ -467,6 +474,7 @@ type Gui_Handles
     band_widgets::Band_Widgets
     table_widgets::Table_Widgets
     spect::Spectrogram
+    save_widgets::Save_Widgets
 
     sc::Single_Channel
 

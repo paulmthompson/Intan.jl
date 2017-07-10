@@ -679,3 +679,226 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
 
     nothing
 end
+
+function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+
+    han, rhd, s = user_data
+
+    filepath=save_dialog("Save configuration",han.win)
+
+    if filepath != ""
+
+        if filepath[end-3:end]==".jld"
+        else
+            filepath=string(filepath,".jld")
+        end
+    
+        file = jldopen(filepath, "w")
+    
+        write(file, "Gain", han.scale)
+        write(file, "Offset", han.offset)
+        write(file, "Sorting", s)
+        write(file, "total_clus",han.total_clus)
+        write(file, "Enabled", han.enabled)
+        write(file, "Reference",rhd.refs)
+        
+        close(file)
+
+    end
+    
+    nothing
+end
+
+
+function export_plex_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    write_plex(save_dialog("Export to Plex",han.win),rhd.save.v,rhd.save.ts,rhd.save.ttl)
+
+    nothing
+end
+
+function export_jld_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    #get prefix for exported data name
+
+    #find out what to export
+
+    #call appropriate save functions based on above
+    
+    nothing
+end
+
+function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    nothing
+end
+
+
+function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+
+    han, rhd, s = user_data
+
+    filepath=open_dialog("Load Configuration",han.win)
+
+    if filepath != ""
+
+        c = jldopen(filepath, "r") do file
+            g=read(file,"Gain")
+
+            for i=1:length(g)
+                han.scale[i]=g[i]
+            end
+            
+            o=read(file,"Offset")
+            
+            for i=1:length(o)
+                han.offset[i]=o[i]
+            end
+            
+            s_saved=read(file,"Sorting")
+            
+            for i=1:length(s)
+                s[i]=s_saved[i]
+            end
+            
+            total_clus=read(file,"total_clus")
+            for i=1:length(total_clus)
+                han.total_clus[i]=total_clus[i]
+            end
+            
+            e=read(file,"Enabled")
+            
+            for i=1:length(e)
+                han.enabled[i]=e[i]
+            end
+            
+            refs=read(file,"Reference")
+            
+            for i=1:length(refs)
+                rhd.refs[i]=refs[i]
+            end
+        end
+
+        update_treeview(han)
+
+        update_ref(rhd,han)
+
+    end
+
+    nothing
+end
+
+
+function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+
+    han, rhd, s = user_data
+
+    filepath=open_dialog("Select Backup File",han.win)
+
+    if filepath != ""
+
+        filepath=filepath[1:(end-10)]
+        println(filepath)
+        #Enabled
+
+        f=open(string(filepath,"enabled.bin"),"r")
+
+        seekend(f)
+        chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
+        
+        seekstart(f)
+        for i=1:(chan_num)
+            han.enabled[i]=read(f,UInt8)
+        end
+        
+        close(f)
+        
+        #Reference
+        if isfile(string(filepath,"ref.bin"))
+            f=open(string(filepath,"ref.bin"),"r")
+            for i=1:(chan_num)
+                rhd.refs[i]=read(f,Int64)
+            end
+            close(f)
+        end
+        
+        #Gain
+        for i=1:chan_num
+            if isfile(string(filepath,"gain/",i,".bin"))
+                f=open(string(filepath,"gain/",i,".bin"),"r")
+                han.scale[i,1]=read(f,Float64)
+                han.scale[i,2]=han.scale[i,1]*.2
+                close(f)
+            end
+        end
+        
+        #Thres
+        for i=1:chan_num
+            if isfile(string(filepath,"thres/",i,".bin"))
+                f=open(string(filepath,"thres/",i,".bin"),"r")
+                s[i].thres=read(f,Float64)
+                close(f)
+            end
+        end
+        
+        for i=1:chan_num
+            if isfile(string(filepath,"cluster/",i,".bin"))
+                f=open(string(filepath,"cluster/",i,".bin"),"r")
+                for j=1:length(han.temp.templates)
+                    s[i].c.templates[j]=read(f,Float64)
+                end
+                for j=1:length(han.temp.sig_min)
+                    s[i].c.sig_min[j]=read(f,Float64)
+                end
+                for j=1:length(han.temp.sig_max)
+                    s[i].c.sig_max[j]=read(f,Float64)
+                end
+                s[i].c.misses=read(f,Int64)
+                s[i].c.num=read(f,Int64)
+                for j=1:length(han.temp.tol)
+                    s[i].c.tol[j]=read(f,Float64)
+                end
+                han.total_clus[i]=s[i].c.num
+                close(f)
+            end
+        end
+        
+        get_thres(han,s)
+        get_cluster(han,s)
+        update_treeview(han)
+        select_unit(han)
+        draw_templates(han)
+        update_ref(rhd,han)
+    end
+    nothing
+end
+
+function saving_pref_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han, rhd = user_data
+
+    visible(han.save_widgets.win,true)
+    nothing
+end
+
+function save_volt_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han,rhd = user_data
+    nothing
+end
+
+function save_lfp_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+    nothing
+end
+
+function save_ttlin_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han,rhd = user_data
+    nothing
+end
