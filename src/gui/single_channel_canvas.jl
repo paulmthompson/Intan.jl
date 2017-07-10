@@ -35,45 +35,45 @@ end
 Rubber Band functions adopted from GtkUtilities.jl package by Tim Holy 2015
 =#
 
-function rubberband_start(han::Gui_Handles, x, y, button_num=1)
+function rubberband_start(sc::Single_Channel, x, y, button_num=1)
 
-    han.sc.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
-    han.sc.selected=falses(500)
-    han.sc.plotted=falses(500)
+    sc.rb = RubberBand(Vec2(x,y), Vec2(x,y), Vec2(x,y), [Vec2(x,y)],false, 2)
+    sc.selected=falses(500)
+    sc.plotted=falses(500)
 
     if button_num==1
-        push!((han.sc.c2.mouse, :button1motion),  (c, event) -> rubberband_move(han,event.x, event.y))
-        push!((han.sc.c2.mouse, :motion), Gtk.default_mouse_cb)
-        push!((han.sc.c2.mouse, :button1release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+        push!((sc.c2.mouse, :button1motion),  (c, event) -> rubberband_move(sc,event.x, event.y))
+        push!((sc.c2.mouse, :motion), Gtk.default_mouse_cb)
+        push!((sc.c2.mouse, :button1release), (c, event) -> rubberband_stop(sc,event.x, event.y,button_num))
     elseif button_num==3
-        push!((han.sc.c2.mouse, :motion),  (c, event) -> rubberband_move(han,event.x, event.y))
-        push!((han.sc.c2.mouse, :button3release), (c, event) -> rubberband_stop(han,event.x, event.y,button_num))
+        push!((sc.c2.mouse, :motion),  (c, event) -> rubberband_move(sc,event.x, event.y))
+        push!((sc.c2.mouse, :button3release), (c, event) -> rubberband_stop(sc,event.x, event.y,button_num))
     end
-    han.sc.rb_active=true
+    sc.rb_active=true
     nothing
 end
 
-function rubberband_move(han::Gui_Handles, x, y)
+function rubberband_move(sc::Single_Channel, x, y)
     
-    han.sc.rb.moved = true
-    han.sc.rb.pos2 = Vec2(x ,y)
+    sc.rb.moved = true
+    sc.rb.pos2 = Vec2(x ,y)
     nothing
 end
 
-function rubberband_stop(han::Gui_Handles, x, y,button_num)
+function rubberband_stop(sc::Single_Channel, x, y,button_num)
 
     if button_num==1
-        pop!((han.sc.c2.mouse, :button1motion))
-        pop!((han.sc.c2.mouse, :motion))
-        pop!((han.sc.c2.mouse, :button1release))
+        pop!((sc.c2.mouse, :button1motion))
+        pop!((sc.c2.mouse, :motion))
+        pop!((sc.c2.mouse, :button1release))
     elseif button_num==3
-        pop!((han.sc.c2.mouse, :motion))
-        pop!((han.sc.c2.mouse, :button3release))
+        pop!((sc.c2.mouse, :motion))
+        pop!((sc.c2.mouse, :button3release))
     end
         
-    han.sc.rb.moved = false
-    han.sc.rb_active=false
-    clear_rb(han)
+    sc.rb.moved = false
+    sc.rb_active=false
+    clear_rb(sc)
     nothing
 end
 
@@ -82,7 +82,7 @@ function draw_rb(han::Gui_Handles)
     if han.sc.rb.moved
 
         ctx = han.sc.ctx2
-        clear_rb(han)
+        clear_rb(han.sc)
 
         line(ctx,han.sc.rb.pos0.x,han.sc.rb.pos2.x,han.sc.rb.pos0.y,han.sc.rb.pos2.y)
         set_line_width(ctx,1.0)
@@ -106,12 +106,12 @@ function draw_rb(han::Gui_Handles)
     nothing
 end
 
-function clear_rb(han::Gui_Handles)
+function clear_rb(sc::Single_Channel)
 
-    line(han.sc.ctx2,han.sc.rb.pos0.x,han.sc.rb.pos1.x,han.sc.rb.pos0.y,han.sc.rb.pos1.y)
-    set_line_width(han.sc.ctx2,2.0)
-    set_source(han.sc.ctx2,han.sc.ctx2s)
-    stroke(han.sc.ctx2)
+    line(sc.ctx2,sc.rb.pos0.x,sc.rb.pos1.x,sc.rb.pos0.y,sc.rb.pos1.y)
+    set_line_width(sc.ctx2,2.0)
+    set_source(sc.ctx2,sc.ctx2s)
+    stroke(sc.ctx2)
     
     nothing
 end
@@ -357,7 +357,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     
     if event.button == 1 #left click captures window
         han.sc.mi=(event.x,event.y)
-        rubberband_start(han,event.x,event.y)
+        rubberband_start(han.sc,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
         if !han.sc.pause
             clear_c2(han.sc.c2,han.spike)
@@ -370,7 +370,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             end
         else
             han.sc.mi=(event.x,event.y)
-            rubberband_start(han,event.x,event.y,3)
+            rubberband_start(han.sc,event.x,event.y,3)
         end
     end
     nothing
