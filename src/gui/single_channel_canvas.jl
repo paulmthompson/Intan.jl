@@ -11,13 +11,13 @@ function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Fl
     
     ctx=han.sc.ctx2
 
-    myx=[1.0;collect(2:(han.wave_points-1)).*(han.w2/han.wave_points)]
+    myx=[1.0;collect(2:(han.wave_points-1)).*(han.sc.w2/han.wave_points)]
     x1=indmin(abs(myx-xi1))
     x2=indmin(abs(myx-xi2))
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
-    y1=(yi1-han.h2/2+o)/s
-    y2=(yi2-han.h2/2+o)/s
+    y1=(yi1-han.sc.h2/2+o)/s
+    y2=(yi2-han.sc.h2/2+o)/s
     
     #ensure that left most point is first
     if x1>x2
@@ -194,8 +194,8 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     ctx=copy(han.sc.ctx2s)
     paint_with_alpha(ctx,0.0)
 
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
+    Cairo.translate(ctx,0.0,han.sc.h2/2)
+    scale(ctx,han.sc.w2/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
 
@@ -266,8 +266,8 @@ function replot_all_spikes(han::Gui_Handles)
     s=han.scale[han.spike,1]
     o=han.offset[han.spike]
 
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
+    Cairo.translate(ctx,0.0,han.sc.h2/2)
+    scale(ctx,han.sc.w2/han.wave_points,s)
 
     for i=1:(han.total_clus[han.spike]+1)
         for j=1:han.buf.ind
@@ -305,8 +305,8 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
 
     set_line_width(ctx,2.0)
     set_source(ctx,han.sc.ctx2s)
-    Cairo.translate(ctx,0.0,han.h2/2)
-    scale(ctx,han.w2/han.wave_points,s)
+    Cairo.translate(ctx,0.0,han.sc.h2/2)
+    scale(ctx,han.sc.w2/han.wave_points,s)
 
     #=
     Reset waveforms that have changed since the start but are

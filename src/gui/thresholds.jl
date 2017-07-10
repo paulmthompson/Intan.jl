@@ -180,12 +180,12 @@ function plot_thres(han::Gui_Handles)
     
     ctx = han.sc.ctx2
 
-    line(ctx,1,han.w2,han.h2/2-han.old_thres,han.h2/2-han.old_thres)
+    line(ctx,1,han.sc.w2,han.sc.h2/2-han.old_thres,han.sc.h2/2-han.old_thres)
     set_line_width(ctx,5.0)
     set_source(ctx,han.sc.ctx2s)
     stroke(ctx)
 
-    line(ctx,1,han.w2,han.h2/2-han.thres,han.h2/2-han.thres)
+    line(ctx,1,han.sc.w2,han.sc.h2/2-han.thres,han.sc.h2/2-han.thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)

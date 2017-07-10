@@ -382,6 +382,8 @@ type Single_Channel
     selection_button::Gtk.GtkToggleButtonLeaf
     mi::NTuple{2,Float64} #saved x,y position of mouse input
     show_thres::Bool
+    w2::Int64
+    h2::Int64
 end
 
 type Gui_Handles
@@ -397,8 +399,6 @@ type Gui_Handles
     adj2::Gtk.GtkAdjustmentLeaf
     
     c::Gtk.GtkCanvasLeaf
-    w2::Int64
-    h2::Int64
     
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
