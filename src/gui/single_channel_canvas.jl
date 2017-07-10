@@ -3,21 +3,21 @@
 #=
 Convert canvas coordinates to voltage vs time coordinates
 =#
-function coordinate_transform(han::Gui_Handles,event)
-    (x1,x2,y1,y2)=coordinate_transform(han,han.sc.mi[1],han.sc.mi[2],event.x,event.y)
+function coordinate_transform(sc::Single_Channel,event)
+    (x1,x2,y1,y2)=coordinate_transform(sc,sc.mi[1],sc.mi[2],event.x,event.y)
 end
 
-function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
+function coordinate_transform(sc::Single_Channel,xi1::Float64,yi1::Float64,xi2::Float64,yi2::Float64)
     
-    ctx=han.sc.ctx2
+    ctx=sc.ctx2
 
-    myx=[1.0;collect(2:(han.sc.wave_points-1)).*(han.sc.w2/han.sc.wave_points)]
+    myx=[1.0;collect(2:(sc.wave_points-1)).*(sc.w2/sc.wave_points)]
     x1=indmin(abs(myx-xi1))
     x2=indmin(abs(myx-xi2))
-    s=han.sc.s
-    o=han.sc.o
-    y1=(yi1-han.sc.h2/2+o)/s
-    y2=(yi2-han.sc.h2/2+o)/s
+    s=sc.s
+    o=sc.o
+    y1=(yi1-sc.h2/2+o)/s
+    y2=(yi2-sc.h2/2+o)/s
     
     #ensure that left most point is first
     if x1>x2
@@ -142,7 +142,7 @@ Find which of the intersected waveforms are in a different cluster and if that d
 =#
 function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
 
-    (x1,x2,y1,y2)=coordinate_transform(han,han.sc.rb.pos0.x,han.sc.rb.pos0.y,han.sc.rb.pos2.x,han.sc.rb.pos2.y)
+    (x1,x2,y1,y2)=coordinate_transform(han.sc,han.sc.rb.pos0.x,han.sc.rb.pos0.y,han.sc.rb.pos2.x,han.sc.rb.pos2.y)
 
     intersection = trues(han.buf.ind)
     find_intersected_waveforms(han.buf.spikes,intersection,han.buf.ind,x1,y1,x2,y2)

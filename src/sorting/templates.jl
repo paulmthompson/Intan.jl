@@ -18,7 +18,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
     clus=han.buf.selected_clus
 
-    (x1,x2,y1,y2)=coordinate_transform(han,event)
+    (x1,x2,y1,y2)=coordinate_transform(han.sc,event)
     
     if event.button==1
 
