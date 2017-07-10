@@ -35,7 +35,7 @@ function table_cb(widget::Ptr, user_data::Tuple{Gui_Handles,RHD2000})
     for i=1:size(rhd.v,2)
 
         setindex!(han.table_widgets.list,round(Int64,han.scale[i,1]*-1000),i,2)
-        setindex!(han.table_widgets.list,han.thres,i,3)
+        setindex!(han.table_widgets.list,han.sc.thres,i,3)
         setindex!(han.table_widgets.list,rhd.refs[i],i,4)
         setindex!(han.table_widgets.list,han.enabled[i],i,5)
 

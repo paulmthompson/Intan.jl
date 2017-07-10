@@ -388,6 +388,8 @@ type Single_Channel
     s::Float64
     o::Float64
     buf::SpikeSorting.Buffer
+    thres::Float64
+    old_thres::Float64
 end
 
 type Gui_Handles
@@ -440,8 +442,6 @@ type Gui_Handles
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
     thres_changed::Bool
-    old_thres::Int64
-    thres::Int64
     
     spike_changed::Bool
     chan_per_display::Int64

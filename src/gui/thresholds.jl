@@ -5,7 +5,7 @@ Set Threshold for sorting equal to GUI threshold
 function thres_changed(han::Gui_Handles,s,fpga,backup)
 
     mythres=getproperty(han.adj_thres,:value,Int)
-    han.thres=mythres
+    han.sc.thres=mythres
 
     update_thres(han,s,backup)
 
@@ -22,13 +22,13 @@ Functions used to update Sorting data structure with threshold from slider
 function update_thres(han::Gui_Handles,s::Array,backup)
     if (getproperty(han.thres_widgets.all,:active,Bool))|(getproperty(han.gain_widgets.all,:active,Bool))
         @inbounds for i=1:length(s)
-            s[i].thres=-1*han.thres/han.scale[i,1]+han.offset[i]
+            s[i].thres=-1*han.sc.thres/han.scale[i,1]+han.offset[i]
             f=open(string(backup,"thres/",i,".bin"),"w")
             write(f,s[i].thres)
             close(f)
         end    
     else
-        @inbounds s[han.spike].thres=-1*han.thres/han.scale[han.spike,1]+han.offset[han.spike]
+        @inbounds s[han.spike].thres=-1*han.sc.thres/han.sc.s+han.sc.o
         f=open(string(backup,"thres/",han.spike,".bin"),"w")
         write(f,s[han.spike].thres)
         close(f)
@@ -44,14 +44,14 @@ function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
         end
         for i=1:size(han.scale,1)
             f=open(string(backup,"thres/",i,".bin"),"w")
-            write(f,-1*han.thres/han.scale[i,1]+h.offset[i])
+            write(f,-1*han.sc.thres/han.scale[i,1]+h.offset[i])
             close(f)
         end
     else
         (nn,mycore)=get_thres_id(s,han.spike)
-        remotecall_wait(((x,h,num)->localpart(x)[num].thres=-1*h.thres/h.scale[h.spike,1]+h.offset[h.spike]),mycore,s,han,nn)
+        remotecall_wait(((x,h,num)->localpart(x)[num].thres=-1*h.sc.thres/h.sc.s+h.sc.o),mycore,s,han,nn)
         f=open(string(backup,"thres/",han.spike,".bin"),"w")
-        write(f,-1*han.thres/han.scale[han.spike,1]+h.offset[han.spike])
+        write(f,-1*han.sc.thres/han.sc.s+h.sc.o)
         close(f)
     end
 end
@@ -73,7 +73,7 @@ end
 
 function set_multiple_thres(s::Array,han::Gui_Handles,inds)
     @inbounds for i=1:length(s)
-        s[i].thres=-1*han.thres/han.scale[inds[1][i],1]+han.offset[inds[1][i]]
+        s[i].thres=-1*han.sc.thres/han.scale[inds[1][i],1]+han.offset[inds[1][i]]
     end 
 end
 
@@ -84,7 +84,7 @@ Get threshold from Sorting data structure and set threshold in GUI handles equal
 function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
     
-    mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.offset[h.spike])*h.scale[h.spike,1]*-1),mycore,s,han,nn)
+    mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.sc.o)*h.sc.s*-1),mycore,s,han,nn)
 
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
@@ -93,7 +93,7 @@ end
 
 function get_thres{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
 
-    mythres=(s[han.spike].thres-han.offset[han.spike])*han.scale[han.spike,1]*-1
+    mythres=(s[han.spike].thres-han.sc.o)*han.sc.s*-1
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
@@ -108,8 +108,8 @@ function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     han, = user_data
     mywidget = convert(CheckButton, widget)
     han.sc.show_thres=getproperty(mywidget,:active,Bool)
-    han.old_thres=getproperty(han.adj_thres,:value,Int)
-    han.thres=getproperty(han.adj_thres,:value,Int)
+    han.sc.old_thres=getproperty(han.adj_thres,:value,Int)
+    han.sc.thres=getproperty(han.adj_thres,:value,Int)
 
     nothing
 end
@@ -178,20 +178,20 @@ end
 Show threshold on canvas
 =#
 
-function plot_thres(han::Gui_Handles)
+function plot_thres(sc::Single_Channel)
     
-    ctx = han.sc.ctx2
+    ctx = sc.ctx2
 
-    line(ctx,1,han.sc.w2,han.sc.h2/2-han.old_thres,han.sc.h2/2-han.old_thres)
+    line(ctx,1,sc.w2,sc.h2/2-sc.old_thres,sc.h2/2-sc.old_thres)
     set_line_width(ctx,5.0)
-    set_source(ctx,han.sc.ctx2s)
+    set_source(ctx,sc.ctx2s)
     stroke(ctx)
 
-    line(ctx,1,han.sc.w2,han.sc.h2/2-han.thres,han.sc.h2/2-han.thres)
+    line(ctx,1,sc.w2,sc.h2/2-sc.thres,sc.h2/2-sc.thres)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
-    han.old_thres=han.thres
+    sc.old_thres=sc.thres
     nothing
 end
 

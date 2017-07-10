@@ -147,7 +147,7 @@ function plot_thres_scope(han,rhd,ctx)
 
     myheight=height(ctx)
     
-    thres=han.thres*han.soft.v_div
+    thres=han.sc.thres*han.soft.v_div
 
     move_to(ctx,1,myheight-150-thres+2)
     line_to(ctx,500,myheight-150-thres+2)
