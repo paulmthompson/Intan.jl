@@ -77,30 +77,30 @@ function rubberband_stop(sc::Single_Channel, x, y,button_num)
     nothing
 end
 
-function draw_rb(han::Gui_Handles)
+function draw_rb(sc::Single_Channel)
 
-    if han.sc.rb.moved
+    if sc.rb.moved
 
-        ctx = han.sc.ctx2
-        clear_rb(han.sc)
+        ctx = sc.ctx2
+        clear_rb(sc)
 
-        line(ctx,han.sc.rb.pos0.x,han.sc.rb.pos2.x,han.sc.rb.pos0.y,han.sc.rb.pos2.y)
+        line(ctx,sc.rb.pos0.x,sc.rb.pos2.x,sc.rb.pos0.y,sc.rb.pos2.y)
         set_line_width(ctx,1.0)
         set_source_rgb(ctx,1.0,1.0,1.0)
         stroke(ctx)   
 
         #Find selected waveforms and plot
-        if (han.buf.selected_clus>0)&((han.buf.count>0)&(han.sc.pause))
-            get_selected_waveforms(han,han.buf.spikes)
+        if (sc.buf.selected_clus>0)&((sc.buf.count>0)&(sc.pause))
+            get_selected_waveforms(sc,sc.buf.spikes)
             mycolor=1
-            if han.sc.click_button==1
-                mycolor=han.buf.selected_clus+1
-            elseif han.sc.click_button==3
+            if sc.click_button==1
+                mycolor=sc.buf.selected_clus+1
+            elseif sc.click_button==3
                 mycolor=1
             end
-            plot_selected_waveforms(han,han.buf.spikes,mycolor)
+            plot_selected_waveforms(sc,sc.buf.spikes,mycolor)
         end
-        han.sc.rb.pos1=han.sc.rb.pos2 
+        sc.rb.pos1=sc.rb.pos2 
     end
     
     nothing
@@ -140,20 +140,20 @@ end
 #=
 Find which of the intersected waveforms are in a different cluster and if that difference has already been plotted
 =#
-function get_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2})
+function get_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2})
 
-    (x1,x2,y1,y2)=coordinate_transform(han.sc,han.sc.rb.pos0.x,han.sc.rb.pos0.y,han.sc.rb.pos2.x,han.sc.rb.pos2.y)
+    (x1,x2,y1,y2)=coordinate_transform(sc,sc.rb.pos0.x,sc.rb.pos0.y,sc.rb.pos2.x,sc.rb.pos2.y)
 
-    intersection = trues(han.buf.ind)
-    find_intersected_waveforms(han.buf.spikes,intersection,han.buf.ind,x1,y1,x2,y2)
+    intersection = trues(sc.buf.ind)
+    find_intersected_waveforms(sc.buf.spikes,intersection,sc.buf.ind,x1,y1,x2,y2)
 
-    for i=1:han.buf.ind
-        if han.buf.mask[i]
+    for i=1:sc.buf.ind
+        if sc.buf.mask[i]
             if !intersection[i]
-                han.sc.selected[i]=true
+                sc.selected[i]=true
             end
-            if (han.sc.plotted[i])&(intersection[i])
-                han.sc.selected[i]=false
+            if (sc.plotted[i])&(intersection[i])
+                sc.selected[i]=false
             end
         end
     end
@@ -297,28 +297,28 @@ Plot waveforms in incremental way
 Selected - true if waveform is captured by incremental capture
 Plotted - true if waveform has been replotted in new color since start of incremental capture
 =#
-function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},mycolor)
+function plot_selected_waveforms{T<:Real}(sc::Single_Channel,input::Array{T,2},mycolor)
 
-    ctx=han.sc.ctx2
-    s=han.sc.s
-    o=han.sc.o
+    ctx=sc.ctx2
+    s=sc.s
+    o=sc.o
 
     set_line_width(ctx,2.0)
-    set_source(ctx,han.sc.ctx2s)
-    Cairo.translate(ctx,0.0,han.sc.h2/2)
-    scale(ctx,han.sc.w2/han.sc.wave_points,s)
+    set_source(ctx,sc.ctx2s)
+    Cairo.translate(ctx,0.0,sc.h2/2)
+    scale(ctx,sc.w2/sc.wave_points,s)
 
     #=
     Reset waveforms that have changed since the start but are
     no longer selected
     =#
-    for j=1:han.buf.count
-        if (!han.sc.selected[j])&(han.sc.plotted[j])
+    for j=1:sc.buf.count
+        if (!sc.selected[j])&(sc.plotted[j])
             move_to(ctx,1,(input[1,j]-o))
             for jj=2:size(input,1)
                 line_to(ctx,jj,input[jj,j]-o)
             end
-            han.sc.plotted[j]=false
+            sc.plotted[j]=false
         end
     end
     stroke(ctx)
@@ -327,13 +327,13 @@ function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},myc
     Plot selected waveforms in new color that have not 
     yet been plotting in new color
     =#
-    for i=1:han.buf.count
-        if (han.sc.selected[i])&(!han.sc.plotted[i])
+    for i=1:sc.buf.count
+        if (sc.selected[i])&(!sc.plotted[i])
             move_to(ctx,1,(input[1,i]-o))
             for jj=2:size(input,1)
                 line_to(ctx,jj,input[jj,i]-o)
             end
-            han.sc.plotted[i]=true
+            sc.plotted[i]=true
         end
     end
     set_line_width(ctx,0.5)

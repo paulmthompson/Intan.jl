@@ -387,6 +387,7 @@ type Single_Channel
     wave_points::Int64
     s::Float64
     o::Float64
+    buf::SpikeSorting.Buffer
 end
 
 type Gui_Handles
