@@ -19,17 +19,23 @@ function make_filter(rhd::RHD2000,filter_type::Int64,wn1,wn2=0.0)
     DF2TFilter(df1)
 end
 
-function apply_filter(rhd::RHD2000,ff::MyFilter,chan_num::Int64)
+function apply_filter(rhd::RHD2000,ff::Intan_Filter,chan_num::Int64)
 
     temp=zeros(Float64,SAMPLES_PER_DATA_BLOCK)
     for i=1:SAMPLES_PER_DATA_BLOCK
         temp[i]=convert(Float64,rhd.v[i,chan_num])
     end
 
-    filt!(temp,ff,temp)
+    filt!(temp,ff.filt,temp)
 
-    for i=1:SAMPLES_PER_DATA_BLOCK
-        rhd.v[i,chan_num] = round(Int16,temp[i])
+    if ff.output==0
+        for i=1:SAMPLES_PER_DATA_BLOCK
+            rhd.v[i,chan_num] = round(Int16,temp[i])
+        end
+    else
+        for i=1:SAMPLES_PER_DATA_BLOCK
+            rhd.lfps[i,chan_num] = round(Int16,temp[i])
+        end
     end
     nothing
 end

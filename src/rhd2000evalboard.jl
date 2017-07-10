@@ -1078,7 +1078,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
 
         #Filtering
         for i=1:length(rhd.filts)
-            apply_filter(rhd,rhd.filts[i].filt,rhd.filts[i].chan)
+            apply_filter(rhd,rhd.filts[i],rhd.filts[i].chan)
         end
 
         #Sorting

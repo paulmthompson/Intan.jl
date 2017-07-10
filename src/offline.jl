@@ -61,7 +61,7 @@ function fillFromOffline!(rhd::RHD2000)
     #Filter
     for i=1:length(rhd.filts)
         for j=1:length(rhd.filts[i])
-            apply_filter(rhd,rhd.filts[i][j].filt,rhd.filts[i][j].chan)
+            apply_filter(rhd,rhd.filts[i][j],rhd.filts[i][j].chan)
         end
     end
 
