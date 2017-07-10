@@ -18,7 +18,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
 
     clus=han.buf.selected_clus
 
-    (x1,x2,y1,y2)=coordinate_transform(han.sc,event)
+    (x1,x2,y1,y2)=SpikeSorting.coordinate_transform(han.sc,event)
     
     if event.button==1
 
@@ -28,7 +28,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         else
 
             han.buf.selected=trues(han.buf.ind)
-            find_intersected_waveforms(han.buf.spikes,han.buf.selected,han.buf.ind,x1,y1,x2,y2)
+            SpikeSorting.find_intersected_waveforms(han.buf.spikes,han.buf.selected,han.buf.ind,x1,y1,x2,y2)
             
             han.buf.c_changed=true
         end
@@ -41,7 +41,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
         #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
         
         if han.sc.pause
-            find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
+            SpikeSorting.find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
 
             if clus>0
                 han.buf.selected=!(han.buf.clus.==clus)

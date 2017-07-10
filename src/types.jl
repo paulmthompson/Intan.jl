@@ -364,34 +364,6 @@ type Save_Widgets
     ttlin::Gtk.GtkCheckButtonLeaf
 end
 
-type Single_Channel
-    c2::Gtk.GtkCanvasLeaf
-    c3::Gtk.GtkCanvasLeaf
-    ctx2::Cairo.CairoContext
-    ctx2s::Cairo.CairoContext
-    rb_active::Bool
-    rb::RubberBand
-    click_button::Int64 
-    selected::Array{Bool,1}
-    plotted::Array{Bool,1}
-    hold::Bool
-    pause::Bool
-    pause_button::Gtk.GtkToggleButtonLeaf
-    rb_button::Gtk.GtkToggleButtonLeaf
-    draw_button::Gtk.GtkToggleButtonLeaf
-    selection_button::Gtk.GtkToggleButtonLeaf
-    mi::NTuple{2,Float64} #saved x,y position of mouse input
-    show_thres::Bool
-    w2::Int64
-    h2::Int64
-    wave_points::Int64
-    s::Float64
-    o::Float64
-    buf::SpikeSorting.Buffer
-    thres::Float64
-    old_thres::Float64
-end
-
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
     
@@ -482,7 +454,7 @@ type Gui_Handles
     spect::Spectrogram
     save_widgets::Save_Widgets
 
-    sc::Single_Channel
+    sc::SpikeSorting.Single_Channel
 
     buf::SpikeSorting.Buffer
 

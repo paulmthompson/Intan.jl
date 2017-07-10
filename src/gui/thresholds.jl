@@ -174,24 +174,5 @@ function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     nothing
 end
 
-#=
-Show threshold on canvas
-=#
 
-function plot_thres(sc::Single_Channel)
-    
-    ctx = sc.ctx2
-
-    line(ctx,1,sc.w2,sc.h2/2-sc.old_thres,sc.h2/2-sc.old_thres)
-    set_line_width(ctx,5.0)
-    set_source(ctx,sc.ctx2s)
-    stroke(ctx)
-
-    line(ctx,1,sc.w2,sc.h2/2-sc.thres,sc.h2/2-sc.thres)
-    set_line_width(ctx,1.0)
-    set_source_rgb(ctx,1.0,1.0,1.0)
-    stroke(ctx)
-    sc.old_thres=sc.thres
-    nothing
-end
 
