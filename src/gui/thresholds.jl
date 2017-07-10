@@ -152,6 +152,8 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         close(f)
     end
 
+    han.sc.s = han.scale[han.spike,1]
+
     han.thres_changed=true
 
     nothing

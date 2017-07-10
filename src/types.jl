@@ -385,6 +385,8 @@ type Single_Channel
     w2::Int64
     h2::Int64
     wave_points::Int64
+    s::Float64
+    o::Float64
 end
 
 type Gui_Handles

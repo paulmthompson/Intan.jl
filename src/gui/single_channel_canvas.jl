@@ -14,8 +14,8 @@ function coordinate_transform(han::Gui_Handles,xi1::Float64,yi1::Float64,xi2::Fl
     myx=[1.0;collect(2:(han.sc.wave_points-1)).*(han.sc.w2/han.sc.wave_points)]
     x1=indmin(abs(myx-xi1))
     x2=indmin(abs(myx-xi2))
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
+    s=han.sc.s
+    o=han.sc.o
     y1=(yi1-han.sc.h2/2+o)/s
     y2=(yi2-han.sc.h2/2+o)/s
     
@@ -187,8 +187,8 @@ Online plotting of new spikes in non-paused display
 function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     spike_num=han.spike
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
+    s=han.sc.s
+    o=han.sc.o
     reads=han.draws
 
     ctx=copy(han.sc.ctx2s)
@@ -263,8 +263,8 @@ function replot_all_spikes(han::Gui_Handles)
     han.sc.ctx2s=copy(han.sc.ctx2)
 
     ctx=han.sc.ctx2s
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
+    s=han.sc.s
+    o=han.sc.o
 
     Cairo.translate(ctx,0.0,han.sc.h2/2)
     scale(ctx,han.sc.w2/han.sc.wave_points,s)
@@ -300,8 +300,8 @@ Plotted - true if waveform has been replotted in new color since start of increm
 function plot_selected_waveforms{T<:Real}(han::Gui_Handles,input::Array{T,2},mycolor)
 
     ctx=han.sc.ctx2
-    s=han.scale[han.spike,1]
-    o=han.offset[han.spike]
+    s=han.sc.s
+    o=han.sc.o
 
     set_line_width(ctx,2.0)
     set_source(ctx,han.sc.ctx2s)

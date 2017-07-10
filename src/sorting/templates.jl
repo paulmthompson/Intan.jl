@@ -152,8 +152,8 @@ function draw_template_bounds(han::Gui_Handles)
     clus=han.buf.selected_clus
     
      if clus>0
-            s=han.scale[han.spike,1]
-            o=han.scale[han.spike]
+            s=han.sc.s
+            o=han.sc.o
             
             Cairo.translate(ctx,0.0,han.sc.h2/2)
             scale(ctx,han.sc.w2/han.sc.wave_points,s)
@@ -212,8 +212,8 @@ function draw_templates(han::Gui_Handles)
     mywidth=width(ctx)
     myheight=height(ctx)
 
-    s=han.scale[han.spike,1]
-    o=han.scale[han.spike]
+    s=han.sc.s
+    o=han.sc.o
     
     Cairo.translate(ctx,0.0,myheight/2)
     scale(ctx,mywidth/han.wave_points,s)
@@ -381,8 +381,8 @@ function draw_templates_c3(han::Gui_Handles)
 
     for clus = 1:han.total_clus[han.spike]
 
-        s=han.scale[han.spike,1]*.25
-        o=han.scale[han.spike]
+        s=han.sc.s * .25
+        o=han.sc.o
 
         Cairo.translate(ctx,0.0,50.0)
         scale(ctx,mywidth/(han.wave_points*total_clus),s)

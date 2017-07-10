@@ -773,7 +773,7 @@ save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_chec
 
 sleep(1.0)
 
-sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win)
+sc_widgets=Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
@@ -1359,6 +1359,8 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
             han.scale[i,1] = -.125
             han.scale[i,2] = -.125*.25
         end
+
+        han.sc.s = han.scale[han.spike,1]
 
         setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000)) #show gain
 
