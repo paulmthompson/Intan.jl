@@ -132,11 +132,14 @@ function spect_popup_freq_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Int64})
         f_max = 15000
     end
 
+    #=
     han.spect.f_max = ceil(Int64,f_max/han.spect.f_div)
 
     if han.spect.f_max > size(han.spect.out,1)
         han.spect.f_max = size(han.spect.out,1)
     end
+    =#
+    han.spect = Spectrogram(han.spect.fs; win_width_t = han.spect.win_width_t, win_overlap_t = han.spect.win_overlap_t, f_max = f_max)
 
     nothing
 end
