@@ -28,6 +28,7 @@ type SaveOpt
     ts::String
     adc::String
     ttl::String
+    lfp::String
     folder::String
     backup::String
 end
@@ -38,12 +39,12 @@ SaveNone()=make_save_structure(false)
 function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),t,string(t,"/.backup/"))
+        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),string(t,"/lfp.bin"),t,string(t,"/.backup/"))
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),t,string(t,"\\.backup\\"))
+        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
     end
     out
 end
@@ -316,6 +317,7 @@ type Band_Widgets
     f_pos::Int64
     f_out::Int64
     chan::Int64
+    lfp_en::Array{Bool,1}
 
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf

@@ -889,6 +889,9 @@ end
 
 function save_volt_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd = user_data
+
+    rhd.save.save_full=getproperty(han.save_widgets.volt,:active,Bool)
+
     nothing
 end
 

@@ -53,11 +53,18 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     for i=(size(rhd.v,1)+1):rhd.sr
         han.v_s[i-SAMPLES_PER_DATA_BLOCK] = han.v_s[i]
     end
-
     count=1
-    for i=(rhd.sr-SAMPLES_PER_DATA_BLOCK+1):rhd.sr
-        han.v_s[i] = rhd.v[count,han.spike]
-        count+=1
+    
+    if han.band_widgets.lfp_en[han.spike]
+        for i=(rhd.sr-SAMPLES_PER_DATA_BLOCK+1):rhd.sr
+            han.v_s[i] = rhd.lfps[count,han.spike]
+            count+=1
+        end
+    else
+        for i=(rhd.sr-SAMPLES_PER_DATA_BLOCK+1):rhd.sr
+            han.v_s[i] = rhd.v[count,han.spike]
+            count+=1
+        end
     end
 
     plot_spectrogram(han.v_s,rhd.sr,han.spect)
@@ -132,13 +139,6 @@ function spect_popup_freq_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Int64})
         f_max = 15000
     end
 
-    #=
-    han.spect.f_max = ceil(Int64,f_max/han.spect.f_div)
-
-    if han.spect.f_max > size(han.spect.out,1)
-        han.spect.f_max = size(han.spect.out,1)
-    end
-    =#
     han.spect = Spectrogram(han.spect.fs; win_width_t = han.spect.win_width_t, win_overlap_t = han.spect.win_overlap_t, f_max = f_max)
 
     nothing

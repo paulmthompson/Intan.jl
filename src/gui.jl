@@ -589,17 +589,22 @@ Save Preferences Window
 
 save_grid=Grid()
 
+save_grid[1,1]=Label(string("Save Folder: ",r.save.folder))
+
 save_check_volt=CheckButton("Analog Voltage")
-save_grid[1,1]=save_check_volt
+save_grid[1,2]=save_check_volt
+if r.save.save_full
+    setproperty!(save_check_volt,:active,true)
+end
 
 save_check_lfp=CheckButton("LFP")
-save_grid[1,2]=save_check_lfp
+save_grid[1,3]=save_check_lfp
 
 save_check_ttlin=CheckButton("TTL input")
-save_grid[1,3]=save_check_ttlin
+save_grid[1,4]=save_check_ttlin
 
 save_pref_win=Window(save_grid)
-setproperty!(save_pref_win, :title, "Filtering")
+setproperty!(save_pref_win, :title, "Saving Preferences")
 
 showall(save_pref_win)
 visible(save_pref_win,false)
@@ -761,7 +766,7 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
-band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,filt_tv,filt_list)
+band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,falses(size(r.v,2)),filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
 save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin)

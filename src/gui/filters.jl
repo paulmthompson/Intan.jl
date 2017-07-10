@@ -100,6 +100,10 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             else
                 insert!(rhd.filts[i],pos,Intan_Filter(i,output,wn1,wn2,filt_type,myfilt))
             end
+
+            if output==1
+                han.band_widgets.lfp_en[i]=true
+            end
         end
     else
         #add new filter
@@ -108,6 +112,9 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             push!(rhd.filts[chan_num],Intan_Filter(chan_num,output,wn1,wn2,filt_type,myfilt))
         else
             insert!(rhd.filts[chan_num],pos,Intan_Filter(chan_num,output,wn1,wn2,filt_type,myfilt))
+        end
+        if output==1
+            han.band_widgets.lfp_en[chan_num]=true
         end
     end
 
@@ -133,6 +140,15 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     output = han.band_widgets.f_out
 
     myfilt=make_filter(rhd,filt_type,wn1,wn2)
+
+    if rhd.filts[chan_num][pos].f_out == 1
+        if output == 0
+            han.band_widgets.lfp_en[chan_num]=false
+        end
+    end
+    if output == 1
+        han.band_widgets.lfp_en[chan_num]=true
+    end
 
     rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
 
@@ -210,6 +226,10 @@ function delete_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if han.band_widgets.f_pos > length(rhd.filts[han.band_widgets.chan])
     else
+
+        if rhd.filts[han.band_widgets.chan][han.band_widgets.f_pos].output == 1
+            han.band_widgets.lfp_en[han.band_widgets.chan] = false
+        end
 
         deleteat!(rhd.filts[han.band_widgets.chan],han.band_widgets.f_pos)
 
