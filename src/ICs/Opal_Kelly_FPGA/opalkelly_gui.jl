@@ -85,7 +85,7 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
 
     han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
     
-    clear_c2(han.sc.c2,han.spike)
+    SpikeSorting.clear_c2(han.sc.c2,han.spike)
     han.sc.ctx2=getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
 

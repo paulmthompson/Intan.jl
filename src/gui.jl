@@ -180,7 +180,7 @@ function makegui(r::RHD2000,s,task,fpga)
 
     @guarded draw(c2) do widget
         ctx = getgc(c2)
-        clear_c2(c2,1)
+        SpikeSorting.clear_c2(c2,1)
     end
 
     show(c2)
@@ -1215,7 +1215,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 	        clear_c(han)
             end
             if (!han.sc.hold)&(!han.sc.pause)
-	        clear_c2(han.sc.c2,han.spike)
+	        SpikeSorting.clear_c2(han.sc.c2,han.spike)
                 han.sc.ctx2=getgc(han.sc.c2)
                 han.sc.ctx2s=copy(han.sc.ctx2)
             end
@@ -1299,7 +1299,7 @@ end
 function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    clear_c2(han.sc.c2,han.spike)
+    SpikeSorting.clear_c2(han.sc.c2,han.spike)
     han.sc.ctx2=getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
     #Sort Button

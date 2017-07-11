@@ -102,7 +102,7 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     end
     
     if !han.sc.hold
-        clear_c2(han.sc.c2,han.spike)
+        SpikeSorting.clear_c2(han.sc.c2,han.spike)
         han.sc.ctx2=getgc(han.sc.c2)
         han.sc.ctx2s=copy(han.sc.ctx2)
         han.buf.ind=1

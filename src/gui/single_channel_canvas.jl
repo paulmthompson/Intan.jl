@@ -76,7 +76,7 @@ Redraw all spikes shown in paused view
 =#
 function replot_all_spikes(han::Gui_Handles)
 
-    clear_c2(han.sc.c2,han.spike)
+    SpikeSorting.clear_c2(han.sc.c2,han.spike)
     han.sc.ctx2=getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
 
@@ -123,7 +123,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
         SpikeSorting.rubberband_start(han.sc,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
         if !han.sc.pause
-            clear_c2(han.sc.c2,han.spike)
+            SpikeSorting.clear_c2(han.sc.c2,han.spike)
             han.sc.ctx2=getgc(han.sc.c2)
             han.sc.ctx2s=copy(han.sc.ctx2)
             han.buf.ind=1
