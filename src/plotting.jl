@@ -218,16 +218,6 @@ end
 function prepare_scope(ctx,han)
 end
 
-function clear_c3(c3,num)
-
-    ctx = getgc(c3)
-
-    set_source_rgb(ctx,0.0,0.0,0.0)
-    paint(ctx)
-    
-    nothing
-end
-
 function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
     ctx=Cairo.getgc(han.sc.c3)

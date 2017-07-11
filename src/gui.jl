@@ -176,7 +176,6 @@ function makegui(r::RHD2000,s,task,fpga)
     c_grid=Grid()
     
     c2=Canvas()
-    #c2=@Canvas()
 
     @guarded draw(c2) do widget
         ctx = getgc(c2)
@@ -192,7 +191,7 @@ function makegui(r::RHD2000,s,task,fpga)
     c3=Canvas(-1,200)     
     @guarded draw(c3) do widget
         ctx = getgc(c3)
-        clear_c3(c3,1)
+        SpikeSorting.clear_c3(c3,1)
     end
     show(c3)
     c_grid[1,2]=c3
@@ -1219,7 +1218,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 han.sc.ctx2=getgc(han.sc.c2)
                 han.sc.ctx2s=copy(han.sc.ctx2)
             end
-            clear_c3(han.sc.c3,han.spike)
+            SpikeSorting.clear_c3(han.sc.c3,han.spike)
             #Sort Button
             if han.sort_cb
                 draw_templates(han)
