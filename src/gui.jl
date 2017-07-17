@@ -743,6 +743,7 @@ if r.save.save_full
     prepare_v_header(r)
     prepare_stamp_header(r)
     prepare_ttl_header(r)
+    prepare_lfp_header(r)
 else
     prepare_stamp_header(r)
 end

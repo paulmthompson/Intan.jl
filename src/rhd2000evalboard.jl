@@ -1272,6 +1272,9 @@ function queueToFile(rhd::RHD2000,task::Task,fpga)
         f=open(rhd.save.ttl,"a+")
         write(f,fpga[1].ttlin)
         close(f)
+        f=open(rhd.save.lfp,"a+")
+        write(f,rhd.lfps)
+        close(f)
     end
 
     writeTimeStamp(rhd)

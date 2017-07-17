@@ -4,6 +4,10 @@ function CreateRHD2000Registers(sampleRate)
     
     defineSampleRate(sampleRate,r)
 
+    dsp_b = 300.0
+    band_a_l = 300.0
+    band_a_u = 5000.0
+
     #Register 0 variables
     r.adcReferenceBw = 3
     setFastSettle(false,r)
@@ -25,9 +29,8 @@ function CreateRHD2000Registers(sampleRate)
     r.twosComp=0
     r.absMode=0
     enableDsp(true,r)
-    setDspCutoffFreq(300.0,r)
+    setDspCutoffFreq(dsp_b,r)
     
-
     #Register 5 variables
     r.zcheckDacPower=0
     r.zcheckLoad=0
@@ -48,8 +51,8 @@ function CreateRHD2000Registers(sampleRate)
     r.adcAux3En=1
 
     #these set RHdac and RLdac variables
-    setUpperBandwidth(5000.0,r)
-    setLowerBandwidth(300.0,r)
+    setUpperBandwidth(band_a_u,r)
+    setLowerBandwidth(band_a_l,r)
      
     powerUpAllAmps(r)
 

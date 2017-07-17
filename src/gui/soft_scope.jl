@@ -93,6 +93,9 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         
         scope_ind=1+t_iter
         for i=2:512
+if spike_ind > 500
+spike_ind = 500
+end
             y=myheight-150.0+han.soft.v[scope_ind]*s
             line_to(ctx,i,y)
             han.soft.last[i]=y

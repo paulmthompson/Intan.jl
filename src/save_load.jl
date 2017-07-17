@@ -35,6 +35,25 @@ function read_v_header(fname="v.bin")
     myheader
 end
 
+function prepare_lfp_header(rhd::RHD2000)
+
+    f=open(rhd.save.lfp,"a+")
+
+    t=now()
+    
+    write(f,convert(UInt8,Dates.month(t)))
+    write(f,convert(UInt8,Dates.day(t)))
+    write(f,convert(UInt16,Dates.year(t)))
+    write(f,convert(UInt8,Dates.hour(t)))
+    write(f,convert(UInt8,Dates.minute(t)))
+    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,size(rhd.v,1)))
+
+    close(f)
+
+    nothing
+end
+
 function prepare_v_header(rhd::RHD2000)
 
     f=open(rhd.save.v,"a+")
