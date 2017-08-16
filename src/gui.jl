@@ -690,9 +690,11 @@ popupmenu_scope = Menu()
 popupmenu_voltage=MenuItem("Voltage Scale")
 popupmenu_time=MenuItem("Time Scale")
 popupmenu_thres=MenuItem("Threshold")
+popupmenu_signal=MenuItem("Signal")
 push!(popupmenu_scope,popupmenu_voltage)
 push!(popupmenu_scope,popupmenu_time)
 push!(popupmenu_scope,popupmenu_thres)
+push!(popupmenu_scope,popupmenu_signal)
 
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
@@ -723,6 +725,15 @@ push!(scope_thres_handles,RadioMenuItem(scope_thres_handles[1],"Off"))
 push!(popupmenu_thres_select,scope_thres_handles[2])
 
 set_active!(scope_thres_handles[2])
+
+popupmenu_signal_select=Menu(popupmenu_signal)
+scope_signal_handles=Array(RadioMenuItemLeaf,0)
+push!(scope_signal_handles,RadioMenuItem("Spike"))
+push!(popupmenu_signal_select,scope_signal_handles[1])
+push!(scope_signal_handles,RadioMenuItem(scope_signal_handles[1],"LFP"))
+push!(popupmenu_signal_select,scope_signal_handles[2])
+
+set_active!(scope_signal_handles[1])
 
 showall(popupmenu_scope)   
 
@@ -978,6 +989,10 @@ end
 
 for i=1:2
     signal_connect(scope_popup_thres_cb,scope_thres_handles[i],"activate",Void,(),false,(handles,i-1))
+end
+
+for i=1:2
+    signal_connect(scope_popup_signal_cb,scope_signal_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
 #=

@@ -52,6 +52,19 @@ function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,Int64})
     nothing
 end
 
+function scope_popup_signal_cb(w::Ptr,user_data::Tuple{Gui_Handles,Int64})
+
+    han, event_id = user_data
+
+    if event_id == 0
+        han.soft.signal_type=1
+    else
+        han.soft.signal_type=2
+    end
+
+    nothing
+end
+
 function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
     ctx=getgc(han.c)
@@ -60,9 +73,16 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
     if han.soft.draws>9
 
         startind=512*(han.soft.draws-1)+1
-        for i=1:512
-            han.soft.v[startind]=rhd.v[i,han.spike]
-            startind+=1
+        if han.soft.signal_type==1
+            for i=1:512
+                han.soft.v[startind]=rhd.v[i,han.spike]
+                startind+=1
+            end
+        else
+            for i=1:512
+                han.soft.v[startind]=rhd.lfps[i,han.spike]
+                startind+=1
+            end
         end
         
         #Paint over old line
@@ -129,9 +149,17 @@ end
     else
         #copy voltage
         startind=512*(han.soft.draws-1)+1
-        for i=1:512
-            han.soft.v[startind]=rhd.v[i,han.spike]
-            startind+=1
+
+        if han.soft.signal_type==1
+            for i=1:512
+                han.soft.v[startind]=rhd.v[i,han.spike]
+                startind+=1
+            end
+        else
+            for i=1:512
+                han.soft.v[startind]=rhd.lfps[i,han.spike]
+                startind+=1
+            end
         end
 
         #get spikes
