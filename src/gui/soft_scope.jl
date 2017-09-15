@@ -23,6 +23,12 @@ end
 function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
+
+    #=
+    500 pixels across and time boxes are 50 pixels
+    So if Sample Rate is 30k, then each box is 50/30000 = 1.67 ms
+    20k, 50/20000 = 2.5 ms
+    =#
     
     if event_id==0
         han.soft.t_div=1.0

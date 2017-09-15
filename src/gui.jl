@@ -687,8 +687,8 @@ Soft Scope Menus
 =#
 
 popupmenu_scope = Menu()
-popupmenu_voltage=MenuItem("Voltage Scale")
-popupmenu_time=MenuItem("Time Scale")
+popupmenu_voltage=MenuItem("Voltage Gain")
+popupmenu_time=MenuItem("ms/div")
 popupmenu_thres=MenuItem("Threshold")
 popupmenu_signal=MenuItem("Signal")
 push!(popupmenu_scope,popupmenu_voltage)
@@ -699,7 +699,7 @@ push!(popupmenu_scope,popupmenu_signal)
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
 scope_v_handles=Array(RadioMenuItemLeaf,0)
-voltage_scales=[1, 50, 100, 200, 500]
+voltage_scales = [1, 50, 100, 200, 500]
 push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1]))) 
 push!(popupmenu_voltage_select,scope_v_handles[1])
 for i=2:5
@@ -709,7 +709,11 @@ end
 
 popupmenu_time_select=Menu(popupmenu_time)
 scope_t_handles=Array(RadioMenuItemLeaf,0)
-time_scales=[1, 2, 3, 4, 5]
+#time_scales=[1, 2, 3, 4, 5]
+time_scales = [1,2,3,4,5].*50 ./ r.sr.* 1000
+for i=1:length(time_scales)
+    time_scales[i]=round(time_scales[i],1)
+end
 push!(scope_t_handles,RadioMenuItem(string(time_scales[1]))) 
 push!(popupmenu_time_select,scope_t_handles[1])
 for i=2:5
