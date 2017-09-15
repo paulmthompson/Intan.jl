@@ -216,6 +216,26 @@ function prepare_events(ctx,han)
 end
 
 function prepare_scope(ctx,han)
+    
+    myheight=height(ctx)
+
+    dashes = [10.0,10.0,10.0]
+    set_dash(ctx, dashes, 0.0)
+
+    for y in collect((myheight-250.0):50.0:(myheight-50.0))
+        line(ctx,1.0,500.0,y,y)
+    end
+
+    for x in collect(50:50:450)
+        line(ctx,x,x,myheight,myheight-300)
+    end
+
+    set_source_rgba(ctx,1.0,1.0,1.0,0.3)
+    stroke(ctx)
+
+    han.soft.ctx=copy(ctx)
+
+    set_dash(ctx,Float64[])
 end
 
 function draw_c3(rhd::RHD2000,han::Gui_Handles)

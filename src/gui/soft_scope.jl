@@ -97,7 +97,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         move_to(ctx,1.0,myheight-7.0)
         line_to(ctx,512.0,myheight-7.0)
         
-        set_source_rgb(ctx,0.0,0.0,0.0)
+        set_source(ctx,han.soft.ctx)
         set_line_width(ctx,4.0)
         stroke(ctx)  
   
@@ -113,9 +113,9 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         
         scope_ind=1+t_iter
         for i=2:512
-if spike_ind > 500
-spike_ind = 500
-end
+            if spike_ind > 500
+                spike_ind = 500
+            end
             y=myheight-150.0+han.soft.v[scope_ind]*s
             line_to(ctx,i,y)
             han.soft.last[i]=y

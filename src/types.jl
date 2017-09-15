@@ -250,10 +250,11 @@ type SoftScope
     prev_num_spikes::Int64
     thres_on::Bool
     signal_type::Int64
+    ctx::Cairo.CairoContext
 end
 
-function SoftScope(sr)
-    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false,1)
+function SoftScope(sr,ctx)
+    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false,1,ctx)
 end
 
 type Spectrogram

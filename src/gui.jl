@@ -796,7 +796,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     false,slider_sort,adj_sort,sort_list,sort_tv,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
-                    ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr),
+                    ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr,getgc(c)),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
