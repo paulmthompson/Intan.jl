@@ -120,7 +120,13 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     
     if event.button == 1 #left click captures window
         han.sc.mi=(event.x,event.y)
-        SpikeSorting.rubberband_start(han.sc,event.x,event.y)
+        if han.sc.pause_state==1
+            SpikeSorting.rubberband_start(han.sc,event.x,event.y)
+        elseif han.sc.pause_state == 2
+            if han.sc.pause
+                SpikeSorting.draw_start(han.sc,event.x,event.y,han.temp)
+            end
+        end
     elseif event.button == 3 #right click refreshes window
         if !han.sc.pause
             SpikeSorting.clear_c2(han.sc.c2,han.spike)
@@ -133,7 +139,11 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             end
         else
             han.sc.mi=(event.x,event.y)
-            SpikeSorting.rubberband_start(han.sc,event.x,event.y,3)
+            if han.sc.pause_state==1
+                SpikeSorting.rubberband_start(han.sc,event.x,event.y,3)
+            elseif han.sc.pause_state == 2
+
+            end
         end
     end
     nothing

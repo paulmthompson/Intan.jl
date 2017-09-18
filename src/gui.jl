@@ -810,7 +810,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
 Template Sorting Callbacks
 =#
 
-    id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sortview_handles.buf,sc_widgets))
     
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort1,"Delete Unit")

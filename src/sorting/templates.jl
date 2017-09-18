@@ -11,44 +11,56 @@ function slider_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Ha
     nothing
 end
 
-function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
+function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{SpikeSorting.Buffer,SpikeSorting.Single_Channel})
 
-    han, = user_data
+    buf,sc = user_data
     event = unsafe_load(param_tuple)
 
-    clus=han.buf.selected_clus
+    clus=buf.selected_clus
 
-    (x1,x2,y1,y2)=SpikeSorting.coordinate_transform(han.sc,event)
+    (x1,x2,y1,y2)=SpikeSorting.coordinate_transform(sc,event)
     
     if event.button==1
 
-        #Waveforms selected with a left click rubberband in the paused display will be used to form a cluster template for the currently selected cluster.
+        if sc.pause_state == 1
+            #Waveforms selected with a left click rubberband in the paused display will be used to form a cluster template for the currently selected cluster.
         
-        if (clus==0) #do nothing if zeroth cluster    
-        else
+            if (clus==0) #do nothing if zeroth cluster    
+            else
 
-            han.buf.selected=trues(han.buf.ind)
-            SpikeSorting.find_intersected_waveforms(han.buf.spikes,han.buf.selected,han.buf.ind,x1,y1,x2,y2)
+                buf.selected=trues(buf.ind)
+                SpikeSorting.find_intersected_waveforms(buf.spikes,buf.selected,buf.ind,x1,y1,x2,y2)
             
-            han.buf.c_changed=true
-        end
+                buf.c_changed=true
+            end
 
-        if (clus>0)&((han.buf.count>0)&(han.sc.pause))
-            han.buf.replot=true
+            if (clus>0)&((buf.count>0)&(sc.pause))
+                buf.replot=true
+            end
+        elseif sc.pause_state == 2
+            if sc.pause
+
+            end
         end
     elseif event.button==3
 
-        #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
+        if sc.pause_state == 1
+            #Waveforms selected with right click in the paused display will be removed from display. If a cluster is selected, these waveforms will also be removed from that selected cluster
         
-        if han.sc.pause
-            SpikeSorting.find_intersected_waveforms(han.buf.spikes,han.buf.mask,han.buf.count,x1,y1,x2,y2)
+            if sc.pause
+                SpikeSorting.find_intersected_waveforms(buf.spikes,buf.mask,buf.count,x1,y1,x2,y2)
 
-            if clus>0
-                han.buf.selected=!(han.buf.clus.==clus)
-                han.buf.c_changed=true
+                if clus>0
+                    buf.selected=!(buf.clus.==clus)
+                    buf.c_changed=true
+                end
+                buf.replot=true     
             end
-            han.buf.replot=true     
-        end
+        elseif sc.pause_state == 2
+            if sc.pause
+                
+            end
+        end   
     end
     
     nothing
