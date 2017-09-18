@@ -92,18 +92,20 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
 
-    button_rb=ToggleButton()
-    add_button_label(button_rb,"RubberBand")
-    vbox_hold[1,3]=button_rb
-    Gtk.GAccessor.active(button_rb,true)
+    button_rb=Array(RadioButton,3)
+    button_rb[1]=RadioButton(active=true)
+    button_rb[2]=RadioButton(button_rb[1])
+    button_rb[3]=RadioButton(button_rb[2])  
 
-    button_draw=ToggleButton()
-    add_button_label(button_draw,"Draw")
-    vbox_hold[2,3]=button_draw
-
-    button_selection=ToggleButton()
-    add_button_label(button_selection,"Selection")
-    vbox_hold[3,3]=button_selection
+    vbox_hold[1,3]=button_rb[1]
+    Gtk.GAccessor.mode(button_rb[1],false)
+    add_button_label(button_rb[1],"RubberBand")
+    vbox_hold[2,3]=button_rb[2]
+    Gtk.GAccessor.mode(button_rb[2],false)
+    add_button_label(button_rb[2],"Draw")
+    vbox_hold[3,3]=button_rb[3]
+    Gtk.GAccessor.mode(button_rb[3],false)
+    add_button_label(button_rb[3],"Selection")
     
     #CLUSTER
     frame1_4=Frame("Clustering")
@@ -788,7 +790,7 @@ save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_chec
 
 sleep(1.0)
 
-sc_widgets=SpikeSorting.Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,button_draw,button_selection,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
+sc_widgets=SpikeSorting.Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
@@ -914,6 +916,10 @@ Pause, Restore, and Clear Callbacks
 id = signal_connect(pause_cb,button_pause,"toggled",Void,(),false,(handles,))
 id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles,))
 id = signal_connect(restore_button_cb,button_restore,"clicked",Void,(),false,(handles,))
+
+#=
+Rubberband, Draw, Stretch
+=#
 
 
 #=
@@ -1674,3 +1680,4 @@ function get_template_dims(han::Gui_Handles,clus)
 
     (xbounds[clus],xbounds[clus+1],0.0,130.0)
 end
+
