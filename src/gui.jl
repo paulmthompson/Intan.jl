@@ -790,7 +790,7 @@ save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_chec
 
 sleep(1.0)
 
-sc_widgets=SpikeSorting.Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
+sc_widgets=SpikeSorting.Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
@@ -921,6 +921,9 @@ id = signal_connect(restore_button_cb,button_restore,"clicked",Void,(),false,(ha
 Rubberband, Draw, Stretch
 =#
 
+for i=1:3
+    id = signal_connect(SpikeSorting.pause_state_cb,button_rb[i],"clicked",Void,(),false,(handles.sc,i))
+end
 
 #=
 Event Viewer Callbacks
@@ -936,7 +939,6 @@ end
 
 id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,-1))
 
-
 #=
 Radiobutton Callback
 =#
@@ -948,7 +950,6 @@ end
 for i=1:8
     id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,i))
 end
-
 
 #=
 Filter Callback
