@@ -8,6 +8,7 @@ abstract IC
 type Debug
     state::Bool
     m::String
+    filepath::String
     data::Array{Float64,1}
     ind::Int64
     maxind::Int64
@@ -187,7 +188,7 @@ default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),
 
 debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignProm(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
 
-default_debug=Debug(false,"off",zeros(Float64,1),0,0)
+default_debug=Debug(false,"off","",zeros(Float64,1),0,0)
 
 default_save=SaveAll()
 

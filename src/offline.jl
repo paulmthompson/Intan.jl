@@ -10,7 +10,20 @@ function Debug(filepath::AbstractString, filetype::AbstractString)
 
         a=matread(filepath)
         md=squeeze(a["data"]',2).*-1000
-        d=Debug(true,"qq",md,1,floor(length(md)/SAMPLES_PER_DATA_BLOCK)*SAMPLES_PER_DATA_BLOCK) 
+        d=Debug(true,"qq",filepath,md,1,floor(length(md)/SAMPLES_PER_DATA_BLOCK)*SAMPLES_PER_DATA_BLOCK) 
+    elseif filetype=="Intan"
+
+        myheader = read_v_header(filepath)
+
+        f=open(filepath, "r+")
+
+        seekend(f)
+
+        endpos = position(f)
+
+        close(f)
+
+        d=Debug(true,"Intan",filepath,zeros(Int16,1),10,endpos)
     end
     d
 end
@@ -50,23 +63,48 @@ end
 function fillFromOffline!(rhd::RHD2000)
 
     toff=rhd.time[end,1]
-    for j=1:SAMPLES_PER_DATA_BLOCK
-        for i=1:size(rhd.v,2)  
-            rhd.v[j,i]=round(Int16,rhd.debug.data[rhd.debug.ind])
-        end
-        rhd.debug.ind+=1
-        rhd.time[j,1]=toff+j
-    end
 
+    if rhd.debug.m == "qq"
+    
+        for j=1:SAMPLES_PER_DATA_BLOCK
+            for i=1:size(rhd.v,2)  
+                rhd.v[j,i]=round(Int16,rhd.debug.data[rhd.debug.ind])
+            end
+            rhd.debug.ind+=1
+            rhd.time[j,1]=toff+j
+        end
+        if rhd.debug.ind>=rhd.debug.maxind
+            rhd.debug.ind=1
+        end
+    elseif rhd.debug.m == "Intan"
+
+        f=open(rhd.debug.filepath, "r+")
+
+        seek(f,rhd.debug.ind)
+
+        for i=1:size(rhd.v,2)
+            for j=1:SAMPLES_PER_DATA_BLOCK
+                rhd.v[j,i]=read(f,Int16)
+            end
+        end
+
+        for j=1:SAMPLES_PER_DATA_BLOCK
+            rhd.time[j,1]=toff+j
+        end
+
+        rhd.debug.ind = position(f)
+        
+
+        close(f)
+        if rhd.debug.ind>=rhd.debug.maxind
+            rhd.debug.ind=10
+        end
+    end
     #Filter
     for i=1:length(rhd.filts)
         for j=1:length(rhd.filts[i])
             apply_filter(rhd,rhd.filts[i][j],rhd.filts[i][j].chan)
         end
-    end
-
-    if rhd.debug.ind>=rhd.debug.maxind
-        rhd.debug.ind=1
     end
     nothing  
 end
