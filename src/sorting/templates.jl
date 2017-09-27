@@ -39,7 +39,7 @@ function canvas_release_template(widget::Ptr,param_tuple,user_data::Tuple{SpikeS
             end
         elseif sc.pause_state == 2
             if sc.pause
-
+                buf.c_changed=true
             end
         end
     elseif event.button==3

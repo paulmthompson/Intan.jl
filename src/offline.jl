@@ -4,13 +4,22 @@ Methods for offline testing
 
 =#
 
-function Debug(filepath::AbstractString, filetype::AbstractString)
+function Debug(filepath::AbstractString, filetype::AbstractString; delay=0.0)
 
+    if delay==0.0
+        delay_b = false
+        delay_t = 0.0
+    else
+        delay_b = true
+        delay_t = delay
+    end
+
+    
     if filetype=="qq"
 
         a=matread(filepath)
         md=squeeze(a["data"]',2).*-1000
-        d=Debug(true,"qq",filepath,md,1,floor(length(md)/SAMPLES_PER_DATA_BLOCK)*SAMPLES_PER_DATA_BLOCK) 
+        d=Debug(true,"qq",filepath,md,1,floor(length(md)/SAMPLES_PER_DATA_BLOCK)*SAMPLES_PER_DATA_BLOCK,delay_b,delay_t) 
     elseif filetype=="Intan"
 
         myheader = read_v_header(filepath)
@@ -23,7 +32,7 @@ function Debug(filepath::AbstractString, filetype::AbstractString)
 
         close(f)
 
-        d=Debug(true,"Intan",filepath,zeros(Int16,1),10,endpos)
+        d=Debug(true,"Intan",filepath,zeros(Int16,1),10,endpos,delay_b,delay_t)
     end
     d
 end
@@ -105,6 +114,10 @@ function fillFromOffline!(rhd::RHD2000)
         for j=1:length(rhd.filts[i])
             apply_filter(rhd,rhd.filts[i][j],rhd.filts[i][j].chan)
         end
+    end
+
+    if rhd.debug.delay
+        sleep(rhd.debug.delay_t)
     end
     nothing  
 end
