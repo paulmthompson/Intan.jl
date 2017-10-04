@@ -661,11 +661,11 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
     
     #This will suck for big files
     #should read in one channel voltage at a time
-    v=parse_v(vname)
 
     #Write data blocks for spike waveforms
     myv=zeros(Int16,samples_per_wave)
     for i=1:length(ss)
+	v=read_single_v(vname,i)
         for j=1:length(ss[i])
             header=PL_DataBlockHeader(1,ss[i][j].inds.start,i,ss[i][j].id,samples_per_wave)
             myind=ss[i][j].inds.start
@@ -673,7 +673,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
             if myind+samples_per_wave-1 < size(v,1)
                 count=1
                 for k=myind:(myind+samples_per_wave-1)                    
-                    myv[count]=v[k,i]
+                    myv[count]=v[k]
                     count+=1
                 end
                 for k=1:length(fieldnames(header))
