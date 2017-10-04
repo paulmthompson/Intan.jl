@@ -256,9 +256,9 @@ function parse_v(fname="v.bin")
     v
 end
 
-function read_single_v(rhd::RHD2000,chan)
+read_single_v(rhd::RHD2000,chan) = read_single_v(rhd.save.v,chan)
 
-    fname=rhd.save.v
+function read_single_v(fname::String,chan)
 
     myheader=read_v_header(fname)
 
