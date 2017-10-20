@@ -46,6 +46,11 @@ function plot_events(fpga::Array{FPGA,1},han::Gui_Handles,myreads::Int64)
     nothing
 end
 
+function plot_events(fpga::DArray{FPGA,1,Array{FPGA,1}},han::Gui_Handles,myreads::Int64)
+
+    nothing
+end
+
 function parse_analog(adc::Array,chan::Int64)
 
     mysum=0
