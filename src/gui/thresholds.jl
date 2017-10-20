@@ -49,11 +49,18 @@ function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
         end
     else
         (nn,mycore)=get_thres_id(s,han.spike)
-        remotecall_wait(((x,h,num)->localpart(x)[num].thres=-1*h.sc.thres/h.sc.s+h.sc.o),mycore,s,han,nn)
+        remotecall_wait(((x,h,num)->remote_set_thres(localpart(x)[num],h)),mycore,s,han,nn)
         f=open(string(backup,"thres/",han.spike,".bin"),"w")
         write(f,-1*han.sc.thres/han.sc.s+h.sc.o)
         close(f)
     end
+end
+
+function remote_set_thres(x,h)
+
+    x.thres = -1 * h.sc.thres/h.sc.s + h.sc.o
+    
+    nothing
 end
 
 function get_thres_id{T}(s::DArray{T,1,Array{T,1}},ss::Int64)
