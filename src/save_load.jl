@@ -618,10 +618,15 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
     
     tscounts=zeros(Int32,130,5)
     
+	#For plexon, 0 is unsorted, 1-4 is sorted
+	#Intan will save starting at 1 for unsorted, and all numbers after as units
+	#This array only logs sorted units. 0 entry (1 in Julia) is unused
     for i=1:length(ss)
         for j=1:length(ss[i])
-            tscounts[i+1,ss[i][j].id+1]+=1 
-        end
+	if ss[i][j].id>1 
+            tscounts[i+1,ss[i][j].id]+=1 
+	end
+	end
     end
 
     samples_per_wave=convert(Int16,length(ss[1][1].inds))
@@ -667,7 +672,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
     for i=1:length(ss)
 	v=read_single_v(vname,i)
         for j=1:length(ss[i])
-            header=PL_DataBlockHeader(1,ss[i][j].inds.start,i,ss[i][j].id,samples_per_wave)
+            header=PL_DataBlockHeader(1,ss[i][j].inds.start,i,ss[i][j].id-1,samples_per_wave)
             myind=ss[i][j].inds.start
             
             if myind+samples_per_wave-1 < size(v,1)
