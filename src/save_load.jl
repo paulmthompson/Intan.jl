@@ -602,7 +602,7 @@ function PL_DataBlockHeader(mytype,t,num,unit,wave_size)
     end
 end
 
-function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlname="ttl.bin",tmin=0)
+function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_parse=false,ttlname="ttl.bin",tmin=0)
 
     v_header=read_v_header(vname)
     ts_header=read_stamp_header(tsname)
@@ -631,13 +631,16 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
 
     samples_per_wave=convert(Int16,length(ss[1][1].inds))
 
-    myttl=parse_ttl(ttlname)
-    
+	if ttl_parse
+    		myttl=parse_ttl(ttlname)
+	end
     evcounts=zeros(Int32,512)
 
+	if ttl_parse
     for i=1:16
         evcounts[i]=length(myttl[i])
     end
+	end
     
     f_out=open(out_name,"a+")
 
@@ -690,6 +693,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
     end
 
     #Write Event blocks
+	if ttl_parse
     for i=1:16
         for j=1:length(myttl[i])
             header=PL_DataBlockHeader(4,myttl[i][j],i,0,0)
@@ -698,6 +702,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin",ttlna
             end
         end
     end
+	end
         
     close(f_out)
 
