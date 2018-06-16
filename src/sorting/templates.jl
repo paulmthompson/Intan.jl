@@ -115,7 +115,7 @@ function b3_cb_template(widget::Ptr,user_data::Tuple{Gui_Handles})
     
     if !han.sc.hold
         SpikeSorting.clear_c2(han.sc.c2,han.spike)
-        han.sc.ctx2=getgc(han.sc.c2)
+        han.sc.ctx2=Gtk.getgc(han.sc.c2)
         han.sc.ctx2s=copy(han.sc.ctx2)
         han.buf.ind=1
         han.buf.count=1
@@ -168,7 +168,7 @@ function draw_template_bounds(han::Gui_Handles)
             o=han.sc.o
             
             Cairo.translate(ctx,0.0,han.sc.h2/2)
-            scale(ctx,han.sc.w2/han.sc.wave_points,s)
+            Gtk.scale(ctx,han.sc.w2/han.sc.wave_points,s)
             
             move_to(ctx,1.0,han.temp.templates[1,clus]+(han.temp.sig_max[1,clus]*han.temp.tol[clus])-o)
             
@@ -228,7 +228,7 @@ function draw_templates(han::Gui_Handles)
     o=han.sc.o
     
     Cairo.translate(ctx,0.0,myheight/2)
-    scale(ctx,mywidth/han.wave_points,s)
+    Gtk.scale(ctx,mywidth/han.wave_points,s)
     
     for clus=1:han.total_clus[han.spike]
         
@@ -384,7 +384,7 @@ end
 
 function draw_templates_c3(han::Gui_Handles)
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
@@ -397,7 +397,7 @@ function draw_templates_c3(han::Gui_Handles)
         o=han.sc.o
 
         Cairo.translate(ctx,0.0,50.0)
-        scale(ctx,mywidth/(han.wave_points*total_clus),s)
+        Gtk.scale(ctx,mywidth/(han.wave_points*total_clus),s)
 
         startx=(clus-1)*(han.wave_points)+1
         move_to(ctx,1.0+startx,han.temp.templates[1,clus]-o)

@@ -54,7 +54,7 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
                 setproperty!(han.rb1[4],:active,true)
             end
         elseif event_id == 7
-            ctx=getgc(han.c)
+            ctx=Gtk.getgc(han.c)
             han.c.back.ptr = CairoRGBSurface(width(ctx),height(ctx)).ptr
             han.c.backcc = CairoContext(han.c.back)
         else

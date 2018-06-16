@@ -13,7 +13,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     paint_with_alpha(ctx,0.0)
 
     Cairo.translate(ctx,0.0,han.sc.h2/2)
-    scale(ctx,han.sc.w2/han.wave_points,s)
+    Cairo.scale(ctx,han.sc.w2/han.wave_points,s)
     
     for i=1:rhd.nums[spike_num]
 
@@ -77,7 +77,7 @@ Redraw all spikes shown in paused view
 function replot_all_spikes(han::Gui_Handles)
 
     SpikeSorting.clear_c2(han.sc.c2,han.spike)
-    han.sc.ctx2=getgc(han.sc.c2)
+    han.sc.ctx2=Gtk.getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
 
     ctx=han.sc.ctx2s
@@ -85,7 +85,7 @@ function replot_all_spikes(han::Gui_Handles)
     o=han.sc.o
 
     Cairo.translate(ctx,0.0,han.sc.h2/2)
-    scale(ctx,han.sc.w2/han.sc.wave_points,s)
+    Cairo.scale(ctx,han.sc.w2/han.sc.wave_points,s)
 
     for i=1:(han.total_clus[han.spike]+1)
         for j=1:han.buf.ind
@@ -130,7 +130,7 @@ function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     elseif event.button == 3 #right click refreshes window
         if !han.sc.pause
             SpikeSorting.clear_c2(han.sc.c2,han.spike)
-            han.sc.ctx2=getgc(han.sc.c2)
+            han.sc.ctx2=Gtk.getgc(han.sc.c2)
             han.sc.ctx2s=copy(han.sc.ctx2)
             han.buf.ind=1
             han.buf.count=1

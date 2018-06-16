@@ -3,7 +3,7 @@ function popup_event_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     myheight=height(ctx)
 
     chan_id=1
@@ -63,7 +63,7 @@ end
 
 function plot_analog(han::Gui_Handles,channel::Int64,myreads::Int64,val::Int64)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     myheight=height(ctx)
     
     move_to(ctx,myreads-1,myheight-260 + (channel-1)*50-val)
@@ -87,7 +87,7 @@ end
 
 function plot_ttl(han::Gui_Handles,channel::Int64,myreads::Int64,val::Bool)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     myheight=height(ctx)
 
     offset=0
