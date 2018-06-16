@@ -1461,13 +1461,13 @@ end
 function check_port_streams(fpga::FPGA,port)
 
     if port=="PortA"
-        streams=sum((fpga.amps.==0)|(fpga.amps.==1)|(fpga.amps.==8)|(fpga.amps.==9))
+        streams=sum((fpga.amps.==0).|(fpga.amps.==1).|(fpga.amps.==8).|(fpga.amps.==9))
     elseif port=="PortB"
-        streams=sum((fpga.amps.==2)|(fpga.amps.==3)|(fpga.amps.==10)|(fpga.amps.==11))
+        streams=sum((fpga.amps.==2).|(fpga.amps.==3).|(fpga.amps.==10).|(fpga.amps.==11))
     elseif port=="PortC"
-        streams=sum((fpga.amps.==4)|(fpga.amps.==5)|(fpga.amps.==12)|(fpga.amps.==13))
+        streams=sum((fpga.amps.==4).|(fpga.amps.==5).|(fpga.amps.==12).|(fpga.amps.==13))
     elseif port=="PortD"
-        streams=sum((fpga.amps.==6)|(fpga.amps.==7)|(fpga.amps.==14)|(fpga.amps.==15))
+        streams=sum((fpga.amps.==6).|(fpga.amps.==7).|(fpga.amps.==14).|(fpga.amps.==15))
     end
     
     streams
