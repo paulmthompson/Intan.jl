@@ -11,7 +11,7 @@ function draw_raster_n(rhd::RHD2000,han::Gui_Handles,num_chan::Int64)
     end
     
     maxid=find_max_id(rhd,han,k_in,num_chan)
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
 
     xwidth=width(ctx)
     myheight=height(ctx)
@@ -83,7 +83,7 @@ end
 
 function draw_isi(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
@@ -119,7 +119,7 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
             set_source_rgb(ctx,1.0,1.0,1.0)
         end
         startx=(i-1)*(han.wave_points)+1
-        scale(ctx,mywidth/(han.wave_points*total_clus),1)
+        Cairo.scale(ctx,mywidth/(han.wave_points*total_clus),1)
         move_to(ctx,startx,10)
         show_text(ctx,string(isi_f))
 
@@ -154,7 +154,7 @@ Reset Canvas
 function clear_c(han::Gui_Handles)
 
     #paint it black
-    ctx = getgc(han.c)
+    ctx = Gtk.getgc(han.c)
     set_source_rgb(ctx,0.0,0.0,0.0)
     paint(ctx)
 
@@ -240,13 +240,13 @@ end
 
 function draw_c3(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=Cairo.getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
     mywidth=width(ctx)
 
     spike_num=han.spike
     reads=han.draws
 
-    scale(ctx,mywidth/500.0,1.0)
+    Cairo.scale(ctx,mywidth/500.0,1.0)
 
     for i=1:rhd.nums[spike_num]
     
@@ -270,7 +270,7 @@ end
 
 function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
@@ -281,7 +281,7 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
-    scale(ctx,mywidth/(han.wave_points*total_clus),1)
+    Cairo.scale(ctx,mywidth/(han.wave_points*total_clus),1)
 
     for i=1:total_clus
 
