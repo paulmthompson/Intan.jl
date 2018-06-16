@@ -1191,7 +1191,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 if clus>0
                 
                     #Find Cluster characteristics from selected waveforms
-                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,!han.buf.selected)
+                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,.!han.buf.selected)
                 
                     #Apply cluster characteristics to handles cluster
                     change_cluster(han.temp,mymean,mystd,clus)

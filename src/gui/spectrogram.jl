@@ -42,7 +42,7 @@ end
 
 function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
    
     x=Gtk.cairo_surface(han.c)
     data = ccall((:cairo_image_surface_get_data,Cairo._jl_libcairo),Ptr{UInt32},(Ptr{Void},),x.ptr)

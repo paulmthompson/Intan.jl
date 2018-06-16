@@ -1,9 +1,9 @@
 
 export SaveWave,SaveAll,SaveNone, FPGA
 
-abstract RHD2000
-abstract Task
-abstract IC
+abstract type RHD2000 end
+abstract type Task end
+abstract type IC end
 
 type Debug
     state::Bool

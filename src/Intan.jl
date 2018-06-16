@@ -7,7 +7,7 @@ import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSor
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
 
-typealias MyFilter DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
+const MyFilter = DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
 
 include("types.jl")
 include("constants.jl")

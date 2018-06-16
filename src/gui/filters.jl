@@ -260,7 +260,7 @@ end
 
 function draw_filter_canvas(han::Gui_Handles,rhd,pos)
 
-    ctx = getgc(han.band_widgets.c)
+    ctx = Gtk.getgc(han.band_widgets.c)
 
     set_source_rgb(ctx,1.0,1.0,1.0)
     paint(ctx)
