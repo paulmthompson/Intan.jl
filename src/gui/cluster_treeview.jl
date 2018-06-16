@@ -23,7 +23,7 @@ function select_unit(han::Gui_Handles)
         setproperty!(han.adj_sort, :value, mytol)
     end
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
 
     if old_clus>0
         (x1_i,x2_i,y1_i,y2_i)=get_template_dims(han,old_clus)

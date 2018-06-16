@@ -180,7 +180,7 @@ function makegui(r::RHD2000,s,task,fpga)
     c2=Canvas()
 
     @guarded draw(c2) do widget
-        ctx = getgc(c2)
+        ctx = Gtk.getgc(c2)
         SpikeSorting.clear_c2(c2,1)
     end
 
@@ -192,7 +192,7 @@ function makegui(r::RHD2000,s,task,fpga)
     #ROW 2
     c3=Canvas(-1,200)     
     @guarded draw(c3) do widget
-        ctx = getgc(c3)
+        ctx = Gtk.getgc(c3)
         SpikeSorting.clear_c3(c3,1)
     end
     show(c3)
@@ -232,7 +232,7 @@ push!(hbox_time,m_label)
 #c=@Canvas(500,800)
 c=Canvas(500)
     @guarded draw(c) do widget
-        ctx = getgc(c)
+        ctx = Gtk.getgc(c)
         set_source_rgb(ctx,0.0,0.0,0.0)
         set_operator(ctx,Cairo.OPERATOR_SOURCE)
         paint(ctx)
@@ -790,7 +790,7 @@ save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_chec
 
 sleep(1.0)
 
-sc_widgets=SpikeSorting.Single_Channel(c2,c3,getgc(c2),copy(getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(getgc(c2)),height(getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
+sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
@@ -802,7 +802,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider
                     false,slider_sort,adj_sort,sort_list,sort_tv,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
-                    ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr,getgc(c)),
+                    ref_tv2,ref_list1,ref_list2,false,SoftScope(r.sr,Gtk.getgc(c)),
                     popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
@@ -1191,7 +1191,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 if clus>0
                 
                     #Find Cluster characteristics from selected waveforms
-                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,!han.buf.selected)
+                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,.!han.buf.selected)
                 
                     #Apply cluster characteristics to handles cluster
                     change_cluster(han.temp,mymean,mystd,clus)
@@ -1242,7 +1242,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             end
             if (!han.sc.hold)&(!han.sc.pause)
 	        SpikeSorting.clear_c2(han.sc.c2,han.spike)
-                han.sc.ctx2=getgc(han.sc.c2)
+                han.sc.ctx2=Gtk.getgc(han.sc.c2)
                 han.sc.ctx2s=copy(han.sc.ctx2)
             end
             SpikeSorting.clear_c3(han.sc.c3,han.spike)
@@ -1326,7 +1326,7 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
     SpikeSorting.clear_c2(han.sc.c2,han.spike)
-    han.sc.ctx2=getgc(han.sc.c2)
+    han.sc.ctx2=Gtk.getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
     #Sort Button
     if han.sort_cb
@@ -1421,7 +1421,7 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
 
     han, rhd = user_data
 
-    ctx=getgc(han.sc.c2)
+    ctx=Gtk.getgc(han.sc.c2)
 
     if (height(ctx)!=han.sc.h2)|(width(ctx)!=han.sc.w2)
 
@@ -1486,7 +1486,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
     han, = user_data
     event = unsafe_load(param_tuple)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     myheight=height(ctx)
 
     han.mim=(event.x,event.y)
@@ -1605,7 +1605,7 @@ end
 
 function get_multi_bounds(han::Gui_Handles,n_col,n_row,num_chan)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
 
     mywidth=width(ctx)
     if num_chan<64
@@ -1644,7 +1644,7 @@ end
 
 function check_c3_click(han::Gui_Handles,x,y)
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
     mywidth=width(ctx)
     
     total_clus = max(han.total_clus[han.spike]+1,5)
@@ -1672,7 +1672,7 @@ end
 
 function get_template_dims(han::Gui_Handles,clus)
 
-    ctx=getgc(han.sc.c3)
+    ctx=Gtk.getgc(han.sc.c3)
     mywidth=width(ctx)
 
     total_clus = max(han.total_clus[han.spike]+1,5)

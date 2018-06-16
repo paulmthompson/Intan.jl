@@ -73,7 +73,7 @@ end
 
 function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     myheight=height(ctx)
 
     if han.soft.draws>9

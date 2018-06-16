@@ -48,7 +48,7 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
     num_plot =n_col*n_row
     
     maxid=find_max_id(rhd,han,k_in,num_chan)
-    ctx=getgc(han.c)
+    ctx=Gtk.getgc(han.c)
     xwidth=width(ctx)
     myheight=height(ctx)
     if num_plot<64
@@ -57,7 +57,7 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
       yheight=myheight
     end
 
-    scale(ctx,xwidth/(han.wave_points/2*n_col),1)
+    Cairo.scale(ctx,xwidth/(han.wave_points/2*n_col),1)
 
     #subsequent IDs
     @inbounds for thisid=1:maxid
@@ -137,7 +137,7 @@ Highlight selected channel
 
 function highlight_channel(han::Gui_Handles,old_spike)
 
-    ctx = getgc(han.c)
+    ctx = Gtk.getgc(han.c)
     
     if han.c_right_top==1
 
