@@ -180,7 +180,7 @@ function makegui(r::RHD2000,s,task,fpga)
     c2=Canvas()
 
     @guarded draw(c2) do widget
-        ctx = getgc(c2)
+        ctx = Gtk.getgc(c2)
         SpikeSorting.clear_c2(c2,1)
     end
 
@@ -192,7 +192,7 @@ function makegui(r::RHD2000,s,task,fpga)
     #ROW 2
     c3=Canvas(-1,200)     
     @guarded draw(c3) do widget
-        ctx = getgc(c3)
+        ctx = Gtk.getgc(c3)
         SpikeSorting.clear_c3(c3,1)
     end
     show(c3)
@@ -232,7 +232,7 @@ push!(hbox_time,m_label)
 #c=@Canvas(500,800)
 c=Canvas(500)
     @guarded draw(c) do widget
-        ctx = getgc(c)
+        ctx = Gtk.getgc(c)
         set_source_rgb(ctx,0.0,0.0,0.0)
         set_operator(ctx,Cairo.OPERATOR_SOURCE)
         paint(ctx)
