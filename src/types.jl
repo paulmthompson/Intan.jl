@@ -282,7 +282,7 @@ function Spectrogram(fs; win_width_t = .01,win_overlap_t = .002, f_max = 15000)
     P = power(S)
 
     f_div=freq(S).multiplier
-    t_div=time(S).step/time(S).divisor
+    t_div=time(S).step
 
     f_max = ceil(Int64,f_max / f_div)
 
