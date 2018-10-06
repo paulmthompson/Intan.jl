@@ -203,20 +203,20 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
             fpga[i].shift=c_per_fpga[i-1]
         end
     end
-    
+
     numchannels=sum(c_per_fpga)
-                  
+
     if debug.state==true
         params=debug_sort
     end
 
     wave_points=get_wavelength(sr,wave_time)
-    
+
     if parallel==false
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
         fpgas=fpga
-        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,sav,debug) 
+        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,sav,debug)
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
@@ -274,7 +274,7 @@ type Spectrogram
 end
 
 function Spectrogram(fs; win_width_t = .01,win_overlap_t = .002, f_max = 15000)
-    
+
     win_width_s=convert(Int, win_width_t*fs)
     win_overlap_s=convert(Int, win_overlap_t*fs)
 
@@ -371,84 +371,84 @@ end
 
 type Gui_Handles
     win::Gtk.GtkWindowLeaf
-    
+
     run::Gtk.GtkToggleButtonLeaf
     init::Gtk.GtkButtonLeaf
     cal::Gtk.GtkCheckButtonLeaf
-    
+
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
     slider2::Gtk.GtkScaleLeaf
     adj2::Gtk.GtkAdjustmentLeaf
-    
+
     c::Gtk.GtkCanvasLeaf
-    
+
     spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
     num16::Int64 #currently selected group of spikes in multi display
-    
+
     scale::Array{Float64,2}
     offset::Array{Int64,1}
-    
+
     mim::NTuple{2,Float64} #saved x,y position of mouse input on multi-channel display
-    
+
     total_clus::Array{Int64,1}
-    
+
     draws::Int64 #how many displays have occured since the last refresh
-    
+
     events::Array{Int64,1}
-    
+
     enabled::Array{Bool,1}
 
     time::mytime
-    
+
     wave_points::Int64
-    
+
     c_right_top::UInt8 #flag to indicate the drawing method to be displayed on top part of right display
     c_right_bottom::UInt8 #flag to indicate the drawing method to be displayed on the bottom part of right display
-    
+
     popup_ed::Gtk.GtkMenuLeaf
     popup_event::Gtk.GtkMenuLeaf
     popup_spect::Gtk.GtkMenuLeaf
-    
+
     rb1::Array{Gtk.GtkRadioButton,1}
     rb2::Array{Gtk.GtkRadioButton,1}
-    
+
     scope::Array{Float64,2}
-    
+
     adj_thres::Gtk.GtkAdjustmentLeaf
     thres_slider::Gtk.GtkScaleLeaf
     thres_changed::Bool
-    
+
     spike_changed::Bool
     chan_per_display::Int64
 
     temp::ClusterTemplate
     c_changed::Bool
-    
+
     slider_sort::Gtk.GtkScaleLeaf
     adj_sort::Gtk.GtkAdjustmentLeaf
-    
+
     sort_list::Gtk.GtkListStoreLeaf
     sort_tv::Gtk.GtkTreeViewLeaf
-    
+
     isi_ind::Int64
     isi_count::Int64
     isi_clus_ID::Array{Int64,1}
     isi_last_time::Array{UInt32,1}
     isi::Array{UInt32,1}
     isi_hist::Array{Int64,1}
-    
+
     ref_win::Gtk.GtkWindowLeaf
     ref_tv1::Gtk.GtkTreeViewLeaf
     ref_tv2::Gtk.GtkTreeViewLeaf
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
-    
+
     sort_cb::Bool
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
-    
+
     sort_widgets::Sort_Widgets
     thres_widgets::Thres_Widgets
     gain_widgets::Gain_Widgets

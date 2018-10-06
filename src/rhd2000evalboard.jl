@@ -88,37 +88,37 @@ function init_board_helper(fpgas::Array{FPGA,1},sr,mydebug=false)
 end
 
 function init_board_helper(fpga::FPGA,sr,mydebug=false)
-    
+
     initialize_board(fpga,mydebug)
 
-    #For 64 channel need two data streams, and data will come in 
+    #For 64 channel need two data streams, and data will come in
     #on the rising AND falling edges of SCLK
     stream=0
     for i in fpga.amps
         enableDataStream(fpga,stream,true)
         setDataSource(fpga,stream,i)
-        stream+=1  
+        stream+=1
     end
-    
+
     #Enable DAC
     enableDac(fpga,0,true)
-    
+
     calculateDataBlockSizeInWords(fpga)
     calculateDataBlockSizeInBytes(fpga)
-    
+
     setSampleRate(fpga,sr,mydebug)
     println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
-    
+
     ledArray=[1,0,0,0,0,0,0,0]
     setLedDisplay(fpga,ledArray)
-    
+
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
     fpga.r=CreateRHD2000Registers(Float64(fpga.sampleRate))
-    
+
     #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),false,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 0)
-    
+
     #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),true,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 1)
@@ -133,15 +133,15 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
         end
     end
     end
-    
+
     setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
     setContinuousRunMode(fpga,false)
-    
+
     if mydebug==false
         runBoard(fpga)
         while (isRunning(fpga))
         end
-        flushBoard(fpga) 
+        flushBoard(fpga)
     end
 
    for port in ["PortA","PortB","PortC","PortD"]
@@ -157,9 +157,9 @@ function open_board(fpga::FPGA)
 
     fpga.lib=Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
     fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Void}, ())
-    
+
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceCount), Int, (Ptr{Void},), fpga.board) 
+    nDevices=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceCount), Int, (Ptr{Void},), fpga.board)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number
@@ -168,13 +168,13 @@ function open_board(fpga::FPGA)
     serial[end]=0
     serialnumber=unsafe_string(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
-    
-    #Open by serial 
+
+    #Open by serial
     if (ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_OpenBySerial), Cint, (Ptr{Void},Ptr{UInt8}),fpga.board,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
-    
+
     #configure on-board PLL
     ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_LoadDefaultPLLConfiguration), Cint, (Ptr{Void},),fpga.board)
 
@@ -208,21 +208,22 @@ function uploadFpgaBitfile(rhd::FPGA)
     else
         println("FPGA configuration failed.")
     end
-      
+
+
     #Check if FrontPanel Support is enabled
-    ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_IsFrontPanelEnabled),Bool,(Ptr{Void},),rhd.board)
+    myenable = ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_IsFrontPanelEnabled),Bool,(Ptr{Void},),rhd.board)
 
     UpdateWireOuts(rhd)
-    
     boardId = GetWireOutValue(rhd,WireOutBoardId)
     boardVersion = GetWireOutValue(rhd,WireOutBoardVersion)
-    if (boardId != RHYTHM_BOARD_ID)
+
+    if (boardId != RHYTHM_BOARD_ID_OPENEPHYS)
         println("FPGA configuration does not support Rythm. Incorrect board ID: ", boardId)
     else
         println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion)
     end
 
-    nothing   
+    nothing
 end
 
 function initialize_board(fpgas::Array{FPGA,1})
@@ -233,7 +234,7 @@ function initialize_board(fpgas::Array{FPGA,1})
 end
 
 function initialize_board(rhd::FPGA,debug=false)
-  
+
     resetBoard(rhd)
     setSampleRate(rhd,30000,debug)
     selectAuxCommandBank(rhd,"PortA", "AuxCmd1", 0)
@@ -253,7 +254,7 @@ function initialize_board(rhd::FPGA,debug=false)
     selectAuxCommandLength(rhd,"AuxCmd3", 0, 0)
 
     setContinuousRunMode(rhd,true)
-    
+
     setMaxTimeStep(rhd,4294967295) #4294967395 == (2^32 - 1)
 
     setCableLengthFeet(rhd,"PortA", 6.0)  # assume 6 ft cables
@@ -272,6 +273,17 @@ function initialize_board(rhd::FPGA,debug=false)
     setDataSource(rhd,6, PortC2)
     setDataSource(rhd,7, PortD2)
 
+    if rhd.usb3
+        setDataSource(rhd,8, PortA1)
+        setDataSource(rhd,9, PortB1)
+        setDataSource(rhd,10, PortC1)
+        setDataSource(rhd,11, PortD1)
+        setDataSource(rhd,12, PortA2)
+        setDataSource(rhd,13, PortB2)
+        setDataSource(rhd,14, PortC2)
+        setDataSource(rhd,15, PortD2)
+    end
+
     #remember that julia indexes with 1's instead of 0's to start an array
     enableDataStream(rhd,0, true)
     for i=1:(MAX_NUM_DATA_STREAMS-1)
@@ -289,7 +301,7 @@ function initialize_board(rhd::FPGA,debug=false)
     setDacGain(rhd,0)
     setAudioNoiseSuppress(rhd,0)
 
-    setTtlMode(rhd,0) 
+    setTtlMode(rhd,1)
 
     for i=0:7; setDacThreshold(rhd,i, 32768, true); end
 
@@ -305,7 +317,9 @@ function initialize_board(rhd::FPGA,debug=false)
     setExternalDigOutChannel(rhd,"PortC", 0)
     setExternalDigOutChannel(rhd,"PortD", 0)
 
-    nothing      
+    enableBoardLeds(rhd,true);
+
+    nothing
 end
 
 function resetBoard(rhd::FPGA)
@@ -319,14 +333,14 @@ function resetBoard(rhd::FPGA)
     if rhd.usb3
        SetWireInValue(rhd,WireInMultiUse, div(USB3_BLOCK_SIZE,4))
        UpdateWireIns(rhd)
-       ActivateTriggerIn(rhd,TrigInSetParam,0)
+       ActivateTriggerIn(rhd,TrigInOpenEphys,16)
 
        SetWireInValue(rhd,WireInMultiUse, DDR_BURST_LENGTH)
        UpdateWireIns(rhd)
-       ActivateTriggerIn(rhd,TrigInSetParam,1)
-    end	
+       ActivateTriggerIn(rhd,TrigInOpenEphys,17)
+    end
 
-    nothing   
+    nothing
 end
 
 function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
@@ -384,28 +398,28 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
         D=25
     else
     end
-  
+
     rhd.sampleRate=newSampleRate
 
     #Wait for DcmProgDone==1 before reprogramming clock synthesizer
     if !debug
-        while !isDcmProgDone(rhd) 
+        while !isDcmProgDone(rhd)
         end
     end
-   
+
     #Reprogram clock synthesizer
 
     SetWireInValue(rhd,WireInDataFreqPll,(256 * convert(Culong,M) + convert(Culong,D)))
-    UpdateWireIns(rhd)  
+    UpdateWireIns(rhd)
     ActivateTriggerIn(rhd,TrigInDcmProg,0)
-   
+
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
     if !debug
         while !isDataClockLocked(rhd)
         end
     end
 
-    nothing                
+    nothing
 end
 
 function isDcmProgDone(rhd::FPGA)
@@ -438,10 +452,10 @@ function uploadCommandList(rhd::FPGA,commandList, auxCommandSlot, bank)
             ActivateTriggerIn(rhd,TrigInRamWrite,1)
         elseif auxCommandSlot == "AuxCmd3"
             ActivateTriggerIn(rhd,TrigInRamWrite,2)
-        end     
+        end
     end
 
-    nothing    
+    nothing
 end
 
 function selectAuxCommandBank(rhd::FPGA,port, commandslot, bank)
@@ -465,14 +479,14 @@ function selectAuxCommandBank(rhd::FPGA,port, commandslot, bank)
     elseif commandslot=="AuxCmd3"
         SetWireInValue(rhd,WireInAuxCmdBank3,(bank<<bitShift),(0x000f<<bitShift))
     end
-    
+
     UpdateWireIns(rhd)
 
     nothing
 end
 
 function selectAuxCommandLength(rhd::FPGA,commandslot,loopIndex,endIndex)
-    
+
     #Error checking goes here
 
     if commandslot=="AuxCmd1"
@@ -488,11 +502,11 @@ function selectAuxCommandLength(rhd::FPGA,commandslot,loopIndex,endIndex)
 
     UpdateWireIns(rhd)
 
-    nothing  
+    nothing
 end
 
 function setContinuousRunMode(rhd::FPGA,continuousMode)
-    
+
     if continuousMode
         SetWireInValue(rhd,WireInResetRun,0x02,0x02)
     else
@@ -507,7 +521,7 @@ end
 function setMaxTimeStep(rhd::FPGA,maxTimeStep)
 
     maxTimeStep=convert(UInt32, maxTimeStep)
-    
+
     maxTimeStepLsb = maxTimeStep & 0x0000ffff
     maxTimeStepMsb = maxTimeStep & 0xffff0000
 
@@ -515,7 +529,7 @@ function setMaxTimeStep(rhd::FPGA,maxTimeStep)
     SetWireInValue(rhd,WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
     UpdateWireIns(rhd)
 
-    nothing  
+    nothing
 end
 
 setCableLengthFeet(rhd::FPGA,port,lengthInFeet::Float64)=setCableLengthMeters(rhd,port,.3048*lengthInFeet)
@@ -538,19 +552,23 @@ function setCableLengthMeters(rhd::FPGA,port, lengthInMeters::Float64)
     nothing
 end
 
-function approxCableLengthFeet(fpga,delay)
+function estimateCableLengthMeters(fpga,delay)
 
     tStep=1.0 / (2800.0 * fpga.sampleRate)
+    cableVelocity = 0.555 * speedOfLight
+    distance = ((delay - 1.0) * tStep - (xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime))
+    if distance <0.0
+        distance = 0.0
+    end
+    distance
+end
 
-    timeDelay=(delay -0.5 -1.0) * tStep
-
-    distance = (timeDelay - ( xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime)) * cableVelocity
-
-    round(Int64, distance/2.0/.3048)
+function approxCableLengthFeet(fpga,delay)
+    estimateCableLengthMeters(fpga,delay) * 3.2808
 end
 
 function setCableDelay(rhd::FPGA,port, delay)
-    
+
     #error checking goes here
 
     if delay<0
@@ -572,11 +590,11 @@ function setCableDelay(rhd::FPGA,port, delay)
     end
 
     bitShift=convert(Int32, bitShift)
-    
-    SetWireInValue(rhd,WireInMisoDelay, delay << bitShift, 0x000f << bitShift)
+
+    SetWireInValue(rhd,WireInMisoDelay, delay << bitShift, 0x0000000f << bitShift)
     UpdateWireIns(rhd)
 
-    nothing 
+    nothing
 end
 
 setDspSettle(rhd::FPGA,enabled)=(SetWireInValue(rhd,WireInResetRun,(enabled ? 0x04 : 0x00),0x04);UpdateWireIns(rhd))
@@ -643,7 +661,7 @@ elseif stream==15
 end
 
 function enableDataStream(rhd::FPGA,stream::Int, enabled::Bool)
-    
+
     #error checking goes here
 
     stream=convert(Int32,stream)
@@ -663,29 +681,31 @@ function enableDataStream(rhd::FPGA,stream::Int, enabled::Bool)
         end
     end
 
-    nothing            
+    nothing
 end
 
 function enableDac(rhd::FPGA,dacChannel::Int,enabled::Bool)
 
     #error checking goes here
 
+    dacEnMask = rhd.usb3 ? 0x0400 : 0x0200
+
     if dacChannel == 0
-        SetWireInValue(rhd,WireInDacSource1,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource1,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 1
-        SetWireInValue(rhd,WireInDacSource2,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource2,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 2
-        SetWireInValue(rhd,WireInDacSource3,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource3,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 3
-        SetWireInValue(rhd,WireInDacSource4,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource4,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 4
-        SetWireInValue(rhd,WireInDacSource5,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource5,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 5
-        SetWireInValue(rhd,WireInDacSource6,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource6,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 6
-        SetWireInValue(rhd,WireInDacSource7,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource7,(enabled ? dacEnMask : 0x0000), 0x0200)
     elseif dacChannel == 7
-        SetWireInValue(rhd,WireInDacSource8,(enabled ? 0x0200 : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource8,(enabled ? dacEnMask : 0x0000), 0x0200)
     end
 
     UpdateWireIns(rhd)
@@ -695,28 +715,30 @@ end
 
 function selectDacDataStream(rhd::FPGA,dacChannel, stream)
     #error checking goes here
-    
+
+    dacStreamMask = rhd.usb3 ? 0x03e0 : 0x01e0
+
     if dacChannel == 0
-         SetWireInValue(rhd,WireInDacSource1, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource1, stream << 5, dacStreamMask)
     elseif dacChannel == 1
-         SetWireInValue(rhd,WireInDacSource2, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource2, stream << 5, dacStreamMask)
     elseif dacChannel == 2
-         SetWireInValue(rhd,WireInDacSource3, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource3, stream << 5, dacStreamMask)
     elseif dacChannel == 3
-         SetWireInValue(rhd,WireInDacSource4, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource4, stream << 5, dacStreamMask)
     elseif dacChannel == 4
-         SetWireInValue(rhd,WireInDacSource5, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource5, stream << 5, dacStreamMask)
     elseif dacChannel == 5
-         SetWireInValue(rhd,WireInDacSource6, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource6, stream << 5, dacStreamMask)
     elseif dacChannel == 6
-         SetWireInValue(rhd,WireInDacSource7, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource7, stream << 5, dacStreamMask)
     elseif dacChannel == 7
-         SetWireInValue(rhd,WireInDacSource8, stream << 5, 0x01e0)
+         SetWireInValue(rhd,WireInDacSource8, stream << 5, dacStreamMask)
     end
 
     UpdateWireIns(rhd)
 
-    nothing       
+    nothing
 end
 
 function selectDacDataChannel(rhd::FPGA,dacChannel::Int, dataChannel)
@@ -742,7 +764,7 @@ function selectDacDataChannel(rhd::FPGA,dacChannel::Int, dataChannel)
 
     UpdateWireIns(rhd)
 
-    nothing  
+    nothing
 end
 
 setDacManual(rhd::FPGA,value)=(SetWireInValue(rhd,WireInDacManual,value);UpdateWireIns(rhd))
@@ -769,7 +791,7 @@ function setDacThreshold(rhd::FPGA,dacChannel, threshold, trigPolarity)
     UpdateWireIns(rhd)
     ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel+8)
 
-    nothing  
+    nothing
 end
 
 function enableExternalFastSettle(rhd::FPGA,enable)
@@ -778,7 +800,7 @@ function enableExternalFastSettle(rhd::FPGA,enable)
     UpdateWireIns(rhd)
     ActivateTriggerIn(rhd,TrigInExtFastSettle,0)
 
-    nothing  
+    nothing
 end
 
 function setExternalFastSettleChannel(rhd::FPGA,channel)
@@ -789,7 +811,7 @@ function setExternalFastSettleChannel(rhd::FPGA,channel)
     UpdateWireIns(rhd)
     ActivateTriggerIn(rhd,TrigInExtFastSettle,1)
 
-    nothing 
+    nothing
 end
 
 function enableExternalDigOut(rhd::FPGA,port, enable)
@@ -807,7 +829,7 @@ function enableExternalDigOut(rhd::FPGA,port, enable)
         ActivateTriggerIn(rhd,TrigInExtDigOut,3)
     end
 
-    nothing  
+    nothing
 end
 
 function setExternalDigOutChannel(rhd::FPGA,port, channel)
@@ -825,7 +847,7 @@ function setExternalDigOutChannel(rhd::FPGA,port, channel)
         ActivateTriggerIn(rhd,TrigInExtDigOut,7)
     end
 
-    nothing 
+    nothing
 end
 
 function getTtlIn(rhd::FPGA,ttlInArray)
@@ -881,7 +903,7 @@ function setLedDisplay(rhd::FPGA,ledArray)
     SetWireInValue(rhd,WireInLedDisplay,ledOut)
     UpdateWireIns(rhd)
 
-    nothing   
+    nothing
 end
 
 runBoard(fpgas::Array{FPGA,1})=map(runBoard,fpgas)
@@ -897,7 +919,7 @@ function isRunning(rhd::FPGA)
         return false
     else
         return true
-    end       
+    end
 end
 
 function flushBoard(rhd::FPGA)
@@ -906,17 +928,25 @@ if !rhd.usb3
     while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
         ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
     end
-    
+
     while (numWordsInFifo(rhd) > 0)
         ReadFromPipeOut(rhd,PipeOutData, (2 * numWordsInFifo(rhd)), rhd.usbBuffer)
     end
 else
-    SetWireInValue(rhd,WireInResetRun, 1<<4, 1<<4)
+    SetWireInValue(rhd,WireInResetRun, 1<<16, 1<<16)
     UpdateWireIns(rhd)
     while (numWordsInFifo(rhd) > 0)
         ReadFromBlockPipeOut(rhd,PipeOutData, USB3_BLOCK_SIZE, rhd.usbBuffer)
     end
-    SetWireInValue(rhd,WireInResetRun,0, 1<<4)
+    #=
+    while (numWordsInFifo(rhd) > USB_BUFFER_SIZE / 2)
+        ReadFromBlockPipeOut(rhd,PipeOutData,USB3_BLOCK_SIZE,USB_BUFFER_SIZE,rhd.usbBuffer)
+    end
+    while (numWordsInFifo(rhd) > 0)
+        ReadFromBlockPipeOut(rhd,PipeOutData,USB3_BLOCK_SIZE,USB3_BLOCK_SIZE * max(2*numWordsInFifo()),rhd.usbBuffer)
+    end
+    =#
+    SetWireInValue(rhd,WireInResetRun,0<<16, 1<<16)
     UpdateWireIns(rhd)
 end
     nothing
@@ -926,7 +956,7 @@ function numWordsInFifo(rhd::FPGA)
 
     UpdateWireOuts(rhd)
 
-    GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)   
+    GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)
 end
 
 function compareNumWords(fpgas::Array{FPGA,1})
@@ -1017,13 +1047,13 @@ function cal_update(rhd::RHD2000)
     if rhd.cal==0
 
         rhd.cal=1
-                      
+
     elseif rhd.cal<3
 
         if rhd.reads>20
             rhd.cal=2
         end
-        
+
     elseif rhd.cal==3
 
     end
@@ -1059,14 +1089,17 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
             numRead=ReadFromBlockPipeOut(myfpga[1],PipeOutData, convert(Clong, numBytesToRead), myfpga[1].usbBuffer)
         else
             numRead=ReadFromPipeOut(myfpga[1],PipeOutData, convert(Clong, numBytesToRead), myfpga[1].usbBuffer)
-	end
-    end  
+        end
+    end
 
     for i=0:(numBlocks-1)
 
         #Move data from usbBuffer to v
 
         fillFromUsbBuffer!(myfpga,i,rhd.v,rhd.time)
+
+        #If analog here, we want to move adc number x into voltage channels
+        #
 
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0
@@ -1084,10 +1117,10 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
         end
 
         #Sorting
-        applySorting(rhd,s)       
+        applySorting(rhd,s)
     end
-                            
-    return true 
+
+    return true
 end
 
 function applySorting(rhd::RHD2000,s)
@@ -1096,7 +1129,7 @@ function applySorting(rhd::RHD2000,s)
 
         cal!(s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
         rhd.cal=1
-                      
+
     elseif rhd.cal<3
 
         cal!(s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
@@ -1104,26 +1137,42 @@ function applySorting(rhd::RHD2000,s)
         if rhd.reads>20
             rhd.cal=2
         end
-        
+
     elseif rhd.cal==3
-            
+
         onlinesort!(s,rhd.v,rhd.buf,rhd.nums)
     end
 
     rhd.reads+=1
-    nothing 
+    nothing
 end
 
+function enableBoardLeds(rhd::FPGA,enable)
+
+    SetWireInValue(rhd,WireInMultiUse, enable ? 1 : 0)
+	UpdateWireIns(rhd)
+    ActivateTriggerIn(rhd,TrigInOpenEphys, 0)
+
+end
+
+function setClockDivider(rhd,divide_factor)
+
+    SetWireInValue(rhd,WireInMultiUse, divide_factor);
+	UpdateWireIns(rhd);
+    ActivateTriggerIn(rhd,TrigInOpenEphys, 1);
+
+end
 
 function calculateDataBlockSizeInWords(rhd::FPGA)
-    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)                         
+    #rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)
+    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36) + 8+2)
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 end
 
 function calculateDataBlockSizeInBytes(rhd::FPGA)
     rhd.numBytesPerBlock=2 * rhd.numWords
-    nothing 
+    nothing
 end
 
 function checkUsbHeader(usbBuffer,index)
@@ -1151,19 +1200,19 @@ function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v,mytime)
 end
 
 function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
-    
+
     index = blockIndex * fpga.numBytesPerBlock + 1
-        
+
     for t=1:SAMPLES_PER_DATA_BLOCK
 
 	#Header
         if !checkUsbHeader(fpga.usbBuffer,index)
             if t==1 #first header missing, we're fucked. creep ahead and see what you find
                 #Add data
-                
+
                 lag=0
                 newindex=index
-                
+
                 for i=2:fpga.numBytesPerBlock
                     if checkUsbHeader(fpga.usbBuffer,i)
                         lag=i-index
@@ -1171,7 +1220,7 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
                         break
                     end
                 end
-                
+
             else #something is messed up, probably in the last sample. start incrementing backward until header is found
                 lag=0
                 newindex=index
@@ -1182,11 +1231,11 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
                         break
                     end
                 end
-		
+
                 if lag>=(fpga.numBytesPerBlock/SAMPLES_PER_DATA_BLOCK) #somehow an extra byte popped up? will want to move forward instead
 		lag=0
                 newindex=index
-                
+
                 for i=(index+1):fpga.numBytesPerBlock
                     if checkUsbHeader(fpga.usbBuffer,i)
                         lag=i-index
@@ -1197,14 +1246,14 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 
 		end
             end
-            
+
             #get extra bytes
-            
+
             while (2*numWordsInFifo(fpga) < lag)
             end
-            
+
             temp_array=zeros(UInt8,lag)
-            
+
             ReadFromPipeOut(fpga,PipeOutData, convert(Clong, lag), temp_array)
 
 	    if t==1 #moved forward, so bytes should be added to the end
@@ -1220,19 +1269,19 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 		   count+=1
 	       end
 	       t=t-1 #refill last block
-	    end	               
-            
+	    end
+
             #start fresh
             index=newindex
         end
-	
+
 	index+=8
 	mytime[t,fpga.id]=convertUsbTimeStamp(fpga.usbBuffer,index)
 	index+=4
-        
+
 	#Auxiliary results
 	index += (2*3*fpga.numDataStreams)
-        
+
 	#Amplifier
 	for i=1:32
 	    for j=1:fpga.numDataStreams
@@ -1240,23 +1289,23 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 		index+=2
 	    end
 	end
-        
-	#skip 36 filler word
-	index += (2*fpga.numDataStreams)
-        
+
+	#skip filler word(s)
+	index += (2*(fpga.numDataStreams % 4))
+
 	#ADCs
         for i=1:8
-            @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)     
+            @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)
             index+=2
         end
-        
+
 	#TTL in
         @inbounds fpga.ttlin[t]=convertUsbWordu(fpga.usbBuffer,index)
         index += 2
-        
+
         #TTL out
         @inbounds fpga.ttlout[t]=convertUsbWordu(fpga.usbBuffer,index)
-	index += 2	
+	index += 2
     end
 
     nothing
@@ -1386,7 +1435,7 @@ function determine_delay(fpga::FPGA,port)
     selectAuxCommandBank(fpga,port,"AuxCmd3",0)
 
     output_delay=falses(16)
-    
+
     for delay=0:15
 
         setCableDelay(fpga,port,delay)
@@ -1394,15 +1443,15 @@ function determine_delay(fpga::FPGA,port)
 	flushBoard(fpga)
 
         runBoard(fpga)
-        
+
         while isRunning(fpga)
         end
 
 	if fpga.usb3
-	    SetWireInValue(fpga,WireInResetRun, 1 << 4, 1 << 4)
+	    SetWireInValue(fpga,WireInResetRun, 1 << 16, 1 << 16)
 	    UpdateWireIns(fpga)
 	    ReadFromBlockPipeOut(fpga,PipeOutData,2*convert(Clong,fpga.numWords),fpga.usbBuffer)
-	    SetWireInValue(fpga,WireInResetRun, 0, 1 << 4);
+	    SetWireInValue(fpga,WireInResetRun, 0 << 16, 1 << 16);
 	    UpdateWireIns(fpga)
 	else
 	    ReadFromPipeOut(fpga,PipeOutData, 2*convert(Clong, fpga.numWords * 1), fpga.usbBuffer)
@@ -1428,22 +1477,22 @@ function determine_delay(fpga::FPGA,port)
 		    index+=2
 	        end
 	    end
-        
+
 	    #skip 36 filler word
-	    index += (2*fpga.numDataStreams)
-        
+	    index += (2*(fpga.numDataStreams % 4))
+
 	    #ADCs
             for i=1:8
                 index+=2
             end
-        
+
 	    #TTL
 	    index += 4
         end
 
         if check_delay_output(fpga,port,output)
             output_delay[delay+1]=true
-        end       
+        end
     end
 
     if all(!output_delay)
@@ -1469,7 +1518,7 @@ function check_port_streams(fpga::FPGA,port)
     elseif port=="PortD"
         streams=sum((fpga.amps.==6).|(fpga.amps.==7).|(fpga.amps.==14).|(fpga.amps.==15))
     end
-    
+
     streams
 end
 
@@ -1504,5 +1553,5 @@ end
 function Intan_GUI(myconfig_path=string(base_path,"Intan_config.jl"))
 
     include(myconfig_path)
-    
+
 end

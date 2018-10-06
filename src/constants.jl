@@ -6,7 +6,7 @@ Constants
 
 @static if is_unix()
     base_path=string(dirname(Base.source_path()),"/../lib/")
-    intan_lib = string(base_path,"libokFrontPanel.so")
+    intan_lib = string(base_path,"libokFrontPanel_0118.so")
     #const lib = Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
 end
 
@@ -14,21 +14,22 @@ end
     base_path=string(dirname(Base.source_path()),"\\..\\lib\\")
     intan_lib = string(base_path,"okFrontPanel.dll")
 end
-	
+
 const bit = string(base_path,"main.bit")
-const usb3bit = string(base_path,"XEM6310_512ch.bit")
-#const usb3bit = string(base_path,"rhd2000_usb3.bit")
+#const usb3bit = string(base_path,"XEM6310_512ch.bit")
+const usb3bit = string(base_path,"rhd2000_usb3_0518.bit")
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
+const RHYTHM_BOARD_ID_OPENEPHYS = 600
 const MAX_NUM_DATA_STREAMS = 16
 const FIFO_CAPACITY_WORDS = 67108864
 
 #const SAMPLES_PER_DATA_BLOCK = 600
-const SAMPLES_PER_DATA_BLOCK = 512
+const SAMPLES_PER_DATA_BLOCK = 256
 const USB3_BLOCK_SIZE = 1024
 
-const DDR_BURST_LENGTH = 64
+const DDR_BURST_LENGTH = 32
 
 const RHD2000_HEADER_MAGIC_NUMBER = 0xc691199927021942
 
@@ -72,7 +73,7 @@ const TrigInDacThresh = 0x43
 const TrigInDacHpf = 0x44
 const TrigInExtFastSettle = 0x45
 const TrigInExtDigOut = 0x46
-const TrigInSetParam = 0x47
+const TrigInOpenEphys = 0x5a
 
 const WireOutNumWordsLsb = 0x20
 const WireOutNumWordsMsb = 0x21
