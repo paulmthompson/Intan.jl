@@ -6,29 +6,29 @@ function makegui(r::RHD2000,s,task,fpga)
     grid = Grid()
 
     #COLUMN 1 - control buttons
-	
+
     #ROW 1
-	
+
     #ROW 2
     vbox1_2=Grid()
     scroll_left=ScrolledWindow()
     Gtk.GAccessor.policy(scroll_left,Gtk.GConstants.GtkPolicyType.NEVER,Gtk.GConstants.GtkPolicyType.AUTOMATIC)
     push!(scroll_left,vbox1_2)
     grid[1,2]=scroll_left
-	
+
     frame_control=Frame("Control")
     grid[1,1]=frame_control
     vbox_control = Grid()
     push!(frame_control,vbox_control)
-    
+
     button_init = Button()
     add_button_label(button_init,"Init")
     vbox_control[1,1]=button_init
-    
+
     button_run = ToggleButton()
     add_button_label(button_run,"Run")
     vbox_control[2,1]=button_run
-    
+
     button_cal = CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
     vbox_control[1,2]=button_cal
@@ -51,14 +51,14 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_gain,"All Channels")
     setproperty!(button_gain,:active,false)
     vbox1_2_1[1,2]=button_gain
-    
-		
+
+
     #THRESHOLD
     frame1_3=Frame("Threshold")
     vbox1_2[1,3]=frame1_3
     vbox1_3_1=Box(:v)
     push!(frame1_3,vbox1_3_1)
-    
+
     #sb=SpinButton(-300:300)
     #setproperty!(sb,:value,0)
     sb=Label("0")
@@ -68,7 +68,7 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_thres_all,"All Channels")
     setproperty!(button_thres_all,:active,false)
     push!(vbox1_3_1,button_thres_all)
-    
+
     button_thres = CheckButton()
     add_button_label(button_thres,"Show")
     setproperty!(button_thres,:active,false)
@@ -92,10 +92,10 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
 
-    button_rb=Array(RadioButton,3)
+    button_rb=Array{RadioButton}(3)
     button_rb[1]=RadioButton(active=true)
     button_rb[2]=RadioButton(button_rb[1])
-    button_rb[3]=RadioButton(button_rb[2])  
+    button_rb[3]=RadioButton(button_rb[2])
 
     vbox_hold[1,3]=button_rb[1]
     Gtk.GAccessor.mode(button_rb[1],false)
@@ -106,10 +106,10 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox_hold[3,3]=button_rb[3]
     Gtk.GAccessor.mode(button_rb[3],false)
     add_button_label(button_rb[3],"Selection")
-    
+
     #CLUSTER
     frame1_4=Frame("Clustering")
-    
+
     vbox1_3_2=Grid()
     push!(frame1_4,vbox1_3_2)
 
@@ -133,9 +133,9 @@ function makegui(r::RHD2000,s,task,fpga)
     sort_r1=CellRendererText()
     sort_c1=TreeViewColumn("Cluster",sort_r1, Dict([("text",0)]))
     Gtk.GAccessor.activate_on_single_click(sort_tv,1)
-    
+
     push!(sort_tv,sort_c1)
-    
+
     vbox1_3_2[1,3] = button_sort1
     vbox1_3_2[1,4] = button_sort2
     vbox1_3_2[1,5] = button_sort3
@@ -144,7 +144,7 @@ function makegui(r::RHD2000,s,task,fpga)
     #vbox1_3_2[1,7]=button_sort5
     vbox1_3_2[1,8] = slider_sort
     vbox1_3_2[1,9] = slider_sort_label
-    
+
     myscroll=ScrolledWindow()
     Gtk.GAccessor.min_content_height(myscroll,150)
     Gtk.GAccessor.min_content_width(myscroll,100)
@@ -162,7 +162,7 @@ function makegui(r::RHD2000,s,task,fpga)
 
     c_thres=Canvas(10,200)
     setproperty!(c_thres,:vexpand,false)
-    
+
     Gtk.GAccessor.inverted(thres_slider,true)
     Gtk.GAccessor.draw_value(thres_slider,false)
 
@@ -170,13 +170,13 @@ function makegui(r::RHD2000,s,task,fpga)
     push!(vbox_slider,thres_slider)
     push!(vbox_slider,c_thres)
     grid[3,2]=vbox_slider
-    
+
 
     #COLUMN 3 - MAXIMIZED CHANNEL PLOTTING
-    
+
     #ROW 2
     c_grid=Grid()
-    
+
     c2=Canvas()
 
     @guarded draw(c2) do widget
@@ -190,7 +190,7 @@ function makegui(r::RHD2000,s,task,fpga)
     setproperty!(c2,:vexpand,true)
 
     #ROW 2
-    c3=Canvas(-1,200)     
+    c3=Canvas(-1,200)
     @guarded draw(c3) do widget
         ctx = Gtk.getgc(c3)
         SpikeSorting.clear_c3(c3,1)
@@ -206,7 +206,7 @@ function makegui(r::RHD2000,s,task,fpga)
     adj2 = Adjustment(c2_slider)
     setproperty!(adj2,:value,1)
     grid[4,3]=c2_slider
- 
+
     #COLUMN 3 - 16 CHANNEL DISPLAY
 
     #ROW 1 - Time
@@ -226,8 +226,8 @@ push!(hbox_time,mh_label)
 push!(hbox_time,m_label)
     push!(hbox_time,sm_label)
     push!(hbox_time,s_label)
-    
-    
+
+
     #ROW 2
 #c=@Canvas(500,800)
 c=Canvas(500)
@@ -237,7 +237,7 @@ c=Canvas(500)
         set_operator(ctx,Cairo.OPERATOR_SOURCE)
         paint(ctx)
     end
-    show(c)   
+    show(c)
 grid[5,2]=c
     setproperty!(c,:vexpand,true)
 
@@ -252,35 +252,35 @@ grid[5,2]=c
     #ROW 2
     vbox_42=Box(:v)
     grid[6,2]=vbox_42
-    
+
 vbox_rb_upper=Box(:v)
     push!(vbox_42,vbox_rb_upper)
-    
+
     push!(vbox_rb_upper,Label("Top Panel"))
-    
-    rbs=Array(RadioButton,5)
+
+    rbs=Array{RadioButton}(5)
     rbs[1]=RadioButton("16 Channel",active=true)
     rbs[2]=RadioButton(rbs[1],"32 Channel")
     rbs[3]=RadioButton(rbs[2],"64 Channel")
     rbs[4]=RadioButton(rbs[3],"64 Raster")
     rbs[5]=RadioButton(rbs[4],"Blank")
-    
+
     push!(vbox_rb_upper,rbs[1])
     push!(vbox_rb_upper,rbs[2])
     push!(vbox_rb_upper,rbs[3])
     push!(vbox_rb_upper,rbs[4])
     push!(vbox_rb_upper,rbs[5])
-    
+
 c_rb=Canvas(40)
 setproperty!(c_rb,:vexpand,true)
-    
+
     push!(vbox_42,c_rb)
-    
+
     vbox_rb_lower=Box(:v)
     push!(vbox_42,vbox_rb_lower)
     push!(vbox_rb_lower,Label("Lower Panel"))
-    
-    rbs2=Array(RadioButton,8)
+
+    rbs2=Array{RadioButton}(8)
     rbs2[1]=RadioButton("Events",active=true)
     rbs2[2]=RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=RadioButton(rbs2[2],"32 Raster")
@@ -298,9 +298,9 @@ rbs2[8]=RadioButton(rbs2[7],"Nothing")
     push!(vbox_rb_lower,rbs2[6])
 push!(vbox_rb_lower,rbs2[7])
 push!(vbox_rb_lower,rbs2[8])
-		
+
     #MENU ITEMS
-    
+
     #SORTING
     sortopts = MenuItem("_File")
     sortmenu = Menu(sortopts)
@@ -332,7 +332,7 @@ push!(exmenu,export_mat_)
 
 viewopts = MenuItem("_View")
 viewmenu = Menu(viewopts)
-	
+
     define_ref_ = MenuItem("Reference Configuration")
 push!(viewmenu,define_ref_)
 
@@ -356,7 +356,7 @@ push!(op_align_menu,op_align_cross)
 
 op_band = MenuItem("Bandwidth")
 push!(opmenu,op_band)
-    
+
     mb = MenuBar()
     push!(mb,sortopts)
 push!(mb,viewopts)
@@ -419,9 +419,9 @@ ref_r1=CellRendererText()
 ref_c1=TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
 
 ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
-    
+
 push!(ref_tv1,ref_c1)
-    
+
 ref_scroll1=ScrolledWindow()
 Gtk.GAccessor.min_content_height(ref_scroll1,350)
 Gtk.GAccessor.min_content_width(ref_scroll1,175)
@@ -437,9 +437,9 @@ ref_c2=TreeViewColumn("Apply Reference To:",ref_r2, Dict([("text",0)]))
 
 ref_tv2_s=Gtk.GAccessor.selection(ref_tv2)
 Gtk.GAccessor.mode(ref_tv2_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
-    
+
 push!(ref_tv2,ref_c2)
-    
+
 ref_scroll2=ScrolledWindow()
 Gtk.GAccessor.min_content_height(ref_scroll2,350)
 Gtk.GAccessor.min_content_width(ref_scroll2,175)
@@ -623,7 +623,7 @@ showall(popupmenu)
 
 #Event
 popup_event = Menu()
-event_handles=Array(CheckMenuItemLeaf,0)
+event_handles=Array{CheckMenuItemLeaf}(0)
 for i=1:8
     push!(event_handles,CheckMenuItem(string("Analog ",i)))
     push!(popup_event,event_handles[i])
@@ -637,9 +637,9 @@ end
 popup_event_none=MenuItem("None")
 push!(popup_event,popup_event_none)
 showall(popup_event)
-    
-    setproperty!(grid, :column_spacing, 15) 
-    setproperty!(grid, :row_spacing, 15) 
+
+    setproperty!(grid, :column_spacing, 15)
+    setproperty!(grid, :row_spacing, 15)
 win = Window(grid, "Intan.jl GUI") |> showall
 
 #=
@@ -655,7 +655,7 @@ push!(popupmenu_spect,popupmenu_spect_win)
 push!(popupmenu_spect,popupmenu_spect_overlap)
 
 popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
-spect_f_handles=Array(RadioMenuItemLeaf,0)
+spect_f_handles=Array{RadioMenuItemLeaf}(0)
 spect_f_options=[300; 1000; 3000; 7500; 15000]
 
 push!(spect_f_handles,RadioMenuItem(string(spect_f_options[1])))
@@ -669,7 +669,7 @@ end
 set_active!(spect_f_handles[5])
 
 popupmenu_spect_win_select=Menu(popupmenu_spect_win)
-spect_w_handles=Array(RadioMenuItemLeaf,0)
+spect_w_handles=Array{RadioMenuItemLeaf}(0)
 spect_w_options=[10; 50; 100]
 
 push!(spect_w_handles,RadioMenuItem(string(spect_w_options[1])))
@@ -682,7 +682,7 @@ end
 
 set_active!(spect_w_handles[1])
 
-showall(popupmenu_spect) 
+showall(popupmenu_spect)
 
 #=
 Soft Scope Menus
@@ -700,31 +700,31 @@ push!(popupmenu_scope,popupmenu_signal)
 
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
-scope_v_handles=Array(RadioMenuItemLeaf,0)
+scope_v_handles=Array{RadioMenuItemLeaf}(0)
 voltage_scales = [1, 50, 100, 200, 500]
-push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1]))) 
+push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1])))
 push!(popupmenu_voltage_select,scope_v_handles[1])
 for i=2:5
-    push!(scope_v_handles,RadioMenuItem(scope_v_handles[i-1],string(voltage_scales[i]))) 
+    push!(scope_v_handles,RadioMenuItem(scope_v_handles[i-1],string(voltage_scales[i])))
     push!(popupmenu_voltage_select,scope_v_handles[i])
 end
 
 popupmenu_time_select=Menu(popupmenu_time)
-scope_t_handles=Array(RadioMenuItemLeaf,0)
+scope_t_handles=Array{RadioMenuItemLeaf}(0)
 #time_scales=[1, 2, 3, 4, 5]
 time_scales = [1,2,3,4,5].*50 ./ r.sr.* 1000
 for i=1:length(time_scales)
     time_scales[i]=round(time_scales[i],1)
 end
-push!(scope_t_handles,RadioMenuItem(string(time_scales[1]))) 
+push!(scope_t_handles,RadioMenuItem(string(time_scales[1])))
 push!(popupmenu_time_select,scope_t_handles[1])
 for i=2:5
-    push!(scope_t_handles,RadioMenuItem(scope_t_handles[i-1],string(time_scales[i]))) 
+    push!(scope_t_handles,RadioMenuItem(scope_t_handles[i-1],string(time_scales[i])))
     push!(popupmenu_time_select,scope_t_handles[i])
 end
 
 popupmenu_thres_select=Menu(popupmenu_thres)
-scope_thres_handles=Array(RadioMenuItemLeaf,0)
+scope_thres_handles=Array{RadioMenuItemLeaf}(0)
 push!(scope_thres_handles,RadioMenuItem("On"))
 push!(popupmenu_thres_select,scope_thres_handles[1])
 push!(scope_thres_handles,RadioMenuItem(scope_thres_handles[1],"Off"))
@@ -733,7 +733,7 @@ push!(popupmenu_thres_select,scope_thres_handles[2])
 set_active!(scope_thres_handles[2])
 
 popupmenu_signal_select=Menu(popupmenu_signal)
-scope_signal_handles=Array(RadioMenuItemLeaf,0)
+scope_signal_handles=Array{RadioMenuItemLeaf}(0)
 push!(scope_signal_handles,RadioMenuItem("Spike"))
 push!(popupmenu_signal_select,scope_signal_handles[1])
 push!(scope_signal_handles,RadioMenuItem(scope_signal_handles[1],"LFP"))
@@ -741,7 +741,7 @@ push!(popupmenu_signal_select,scope_signal_handles[2])
 
 set_active!(scope_signal_handles[1])
 
-showall(popupmenu_scope)   
+showall(popupmenu_scope)
 
 
 #Prepare saving headers
@@ -811,19 +811,19 @@ Template Sorting Callbacks
 =#
 
     id = signal_connect(canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sortview_handles.buf,sc_widgets))
-    
+
     id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort1,"Delete Unit")
-    
+
     id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort2,"Add Unit")
-    
+
     id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort3,"Collect Templates")
-    
+
     id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,))
     add_button_label(button_sort4,"Show Template Bounds")
-    
+
     setproperty!(check_sort1,:label,"Show Template")
     id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,))
 
@@ -1070,25 +1070,25 @@ close(f)
 
 resize!(handles.win,1200,800)
 
-handles  
+handles
 end
 
 #Drawing
 function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})
-    
+
     widget = convert(ToggleButton, widgetptr)
-	          
+
     @async if getproperty(widget,:active,Bool)==true
-        
+
         #unpack tuple
         han, rhd, s,task,fpga = user_data
-              
+
 	if rhd.debug.state==false
             map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop_par(rhd,han,s,task,fpga) 
-        end       
+           main_loop_par(rhd,han,s,task,fpga)
+        end
     end
     nothing
 end
@@ -1096,20 +1096,20 @@ end
 function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array{I,1}})
 
     widget = convert(ToggleButton, widgetptr)
-	          
+
     @async if getproperty(widget,:active,Bool)==true
-        
+
         #unpack tuple
         han, rhd, s,task,fpga = user_data
-              
+
 	if rhd.debug.state==false
             map(runBoard,fpga)
         end
         while getproperty(widget,:active,Bool)==true
-           main_loop_s(rhd,han,s,task,fpga) 
-        end       
+           main_loop_s(rhd,han,s,task,fpga)
+        end
     end
-        
+
     nothing
 end
 
@@ -1141,8 +1141,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
     #process and output (e.g. kalman, spike triggered stim calc, etc)
     do_task(task,rhd,myread)
-    
-    #plot spikes    
+
+    #plot spikes
     if myread
 	if han.num16>0
 
@@ -1155,7 +1155,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 		draw_spike64(rhd,han)
             elseif han.c_right_top==4
             elseif han.c_right_top==5
-            else   
+            else
             end
 
             #bottom right
@@ -1173,10 +1173,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 draw_raster64(rhd,han)
             elseif han.c_right_bottom==7
                 draw_spectrogram(rhd,han)
-            else 
+            else
             end
 
-            update_time(rhd,han)         
+            update_time(rhd,han)
 	    reveal(han.c)
 
             if han.spike_changed
@@ -1189,10 +1189,10 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 clus = han.buf.selected_clus
 
                 if clus>0
-                
+
                     #Find Cluster characteristics from selected waveforms
                     (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,.!han.buf.selected)
-                
+
                     #Apply cluster characteristics to handles cluster
                     change_cluster(han.temp,mymean,mystd,clus)
                     setproperty!(han.adj_sort, :value, 1.0)
@@ -1202,8 +1202,8 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                     end
 
                 end
-                
-                #Send cluster information to sorting 
+
+                #Send cluster information to sorting
                 send_clus(s,han)
                 backup_clus(han.temp,han.spike,rhd.save.backup)
                 han.buf.c_changed=false
@@ -1220,7 +1220,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 end
                 han.buf.replot=false
             end
-	    if (han.num>0)&(!han.sc.pause)                     
+	    if (han.num>0)&(!han.sc.pause)
 		draw_spike(rhd,han)
 	    end
             if han.thres_changed
@@ -1233,7 +1233,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 SpikeSorting.draw_rb(han.sc)
             end
             draw_c3(rhd,han)
-	end	
+	end
 	han.draws+=1
 	if han.draws>500
 	    han.draws=0
@@ -1262,15 +1262,15 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 end
 
 function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
-    
-    han, = user_data 
+
+    han, = user_data
     han.num16=getproperty(han.adj,:value,Int64) # 16 channels
-    
+
     if han.num16>0
         clear_c(han)
         han.spike_changed=true
     end
-    nothing    
+    nothing
 end
 
 update_c2_cb(w::Ptr,d::Tuple{Gui_Handles})=update_c2(d[1])
@@ -1283,10 +1283,10 @@ function update_c2(han::Gui_Handles)
 
         old_spike=rem(han.spike-1,han.chan_per_display)+1
         han.spike_changed=true
-        
+
         #Highlight channel
         highlight_channel(han,old_spike)
-    end       
+    end
     nothing
 end
 
@@ -1296,7 +1296,7 @@ end
 
 function get_cluster{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     (nn,mycore)=get_thres_id(s,han.spike)
-    
+
     han.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,nn)
 end
 
@@ -1307,7 +1307,7 @@ function backup_clus(myclus,chan,backup)
         write(f,getfield(myclus,i))
     end
     close(f)
-    
+
     nothing
 end
 
@@ -1332,7 +1332,7 @@ function clear_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
     if han.sort_cb
         draw_templates(han)
     end
-    
+
     nothing
 end
 
@@ -1347,13 +1347,13 @@ function restore_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
         han.buf.replot=true
     end
-    
+
     nothing
 end
 
 function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Array{I,1}})
 
-    han, rhd,task,fpga = user_data       
+    han, rhd,task,fpga = user_data
     init_board!(rhd,fpga)
     init_task(task,rhd)
 
@@ -1362,7 +1362,7 @@ end
 
 function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DArray{I,1,Array{I,1}}})
 
-    han, rhd,task,fpga = user_data       
+    han, rhd,task,fpga = user_data
     init_board!(rhd,fpga)
     init_task(task,rhd)
 
@@ -1374,12 +1374,12 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
     han, rhd = user_data
 
     mycal=getproperty(han.cal,:active,Bool)
-        
+
     if mycal==true
         rhd.cal=0
     else
         rhd.cal=3
-    
+
         @inbounds for i=1:length(han.offset)
             han.offset[i]=0.0
             han.scale[i,1] = -.125
@@ -1399,7 +1399,7 @@ end
 function pause_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    
+
     widget = convert(ToggleButton, widgetptr)
 
     if getproperty(widget,:active,Bool)
@@ -1429,11 +1429,11 @@ function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2
         han.sc.ctx2s=copy(han.sc.ctx2)
         han.sc.w2=width(han.sc.ctx2)
         han.sc.h2=height(han.sc.ctx2)
-    
+
         setproperty!(han.adj_thres,:upper,han.sc.h2/2)
         setproperty!(han.adj_thres,:lower,-han.sc.h2/2)
     end
-    
+
     nothing
 end
 
@@ -1443,7 +1443,7 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
 
     this_h=div(total_seconds,3600)
 
-    total_seconds=total_seconds - this_h*3600 
+    total_seconds=total_seconds - this_h*3600
 
     this_m=div(total_seconds,60)
 
@@ -1503,7 +1503,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han)
                 end
-                
+
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
@@ -1517,14 +1517,14 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han)
                 end
-                
+
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
             end
-            
+
         elseif han.c_right_top==3 #disable enable 64
-            
+
             if event.button == 1 #left click
 
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
@@ -1532,12 +1532,12 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han)
                 end
-                
+
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
             end
-            
+
         elseif han.c_right_top==4 #64 channel raster - nothing
         else
         end
@@ -1556,9 +1556,9 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
             if event.button == 3 #right click
                 popup(han.popup_scope,event)
             end
-            
+
         elseif han.c_right_bottom==5 #disable enable 64
-            
+
             if event.button == 1 #left click
 
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
@@ -1566,22 +1566,22 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                     setproperty!(han.adj2,:value,channel_num)
                     update_c2(han)
                 end
-                
+
             elseif event.button == 3 #right click
 
                 popup(han.popup_ed,event)
             end
-            
+
         elseif han.c_right_bottom==6 #64 channel raster - nothing
         elseif han.c_right_bottom==7 #spectrogram
-            
+
             if event.button == 3 #right click
                 popup(han.popup_spect,event)
             end
-            
+
         else
-            
-        end            
+
+        end
     end
     nothing
 end
@@ -1626,7 +1626,7 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
 
     y=rem(rem(spike-1,num_chan),n_row)+1
     x=div(rem(spike-1,num_chan),n_row)+1
-    
+
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
 end
 
@@ -1634,7 +1634,7 @@ function c3_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
     han, = user_data
     event = unsafe_load(param_tuple)
-    
+
     if event.button == 1 #left click captures window
         check_c3_click(han,event.x,event.y)
     elseif event.button == 3 #right click refreshes window
@@ -1646,7 +1646,7 @@ function check_c3_click(han::Gui_Handles,x,y)
 
     ctx=Gtk.getgc(han.sc.c3)
     mywidth=width(ctx)
-    
+
     total_clus = max(han.total_clus[han.spike]+1,5)
 
     xbounds=linspace(0.0,mywidth,total_clus+1)
@@ -1676,9 +1676,8 @@ function get_template_dims(han::Gui_Handles,clus)
     mywidth=width(ctx)
 
     total_clus = max(han.total_clus[han.spike]+1,5)
-    
+
     xbounds=linspace(0.0,mywidth,total_clus+1)
 
     (xbounds[clus],xbounds[clus+1],0.0,130.0)
 end
-

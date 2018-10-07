@@ -2,7 +2,7 @@
 function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
-    
+
     if event_id==0
         han.soft.v_div=1.0
     elseif event_id==1
@@ -29,7 +29,7 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
     So if Sample Rate is 30k, then each box is 50/30000 = 1.67 ms
     20k, 50/20000 = 2.5 ms
     =#
-    
+
     if event_id==0
         han.soft.t_div=1.0
     elseif event_id==1
@@ -46,7 +46,7 @@ function scope_popup_t_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 end
 
 function scope_popup_thres_cb(w::Ptr,user_data::Tuple{Gui_Handles,Int64})
-    
+
     han, event_id = user_data
 
     if event_id==0
@@ -78,19 +78,19 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
     if han.soft.draws>9
 
-        startind=512*(han.soft.draws-1)+1
+        startind=SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
         if han.soft.signal_type==1
-            for i=1:512
+            for i=1:SAMPLES_PER_DATA_BLOCK
                 han.soft.v[startind]=rhd.v[i,han.spike]
                 startind+=1
             end
         else
-            for i=1:512
+            for i=1:SAMPLES_PER_DATA_BLOCK
                 han.soft.v[startind]=rhd.lfps[i,han.spike]
                 startind+=1
             end
         end
-        
+
         #Paint over old line
         move_to(ctx,1.0,han.soft.last[1])
         for i=2:499
@@ -102,13 +102,13 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         line_to(ctx,512.0,myheight-4.0)
         move_to(ctx,1.0,myheight-7.0)
         line_to(ctx,512.0,myheight-7.0)
-        
+
         set_source(ctx,han.soft.ctx)
         set_line_width(ctx,4.0)
-        stroke(ctx)  
-  
+        stroke(ctx)
+
         s=han.soft.v_div*-1
-        
+
         #Draw voltage trace from desired channel
         move_to(ctx,1.0,myheight-150.0+han.soft.v[1]*s)
         han.soft.last[1]=myheight-150.0+han.soft.v[1]*s
@@ -116,7 +116,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         t_iter=floor(Int64,han.soft.t_div)
 
         spike_ind=1
-        
+
         scope_ind=1+t_iter
         for i=2:512
             if spike_ind > 500
@@ -125,7 +125,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
             y=myheight-150.0+han.soft.v[scope_ind]*s
             line_to(ctx,i,y)
             han.soft.last[i]=y
-            
+
             if scope_ind>han.soft.spikes[spike_ind]
                 han.soft.prev_spikes[spike_ind]=i
                 spike_ind+=1
@@ -134,7 +134,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
             scope_ind+=t_iter
         end
         set_source_rgb(ctx,1.0,1.0,1.0)
-        set_line_width(ctx,0.5)      
+        set_line_width(ctx,0.5)
         stroke(ctx)
 
         #reset spikes
@@ -144,7 +144,7 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         end
         han.soft.prev_num_spikes=spike_ind-1
         han.soft.num_spikes=0
-        
+
         #draw threshold
 
         if han.soft.thres_on
@@ -154,15 +154,15 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         han.soft.draws=1
     else
         #copy voltage
-        startind=512*(han.soft.draws-1)+1
+        startind=SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
 
         if han.soft.signal_type==1
-            for i=1:512
+            for i=1:SAMPLES_PER_DATA_BLOCK
                 han.soft.v[startind]=rhd.v[i,han.spike]
                 startind+=1
             end
         else
-            for i=1:512
+            for i=1:SAMPLES_PER_DATA_BLOCK
                 han.soft.v[startind]=rhd.lfps[i,han.spike]
                 startind+=1
             end
@@ -171,9 +171,9 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         #get spikes
         for g=1:rhd.nums[han.spike]
             han.soft.num_spikes+=1
-            han.soft.spikes[han.soft.num_spikes]=rhd.buf[g,han.spike].inds.start+512*(han.soft.draws-1)+1
+            han.soft.spikes[han.soft.num_spikes]=rhd.buf[g,han.spike].inds.start+SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
         end
-  
+
         han.soft.draws+=1
     end
 
@@ -183,7 +183,7 @@ end
 function plot_thres_scope(han,rhd,ctx)
 
     myheight=height(ctx)
-    
+
     thres=han.sc.thres*han.soft.v_div
 
     move_to(ctx,1,myheight-150-thres+2)
@@ -201,6 +201,6 @@ function plot_thres_scope(han,rhd,ctx)
     set_line_width(ctx,1.0)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
-    
+
     nothing
 end

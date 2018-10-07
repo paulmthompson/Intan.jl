@@ -163,7 +163,7 @@ function open_board(fpga::FPGA)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number
-    serial=Array(UInt8,11)
+    serial=Array{UInt8}(11)
     ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
     serial[end]=0
     serialnumber=unsafe_string(pointer(serial))
@@ -217,7 +217,13 @@ function uploadFpgaBitfile(rhd::FPGA)
     boardId = GetWireOutValue(rhd,WireOutBoardId)
     boardVersion = GetWireOutValue(rhd,WireOutBoardVersion)
 
-    if (boardId != RHYTHM_BOARD_ID_OPENEPHYS)
+    if rhd.usb3
+        target_id = RHYTHM_BOARD_ID_OPENEPHYS
+    else
+        target_id = RHYTHM_BOARD_ID
+    end
+
+    if (boardId != target_id)
         println("FPGA configuration does not support Rythm. Incorrect board ID: ", boardId)
     else
         println("Rhythm configuration file successfully loaded. Rhythm version number: ", boardVersion)
