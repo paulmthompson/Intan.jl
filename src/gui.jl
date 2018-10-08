@@ -29,6 +29,10 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_run,"Run")
     vbox_control[2,1]=button_run
 
+    button_record = ToggleButton()
+    add_button_label(button_record,"Record")
+    vbox_control[3,1]=button_record
+
     button_cal = CheckButton("Calibrate")
     setproperty!(button_cal,:active,true)
     vbox_control[1,2]=button_cal
@@ -777,7 +781,7 @@ sleep(1.0)
 sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0)
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,c_slider,adj,c2_slider,adj2,
+handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider,adj,c2_slider,adj2,
                     c,1,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums)),
                     0,-1.*ones(Int64,6),
                     trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
@@ -835,10 +839,10 @@ id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventB
 Start Button Callbacks
 =#
 
-id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
+    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
     id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
-
+    id = signal_connect(record_cb,button_record,"clicked",Void,(),false,(handles,r))
 
 #=
 Slider callbacks
@@ -1162,7 +1166,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             end
 
             update_time(rhd,han)
-	    reveal(han.c)
+	        reveal(han.c)
 
             if han.spike_changed
                 new_single_channel(han,rhd,s,fpga)
@@ -1378,6 +1382,20 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
         han.spike_changed=true
     end
 
+    nothing
+end
+
+function record_cb{R<:RHD2000}(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R})
+
+    han, rhd = user_data
+
+    widget = convert(ToggleButton, widgetptr)
+
+    if getproperty(widget,:active,Bool)
+        rhd.save.record_mode = true
+    else
+        rhd.save.record_mode = false
+    end
     nothing
 end
 

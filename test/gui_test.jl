@@ -249,11 +249,12 @@ end
 #=
 SAVE LOAD Test
 =#
-#=
+
 sleep(1.0);
 
 setproperty!(handles.run,:active,false)
 sleep(1.0);
+#=
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
 sleep(1.0);

@@ -26,6 +26,7 @@ type Intan_Filter
 end
 
 type SaveOpt
+    record_mode::Bool
     save_full::Bool
     v::String
 
@@ -51,12 +52,12 @@ end
 function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(save_full,string(t,"/v.bin"),false,string(t,"/ts.bin"),false,string(t,"/adc.bin"),false,string(t,"/ttl.bin"),false,string(t,"/lfp.bin"),t,string(t,"/.backup/"))
+        out=SaveOpt(false,save_full,string(t,"/v.bin"),false,string(t,"/ts.bin"),false,string(t,"/adc.bin"),false,string(t,"/ttl.bin"),false,string(t,"/lfp.bin"),t,string(t,"/.backup/"))
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveOpt(save_full,string(t,"\\v.bin"),false,string(t,"\\ts.bin"),false,string(t,"\\adc.bin"),false,string(t,"\\ttl.bin"),false,string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
+        out=SaveOpt(false,save_full,string(t,"\\v.bin"),false,string(t,"\\ts.bin"),false,string(t,"\\adc.bin"),false,string(t,"\\ttl.bin"),false,string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
     end
     out
 end
@@ -384,6 +385,7 @@ type Gui_Handles
     run::Gtk.GtkToggleButtonLeaf
     init::Gtk.GtkButtonLeaf
     cal::Gtk.GtkCheckButtonLeaf
+    record::Gtk.GtkToggleButtonLeaf
 
     slider::Gtk.GtkScaleLeaf
     adj::Gtk.GtkAdjustmentLeaf
