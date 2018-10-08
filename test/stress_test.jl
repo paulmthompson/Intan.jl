@@ -6,8 +6,7 @@ using Intan,SpikeSorting,Gtk.ShortNames, Cairo
 function stress_init(amps)
     d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
     myt=Task_NoTask()
-    mys=SaveAll()
-    rhd=makeRHD(amps,myt,debug=d,sav=mys)
+    rhd=makeRHD(amps,myt,debug=d)
     handles = makegui(rhd)
     (rhd,handles)
 end
@@ -32,7 +31,7 @@ function stress_test(myrhd,handles)
         mytimes[i]=@elapsed Intan.main_loop(myrhd,handles,myctx,myctx2)
     end
     destroy(handles.win)
-    mytimes   
+    mytimes
 end
 
 function total_test(amps)

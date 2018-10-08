@@ -1,5 +1,5 @@
 
-export SaveWave,SaveAll,SaveNone, FPGA
+export FPGA
 
 abstract type RHD2000 end
 abstract type Task end
@@ -35,9 +35,6 @@ type SaveOpt
     folder::String
     backup::String
 end
-
-SaveAll()=make_save_structure(true)
-SaveNone()=make_save_structure(false)
 
 function make_save_structure(save_full::Bool)
     @static if is_unix()
@@ -162,8 +159,8 @@ type RHD_Single <: RHD2000
     lfps::Array{Int16,2}
 end
 
-function RHD_Single(fpga,num_channels,s,buf,nums,save,debug)
-    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
+function RHD_Single(fpga,num_channels,s,buf,nums,debug)
+    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
 end
 
 type RHD_Parallel <: RHD2000
@@ -182,8 +179,8 @@ type RHD_Parallel <: RHD2000
     lfps::SharedArray{Int16,2}
 end
 
-function RHD_Parallel(fpga,num_channels,s,buf,nums,save,debug)
-    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,save,30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
+function RHD_Parallel(fpga,num_channels,s,buf,nums,debug)
+    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
@@ -192,9 +189,7 @@ debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignProm(),FeatureTime(),R
 
 default_debug=Debug(false,"off","",zeros(Float64,1),0,0,false,0.0)
 
-default_save=SaveAll()
-
-function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,sav=default_sav,sr=30000,wave_time=1.6)
+function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,sr=30000,wave_time=1.6)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 
@@ -216,12 +211,12 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
         fpgas=fpga
-        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,sav,debug)
+        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,debug)
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
         fpgas=distribute(fpga)
-        rhd=RHD_Parallel(fpgas,numchannels,s,buf,nums,sav,debug)
+        rhd=RHD_Parallel(fpgas,numchannels,s,buf,nums,debug)
     end
 
     rhd.sr=sr

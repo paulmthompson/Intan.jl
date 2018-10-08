@@ -5,9 +5,8 @@ using FactCheck, Intan, SpikeSorting, Gtk.ShortNames, MAT, JLD
 myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 myt=Task_NoTask()
-mys=SaveAll()
 myfpga=FPGA(1,myamp)
-(myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d,sav=mys)
+(myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d)
 
 handles = makegui(myrhd,ss,myt,myfpgas)
 
@@ -16,7 +15,7 @@ sleep(1.0)
 facts() do
 
     @fact handles.sc.mi --> (0.0,0.0)
-    
+
 end
 
 #=
