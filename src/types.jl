@@ -28,10 +28,22 @@ end
 type SaveOpt
     save_full::Bool
     v::String
+
+    ts_s::Bool
     ts::String
+
+    adc_s::Bool
     adc::String
+
+    #Intan board ttls
+    ttl_s::Bool
     ttl::String
+
+    #Local field potential could be saved if it is calculated in real time
+    lfp_s::Bool
     lfp::String
+
+    #Location for saved files
     folder::String
     backup::String
 end
@@ -39,12 +51,12 @@ end
 function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(save_full,string(t,"/v.bin"),string(t,"/ts.bin"),string(t,"/adc.bin"),string(t,"/ttl.bin"),string(t,"/lfp.bin"),t,string(t,"/.backup/"))
+        out=SaveOpt(save_full,string(t,"/v.bin"),false,string(t,"/ts.bin"),false,string(t,"/adc.bin"),false,string(t,"/ttl.bin"),false,string(t,"/lfp.bin"),t,string(t,"/.backup/"))
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveOpt(save_full,string(t,"\\v.bin"),string(t,"\\ts.bin"),string(t,"\\adc.bin"),string(t,"\\ttl.bin"),string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
+        out=SaveOpt(save_full,string(t,"\\v.bin"),false,string(t,"\\ts.bin"),false,string(t,"\\adc.bin"),false,string(t,"\\ttl.bin"),false,string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
     end
     out
 end

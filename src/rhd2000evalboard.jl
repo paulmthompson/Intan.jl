@@ -1319,20 +1319,27 @@ end
 
 function queueToFile(rhd::RHD2000,task::Task,fpga)
 
-    #write analog voltage traces
     if rhd.save.save_full
         f=open(rhd.save.v, "a+")
         write(f,rhd.v)
         close(f)
+    end
+    if rhd.save.ttl_s
         f=open(rhd.save.ttl,"a+")
         write(f,fpga[1].ttlin)
         close(f)
+    end
+    if rhd.save.lfp_s
         f=open(rhd.save.lfp,"a+")
         write(f,rhd.lfps)
         close(f)
     end
+    if rhd.save.adc_s
+    end
 
-    writeTimeStamp(rhd)
+    if rhd.save.ts_s
+        writeTimeStamp(rhd)
+    end
 
     save_task(task,rhd)
 

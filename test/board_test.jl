@@ -119,7 +119,6 @@ Sample Rate Testing
 
 myamp=RHD2164("PortA1")
 myt=Task_NoTask()
-mys=SaveNone()
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
 
 myfpga=FPGA(1,myamp)

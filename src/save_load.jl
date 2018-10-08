@@ -21,7 +21,7 @@ function read_v_header(fname="v.bin")
     f=open(fname,"r+")
 
     myheader=Voltage_Header()
-    
+
     myheader.date_m=read(f,UInt8,1)[1]
     myheader.date_d=read(f,UInt8,1)[1]
     myheader.date_y=read(f,UInt16,1)[1]
@@ -37,10 +37,13 @@ end
 
 function prepare_lfp_header(rhd::RHD2000)
 
+    if isfile(rhd.save.lfp)
+        return
+    end
     f=open(rhd.save.lfp,"a+")
 
     t=now()
-    
+
     write(f,convert(UInt8,Dates.month(t)))
     write(f,convert(UInt8,Dates.day(t)))
     write(f,convert(UInt16,Dates.year(t)))
@@ -56,10 +59,14 @@ end
 
 function prepare_v_header(rhd::RHD2000)
 
+    if isfile(rhd.save.v)
+        return
+    end
+
     f=open(rhd.save.v,"a+")
 
     t=now()
-    
+
     write(f,convert(UInt8,Dates.month(t)))
     write(f,convert(UInt8,Dates.day(t)))
     write(f,convert(UInt16,Dates.year(t)))
@@ -90,7 +97,7 @@ function read_stamp_header(fname="ts.bin")
     f=open(fname,"r+")
 
     myheader=Stamp_Header()
-    
+
     myheader.date_m=read(f,UInt8,1)[1]
     myheader.date_d=read(f,UInt8,1)[1]
     myheader.date_y=read(f,UInt16,1)[1]
@@ -101,15 +108,19 @@ function read_stamp_header(fname="ts.bin")
 
     close(f)
 
-    myheader    
+    myheader
 end
 
 function prepare_stamp_header(rhd::RHD2000)
 
+    if isfile(rhd.save.ts)
+        return
+    end
+
     f=open(rhd.save.ts,"a+")
 
     t=now()
-    
+
     write(f,convert(UInt8,Dates.month(t)))
     write(f,convert(UInt8,Dates.day(t)))
     write(f,convert(UInt16,Dates.year(t)))
@@ -122,7 +133,7 @@ function prepare_stamp_header(rhd::RHD2000)
 
     nothing
 end
-    
+
 type ADC_Header
     date_m::UInt8
     date_d::UInt8
@@ -140,7 +151,7 @@ function read_adc_header(fname="adc.bin")
     f=open(fname,"r+")
 
     myheader=ADC_Header()
-    
+
     myheader.date_m=read(f,UInt8,1)[1]
     myheader.date_d=read(f,UInt8,1)[1]
     myheader.date_y=read(f,UInt16,1)[1]
@@ -151,10 +162,14 @@ function read_adc_header(fname="adc.bin")
 
     close(f)
 
-    myheader   
+    myheader
 end
 
 function prepare_adc_header(rhd::RHD2000)
+
+    if isfile(rhd.save.adc)
+        return
+    end
 
     f=open(rhd.save.adc,"a+")
 
@@ -191,7 +206,7 @@ function read_ttl_header(fname="ttl.bin")
     f=open(fname,"r+")
 
     myheader=TTL_Header()
-    
+
     myheader.date_m=read(f,UInt8,1)[1]
     myheader.date_d=read(f,UInt8,1)[1]
     myheader.date_y=read(f,UInt16,1)[1]
@@ -203,10 +218,14 @@ function read_ttl_header(fname="ttl.bin")
 
     close(f)
 
-    myheader 
+    myheader
 end
 
 function prepare_ttl_header(rhd::RHD2000)
+
+    if isfile(rhd.save.ttl)
+        return
+    end
 
     f=open(rhd.save.ttl,"a+")
 
@@ -222,7 +241,7 @@ function prepare_ttl_header(rhd::RHD2000)
     write(f,convert(UInt32,rhd.sr))
 
     close(f)
-    
+
     nothing
 end
 
@@ -252,7 +271,7 @@ function parse_v(fname="v.bin")
         count+=myheader.samples_per_block
     end
     close(f)
-    
+
     v
 end
 
@@ -287,7 +306,7 @@ function read_single_v(fname::String,chan)
         count+=myheader.samples_per_block
     end
     close(f)
-    
+
     v
 end
 
@@ -298,7 +317,7 @@ function save_v_mat(in_name="v.bin",out_name="v.mat")
     file = matopen(out_name, "w")
     write(file, "v", v)
     close(file)
-      
+
     nothing
 end
 
@@ -309,7 +328,7 @@ function save_v_jld(in_name="v.bin",out_name="v.jld")
     file = jldopen(out_name, "w")
     write(file, "v", v)
     close(file)
-    
+
     nothing
 end
 
@@ -322,7 +341,7 @@ function parse_ts(fname="ts.bin")
     myheader=read_stamp_header(fname)
 
     ss=[Array(Spike,0) for i=1:myheader.num_channels]
-    
+
     numcells=zeros(Int64,myheader.num_channels)
 
     f=open(fname, "r+")
@@ -345,7 +364,7 @@ function parse_ts(fname="ts.bin")
                 push!(ss[j],Spike((t+myss[1]:t+myss[2]),clus))
             end
         end
-    
+
     end
 
     close(f)
@@ -360,14 +379,14 @@ function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},sr=300
     for i=1:length(numcells)
         for j=1:numcells[i]
             myname=string("s",i,"_",j)
-            
+
             myspikes=zeros(Float64,0)
-            
+
             for k=1:length(ss[i])
                 if (ss[i][k].inds.start/sr>tmin) &&(ss[i][k].id==j)
                     push!(myspikes,ss[i][k].inds.start/sr)
-                end             
-            end   
+                end
+            end
             spikes[myname]=myspikes
         end
     end
@@ -379,14 +398,14 @@ function save_ts_mat(in_name="ts.bin",out_name="ts.mat")
     myheader=read_stamp_header(in_name)
 
     (ss,numcells)=parse_ts(in_name)
-    
+
     spikes=get_ts_dict(ss,numcells,myheader.sr)
-    
+
     file = matopen(out_name, "w")
     write(file, "spikes", spikes)
     close(file)
-      
-    spikes   
+
+    spikes
 end
 
 function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
@@ -394,14 +413,14 @@ function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
     myheader=read_stamp_header(in_name)
 
     (ss,numcells)=parse_ts(in_name)
-    
+
     spikes=get_ts_dict(ss,numcells,myheader.sr)
-    
+
     file = jldopen(out_name, "w")
     write(file, "spikes", spikes)
     close(file)
-      
-    spikes 
+
+    spikes
 end
 
 #=
@@ -430,7 +449,7 @@ function parse_adc(fname="adc.bin")
         count+=myheader.samples_per_block
     end
     close(f)
-    
+
     adc
 end
 
@@ -443,7 +462,7 @@ function parse_ttl(fname="ttl.bin")
     myheader=read_ttl_header(fname)
 
     ttl_times=[zeros(Int64,0) for i=1:myheader.num_channels]
-    
+
     f=open(fname, "r+")
 
     seek(f,14) #start at second time step
@@ -454,7 +473,7 @@ function parse_ttl(fname="ttl.bin")
     while eof(f)==false
 
         x=read(f,UInt16)
-        
+
         for i=1:myheader.num_channels
             y=x&(2^(i-1))
             if y>0
@@ -468,7 +487,7 @@ function parse_ttl(fname="ttl.bin")
         count+=1
     end
     close(f)
-    
+
     ttl_times
 end
 
@@ -543,7 +562,7 @@ type PL_ChanHeader
 end
 
 function PL_ChanHeader(num,units)
-    
+
     if num<10
         c=string("sig00",num)
     elseif num<100
@@ -560,7 +579,7 @@ function PL_ChanHeader(num,units)
     boxes=zeros(Int16,5,2,4)
     com=zeros(UInt8,128)
     pad=zeros(Int32,11)
-    
+
     PL_ChanHeader(myname,myname,num,10,num,0,16,0,0,1,units,templates,fits,0,boxes,0,com,pad)
 end
 
@@ -592,7 +611,7 @@ type PL_DataBlockHeader
     Unit::Int16
     NumberOfWaveForms::Int16
     NumberOfWordsInWaveform::Int16
-end 
+end
 
 function PL_DataBlockHeader(mytype,t,num,unit,wave_size)
     if mytype==1
@@ -609,22 +628,22 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
 
     sample_size=v_header.samples_per_block
     sr=ts_header.sr
-    
+
     (ss,numcells)=parse_ts(tsname)
 
     num_channel=length(ss)
-    
+
     spikes=get_ts_dict(ss,numcells,tmin,sr)
-    
+
     tscounts=zeros(Int32,130,5)
-    
+
 	#For plexon, 0 is unsorted, 1-4 is sorted
 	#Intan will save starting at 1 for unsorted, and all numbers after as units
 	#This array only logs sorted units. 0 entry (1 in Julia) is unused
     for i=1:length(ss)
         for j=1:length(ss[i])
-	if ss[i][j].id>1 
-            tscounts[i+1,ss[i][j].id]+=1 
+	if ss[i][j].id>1
+            tscounts[i+1,ss[i][j].id]+=1
 	end
 	end
     end
@@ -641,21 +660,21 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
         evcounts[i]=length(myttl[i])
     end
 	end
-    
+
     f_out=open(out_name,"a+")
 
     #First is File Header
     file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,ss[1][end].inds.stop/sr,tscounts,16,evcounts)
-    
+
     for i=1:length(fieldnames(file_header))
-        write(f_out,getfield(file_header,i)) 
+        write(f_out,getfield(file_header,i))
     end
 
     #Then Spike Channel Headers
     for i=1:length(ss)
         chan_header=PL_ChanHeader(i,numcells[i])
         for j=1:length(fieldnames(chan_header))
-            write(f_out,getfield(chan_header,j)) 
+            write(f_out,getfield(chan_header,j))
         end
     end
 
@@ -666,7 +685,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
             write(f_out,getfield(event_header,j))
         end
     end
-    
+
     #This will suck for big files
     #should read in one channel voltage at a time
 
@@ -677,17 +696,17 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
         for j=1:length(ss[i])
             header=PL_DataBlockHeader(1,ss[i][j].inds.start,i,ss[i][j].id-1,samples_per_wave)
             myind=ss[i][j].inds.start
-            
+
             if myind+samples_per_wave-1 < size(v,1)
                 count=1
-                for k=myind:(myind+samples_per_wave-1)                    
+                for k=myind:(myind+samples_per_wave-1)
                     myv[count]=v[k]
                     count+=1
                 end
                 for k=1:length(fieldnames(header))
-                    write(f_out,getfield(header,k)) 
+                    write(f_out,getfield(header,k))
                 end
-                write(f_out,myv)   
+                write(f_out,myv)
             end
         end
     end
@@ -698,12 +717,12 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
         for j=1:length(myttl[i])
             header=PL_DataBlockHeader(4,myttl[i][j],i,0,0)
             for k=1:length(fieldnames(header))
-                write(f_out,getfield(header,k)) 
+                write(f_out,getfield(header,k))
             end
         end
     end
 	end
-        
+
     close(f_out)
 
     nothing
@@ -721,20 +740,20 @@ function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
         else
             filepath=string(filepath,".jld")
         end
-    
+
         file = jldopen(filepath, "w")
-    
+
         write(file, "Gain", han.scale)
         write(file, "Offset", han.offset)
         write(file, "Sorting", s)
         write(file, "total_clus",han.total_clus)
         write(file, "Enabled", han.enabled)
         write(file, "Reference",rhd.refs)
-        
+
         close(file)
 
     end
-    
+
     nothing
 end
 
@@ -757,7 +776,7 @@ function export_jld_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #find out what to export
 
     #call appropriate save functions based on above
-    
+
     nothing
 end
 
@@ -783,32 +802,32 @@ function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
             for i=1:length(g)
                 han.scale[i]=g[i]
             end
-            
+
             o=read(file,"Offset")
-            
+
             for i=1:length(o)
                 han.offset[i]=o[i]
             end
-            
+
             s_saved=read(file,"Sorting")
-            
+
             for i=1:length(s)
                 s[i]=s_saved[i]
             end
-            
+
             total_clus=read(file,"total_clus")
             for i=1:length(total_clus)
                 han.total_clus[i]=total_clus[i]
             end
-            
+
             e=read(file,"Enabled")
-            
+
             for i=1:length(e)
                 han.enabled[i]=e[i]
             end
-            
+
             refs=read(file,"Reference")
-            
+
             for i=1:length(refs)
                 rhd.refs[i]=refs[i]
             end
@@ -840,14 +859,14 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 
         seekend(f)
         chan_num=(position(f)<size(rhd.v,2)) ? position(f) : size(rhd.v,2)
-        
+
         seekstart(f)
         for i=1:(chan_num)
             han.enabled[i]=read(f,UInt8)
         end
-        
+
         close(f)
-        
+
         #Reference
         if isfile(string(filepath,"ref.bin"))
             f=open(string(filepath,"ref.bin"),"r")
@@ -856,7 +875,7 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
             end
             close(f)
         end
-        
+
         #Gain
         for i=1:chan_num
             if isfile(string(filepath,"gain/",i,".bin"))
@@ -866,7 +885,7 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
                 close(f)
             end
         end
-        
+
         #Thres
         for i=1:chan_num
             if isfile(string(filepath,"thres/",i,".bin"))
@@ -875,7 +894,7 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
                 close(f)
             end
         end
-        
+
         for i=1:chan_num
             if isfile(string(filepath,"cluster/",i,".bin"))
                 f=open(string(filepath,"cluster/",i,".bin"),"r")
@@ -897,7 +916,7 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
                 close(f)
             end
         end
-        
+
         get_thres(han,s)
         get_cluster(han,s)
         update_treeview(han)
@@ -921,16 +940,33 @@ function save_volt_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     rhd.save.save_full=getproperty(han.save_widgets.volt,:active,Bool)
 
+    if rhd.save.save_full
+        prepare_v_header(rhd)
+    end
+
     nothing
 end
 
 function save_lfp_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
+
+    rhd.save.lfp_s=getproperty(han.save_widgets.lfp,:active,Bool)
+
+    if rhd.save.lfp_s
+        prepare_lfp_header(rhd)
+    end
+
     nothing
 end
 
 function save_ttlin_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd = user_data
+    rhd.save.ttl_s=getproperty(han.save_widgets.ttlin,:active,Bool)
+
+    if rhd.save.ttl_s
+        prepare_ttl_header(rhd)
+    end
+
     nothing
 end

@@ -756,14 +756,7 @@ f=open(string(r.save.backup,"backup.bin"),"w")
 write(f,1)
 close(f)
 
-if r.save.save_full
-    prepare_v_header(r)
-    prepare_stamp_header(r)
-    prepare_ttl_header(r)
-    prepare_lfp_header(r)
-else
-    prepare_stamp_header(r)
-end
+prepare_stamp_header(r)
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
