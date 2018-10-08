@@ -93,11 +93,15 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
 
     #For 64 channel need two data streams, and data will come in
     #on the rising AND falling edges of SCLK
-    stream=0
-    for i in fpga.amps
-        enableDataStream(fpga,stream,true)
-        setDataSource(fpga,stream,i)
-        stream+=1
+    if fpga.amps[1] == 0
+        enableDataStream(fpga,0, false)
+    else
+        stream=0
+        for i in fpga.amps
+            enableDataStream(fpga,stream,true)
+            setDataSource(fpga,stream,i)
+            stream+=1
+        end
     end
 
     #Enable DAC
@@ -126,12 +130,12 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
 
     if mydebug==false
-    for port in ["PortA","PortB","PortC","PortD"]
-        if check_port_streams(fpga,port)>0
-            determine_delay(fpga,port)
-            selectAuxCommandBank(fpga,port, "AuxCmd3", 1)
+        for port in ["PortA","PortB","PortC","PortD"]
+            if check_port_streams(fpga,port)>0
+                determine_delay(fpga,port)
+                selectAuxCommandBank(fpga,port, "AuxCmd3", 1)
+            end
         end
-    end
     end
 
     setMaxTimeStep(fpga,SAMPLES_PER_DATA_BLOCK)
@@ -1106,6 +1110,9 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
 
         #If analog here, we want to move adc number x into voltage channels
         #
+        if myfpga[1].amps[1] == 0
+            rhd.v[:,1] = myfpga[1].adc[:,2] - 2556 #open ephys special
+        end
 
         for j=1:size(rhd.v,2)
             if rhd.refs[j]>0
@@ -1297,11 +1304,13 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 	end
 
 	#skip filler word(s)
-	index += (2*(fpga.numDataStreams % 4))
+        if fpga.numDataStreams>0
+	       index += 2
+       end
 
 	#ADCs
         for i=1:8
-            @inbounds fpga.adc[t,i]=convertUsbWordu(fpga.usbBuffer,index)
+            @inbounds fpga.adc[t,i]=convertUsbWord(fpga.usbBuffer,index)
             index+=2
         end
 
@@ -1493,7 +1502,9 @@ function determine_delay(fpga::FPGA,port)
 	    end
 
 	    #skip 36 filler word
-	    index += (2*(fpga.numDataStreams % 4))
+        if fpga.numDataStreams>0
+	       index += 2
+       end
 
 	    #ADCs
             for i=1:8
@@ -1509,7 +1520,7 @@ function determine_delay(fpga::FPGA,port)
         end
     end
 
-    if all(!output_delay)
+    if all(.!output_delay)
         println("No delay setting produces optimum results")
 	setCableLengthFeet(fpga,port, 6.0)
     else
@@ -1540,13 +1551,13 @@ function check_delay_output(fpga::FPGA,port,output)
 
     data_stream_inds=find(fpga.dataStreamEnabled.==1)
     if port=="PortA"
-        outinds=find((data_stream_inds.==1)|(data_stream_inds.==2)|(data_stream_inds.==9)|(data_stream_inds.==10))
+        outinds=find((data_stream_inds.==1).|(data_stream_inds.==2).|(data_stream_inds.==9).|(data_stream_inds.==10))
     elseif port=="PortB"
-        outinds=find((data_stream_inds.==3)|(data_stream_inds.==4)|(data_stream_inds.==11)|(data_stream_inds.==12))
+        outinds=find((data_stream_inds.==3).|(data_stream_inds.==4).|(data_stream_inds.==11).|(data_stream_inds.==12))
     elseif port=="PortC"
-        outinds=find((data_stream_inds.==5)|(data_stream_inds.==6)|(data_stream_inds.==13)|(data_stream_inds.==14))
+        outinds=find((data_stream_inds.==5).|(data_stream_inds.==6).|(data_stream_inds.==13).|(data_stream_inds.==14))
     elseif port=="PortD"
-        outinds=find((data_stream_inds.==7)|(data_stream_inds.==8)|(data_stream_inds.==15)|(data_stream_inds.==16))
+        outinds=find((data_stream_inds.==7).|(data_stream_inds.==8).|(data_stream_inds.==15).|(data_stream_inds.==16))
     end
 
     hits=0

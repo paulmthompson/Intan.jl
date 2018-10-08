@@ -1157,7 +1157,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
             elseif han.c_right_bottom==4
                 draw_scope(rhd,han)
             elseif han.c_right_bottom==5
-		draw_spike64(rhd,han)
+		        draw_spike64(rhd,han)
             elseif han.c_right_bottom==6
                 draw_raster64(rhd,han)
             elseif han.c_right_bottom==7
@@ -1210,7 +1210,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 han.buf.replot=false
             end
 	    if (han.num>0)&(!han.sc.pause)
-		draw_spike(rhd,han)
+		   draw_spike(rhd,han)
 	    end
             if han.thres_changed
                 thres_changed(han,s,fpga,rhd.save.backup)

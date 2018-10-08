@@ -138,7 +138,7 @@ type FPGA <: IC
     numWords::Int64
     numBytesPerBlock::Int64
     amps::Array{Int64,1}
-    adc::Array{UInt16,2}
+    adc::Array{Int16,2}
     ttlin::Array{UInt16,1}
     ttlout::Array{UInt16,1}
     ttloutput::UInt16
@@ -150,9 +150,9 @@ function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false)
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(UInt16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
     end
 end
 
@@ -213,6 +213,10 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
     end
 
     numchannels=sum(c_per_fpga)
+    #Single Channel
+    if fpga[1].amps[1]==0
+        numchannels=1
+    end
 
     if debug.state==true
         params=debug_sort
