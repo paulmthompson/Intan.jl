@@ -374,6 +374,8 @@ type Save_Widgets
     volt::Gtk.GtkCheckButtonLeaf
     lfp::Gtk.GtkCheckButtonLeaf
     ttlin::Gtk.GtkCheckButtonLeaf
+    ts::Gtk.GtkCheckButtonLeaf
+    input::Gtk.GtkEntryLeaf
 end
 
 type Gui_Handles

@@ -970,3 +970,62 @@ function save_ttlin_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     nothing
 end
+
+function save_ts_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han,rhd = user_data
+    rhd.save.ts_s = getproperty(han.save_widgets.ts,:active,Bool)
+
+    if rhd.save.ts_s
+        prepare_stamp_header(rhd)
+    end
+
+    nothing
+end
+
+function save_entry_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+
+    han,rhd = user_data
+
+    base_path = getproperty(han.save_widgets.input,:text,String)
+    backup_path = string(base_path,"/.backup/")
+    rhd.save.folder=base_path
+    rhd.save.backup=backup_path
+    rhd.save.v=string(base_path,"/v.bin")
+    rhd.save.ts=string(base_path,"/ts.bin")
+    rhd.save.ttl=string(base_path,"/ttl.bin")
+    rhd.save.lfp=string(base_path,"/lfp.bin")
+    rhd.save.adc=string(base_path,"/adc.bin")
+
+    prepare_save_folder(rhd)
+
+    if rhd.save.save_full
+        prepare_v_header(rhd)
+    end
+    if rhd.save.ts_s
+        prepare_stamp_header(rhd)
+    end
+    if rhd.save.adc_s
+        prepare_adc_header(rhd)
+    end
+    if rhd.save.ttl_s
+        prepare_ttl_header(rhd)
+    end
+    if rhd.save.lfp_s
+        prepare_lfp_header(rhd)
+    end
+
+    nothing
+end
+
+#Prepare saving headers
+function prepare_save_folder(r)
+    mkdir(r.save.folder)
+    mkdir(r.save.backup)
+    mkdir(string(r.save.backup,"thres"))
+    mkdir(string(r.save.backup,"gain"))
+    mkdir(string(r.save.backup,"cluster"))
+
+    f=open(string(r.save.backup,"backup.bin"),"w")
+        write(f,1)
+    close(f)
+end

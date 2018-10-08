@@ -590,19 +590,22 @@ Save Preferences Window
 
 save_grid=Grid()
 
-save_grid[1,1]=Label(string("Save Folder: ",r.save.folder))
+save_entry=Entry()
+Gtk.GAccessor.text(save_entry,r.save.folder)
+save_grid[1,1]=Label("Save Folder: ")
+save_grid[2,1]=save_entry
 
 save_check_volt=CheckButton("Analog Voltage")
 save_grid[1,2]=save_check_volt
-if r.save.save_full
-    setproperty!(save_check_volt,:active,true)
-end
 
 save_check_lfp=CheckButton("LFP")
 save_grid[1,3]=save_check_lfp
 
 save_check_ttlin=CheckButton("TTL input")
 save_grid[1,4]=save_check_ttlin
+
+save_check_ts=CheckButton("Spike Time Stamps")
+save_grid[1,5]=save_check_ts
 
 save_pref_win=Window(save_grid)
 setproperty!(save_pref_win, :title, "Saving Preferences")
@@ -744,19 +747,7 @@ set_active!(scope_signal_handles[1])
 showall(popupmenu_scope)
 
 
-#Prepare saving headers
-
-mkdir(r.save.folder)
-mkdir(r.save.backup)
-mkdir(string(r.save.backup,"thres"))
-mkdir(string(r.save.backup,"gain"))
-mkdir(string(r.save.backup,"cluster"))
-
-f=open(string(r.save.backup,"backup.bin"),"w")
-write(f,1)
-close(f)
-
-prepare_stamp_header(r)
+prepare_save_folder(r)
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
@@ -779,7 +770,7 @@ spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,falses(size(r.v,2)),filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
-save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin)
+save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_entry)
 
 sleep(1.0)
 
@@ -978,7 +969,8 @@ end
 id=signal_connect(save_volt_cb,save_check_volt,"clicked",Void,(),false,(handles,r))
 id=signal_connect(save_lfp_cb,save_check_lfp,"clicked",Void,(),false,(handles,r))
 id=signal_connect(save_ttlin_cb,save_check_ttlin,"clicked",Void,(),false,(handles,r))
-
+id=signal_connect(save_ts_cb,save_check_ts,"clicked",Void,(),false,(handles,r))
+id=signal_connect(save_entry_cb,save_entry,"activate",Void,(),false,(handles,r))
 #=
 Soft Scope Callbacks
 =#

@@ -249,7 +249,7 @@ end
 #=
 SAVE LOAD Test
 =#
-
+#=
 sleep(1.0);
 
 setproperty!(handles.run,:active,false)
@@ -271,7 +271,7 @@ facts() do
     @fact length(mys_m) --> length(mys_j)
 end
 
-
+=#
 #=
 Close
 =#
