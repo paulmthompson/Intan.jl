@@ -311,7 +311,7 @@ function initialize_board(rhd::FPGA,debug=false)
     setDacGain(rhd,0)
     setAudioNoiseSuppress(rhd,0)
 
-    setTtlMode(rhd,1)
+    setTtlMode(rhd,0)
 
     for i=0:7; setDacThreshold(rhd,i, 32768, true); end
 

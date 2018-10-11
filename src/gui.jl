@@ -1129,7 +1129,7 @@ end
 function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
     #process and output (e.g. kalman, spike triggered stim calc, etc)
-    do_task(task,rhd,myread)
+    do_task(task,rhd,myread,han,fpga)
 
     #plot spikes
     if myread
@@ -1344,7 +1344,7 @@ function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Ar
 
     han, rhd,task,fpga = user_data
     init_board!(rhd,fpga)
-    init_task(task,rhd)
+    init_task(task,rhd,han,fpga)
 
     nothing
 end
@@ -1353,7 +1353,7 @@ function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DA
 
     han, rhd,task,fpga = user_data
     init_board!(rhd,fpga)
-    init_task(task,rhd)
+    init_task(task,rhd,han,fpga)
 
     nothing
 end
