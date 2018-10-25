@@ -32,11 +32,6 @@ function add_button_label(button,mylabel)
     show(b_label)
 end
 
-function change_button_label(button,mylabel)
-    hi=Gtk.GAccessor.child(button)
-    Gtk.GAccessor.markup(hi, string("""<span size="x-small">""",mylabel,"</span>"))
-end
-
 function line(ctx,x1,x2,y1,y2)
     move_to(ctx,x1,y1)
     line_to(ctx,x2,y2)

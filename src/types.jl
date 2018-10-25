@@ -398,7 +398,6 @@ type Gui_Handles
 
     c::Gtk.GtkCanvasLeaf
 
-    spike::Int64 #currently selected spike of all spikes
     num::Int64 #currently selected spike from multi display
     num16::Int64 #currently selected group of spikes in multi display
 
@@ -438,7 +437,6 @@ type Gui_Handles
     spike_changed::Bool
     chan_per_display::Int64
 
-    temp::ClusterTemplate
     c_changed::Bool
 
     slider_sort::Gtk.GtkScaleLeaf
@@ -460,7 +458,6 @@ type Gui_Handles
     ref_list1::Gtk.GtkListStoreLeaf
     ref_list2::Gtk.GtkListStoreLeaf
 
-    sort_cb::Bool
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
 

@@ -12,7 +12,7 @@ function thres_changed(han::Gui_Handles,s,fpga,backup)
     send_thres_to_ic(han,fpga)
 
     han.thres_changed=false
-    
+
     nothing
 end
 
@@ -26,11 +26,11 @@ function update_thres(han::Gui_Handles,s::Array,backup)
             f=open(string(backup,"thres/",i,".bin"),"w")
             write(f,s[i].thres)
             close(f)
-        end    
+        end
     else
-        @inbounds s[han.spike].thres=-1*han.sc.thres/han.sc.s+han.sc.o
-        f=open(string(backup,"thres/",han.spike,".bin"),"w")
-        write(f,s[han.spike].thres)
+        @inbounds s[han.sc.spike].thres=-1*han.sc.thres/han.sc.s+han.sc.o
+        f=open(string(backup,"thres/",han.sc.spike,".bin"),"w")
+        write(f,s[han.sc.spike].thres)
         close(f)
     end
 end
@@ -48,9 +48,9 @@ function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
             close(f)
         end
     else
-        (nn,mycore)=get_thres_id(s,han.spike)
+        (nn,mycore)=get_thres_id(s,han.sc.spike)
         remotecall_wait(((x,h,num)->remote_set_thres(localpart(x)[num],h)),mycore,s,han,nn)
-        f=open(string(backup,"thres/",han.spike,".bin"),"w")
+        f=open(string(backup,"thres/",han.sc.spike,".bin"),"w")
         write(f,-1*han.sc.thres/han.sc.s+han.sc.o)
         close(f)
     end
@@ -59,7 +59,7 @@ end
 function remote_set_thres(x,h)
 
     x.thres = -1 * h.sc.thres/h.sc.s + h.sc.o
-    
+
     nothing
 end
 
@@ -81,7 +81,7 @@ end
 function set_multiple_thres(s::Array,han::Gui_Handles,inds)
     @inbounds for i=1:length(s)
         s[i].thres=-1*han.sc.thres/han.scale[inds[1][i],1]+han.offset[inds[1][i]]
-    end 
+    end
 end
 
 #=
@@ -89,8 +89,8 @@ Get threshold from Sorting data structure and set threshold in GUI handles equal
 =#
 
 function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
-    (nn,mycore)=get_thres_id(s,han.spike)
-    
+    (nn,mycore)=get_thres_id(s,han.sc.spike)
+
     mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.sc.o)*h.sc.s*-1),mycore,s,han,nn)
 
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
@@ -100,7 +100,7 @@ end
 
 function get_thres{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
 
-    mythres=(s[han.spike].thres-han.sc.o)*han.sc.s*-1
+    mythres=(s[han.sc.spike].thres-han.sc.o)*han.sc.s*-1
     setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
@@ -151,15 +151,15 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             close(f)
         end
     else
-        han.scale[han.spike,1]=-1*gainval/1000
-        han.scale[han.spike,2]=-.2*gainval/1000
-        
-        f=open(string(rhd.save.backup,"gain/",han.spike,".bin"),"w")
-        write(f,han.scale[han.spike,1])
+        han.scale[han.sc.spike,1]=-1*gainval/1000
+        han.scale[han.sc.spike,2]=-.2*gainval/1000
+
+        f=open(string(rhd.save.backup,"gain/",han.sc.spike,".bin"),"w")
+        write(f,han.scale[han.sc.spike,1])
         close(f)
     end
 
-    han.sc.s = han.scale[han.spike,1]
+    han.sc.s = han.scale[han.sc.spike,1]
 
     han.thres_changed=true
 
@@ -180,6 +180,3 @@ function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     nothing
 end
-
-
-

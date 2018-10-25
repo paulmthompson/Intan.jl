@@ -3,13 +3,13 @@
 function draw_raster_n(rhd::RHD2000,han::Gui_Handles,num_chan::Int64)
 
     num_plot=num_chan
-    
+
     k_in=num_chan*(han.num16)-num_chan+1
 
     if (k_in+num_chan-1)>size(rhd.v,2)
         num_chan=(size(rhd.v,2)-k_in+1)
     end
-    
+
     maxid=find_max_id(rhd,han,k_in,num_chan)
     ctx=Gtk.getgc(han.c)
 
@@ -24,22 +24,22 @@ function draw_raster_n(rhd::RHD2000,han::Gui_Handles,num_chan::Int64)
     end
 
     ctx_step=yheight/num_chan
-    
+
     @inbounds for thisid=1:maxid
         count=1
         for i=k_in:(k_in+num_chan-1)
             if han.enabled[i]
-                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?  
+                for g=1:rhd.nums[i] #plotting every spike, do we need to do that?
                     if rhd.buf[g,i].id==thisid
                         offset=myoff+ctx_step*(count-1)
                         move_to(ctx,han.draws,offset)
                         line_to(ctx,han.draws,offset+ctx_step-3.0)
-                    end    
+                    end
                 end
             end
             count+=1
         end
-    
+
         set_line_width(ctx,0.5);
         @inbounds select_color(ctx,thisid)
         stroke(ctx)
@@ -56,7 +56,7 @@ draw_raster64(rhd::RHD2000,han::Gui_Handles)=draw_raster_n(rhd,han,64)
 
 function update_isi(rhd::RHD2000,han::Gui_Handles,i)
 
-    spike_num=han.spike
+    spike_num=han.sc.spike
     clus=rhd.buf[i,spike_num].id
     mytime=rhd.time[rhd.buf[i,spike_num].inds.start,1]
 
@@ -77,7 +77,7 @@ function update_isi(rhd::RHD2000,han::Gui_Handles,i)
     if han.isi_count>500
         han.isi_count=500
     end
-    
+
     nothing
 end
 
@@ -88,9 +88,9 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
     myheight=height(ctx)
     mywidth=width(ctx)
 
-    total_clus = max(han.total_clus[han.spike]+1,5)
-    
-    for i=1:han.total_clus[han.spike]        
+    total_clus = max(han.sc.total_clus+1,5)
+
+    for i=1:han.sc.total_clus
 
         mycount=0
         myviolation=0
@@ -126,7 +126,7 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
 
         #Find Scale for histogram
         isi_scale = (maximum(han.isi_hist)>0) ? 50/maximum(han.isi_hist) : 1
-        
+
         select_color(ctx,i+1)
         move_to(ctx,startx,130)
         line_to(ctx,startx,130-han.isi_hist[1]*isi_scale)
@@ -143,7 +143,7 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
 
         identity_matrix(ctx)
     end
-    
+
     nothing
 end
 
@@ -177,7 +177,7 @@ function clear_c(han::Gui_Handles)
     elseif han.c_right_bottom==7
         prepare_spectrogram(ctx,han)
     else
-        
+
     end
     nothing
 end
@@ -211,12 +211,12 @@ function prepare_events(ctx,han)
 	    end
 	end
     end
-    
+
     nothing
 end
 
 function prepare_scope(ctx,han)
-    
+
     myheight=height(ctx)
 
     dashes = [10.0,10.0,10.0]
@@ -243,13 +243,13 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
     ctx=Gtk.getgc(han.sc.c3)
     mywidth=width(ctx)
 
-    spike_num=han.spike
+    spike_num=han.sc.spike
     reads=han.draws
 
     Cairo.scale(ctx,mywidth/500.0,1.0)
 
     for i=1:rhd.nums[spike_num]
-    
+
         @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+150.0)
         @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+160.0)
         set_line_width(ctx,0.5);
@@ -275,7 +275,7 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
     myheight=height(ctx)
     mywidth=width(ctx)
 
-    total_clus = max(han.total_clus[han.spike]+1,5)
+    total_clus = max(han.sc.total_clus+1,5)
 
     line(ctx,0,mywidth,130,130)
     set_source_rgb(ctx,1.0,1.0,1.0)
@@ -300,4 +300,3 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     nothing
 end
-

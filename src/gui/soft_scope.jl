@@ -81,12 +81,12 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
         startind=SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
         if han.soft.signal_type==1
             for i=1:SAMPLES_PER_DATA_BLOCK
-                han.soft.v[startind]=rhd.v[i,han.spike]
+                han.soft.v[startind]=rhd.v[i,han.sc.spike]
                 startind+=1
             end
         else
             for i=1:SAMPLES_PER_DATA_BLOCK
-                han.soft.v[startind]=rhd.lfps[i,han.spike]
+                han.soft.v[startind]=rhd.lfps[i,han.sc.spike]
                 startind+=1
             end
         end
@@ -158,20 +158,20 @@ function draw_scope(rhd::RHD2000,han::Gui_Handles)
 
         if han.soft.signal_type==1
             for i=1:SAMPLES_PER_DATA_BLOCK
-                han.soft.v[startind]=rhd.v[i,han.spike]
+                han.soft.v[startind]=rhd.v[i,han.sc.spike]
                 startind+=1
             end
         else
             for i=1:SAMPLES_PER_DATA_BLOCK
-                han.soft.v[startind]=rhd.lfps[i,han.spike]
+                han.soft.v[startind]=rhd.lfps[i,han.sc.spike]
                 startind+=1
             end
         end
 
         #get spikes
-        for g=1:rhd.nums[han.spike]
+        for g=1:rhd.nums[han.sc.spike]
             han.soft.num_spikes+=1
-            han.soft.spikes[han.soft.num_spikes]=rhd.buf[g,han.spike].inds.start+SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
+            han.soft.spikes[han.soft.num_spikes]=rhd.buf[g,han.sc.spike].inds.start+SAMPLES_PER_DATA_BLOCK*(han.soft.draws-1)+1
         end
 
         han.soft.draws+=1

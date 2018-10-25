@@ -33,7 +33,7 @@ function rb1_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
     elseif (han.c_right_top == 3)|(han.c_right_top == 4)
 	set_slider(han,64)
     end
-    
+
     clear_c(han)
     nothing
 end
@@ -69,8 +69,8 @@ function rb2_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 end
 
 function set_slider(han::Gui_Handles,chan_num::Int64)
-    han.num16=div(han.spike-1,chan_num)+1
-    han.num=rem(han.spike-1,chan_num)+1
+    han.num16=div(han.sc.spike-1,chan_num)+1
+    han.num=rem(han.sc.spike-1,chan_num)+1
     han.chan_per_display=chan_num
     if han.num16*chan_num>length(han.enabled)
         setproperty!(han.adj2,:upper,han.num16*chan_num-length(han.enabled))
@@ -80,6 +80,6 @@ function set_slider(han::Gui_Handles,chan_num::Int64)
         setproperty!(han.adj,:upper,div(length(han.enabled),chan_num))
     end
     setproperty!(han.adj2, :value, han.num)
-    setproperty!(han.adj, :value, han.num16)  
+    setproperty!(han.adj, :value, han.num16)
     nothing
 end

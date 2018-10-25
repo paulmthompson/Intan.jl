@@ -7,11 +7,11 @@ These functions are needed for specific hardware implementations
 Audio
 =#
 
-set_audio(fp::Array{FPGA,1},h::Gui_Handles,r::RHD2000)=set_audio_fpga(fp,h.spike,r.refs[h.spike])
+set_audio(fp::Array{FPGA,1},h::Gui_Handles,r::RHD2000)=set_audio_fpga(fp,h.sc.spike,r.refs[h.sc.spike])
 
 function set_audio(fpga::DArray{FPGA,1,Array{FPGA,1}},han::Gui_Handles,rhd::RHD2000)
 
-    remotecall_wait(((x,h,ii)->set_audio_fpga(localpart(x),h,ii)),2,fpga,han.spike,rhd.refs[han.spike])
+    remotecall_wait(((x,h,ii)->set_audio_fpga(localpart(x),h,ii)),2,fpga,han.sc.spike,rhd.refs[han.sc.spike])
 
 end
 
@@ -85,9 +85,13 @@ new_single_channel(han::Gui_Handles,rhd::RHD2000,s,fpga::DArray{FPGA,1,Array{FPG
 
 function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
 
-    han.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
+    han.total_clus[han.sc.spike] = han.sc.total_clus
 
-    SpikeSorting.clear_c2(han.sc.c2,han.spike)
+    han.sc.spike=han.chan_per_display*han.num16-han.chan_per_display+han.num
+
+    han.sc.total_clus = han.total_clus[han.sc.spike]
+
+    SpikeSorting.clear_c2(han.sc.c2,han.sc.spike)
     han.sc.ctx2=Gtk.getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
 
@@ -95,7 +99,7 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
     set_audio(fpga,han,rhd)
 
     #Display Gain
-    setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.spike,1]*-1000))
+    setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.sc.spike,1]*-1000))
 
     #Display Threshold
     get_thres(han,s)
@@ -113,8 +117,8 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
     select_unit(han)
 
     #Sort Button
-    if han.sort_cb
-        draw_templates(han)
+    if han.sc.sort_cb
+        SpikeSorting.draw_templates(han.sc)
     end
 
     han.spike_changed=false

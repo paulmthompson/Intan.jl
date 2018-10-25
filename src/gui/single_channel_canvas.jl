@@ -4,7 +4,7 @@ Online plotting of new spikes in non-paused display
 =#
 function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
-    spike_num=han.spike
+    spike_num=han.sc.spike
     s=han.sc.s
     o=han.sc.o
     reads=han.draws
@@ -14,20 +14,20 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
 
     Cairo.translate(ctx,0.0,han.sc.h2/2)
     Cairo.scale(ctx,han.sc.w2/han.wave_points,s)
-    
+
     for i=1:rhd.nums[spike_num]
 
         kk=rhd.buf[i,spike_num].inds.start
         k_end=rhd.buf[i,spike_num].inds.stop
         if (kk>0) & (k_end<size(rhd.v,1))
-        
+
             move_to(ctx,1,rhd.v[kk,spike_num]-o)
-            
+
             for k=2:han.wave_points
                 y = rhd.v[kk+k-1,spike_num]-o
                 line_to(ctx,k,y)
             end
-			
+
 	    set_line_width(ctx,0.5);
 	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
 	    stroke(ctx)
@@ -63,7 +63,7 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     set_source(han.sc.ctx2,ctx)
     mask_surface(han.sc.ctx2,ctx,0.0,0.0)
     fill(han.sc.ctx2)
-    
+
     nothing
 end
 
@@ -76,7 +76,7 @@ Redraw all spikes shown in paused view
 =#
 function replot_all_spikes(han::Gui_Handles)
 
-    SpikeSorting.clear_c2(han.sc.c2,han.spike)
+    SpikeSorting.clear_c2(han.sc.c2,han.sc.spike)
     han.sc.ctx2=Gtk.getgc(han.sc.c2)
     han.sc.ctx2s=copy(han.sc.ctx2)
 
@@ -87,7 +87,7 @@ function replot_all_spikes(han::Gui_Handles)
     Cairo.translate(ctx,0.0,han.sc.h2/2)
     Cairo.scale(ctx,han.sc.w2/han.sc.wave_points,s)
 
-    for i=1:(han.total_clus[han.spike]+1)
+    for i=1:(han.sc.total_clus+1)
         for j=1:han.buf.ind
             if (han.buf.clus[j]==(i-1))&(han.buf.mask[j])
                 move_to(ctx,1,(han.buf.spikes[1,j]-o))
@@ -105,46 +105,5 @@ function replot_all_spikes(han::Gui_Handles)
     mask_surface(han.sc.ctx2,ctx,0.0,0.0)
     fill(han.sc.ctx2)
     reveal(han.sc.c2)
-    nothing
-end
-
-#=
-Callback for how mouse interacts with canvas
-=#
-function canvas_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-    event = unsafe_load(param_tuple)
-
-    han.sc.click_button=event.button
-    
-    if event.button == 1 #left click captures window
-        han.sc.mi=(event.x,event.y)
-        if han.sc.pause_state==1
-            SpikeSorting.rubberband_start(han.sc,event.x,event.y)
-        elseif han.sc.pause_state == 2
-            if han.sc.pause
-                SpikeSorting.draw_start(han.sc,event.x,event.y,han.temp)
-            end
-        end
-    elseif event.button == 3 #right click refreshes window
-        if !han.sc.pause
-            SpikeSorting.clear_c2(han.sc.c2,han.spike)
-            han.sc.ctx2=Gtk.getgc(han.sc.c2)
-            han.sc.ctx2s=copy(han.sc.ctx2)
-            han.buf.ind=1
-            han.buf.count=1
-            if han.sort_cb
-                draw_templates(han)
-            end
-        else
-            han.sc.mi=(event.x,event.y)
-            if han.sc.pause_state==1
-                SpikeSorting.rubberband_start(han.sc,event.x,event.y,3)
-            elseif han.sc.pause_state == 2
-
-            end
-        end
-    end
     nothing
 end
