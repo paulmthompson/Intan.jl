@@ -118,8 +118,8 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
         else
             set_source_rgb(ctx,1.0,1.0,1.0)
         end
-        startx=(i-1)*(han.wave_points)+1
-        Cairo.scale(ctx,mywidth/(han.wave_points*total_clus),1)
+        startx=(i-1)*(han.sc.wave_points)+1
+        Cairo.scale(ctx,mywidth/(han.sc.wave_points*total_clus),1)
         move_to(ctx,startx,10)
         show_text(ctx,string(isi_f))
 
@@ -253,39 +253,39 @@ function draw_c3(rhd::RHD2000,han::Gui_Handles)
         @inbounds move_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+150.0)
         @inbounds line_to(ctx,reads,(rhd.buf[i,spike_num].id-1)*10.0+160.0)
         set_line_width(ctx,0.5);
-	@inbounds select_color(ctx,rhd.buf[i,spike_num].id)
-	stroke(ctx)
+	    @inbounds select_color(ctx,rhd.buf[i,spike_num].id)
+	    stroke(ctx)
     end
 
     identity_matrix(ctx)
 
     if reads==1
-        prepare_c3(rhd,han)
-        draw_templates_c3(han)
+        prepare_c3(han.sc)
+        draw_templates_c3(han.sc)
         draw_isi(rhd,han)
     end
 
     nothing
 end
 
-function prepare_c3(rhd::RHD2000,han::Gui_Handles)
+function prepare_c3(sc::SpikeSorting.Single_Channel)
 
-    ctx=Gtk.getgc(han.sc.c3)
+    ctx=Gtk.getgc(sc.c3)
 
     myheight=height(ctx)
     mywidth=width(ctx)
 
-    total_clus = max(han.sc.total_clus+1,5)
+    total_clus = max(sc.total_clus+1,5)
 
     line(ctx,0,mywidth,130,130)
     set_source_rgb(ctx,1.0,1.0,1.0)
     stroke(ctx)
 
-    Cairo.scale(ctx,mywidth/(han.wave_points*total_clus),1)
+    Cairo.scale(ctx,mywidth/(sc.wave_points*total_clus),1)
 
     for i=1:total_clus
 
-        line(ctx,i*han.wave_points,i*han.wave_points,0,130)
+        line(ctx,i*sc.wave_points,i*sc.wave_points,0,130)
         set_source_rgb(ctx,1.0,1.0,1.0)
         stroke(ctx)
 
@@ -293,8 +293,8 @@ function prepare_c3(rhd::RHD2000,han::Gui_Handles)
 
     identity_matrix(ctx)
 
-    if han.buf.selected_clus>0
-        (x1_f,x2_f,y1_f,y2_f)=get_template_dims(han,han.buf.selected_clus)
+    if sc.buf.selected_clus>0
+        (x1_f,x2_f,y1_f,y2_f)=SpikeSorting.get_template_dims(sc,sc.buf.selected_clus)
         draw_box(x1_f,y1_f,x2_f,y2_f,(1.0,0.0,1.0),1.0,ctx)
     end
 

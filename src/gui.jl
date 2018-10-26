@@ -778,8 +778,11 @@ save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_chec
 
 sleep(5.0)
 
-sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
-    height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0,ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false)
+sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),false,RubberBand(Vec2(0.0,0.0),
+Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),
+false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
+    height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0,
+    ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider,adj,c2_slider,adj2,
@@ -788,7 +791,7 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider
                     trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,
                     adj_thres,thres_slider,false,false,16,
-                    false,slider_sort,adj_sort,sort_list,sort_tv,
+                    false,slider_sort,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c)),
@@ -801,24 +804,24 @@ Template Sorting Callbacks
 
     id = signal_connect(SpikeSorting.canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sortview_handles.buf,sc_widgets))
 
-    id = signal_connect(b1_cb_template,button_sort1,"clicked",Void,(),false,(handles,))
+    id = signal_connect(SpikeSorting.b1_cb_template,button_sort1,"clicked",Void,(),false,(sc_widgets,))
     add_button_label(button_sort1,"Delete Unit")
 
-    id = signal_connect(b2_cb_template,button_sort2,"clicked",Void,(),false,(handles,))
+    id = signal_connect(SpikeSorting.b2_cb_template,button_sort2,"clicked",Void,(),false,(sc_widgets,))
     add_button_label(button_sort2,"Add Unit")
 
-    id = signal_connect(b3_cb_template,button_sort3,"clicked",Void,(),false,(handles,))
+    id = signal_connect(SpikeSorting.b3_cb_template,button_sort3,"clicked",Void,(),false,(sc_widgets,sortview_handles))
     add_button_label(button_sort3,"Collect Templates")
 
-    id = signal_connect(b4_cb_template,button_sort4,"clicked",Void,(),false,(handles,))
+    id = signal_connect(SpikeSorting.b4_cb_template,button_sort4,"clicked",Void,(),false,(sc_widgets,))
     add_button_label(button_sort4,"Show Template Bounds")
 
     setproperty!(check_sort1,:label,"Show Template")
-    id = signal_connect(check_cb_template,check_sort1,"clicked",Void,(),false,(handles,))
+    id = signal_connect(SpikeSorting.check_cb_template,check_sort1,"clicked",Void,(),false,(sc_widgets,))
 
     setproperty!(slider_sort_label,:label,"Tolerance")
 
-id = signal_connect(unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles,))
+id = signal_connect(SpikeSorting.unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles.sc,))
 id = signal_connect(SpikeSorting.canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles.sc,))
 
 
@@ -832,8 +835,7 @@ id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectang
 #=
 ISI canvas callbacks
 =#
-
-id = signal_connect(c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+id = signal_connect(SpikeSorting.c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sc_widgets,))
 
 
 #=
@@ -903,8 +905,8 @@ Pause, Restore, and Clear Callbacks
 =#
 
 id = signal_connect(SpikeSorting.pause_cb,button_pause,"toggled",Void,(),false,(handles.sc,))
-id = signal_connect(clear_button_cb,button_clear,"clicked",Void,(),false,(handles.sc,))
-id = signal_connect(restore_button_cb,button_restore,"clicked",Void,(),false,(handles,))
+id = signal_connect(SpikeSorting.clear_button_cb,button_clear,"clicked",Void,(),false,(handles.sc,))
+id = signal_connect(SpikeSorting.restore_button_cb,button_restore,"clicked",Void,(),false,(handles.sc,))
 
 #=
 Rubberband, Draw, Stretch
@@ -1183,25 +1185,25 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
                 if clus>0
 
                     #Find Cluster characteristics from selected waveforms
-                    (mymean,mystd)=make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,.!han.buf.selected)
+                    (mymean,mystd)=SpikeSorting.make_cluster(han.buf.spikes,han.buf.mask,han.buf.ind,.!han.buf.selected)
 
                     #Apply cluster characteristics to handles cluster
-                    change_cluster(han.sc.temp,mymean,mystd,clus)
-                    setproperty!(han.adj_sort, :value, 1.0)
+                    SpikeSorting.change_cluster(han.sc.temp,mymean,mystd,clus)
+                    setproperty!(han.sc.adj_sort, :value, 1.0)
 
                     if (han.buf.count>0)&(han.sc.pause)
-                        template_cluster(han,clus,mymean,mystd[:,2],mystd[:,1],1.0)
+                        SpikeSorting.template_cluster(han.sc,clus,mymean,mystd[:,2],mystd[:,1],1.0)
                     end
 
                 end
 
                 #Send cluster information to sorting
-                send_clus(s,han)
+                SpikeSorting.send_clus(s,han.sc)
                 backup_clus(han.sc.temp,han.sc.spike,rhd.save.backup)
                 han.buf.c_changed=false
             end
             if han.buf.replot
-                replot_all_spikes(han)
+                SpikeSorting.replot_all_spikes(han.sc)
                 if visible(han.sortview_widgets.win)
                     if !han.sc.pause
 
@@ -1299,46 +1301,6 @@ function backup_clus(myclus,chan,backup)
         write(f,getfield(myclus,i))
     end
     close(f)
-
-    nothing
-end
-
-function send_clus{T<:Sorting}(s::Array{T,1},han::Gui_Handles)
-    s[han.sc.spike].c=deepcopy(han.sc.temp)
-    nothing
-end
-
-function send_clus{T<:Sorting}(s::DArray{T,1,Array{T,1}},han::Gui_Handles)
-    (nn,mycore)=get_thres_id(s,han.sc.spike)
-    remotecall_wait(((x,tt,num)->localpart(x)[num].c=tt),mycore,s,han.sc.temp,nn)
-    nothing
-end
-
-function clear_button_cb(widget::Ptr,user_data::Tuple{SpikeSorting.Single_Channel})
-
-    sc, = user_data
-    SpikeSorting.clear_c2(sc.c2,sc.spike)
-    han.sc.ctx2=Gtk.getgc(sc.c2)
-    han.sc.ctx2s=copy(sc.ctx2)
-    #Sort Button
-    if sc.sort_cb
-        SpikeSorting.draw_templates(sc)
-    end
-
-    nothing
-end
-
-function restore_button_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-
-    if han.sc.pause
-        for i=1:han.buf.ind
-            han.buf.mask[i]=true
-        end
-
-        han.buf.replot=true
-    end
 
     nothing
 end
@@ -1614,56 +1576,4 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
     x=div(rem(spike-1,num_chan),n_row)+1
 
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
-end
-
-function c3_press_win(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-    event = unsafe_load(param_tuple)
-
-    if event.button == 1 #left click captures window
-        check_c3_click(han,event.x,event.y)
-    elseif event.button == 3 #right click refreshes window
-    end
-    nothing
-end
-
-function check_c3_click(han::Gui_Handles,x,y)
-
-    ctx=Gtk.getgc(han.sc.c3)
-    mywidth=width(ctx)
-
-    total_clus = max(han.sc.total_clus+1,5)
-
-    xbounds=linspace(0.0,mywidth,total_clus+1)
-
-    count=1
-    inmulti=false
-    if y<130
-        for j=2:length(xbounds)
-            if (x<xbounds[j])
-                inmulti=true
-                break
-            end
-            count+=1
-        end
-    end
-    if (inmulti)&(count<han.sc.total_clus+1)
-        selmodel=Gtk.GAccessor.selection(han.sort_tv)
-        select!(selmodel, Gtk.iter_from_index(han.sort_list,count+1))
-        select_unit(han)
-    end
-    nothing
-end
-
-function get_template_dims(han::Gui_Handles,clus)
-
-    ctx=Gtk.getgc(han.sc.c3)
-    mywidth=width(ctx)
-
-    total_clus = max(han.sc.total_clus+1,5)
-
-    xbounds=linspace(0.0,mywidth,total_clus+1)
-
-    (xbounds[clus],xbounds[clus+1],0.0,130.0)
 end

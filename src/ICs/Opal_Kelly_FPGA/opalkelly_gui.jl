@@ -111,10 +111,10 @@ function new_single_channel_fpga(han::Gui_Handles,rhd::RHD2000,s,fpga)
     get_cluster(han,s)
 
     #Update treeview
-    update_treeview(han)
+    SpikeSorting.update_treeview(han.sc)
 
     #update selected cluster
-    select_unit(han)
+    SpikeSorting.select_unit(han.sc)
 
     #Sort Button
     if han.sc.sort_cb

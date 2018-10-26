@@ -440,10 +440,6 @@ type Gui_Handles
     c_changed::Bool
 
     slider_sort::Gtk.GtkScaleLeaf
-    adj_sort::Gtk.GtkAdjustmentLeaf
-
-    sort_list::Gtk.GtkListStoreLeaf
-    sort_tv::Gtk.GtkTreeViewLeaf
 
     isi_ind::Int64
     isi_count::Int64

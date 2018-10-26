@@ -57,53 +57,12 @@ function draw_spike(rhd::RHD2000,han::Gui_Handles)
     identity_matrix(ctx)
 
     set_source(han.sc.ctx2s,ctx)
-    mask_surface(han.sc.ctx2s,ctx,0.0,0.0)
+    SpikeSorting.mask_surface(han.sc.ctx2s,ctx,0.0,0.0)
     fill(han.sc.ctx2s)
 
     set_source(han.sc.ctx2,ctx)
-    mask_surface(han.sc.ctx2,ctx,0.0,0.0)
+    SpikeSorting.mask_surface(han.sc.ctx2,ctx,0.0,0.0)
     fill(han.sc.ctx2)
 
-    nothing
-end
-
-function mask_surface(ctx,s,x,y)
-    ccall((:cairo_mask_surface,Cairo._jl_libcairo),Void,(Ptr{Void},Ptr{Void},Float64,Float64),ctx.ptr,s.surface.ptr,x,y)
-end
-
-#=
-Redraw all spikes shown in paused view
-=#
-function replot_all_spikes(han::Gui_Handles)
-
-    SpikeSorting.clear_c2(han.sc.c2,han.sc.spike)
-    han.sc.ctx2=Gtk.getgc(han.sc.c2)
-    han.sc.ctx2s=copy(han.sc.ctx2)
-
-    ctx=han.sc.ctx2s
-    s=han.sc.s
-    o=han.sc.o
-
-    Cairo.translate(ctx,0.0,han.sc.h2/2)
-    Cairo.scale(ctx,han.sc.w2/han.sc.wave_points,s)
-
-    for i=1:(han.sc.total_clus+1)
-        for j=1:han.buf.ind
-            if (han.buf.clus[j]==(i-1))&(han.buf.mask[j])
-                move_to(ctx,1,(han.buf.spikes[1,j]-o))
-                for jj=2:size(han.buf.spikes,1)
-                    line_to(ctx,jj,han.buf.spikes[jj,j]-o)
-                end
-            end
-        end
-        set_line_width(ctx,0.5)
-        select_color(ctx,i)
-        stroke(ctx)
-    end
-    identity_matrix(ctx)
-    set_source(han.sc.ctx2,ctx)
-    mask_surface(han.sc.ctx2,ctx,0.0,0.0)
-    fill(han.sc.ctx2)
-    reveal(han.sc.c2)
     nothing
 end

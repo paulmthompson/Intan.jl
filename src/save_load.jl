@@ -833,7 +833,7 @@ function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
             end
         end
 
-        update_treeview(han)
+        update_treeview(han.sc)
 
         update_ref(rhd,han)
 
@@ -919,8 +919,8 @@ function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 
         get_thres(han,s)
         get_cluster(han,s)
-        update_treeview(han)
-        select_unit(han)
+        SpikeSorting.update_treeview(han.sc)
+        SpikeSorting.select_unit(han.sc)
         SpikeSorting.draw_templates(han.sc)
         update_ref(rhd,han)
     end
