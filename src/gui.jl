@@ -768,8 +768,8 @@ for i=1:500
 end
 
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1,false)
-thres_widgets=Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
-gain_widgets=Gain_Widgets(sb2,gain_checkbox,button_gain)
+thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
+gain_widgets=SpikeSorting.Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,falses(size(r.v,2)),filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
@@ -782,7 +782,8 @@ sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),f
 Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),
 false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
     height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0,
-    ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort)
+    ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort,adj_thres,thres_slider,false,
+    thres_widgets,gain_widgets)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider,adj,c2_slider,adj2,
@@ -790,12 +791,12 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider
                     0,-1.*ones(Int64,6),
                     trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,
-                    adj_thres,thres_slider,false,false,16,
+                    false,16,
                     false,slider_sort,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
                     ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c)),
-                    popupmenu_scope,sort_widgets,thres_widgets,gain_widgets,spike_widgets,
+                    popupmenu_scope,sort_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
 #=
@@ -829,7 +830,7 @@ id = signal_connect(SpikeSorting.canvas_press_win,c2,"button-press-event",Void,(
 Window Callbacks
 =#
 
-id = signal_connect(win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(handles,r))
+id = signal_connect(SpikeSorting.win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(sc_widgets,))
 
 
 #=
@@ -889,15 +890,15 @@ Gain Callbacks
 =#
 
 id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
-id = signal_connect(gain_check_cb,gain_checkbox, "clicked", Void,(),false,(handles,))
+id = signal_connect(SpikeSorting.gain_check_cb,gain_checkbox, "clicked", Void,(),false,(sc_widgets,))
 
 
 #=
 Threshold callbacks
 =#
 
-id = signal_connect(thres_cb,thres_slider,"value-changed",Void,(),false,(handles,))
-id = signal_connect(thres_show_cb,button_thres,"clicked",Void,(),false,(handles,))
+id = signal_connect(SpikeSorting.thres_cb,thres_slider,"value-changed",Void,(),false,(sc_widgets,))
+id = signal_connect(SpikeSorting.thres_show_cb,button_thres,"clicked",Void,(),false,(sc_widgets,))
 
 
 #=
@@ -1217,7 +1218,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 	    if (han.num>0)&(!han.sc.pause)
 		   draw_spike(rhd,han)
 	    end
-            if han.thres_changed
+            if han.sc.thres_changed
                 thres_changed(han,s,fpga,rhd.save.backup)
             end
             if han.sc.show_thres
@@ -1342,7 +1343,7 @@ function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
 
         han.sc.s = han.scale[han.sc.spike,1]
 
-        setproperty!(han.gain_widgets.gainbox,:value,round(Int,han.scale[han.sc.spike,1]*-1000)) #show gain
+        setproperty!(han.sc.gain_widgets.gainbox,:value,round(Int,han.scale[han.sc.spike,1]*-1000)) #show gain
 
         han.spike_changed=true
     end
@@ -1362,26 +1363,6 @@ function record_cb{R<:RHD2000}(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R})
         sleep(1.0)
         rhd.save.record_mode = false
     end
-    nothing
-end
-
-function win_resize_cb(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles,RHD2000})
-
-    han, rhd = user_data
-
-    ctx=Gtk.getgc(han.sc.c2)
-
-    if (height(ctx)!=han.sc.h2)|(width(ctx)!=han.sc.w2)
-
-        han.sc.ctx2=ctx
-        han.sc.ctx2s=copy(han.sc.ctx2)
-        han.sc.w2=width(han.sc.ctx2)
-        han.sc.h2=height(han.sc.ctx2)
-
-        setproperty!(han.adj_thres,:upper,han.sc.h2/2)
-        setproperty!(han.adj_thres,:lower,-han.sc.h2/2)
-    end
-
     nothing
 end
 

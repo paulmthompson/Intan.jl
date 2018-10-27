@@ -4,14 +4,14 @@ Set Threshold for sorting equal to GUI threshold
 =#
 function thres_changed(han::Gui_Handles,s,fpga,backup)
 
-    mythres=getproperty(han.adj_thres,:value,Int)
+    mythres=getproperty(han.sc.adj_thres,:value,Int)
     han.sc.thres=mythres
 
     update_thres(han,s,backup)
 
     send_thres_to_ic(han,fpga)
 
-    han.thres_changed=false
+    han.sc.thres_changed=false
 
     nothing
 end
@@ -20,7 +20,7 @@ end
 Functions used to update Sorting data structure with threshold from slider
 =#
 function update_thres(han::Gui_Handles,s::Array,backup)
-    if (getproperty(han.thres_widgets.all,:active,Bool))|(getproperty(han.gain_widgets.all,:active,Bool))
+    if (getproperty(han.sc.thres_widgets.all,:active,Bool))|(getproperty(han.sc.gain_widgets.all,:active,Bool))
         @inbounds for i=1:length(s)
             s[i].thres=-1*han.sc.thres/han.scale[i,1]+han.offset[i]
             f=open(string(backup,"thres/",i,".bin"),"w")
@@ -36,7 +36,7 @@ function update_thres(han::Gui_Handles,s::Array,backup)
 end
 
 function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
-    if (getproperty(han.thres_widgets.all,:active,Bool))|(getproperty(han.gain_widgets.all,:active,Bool))
+    if (getproperty(han.sc.thres_widgets.all,:active,Bool))|(getproperty(han.sc.gain_widgets.all,:active,Bool))
         @sync begin
             for p in procs(s)
                 @async remotecall_wait((ss)->set_multiple_thres(localpart(ss),han,localindexes(ss)),p,s)
@@ -93,7 +93,7 @@ function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
 
     mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.sc.o)*h.sc.s*-1),mycore,s,han,nn)
 
-    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+    setproperty!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
 end
@@ -101,7 +101,7 @@ end
 function get_thres{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
 
     mythres=(s[han.sc.spike].thres-han.sc.o)*han.sc.s*-1
-    setproperty!(han.adj_thres,:value,round(Int64,mythres)) #show threshold
+    setproperty!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
 end
@@ -110,36 +110,14 @@ end
 Threshold Callbacks
 =#
 
-function thres_show_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-    mywidget = convert(CheckButton, widget)
-    han.sc.show_thres=getproperty(mywidget,:active,Bool)
-    han.sc.old_thres=getproperty(han.adj_thres,:value,Int)
-    han.sc.thres=getproperty(han.adj_thres,:value,Int)
-
-    nothing
-end
-
-function thres_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han,  = user_data
-
-    mythres=getproperty(han.adj_thres,:value,Int)
-    setproperty!(han.thres_widgets.sb,:label,string(mythres))
-    han.thres_changed=true
-
-    nothing
-end
-
 function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    mygain=getproperty(han.gain_widgets.all,:active,Bool)
+    mygain=getproperty(han.sc.gain_widgets.all,:active,Bool)
 
-    gainval=getproperty(han.gain_widgets.gainbox,:value,Int)
-    mythres=getproperty(han.adj_thres,:value,Int)
+    gainval=getproperty(han.sc.gain_widgets.gainbox,:value,Int)
+    mythres=getproperty(han.sc.adj_thres,:value,Int)
 
     if mygain==true
         han.scale[:,1]=-1.*gainval/1000
@@ -161,22 +139,7 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han.sc.s = han.scale[han.sc.spike,1]
 
-    han.thres_changed=true
-
-    nothing
-end
-
-function gain_check_cb(widget::Ptr,user_data::Tuple{Gui_Handles})
-
-    han, = user_data
-
-    mygain=getproperty(han.gain_widgets.multiply,:active,Bool)
-
-    if mygain
-        Gtk.GAccessor.increments(han.gain_widgets.gainbox,10,10)
-    else
-        Gtk.GAccessor.increments(han.gain_widgets.gainbox,1,1)
-    end
+    han.sc.thres_changed=true
 
     nothing
 end

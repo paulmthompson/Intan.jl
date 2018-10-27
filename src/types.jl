@@ -349,20 +349,6 @@ type Sort_Widgets
     slider_active::Bool
 end
 
-type Thres_Widgets
-    sb::Gtk.GtkLabelLeaf
-    slider::Gtk.GtkScaleLeaf
-    adj::Gtk.GtkAdjustmentLeaf
-    all::Gtk.GtkCheckButtonLeaf
-    show::Gtk.GtkCheckButtonLeaf
-end
-
-type Gain_Widgets
-    gainbox::Gtk.GtkSpinButtonLeaf
-    multiply::Gtk.GtkCheckButtonLeaf
-    all::Gtk.GtkCheckButtonLeaf
-end
-
 type Spike_Widgets
     refresh::Gtk.GtkButtonLeaf
     pause::Gtk.GtkToggleButtonLeaf
@@ -430,10 +416,6 @@ type Gui_Handles
 
     scope::Array{Float64,2}
 
-    adj_thres::Gtk.GtkAdjustmentLeaf
-    thres_slider::Gtk.GtkScaleLeaf
-    thres_changed::Bool
-
     spike_changed::Bool
     chan_per_display::Int64
 
@@ -458,8 +440,6 @@ type Gui_Handles
     popup_scope::Gtk.GtkMenuLeaf
 
     sort_widgets::Sort_Widgets
-    thres_widgets::Thres_Widgets
-    gain_widgets::Gain_Widgets
     spike_widgets::Spike_Widgets
     sortview_widgets::SortView
     band_widgets::Band_Widgets
