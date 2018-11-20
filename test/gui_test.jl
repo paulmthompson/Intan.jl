@@ -63,7 +63,7 @@ facts() do
         Intan.update_c1(handles.adj.handle,(handles,))
         sleep(1.0)
         @fact handles.num16 --> i
-        @fact handles.spike --> 16*i-16+handles.num
+        @fact handles.sc.spike --> 16*i-16+handles.num
     end
 end
 
@@ -75,7 +75,7 @@ facts() do
         Intan.update_c2(handles)
         sleep(1.0)
         @fact handles.num --> i
-        @fact handles.spike --> 16*handles.num16-16+i
+        @fact handles.sc.spike --> 16*handles.num16-16+i
     end
 end
 
@@ -114,7 +114,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-    @fact handles.spike --> 49
+    @fact handles.sc.spike --> 49
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),200.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -122,7 +122,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-    @fact handles.spike --> 53
+    @fact handles.sc.spike --> 53
 end
 
 #32 Channel Select
@@ -137,7 +137,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-    @fact handles.spike --> 33
+    @fact handles.sc.spike --> 33
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),150.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -145,7 +145,7 @@ signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
 facts() do
-    @fact handles.spike --> 39
+    @fact handles.sc.spike --> 39
 end
 
 
@@ -215,13 +215,13 @@ sleep(1.0)
 Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
-    @fact handles.enabled[handles.spike] --> true
+    @fact handles.enabled[handles.sc.spike] --> true
 end
 
 Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
-    @fact handles.enabled[handles.spike] --> false
+    @fact handles.enabled[handles.sc.spike] --> false
 end
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -235,13 +235,13 @@ sleep(1.0)
 Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
-    @fact handles.enabled[handles.spike] --> true
+    @fact handles.enabled[handles.sc.spike] --> true
 end
 
 Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
 facts() do
-    @fact handles.enabled[handles.spike] --> false
+    @fact handles.enabled[handles.sc.spike] --> false
 end
 
 

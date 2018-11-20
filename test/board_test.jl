@@ -78,8 +78,8 @@ facts() do
     @fact myfpgas[1].numDataStreams --> 2
     @fact myfpgas[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
     @fact myfpgas[1].sampleRate --> 30000
-    @fact myfpgas[1].numWords --> 45056
-    @fact myfpgas[1].numBytesPerBlock --> 90112
+    @fact myfpgas[1].numWords --> Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2)
+    @fact myfpgas[1].numBytesPerBlock --> Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2) * 2
 end
 
 #=
