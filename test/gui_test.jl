@@ -83,8 +83,8 @@ end
 Threshold Test
 =#
 
-press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.thres_widgets.show),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
-signal_emit(handles.thres_widgets.show,"clicked",Bool,press)
+press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sc.thres_widgets.show),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
+signal_emit(handles.sc.thres_widgets.show,"clicked",Bool,press)
 
 sleep(5.0)
 
