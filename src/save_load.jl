@@ -457,9 +457,15 @@ end
 Events
 =#
 
-function parse_ttl(fname="ttl.bin")
+function parse_ttl(fname="ttl.bin",polarity=trues(16))
 
     myheader=read_ttl_header(fname)
+
+    positive_event=trues(16);
+
+    for i=1:length(polarity)
+        positive_event[i]=polarity[i]
+    end
 
     ttl_times=[zeros(Int64,0) for i=1:myheader.num_channels]
 
@@ -476,7 +482,7 @@ function parse_ttl(fname="ttl.bin")
 
         for i=1:myheader.num_channels
             y=x&(2^(i-1))
-            if y>0
+            if (y>0)==(positive_event[i])
                 #y_p=x_p&(2^(i-1))
                 #if y_p==0
                     push!(ttl_times[i],count)
