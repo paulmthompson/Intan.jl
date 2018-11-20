@@ -21,7 +21,7 @@ Initialization function
 This will build all of the necessary elements before anything starts running
 (initializing external boards, creating GUIs etc)
 =#
-function init_task(myt::Task_NoTask,rhd::RHD2000)
+function init_task(myt::Task_NoTask,rhd::RHD2000,han,fpga)
 end
 
 #=
@@ -30,13 +30,13 @@ Experimental Control Function
 This will implement the control logic of the task
 such as updating GUIs, modifying the data structure, talking to external boards
 =#
-function do_task(myt::Task_NoTask,rhd::RHD2000,myread)
+function do_task(myt::Task_NoTask,rhd::RHD2000,myread,han,fpga)
 end
 
 #=
 Logging Function
 
-This will save the appropriate elements of the data structure, as well as specifying what 
+This will save the appropriate elements of the data structure, as well as specifying what
 analog streams from either the Intan or other external DAQs
 =#
 function save_task(myt::Task_NoTask,rhd::RHD2000)

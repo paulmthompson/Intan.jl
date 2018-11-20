@@ -93,7 +93,7 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
 
     #For 64 channel need two data streams, and data will come in
     #on the rising AND falling edges of SCLK
-    if fpga.amps[1] == 0
+    if fpga.amps[1] == 255
         enableDataStream(fpga,0, false)
     else
         stream=0

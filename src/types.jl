@@ -218,6 +218,7 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
     #Single Channel
     if single_channel_mode
         numchannels=1
+        fpga[1].amps[1]=255
     end
 
     if debug.state==true

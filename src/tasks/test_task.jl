@@ -5,12 +5,12 @@ export Task_TestTask
 type Task_TestTask <: Task
 end
 
-function init_task(myt::Task_TestTask,rhd::RHD2000)
+function init_task(myt::Task_TestTask,rhd::RHD2000,han,fpga)
     setTtlOut(rhd,ones(Int32,16))
-    nothing   
+    nothing
 end
 
-function do_task(myt::Task_TestTask,rhd::RHD2000,myread)
+function do_task(myt::Task_TestTask,rhd::RHD2000,myread,han,fpga)
 
     for i=1:SAMPLES_PER_DATA_BLOCK
         if rhd.adc[i,1]>10000
@@ -18,7 +18,7 @@ function do_task(myt::Task_TestTask,rhd::RHD2000,myread)
             break
         end
     end
-    
+
     nothing
 end
 
