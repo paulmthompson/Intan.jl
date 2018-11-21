@@ -170,10 +170,11 @@ type RHD_Single <: RHD2000
     time::Array{UInt32,2}
     filts::Array{Array{Intan_Filter,1},1}
     lfps::Array{Int16,2}
+    initialized::Bool
 end
 
 function RHD_Single(fpga,num_channels,s,buf,nums,debug)
-    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
+    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
 end
 
 type RHD_Parallel <: RHD2000
@@ -190,10 +191,11 @@ type RHD_Parallel <: RHD2000
     time::SharedArray{UInt32,2}
     filts::Array{Array{Intan_Filter,1},1}
     lfps::SharedArray{Int16,2}
+    initialized::Bool
 end
 
 function RHD_Parallel(fpga,num_channels,s,buf,nums,debug)
-    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels))
+    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]

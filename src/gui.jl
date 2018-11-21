@@ -1309,8 +1309,11 @@ end
 function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Array{I,1}})
 
     han, rhd,task,fpga = user_data
-    init_board!(rhd,fpga)
-    init_task(task,rhd,han,fpga)
+    if !rhd.initialized
+        init_board!(rhd,fpga)
+        init_task(task,rhd,han,fpga)
+        rhd.initialized=true
+    end
 
     nothing
 end
@@ -1318,8 +1321,11 @@ end
 function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DArray{I,1,Array{I,1}}})
 
     han, rhd,task,fpga = user_data
-    init_board!(rhd,fpga)
-    init_task(task,rhd,han,fpga)
+    if !rhd.initialized
+        init_board!(rhd,fpga)
+        init_task(task,rhd,han,fpga)
+        rhd.initialized=true
+    end
 
     nothing
 end
