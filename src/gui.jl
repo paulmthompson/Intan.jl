@@ -832,7 +832,7 @@ Window Callbacks
 =#
 
 id = signal_connect(SpikeSorting.win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(sc_widgets,))
-
+id = signal_connect(close_cb,win, "destroy",Void,(),false,(handles,r,fpga))
 
 #=
 ISI canvas callbacks
@@ -1536,4 +1536,21 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
     x=div(rem(spike-1,num_chan),n_row)+1
 
     (xbounds[x],xbounds[x+1],ybounds[y],ybounds[y+1])
+end
+
+#(handles,r,fpga))
+function close_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Array{I,1}})
+
+    han, rhd, fpgas = user_data
+
+    #If we were in run loop, turn off
+
+    for i=1:length(fpgas)
+        resetBoard(fpgas[i])
+        enableBoardLeds(fpgas[i],false)
+    end
+
+    println("Bye!")
+
+    nothing
 end
