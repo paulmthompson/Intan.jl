@@ -1061,7 +1061,9 @@ function cal_update(rhd::RHD2000)
     elseif rhd.cal<3
 
         if rhd.reads>20
-            rhd.cal=2
+            #rhd.cal=2
+            rhd.cal=3
+            
         end
 
     elseif rhd.cal==3
@@ -1158,7 +1160,8 @@ function applySorting(rhd::RHD2000,s)
         cal!(s,rhd.v,rhd.buf,rhd.nums,rhd.cal)
 
         if rhd.reads>20
-            rhd.cal=2
+            #rhd.cal=2
+            rhd.cal=3
         end
 
     elseif rhd.cal==3

@@ -33,10 +33,6 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_record,"Record")
     vbox_control[3,1]=button_record
 
-    button_cal = CheckButton("Calibrate")
-    setproperty!(button_cal,:active,true)
-    vbox_control[1,2]=button_cal
-
     #GAIN
     frame1_2=Frame("Gain")
     vbox1_2[1,2]=frame1_2
@@ -755,8 +751,8 @@ prepare_save_folder(r)
 
     #Callback functions that interact with canvas depend on spike sorting method that is being used
 
-    scales=ones(Float64,size(r.v,2),2)
-    scales[:,2]=scales[:,2].*.2
+    scales=ones(Float64,size(r.v,2),2) .* -.125
+    scales[:,2]=scales[:,2].*.25
 offs=zeros(Int64,size(r.v,2))
 
 scope_mat=ones(Float64,500,3)
@@ -786,7 +782,7 @@ false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
     thres_widgets,gain_widgets)
 
     #Create type with handles to everything
-handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider,adj,c2_slider,adj2,
+handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_slider,adj2,
                     c,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums)),
                     0,-1.*ones(Int64,6),
                     trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
@@ -798,6 +794,11 @@ handles=Gui_Handles(win,button_run,button_init,button_cal,button_record,c_slider
                     ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c)),
                     popupmenu_scope,sort_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
+
+    handles.sc.s = -.125
+
+setproperty!(sb2,:value,round(Int,scales[1,1]*-1000)) #show gain
+
 
 #=
 Template Sorting Callbacks
@@ -845,7 +846,6 @@ Start Button Callbacks
 
     id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
     id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
-    id = signal_connect(cal_cb, button_cal, "clicked", Void, (), false, (handles,r))
     id = signal_connect(record_cb,button_record,"clicked",Void,(),false,(handles,r))
 
 #=
@@ -1325,33 +1325,6 @@ function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DA
         init_board!(rhd,fpga)
         init_task(task,rhd,han,fpga)
         rhd.initialized=true
-    end
-
-    nothing
-end
-
-function cal_cb{R<:RHD2000}(widget::Ptr, user_data::Tuple{Gui_Handles,R})
-
-    han, rhd = user_data
-
-    mycal=getproperty(han.cal,:active,Bool)
-
-    if mycal==true
-        rhd.cal=0
-    else
-        rhd.cal=3
-
-        @inbounds for i=1:length(han.offset)
-            han.offset[i]=0.0
-            han.scale[i,1] = -.125
-            han.scale[i,2] = -.125*.25
-        end
-
-        han.sc.s = han.scale[han.sc.spike,1]
-
-        setproperty!(han.sc.gain_widgets.gainbox,:value,round(Int,han.scale[han.sc.spike,1]*-1000)) #show gain
-
-        han.spike_changed=true
     end
 
     nothing

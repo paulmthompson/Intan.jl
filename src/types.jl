@@ -379,7 +379,7 @@ type Gui_Handles
 
     run::Gtk.GtkToggleButtonLeaf
     init::Gtk.GtkButtonLeaf
-    cal::Gtk.GtkCheckButtonLeaf
+    #cal::Gtk.GtkCheckButtonLeaf
     record::Gtk.GtkToggleButtonLeaf
 
     slider::Gtk.GtkScaleLeaf
