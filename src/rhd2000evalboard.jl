@@ -1110,7 +1110,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
 
         #If analog here, we want to move adc number x into voltage channels
         #
-        if myfpga[1].amps[1] == 0
+        if myfpga[1].amps[1] == 255
             try
                 rhd.v[:,1] = myfpga[1].adc[:,2] - 2556 #open ephys special
             catch

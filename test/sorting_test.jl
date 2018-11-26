@@ -31,7 +31,7 @@ myctx2=Gtk.getgc(handles.sc.c2)
 sleep(1.0)
 
 #Add Unit
-SpikeSorting.b2_cb_template(handles.run.handle,(handles,))
+SpikeSorting.b2_cb_template(handles.run.handle,(handles.sc,))
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sc.c2),Int8(0),UInt32(0),142.0,252.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.sc.c2,"button-press-event",Bool,press)
@@ -48,7 +48,7 @@ facts() do
 end
 
 #Delete Unit
-SpikeSorting.b1_cb_template(handles.run.handle,(handles,))
+SpikeSorting.b1_cb_template(handles.run.handle,(handles.sc,))
 
 facts() do
 
@@ -59,7 +59,7 @@ end
 sleep(1.0)
 
 #Add Unit
-SpikeSorting.b2_cb_template(handles.run.handle,(handles,))
+SpikeSorting.b2_cb_template(handles.run.handle,(handles.sc,))
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sc.c2),Int8(0),UInt32(0),142.0,252.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.sc.c2,"button-press-event",Bool,press)
@@ -70,7 +70,7 @@ signal_emit(handles.sc.c2,"button-release-event",Bool,press)
 sleep(1.0)
 
 #Add Second Unit
-SpikeSorting.b2_cb_template(handles.run.handle,(handles,))
+SpikeSorting.b2_cb_template(handles.run.handle,(handles.sc,))
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sc.c2),Int8(0),UInt32(0),186.0,287.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.sc.c2,"button-press-event",Bool,press)
@@ -103,7 +103,7 @@ facts() do
 end
 
 #Show Templates
-SpikeSorting.b4_cb_template(handles.run.handle,(handles,))
+SpikeSorting.b4_cb_template(handles.run.handle,(handles.sc,))
 
 sleep(1.0)
 
