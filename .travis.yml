@@ -1,5 +1,5 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
-dist: trusty
+#dist: trusty
 sudo: required
 language: julia
 os:
@@ -8,10 +8,16 @@ os:
 julia:
   - 0.6
 notifications:
-  email: false       
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libgtk-3-dev xvfb xauth
+  email: false
+  addons:
+    apt:
+        packages:
+            - xvfb
+            - xauth
+            - libgtk-3-dev
+#before_install:
+#  - sudo apt-get update -qq
+#  - sudo apt-get install -qq libgtk-3-dev xvfb xauth
 script:
   - sudo ln -sf /lib/x86_64-linux-gnu/libudev.so.1 /lib/x86_64-linux-gnu/libudev.so.0
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
