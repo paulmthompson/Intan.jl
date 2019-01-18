@@ -4,10 +4,15 @@ Constants
 
 #Constant parameters
 
-@static if is_unix()
+@static if is_linux()
     base_path=string(dirname(Base.source_path()),"/../lib/")
     intan_lib = string(base_path,"libokFrontPanel_0118.so")
     #const lib = Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
+end
+
+@static if is_mac()
+    base_path=string(dirname(Base.source_path()),"/../lib/")
+    intan_lib = string(base_path,"libokFrontPanel.dylib")
 end
 
 @static if is_windows()
