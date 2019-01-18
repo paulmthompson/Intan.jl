@@ -22,6 +22,7 @@ script:
   - sudo ln -sf /lib/x86_64-linux-gnu/libudev.so.1 /lib/x86_64-linux-gnu/libudev.so.0
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia ./test/install_SS.jl
-  - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Intan"); Pkg.test("Intan"; coverage=true)'
+  - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
+  - $TESTCMD --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Intan"); Pkg.test("Intan"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Intan")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
