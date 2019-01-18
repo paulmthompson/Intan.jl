@@ -9,7 +9,7 @@ julia:
   - 0.6
 notifications:
   email: false
-  addons:
+addons:
     apt:
         packages:
             - xvfb

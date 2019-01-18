@@ -10,7 +10,7 @@ Constants
     #const lib = Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
 end
 
-@static if is_mac()
+@static if is_apple()
     base_path=string(dirname(Base.source_path()),"/../lib/")
     intan_lib = string(base_path,"libokFrontPanel.dylib")
 end
