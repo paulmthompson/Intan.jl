@@ -2,6 +2,8 @@
 Constants
 =#
 
+const OPEN_EPHYS = false
+
 #Constant parameters
 
 @static if is_linux()
@@ -22,7 +24,8 @@ end
 
 const bit = string(base_path,"main.bit")
 #const usb3bit = string(base_path,"XEM6310_512ch.bit")
-const usb3bit = string(base_path,"rhd2000_usb3_0518.bit")
+#const usb3bit = string(base_path,"rhd2000_usb3_0518.bit")
+const usb3bit = string(base_path,"rhd2000_usb3.bit")
 
 const USB_BUFFER_SIZE = 2400000
 const RHYTHM_BOARD_ID = 500
@@ -37,11 +40,20 @@ const USB3_BLOCK_SIZE = 1024
 
 const DDR_BURST_LENGTH = 32
 
-const RHD2000_HEADER_MAGIC_NUMBER = 0xc691199927021942
+if (OPEN_EPHYS)
+    const RHD2000_HEADER_MAGIC_NUMBER = 0xc691199927021942
+else
+    const RHD2000_HEADER_MAGIC_NUMBER = 0xd7a22aaa38132a53
+end
 
 const WireInResetRun = 0x00
-const WireInMaxTimeStepLsb = 0x01
-const WireInMaxTimeStepMsb = 0x02
+if (OPEN_EPHYS)
+    const WireInMaxTimeStepLsb = 0x01
+    const WireInMaxTimeStepMsb = 0x02
+else
+    const WireInMaxTimeStep = 0x01
+    const WireInSerialDigitalInCntl = 0x02
+end
 const WireInDataFreqPll = 0x03
 const WireInMisoDelay = 0x04
 const WireInCmdRamAddr = 0x05
@@ -50,15 +62,24 @@ const WireInCmdRamData = 0x07
 const WireInAuxCmdBank1 = 0x08
 const WireInAuxCmdBank2 = 0x09
 const WireInAuxCmdBank3 = 0x0a
-const WireInAuxCmdLength1 = 0x0b
-const WireInAuxCmdLength2 = 0x0c
-const WireInAuxCmdLength3 = 0x0d
-const WireInAuxCmdLoop1 = 0x0e
-const WireInAuxCmdLoop2 = 0x0f
-const WireInAuxCmdLoop3 = 0x10
-const WireInLedDisplay = 0x11
-const WireInDataStreamSel1234 = 0x12
-const WireInDataStreamSel5678 = 0x13
+if (OPEN_EPHYS)
+    const WireInAuxCmdLength1 = 0x0b
+    const WireInAuxCmdLength2 = 0x0c
+    const WireInAuxCmdLength3 = 0x0d
+    const WireInAuxCmdLoop1 = 0x0e
+    const WireInAuxCmdLoop2 = 0x0f
+    const WireInAuxCmdLoop3 = 0x10
+    const WireInLedDisplay = 0x11
+    const WireInDataStreamSel1234 = 0x12
+    const WireInDataStreamSel5678 = 0x13
+else
+    const WireInAuxCmdLength = 0x0b
+    const WireInAuxCmdLoop = 0x0c
+    const WireInLedDisplay = 0x0d
+    const WireInDacReref = 0x0e
+end
+
+
 const WireInDataStreamEn = 0x14
 const WireInTtlOut = 0x15
 const WireInDacSource1 = 0x16
@@ -72,6 +93,13 @@ const WireInDacSource8 = 0x1d
 const WireInDacManual = 0x1e
 const WireInMultiUse = 0x1f
 
+#Intan USB3
+const TrigInConfig = 0x40
+const TrigInSpiStart = 0x41
+const TrigInDacConfig = 0x42
+
+#OpenEphys
+#=
 const TrigInDcmProg = 0x40
 const TrigInSpiStart = 0x41
 const TrigInRamWrite = 0x42
@@ -80,9 +108,15 @@ const TrigInDacHpf = 0x44
 const TrigInExtFastSettle = 0x45
 const TrigInExtDigOut = 0x46
 const TrigInOpenEphys = 0x5a
+=#
 
-const WireOutNumWordsLsb = 0x20
-const WireOutNumWordsMsb = 0x21
+if (OPEN_EPHYS)
+    const WireOutNumWordsLsb = 0x20
+    const WireOutNumWordsMsb = 0x21
+else
+    const WireOutNumWords = 0x20
+    const WireOutSerialDigitalIn = 0x21
+end
 const WireOutSpiRunning = 0x22
 const WireOutTtlIn = 0x23
 const WireOutDataClkLocked = 0x24

@@ -99,7 +99,9 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
         stream=0
         for i in fpga.amps
             enableDataStream(fpga,stream,true)
-            setDataSource(fpga,stream,i)
+            if (OPEN_EPHYS)
+                setDataSource(fpga,stream,i)
+            end
             stream+=1
         end
     end
@@ -114,7 +116,9 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     println("Sample Rate set at ",fpga.sampleRate, " on board ", fpga.id)
 
     ledArray=[1,0,0,0,0,0,0,0]
-    setLedDisplay(fpga,ledArray)
+    if (OPEN_EPHYS)
+        setLedDisplay(fpga,ledArray)
+    end
 
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
     fpga.r=CreateRHD2000Registers(Float64(fpga.sampleRate))
@@ -154,6 +158,7 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
         end
     end
     setContinuousRunMode(fpga,true)
+
     nothing
 end
 
@@ -222,7 +227,11 @@ function uploadFpgaBitfile(rhd::FPGA)
     boardVersion = GetWireOutValue(rhd,WireOutBoardVersion)
 
     if rhd.usb3
-        target_id = RHYTHM_BOARD_ID_OPENEPHYS
+        if (OPEN_EPHYS)
+            target_id = RHYTHM_BOARD_ID_OPENEPHYS
+        else
+	       target_id = 700
+       end
     else
         target_id = RHYTHM_BOARD_ID
     end
@@ -246,6 +255,11 @@ end
 function initialize_board(rhd::FPGA,debug=false)
 
     resetBoard(rhd)
+
+    if (!OPEN_EPHYS)
+        readDigitalInManual(rhd)
+    end
+
     setSampleRate(rhd,30000,debug)
     selectAuxCommandBank(rhd,"PortA", "AuxCmd1", 0)
     selectAuxCommandBank(rhd,"PortB", "AuxCmd1", 0)
@@ -274,25 +288,31 @@ function initialize_board(rhd::FPGA,debug=false)
 
     setDspSettle(rhd,false)
 
-    setDataSource(rhd,0, PortA1)
-    setDataSource(rhd,1, PortB1)
-    setDataSource(rhd,2, PortC1)
-    setDataSource(rhd,3, PortD1)
-    setDataSource(rhd,4, PortA2)
-    setDataSource(rhd,5, PortB2)
-    setDataSource(rhd,6, PortC2)
-    setDataSource(rhd,7, PortD2)
+    if (OPEN_EPHYS)
+        setDataSource(rhd,0, PortA1)
+        setDataSource(rhd,1, PortB1)
+        setDataSource(rhd,2, PortC1)
+        setDataSource(rhd,3, PortD1)
+        setDataSource(rhd,4, PortA2)
+        setDataSource(rhd,5, PortB2)
+        setDataSource(rhd,6, PortC2)
+        setDataSource(rhd,7, PortD2)
 
-    if rhd.usb3
-        setDataSource(rhd,8, PortA1)
-        setDataSource(rhd,9, PortB1)
-        setDataSource(rhd,10, PortC1)
-        setDataSource(rhd,11, PortD1)
-        setDataSource(rhd,12, PortA2)
-        setDataSource(rhd,13, PortB2)
-        setDataSource(rhd,14, PortC2)
-        setDataSource(rhd,15, PortD2)
+        if rhd.usb3
+            setDataSource(rhd,8, PortA1)
+            setDataSource(rhd,9, PortB1)
+            setDataSource(rhd,10, PortC1)
+            setDataSource(rhd,11, PortD1)
+            setDataSource(rhd,12, PortA2)
+            setDataSource(rhd,13, PortB2)
+            setDataSource(rhd,14, PortC2)
+            setDataSource(rhd,15, PortD2)
+        end
+    else
+        SetWireInValue(rhd,WireInDataStreamEn, 0x00000000);
+        UpdateWireIns(rhd);
     end
+
 
     #remember that julia indexes with 1's instead of 0's to start an array
     enableDataStream(rhd,0, true)
@@ -327,7 +347,9 @@ function initialize_board(rhd::FPGA,debug=false)
     setExternalDigOutChannel(rhd,"PortC", 0)
     setExternalDigOutChannel(rhd,"PortD", 0)
 
-    enableBoardLeds(rhd,true);
+    if (OPEN_EPHYS)
+        enableBoardLeds(rhd,true);
+    end
 
     nothing
 end
@@ -343,11 +365,19 @@ function resetBoard(rhd::FPGA)
     if rhd.usb3
        SetWireInValue(rhd,WireInMultiUse, div(USB3_BLOCK_SIZE,4))
        UpdateWireIns(rhd)
-       ActivateTriggerIn(rhd,TrigInOpenEphys,16)
+       if (OPEN_EPHYS)
+           ActivateTriggerIn(rhd,TrigInOpenEphys,16)
+       else
+           ActivateTriggerIn(rhd,TrigInConfig,9)
+       end
 
        SetWireInValue(rhd,WireInMultiUse, DDR_BURST_LENGTH)
        UpdateWireIns(rhd)
-       ActivateTriggerIn(rhd,TrigInOpenEphys,17)
+       if (OPEN_EPHYS)
+           ActivateTriggerIn(rhd,TrigInOpenEphys,17)
+       else
+           ActivateTriggerIn(rhd,TrigInConfig,10)
+       end
     end
 
     nothing
@@ -421,7 +451,11 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
 
     SetWireInValue(rhd,WireInDataFreqPll,(256 * convert(Culong,M) + convert(Culong,D)))
     UpdateWireIns(rhd)
-    ActivateTriggerIn(rhd,TrigInDcmProg,0)
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(rhd,TrigInDcmProg,0)
+    else
+        ActivateTriggerIn(rhd,TrigInConfig,0)
+    end
 
     #Wait for DataClkLocked = 1 before allowing data acquisition to continue
     if !debug
@@ -457,11 +491,23 @@ function uploadCommandList(rhd::FPGA,commandList, auxCommandSlot, bank)
         SetWireInValue(rhd,WireInCmdRamBank, bank)
         UpdateWireIns(rhd)
         if auxCommandSlot == "AuxCmd1"
-            ActivateTriggerIn(rhd,TrigInRamWrite,0)
+		    if (OPEN_EPHYS)
+                ActivateTriggerIn(rhd,TrigInRamWrite,0)
+		    else
+	            ActivateTriggerIn(rhd,TrigInConfig,1)
+	        end
         elseif auxCommandSlot == "AuxCmd2"
-            ActivateTriggerIn(rhd,TrigInRamWrite,1)
+            if (OPEN_EPHYS)
+                ActivateTriggerIn(rhd,TrigInRamWrite,1)
+            else
+                ActivateTriggerIn(rhd,TrigInConfig,2)
+            end
         elseif auxCommandSlot == "AuxCmd3"
-            ActivateTriggerIn(rhd,TrigInRamWrite,2)
+            if (OPEN_EPHYS)
+                ActivateTriggerIn(rhd,TrigInRamWrite,2)
+            else
+                ActivateTriggerIn(rhd,TrigInConfig,3)
+            end
         end
     end
 
@@ -500,14 +546,29 @@ function selectAuxCommandLength(rhd::FPGA,commandslot,loopIndex,endIndex)
     #Error checking goes here
 
     if commandslot=="AuxCmd1"
-        SetWireInValue(rhd,WireInAuxCmdLoop1,loopIndex)
-        SetWireInValue(rhd,WireInAuxCmdLength1,endIndex)
+        if (OPEN_EPHYS)
+            SetWireInValue(rhd,WireInAuxCmdLoop1,loopIndex)
+            SetWireInValue(rhd,WireInAuxCmdLength1,endIndex)
+        else
+            SetWireInValue(rhd,WireInAuxCmdLoop, loopIndex, 0x000003ff);
+            SetWireInValue(rhd,WireInAuxCmdLength, endIndex, 0x000003ff);
+        end
     elseif commandslot=="AuxCmd2"
-        SetWireInValue(rhd,WireInAuxCmdLoop2,loopIndex)
-        SetWireInValue(rhd,WireInAuxCmdLength2,endIndex)
+        if (OPEN_EPHYS)
+            SetWireInValue(rhd,WireInAuxCmdLoop2,loopIndex)
+            SetWireInValue(rhd,WireInAuxCmdLength2,endIndex)
+        else
+            SetWireInValue(rhd, WireInAuxCmdLoop, loopIndex << 10, 0x000003ff << 10);
+            SetWireInValue(rhd, WireInAuxCmdLength, endIndex << 10, 0x000003ff << 10);
+        end
     elseif commandslot=="AuxCmd3"
-        SetWireInValue(rhd,WireInAuxCmdLoop3,loopIndex)
-        SetWireInValue(rhd,WireInAuxCmdLength3,endIndex)
+        if (OPEN_EPHYS)
+            SetWireInValue(rhd,WireInAuxCmdLoop3,loopIndex)
+            SetWireInValue(rhd,WireInAuxCmdLength3,endIndex)
+        else
+            SetWireInValue(rhd,WireInAuxCmdLoop, loopIndex << 20, 0x000003ff << 20);
+            SetWireInValue(rhd,WireInAuxCmdLength, endIndex << 20, 0x000003ff << 20);
+        end
     end
 
     UpdateWireIns(rhd)
@@ -530,13 +591,17 @@ end
 
 function setMaxTimeStep(rhd::FPGA,maxTimeStep)
 
-    maxTimeStep=convert(UInt32, maxTimeStep)
+    if (OPEN_EPHYS)
+        maxTimeStep=convert(UInt32, maxTimeStep)
 
-    maxTimeStepLsb = maxTimeStep & 0x0000ffff
-    maxTimeStepMsb = maxTimeStep & 0xffff0000
+        maxTimeStepLsb = maxTimeStep & 0x0000ffff
+        maxTimeStepMsb = maxTimeStep & 0xffff0000
 
-    SetWireInValue(rhd,WireInMaxTimeStepLsb,maxTimeStepLsb)
-    SetWireInValue(rhd,WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
+        SetWireInValue(rhd,WireInMaxTimeStepLsb,maxTimeStepLsb)
+        SetWireInValue(rhd,WireInMaxTimeStepMsb,(maxTimeStepMsb >> 16))
+    else
+        SetWireInValue(rhd,WireInMaxTimeStep, maxTimeStep);
+    end
     UpdateWireIns(rhd)
 
     nothing
@@ -794,12 +859,20 @@ function setDacThreshold(rhd::FPGA,dacChannel, threshold, trigPolarity)
     #Set threshold level
     SetWireInValue(rhd,WireInMultiUse,threshold)
     UpdateWireIns(rhd)
-    ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel)
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel)
+    else
+        ActivateTriggerIn(rhd,TrigInDacConfig, dacChannel)
+    end
 
     #Set threshold polarity
     SetWireInValue(rhd,WireInMultiUse, (trigPolarity ? 1 : 0))
     UpdateWireIns(rhd)
-    ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel+8)
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(rhd,TrigInDacThresh, dacChannel+8)
+    else
+        ActivateTriggerIn(rhd,TrigInDacConfig, dacChannel+8)
+    end
 
     nothing
 end
@@ -808,7 +881,12 @@ function enableExternalFastSettle(rhd::FPGA,enable)
 
     SetWireInValue(rhd,WireInMultiUse, (enable ? 1 : 0))
     UpdateWireIns(rhd)
-    ActivateTriggerIn(rhd,TrigInExtFastSettle,0)
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(rhd,TrigInExtFastSettle,0)
+    else
+        ActivateTriggerIn(rhd,TrigInConfig,6)
+    end
+
 
     nothing
 end
@@ -819,9 +897,11 @@ function setExternalFastSettleChannel(rhd::FPGA,channel)
 
     SetWireInValue(rhd,WireInMultiUse,channel)
     UpdateWireIns(rhd)
-    ActivateTriggerIn(rhd,TrigInExtFastSettle,1)
-
-    nothing
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(rhd,TrigInExtFastSettle,1)
+    else
+        ActivateTriggerIn(rhd,TrigInConfig,7)
+    end
 end
 
 function enableExternalDigOut(rhd::FPGA,port, enable)
@@ -830,13 +910,29 @@ function enableExternalDigOut(rhd::FPGA,port, enable)
     UpdateWireIns(rhd)
 
     if port=="PortA"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,0)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,0)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,16)
+        end
     elseif port=="PortB"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,1)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,1)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,17)
+        end
     elseif port=="PortC"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,2)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,2)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,18)
+        end
     elseif port=="PortD"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,3)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,3)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,19)
+        end
     end
 
     nothing
@@ -848,13 +944,29 @@ function setExternalDigOutChannel(rhd::FPGA,port, channel)
     UpdateWireIns(rhd)
 
     if port=="PortA"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,4)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,4)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,24)
+        end
     elseif port=="PortB"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,5)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,5)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,25)
+        end
     elseif port=="PortC"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,6)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,6)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,26)
+        end
     elseif port=="PortD"
-        ActivateTriggerIn(rhd,TrigInExtDigOut,7)
+        if (OPEN_EPHYS)
+            ActivateTriggerIn(rhd,TrigInExtDigOut,7)
+        else
+            ActivateTriggerIn(rhd,TrigInConfig,27)
+        end
     end
 
     nothing
@@ -934,39 +1046,196 @@ end
 
 function flushBoard(rhd::FPGA)
 
-if !rhd.usb3
-    while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
-        ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
+    if !rhd.usb3
+        while (numWordsInFifo(rhd) >= (USB_BUFFER_SIZE/2))
+            ReadFromPipeOut(rhd,PipeOutData, USB_BUFFER_SIZE, rhd.usbBuffer)
+        end
+
+        while (numWordsInFifo(rhd) > 0)
+            ReadFromPipeOut(rhd,PipeOutData, (2 * numWordsInFifo(rhd)), rhd.usbBuffer)
+        end
+    else
+        SetWireInValue(rhd,WireInResetRun, 1<<16, 1<<16)
+        UpdateWireIns(rhd)
+        if (OPEN_EPHYS)
+            while (numWordsInFifo(rhd) > 0)
+                ReadFromBlockPipeOut(rhd,PipeOutData, USB3_BLOCK_SIZE, rhd.usbBuffer)
+            end
+        else
+            while (numWordsInFifo(rhd) > USB_BUFFER_SIZE / 2)
+                ReadFromBlockPipeOut(rhd,PipeOutData,USB_BUFFER_SIZE,rhd.usbBuffer)
+            end
+            while (numWordsInFifo(rhd) > 0)
+                ReadFromBlockPipeOut(rhd,PipeOutData,USB3_BLOCK_SIZE * max(div(2*numWordsInFifo(rhd) , USB3_BLOCK_SIZE),1),rhd.usbBuffer)
+            end
+        end
+        SetWireInValue(rhd,WireInResetRun,0<<16, 1<<16)
+        UpdateWireIns(rhd)
+    end
+    nothing
+end
+
+function readDigitalInManual(rhd::FPGA)
+
+    spiPortPresent = falses(8)
+    userId=falses(3);
+    serialId=falses(4);
+
+    UpdateWireOuts(rhd);
+
+    expanderBoardDetected = (GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x04) != 0;
+    expanderBoardIdNumber = (GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x08)
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 2)
+    UpdateWireIns(rhd)
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0)  # Load digital in shift registers on falling edge of serial_LOAD
+    UpdateWireIns(rhd)
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[8] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[7] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[6] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[5] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[4] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[3] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[2] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    spiPortPresent[1] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    digOutVoltageLevel = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    userId[3] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    userId[2] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    userId[1] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    serialId[4] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    serialId[3] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    serialId[2] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 1);
+    UpdateWireIns(rhd);
+    SetWireInValue(rhd,WireInSerialDigitalInCntl, 0);
+    UpdateWireIns(rhd);
+
+    UpdateWireOuts(rhd);
+    serialId[1] = GetWireOutValue(rhd,WireOutSerialDigitalIn) & 0x01;
+
+    numPorts = 4;
+    for i=5:8
+        if (spiPortPresent[i])
+            numPorts = 8;
+        end
     end
 
-    while (numWordsInFifo(rhd) > 0)
-        ReadFromPipeOut(rhd,PipeOutData, (2 * numWordsInFifo(rhd)), rhd.usbBuffer)
-    end
-else
-    SetWireInValue(rhd,WireInResetRun, 1<<16, 1<<16)
-    UpdateWireIns(rhd)
-    while (numWordsInFifo(rhd) > 0)
-        ReadFromBlockPipeOut(rhd,PipeOutData, USB3_BLOCK_SIZE, rhd.usbBuffer)
-    end
-    #=
-    while (numWordsInFifo(rhd) > USB_BUFFER_SIZE / 2)
-        ReadFromBlockPipeOut(rhd,PipeOutData,USB3_BLOCK_SIZE,USB_BUFFER_SIZE,rhd.usbBuffer)
-    end
-    while (numWordsInFifo(rhd) > 0)
-        ReadFromBlockPipeOut(rhd,PipeOutData,USB3_BLOCK_SIZE,USB3_BLOCK_SIZE * max(2*numWordsInFifo()),rhd.usbBuffer)
-    end
-    =#
-    SetWireInValue(rhd,WireInResetRun,0<<16, 1<<16)
-    UpdateWireIns(rhd)
-end
-    nothing
+    println(string("expanderBoardDetected: ", expanderBoardDetected))
+    println(string("expanderBoardId: " , expanderBoardIdNumber ))
+
+    return numPorts;
 end
 
 function numWordsInFifo(rhd::FPGA)
 
     UpdateWireOuts(rhd)
 
-    GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)
+    if (OPEN_EPHYS)
+        GetWireOutValue(rhd,WireOutNumWordsMsb)<<16+GetWireOutValue(rhd,WireOutNumWordsLsb)
+    else
+        GetWireOutValue(rhd,WireOutNumWords)
+    end
 end
 
 function compareNumWords(fpgas::Array{FPGA,1})
@@ -1014,7 +1283,7 @@ function readDataBlocks_cal(fpga::FPGA,s,v,buf,nums,mytime,calnum)
     if fpga.usb3
        ReadFromBlockPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
     else
-	ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
+	   ReadFromPipeOut(fpga,PipeOutData,convert(Clong,fpga.numBytesPerBlock),fpga.usbBuffer)
     end
     fillFromUsbBuffer!(fpga,0,v,mytime)
 
@@ -1063,7 +1332,7 @@ function cal_update(rhd::RHD2000)
         if rhd.reads>20
             #rhd.cal=2
             rhd.cal=3
-            
+
         end
 
     elseif rhd.cal==3

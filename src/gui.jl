@@ -1547,7 +1547,9 @@ function close_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Array{
 
     for i=1:length(fpgas)
         resetBoard(fpgas[i])
-        enableBoardLeds(fpgas[i],false)
+        if (OPEN_EPHYS)
+            enableBoardLeds(fpgas[i],false)
+        end
     end
 
     println("Bye!")
