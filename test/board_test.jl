@@ -110,13 +110,13 @@ myfpga2=FPGA(2,myamp)
 #Intan.init_board!(myrhd2)
 
 #=
-facts() do
+
     @test myrhd.fpga[1].numDataStreams --> 1
     @test myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
     @test myrhd.fpga[1].sampleRate --> 30000
     @test myrhd.fpga[1].numWords --> 31200
     @test myrhd.fpga[1].numBytesPerBlock --> 62400
-end
+
 =#
 #=
 Sample Rate Testing
