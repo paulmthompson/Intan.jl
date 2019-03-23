@@ -34,6 +34,8 @@ myctx2=Gtk.getgc(handles.sc.c2)
 sleep(1.0)
 
 #Add Unit
+
+@testset "Add Unit" begin
 SpikeSorting.b2_cb_template(handles.run.handle,(handles.sc,))
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.sc.c2),Int8(0),UInt32(0),142.0,252.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
@@ -49,8 +51,10 @@ sleep(1.0)
     @test handles.total_clus[1] == 1
     @test handles.total_clus[2] == 0
 
-
+end
 #Delete Unit
+
+@testset "Delete Unit" begin
 SpikeSorting.b1_cb_template(handles.run.handle,(handles.sc,))
 
 
@@ -58,7 +62,7 @@ SpikeSorting.b1_cb_template(handles.run.handle,(handles.sc,))
     @test handles.total_clus[1] == 0
     @test handles.total_clus[2] == 0
 
-
+end
 sleep(1.0)
 
 #Add Unit
