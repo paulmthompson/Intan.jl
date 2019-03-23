@@ -1,6 +1,12 @@
 module Sorting_Test
 
-using FactCheck, Intan, SpikeSorting, Gtk.ShortNames, Cairo, MAT, JLD
+using Intan, SpikeSorting, Gtk.ShortNames, Cairo, MAT, JLD
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
@@ -38,20 +44,20 @@ signal_emit(handles.sc.c2,"button-release-event",Bool,press)
 
 sleep(1.0)
 
-facts() do
 
-    @fact handles.total_clus[1] --> 1
-    @fact handles.total_clus[2] --> 0
-end
+
+    @test handles.total_clus[1] == 1
+    @test handles.total_clus[2] == 0
+
 
 #Delete Unit
 SpikeSorting.b1_cb_template(handles.run.handle,(handles.sc,))
 
-facts() do
 
-    @fact handles.total_clus[1] --> 0
-    @fact handles.total_clus[2] --> 0
-end
+
+    @test handles.total_clus[1] == 0
+    @test handles.total_clus[2] == 0
+
 
 sleep(1.0)
 
@@ -77,11 +83,11 @@ signal_emit(handles.sc.c2,"button-release-event",Bool,press)
 
 sleep(1.0)
 
-facts() do
 
-    @fact handles.total_clus[1] --> 2
-    @fact handles.total_clus[2] --> 0
-end
+
+    @test handles.total_clus[1] == 2
+    @test handles.total_clus[2] == 0
+
 
 #Change second unit
 
@@ -93,11 +99,11 @@ signal_emit(handles.sc.c2,"button-release-event",Bool,press)
 
 sleep(1.0)
 
-facts() do
 
-    @fact handles.total_clus[1] --> 2
-    @fact handles.total_clus[2] --> 0
-end
+
+    @test handles.total_clus[1] == 2
+    @test handles.total_clus[2] == 0
+
 
 #Show Templates
 SpikeSorting.b4_cb_template(handles.run.handle,(handles.sc,))
@@ -130,10 +136,10 @@ signal_emit(handles.sc.pause_button,"clicked",Bool,press)
 
 sleep(1.0)
 
-facts() do
 
-    @fact handles.total_clus[1] --> 2
-    @fact handles.total_clus[2] --> 0
-end
+
+    @test handles.total_clus[1] == 2
+    @test handles.total_clus[2] == 0
+
 
 end

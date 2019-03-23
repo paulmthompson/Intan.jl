@@ -1,7 +1,7 @@
 
 module Filter_Test
 
-using FactCheck, Intan
+using Intan
 
 #=
 Weiner Filter

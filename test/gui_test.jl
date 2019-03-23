@@ -1,6 +1,12 @@
 module Gui_Test
 
-using FactCheck, Intan, SpikeSorting, Gtk.ShortNames, MAT, JLD
+using Intan, SpikeSorting, Gtk.ShortNames, MAT, JLD
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 myamp=RHD2164("PortA1")
 d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
@@ -12,11 +18,11 @@ handles = makegui(myrhd,ss,myt,myfpgas)
 
 sleep(1.0)
 
-facts() do
 
-    @fact handles.sc.mi --> (0.0,0.0)
 
-end
+    @test handles.sc.mi == (0.0,0.0)
+
+
 
 #=
 Callback Testing
@@ -25,10 +31,10 @@ Callback Testing
 #Initialization
 Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myfpgas))
 
-facts() do
-    @fact myfpgas[1].numDataStreams --> 2
-    @fact myfpgas[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-end
+
+    @test myfpgas[1].numDataStreams == 2
+    @test myfpgas[1].dataStreamEnabled == [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 
 
 #Run
@@ -36,45 +42,45 @@ setproperty!(handles.run,:active,true)
 sleep(1.0)
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
-facts() do
+
     myreads=myrhd.reads
     for i=1:5
         sleep(0.5)
-        @fact myrhd.reads --> greater_than(myreads)
+        @test myrhd.reads > myreads
         myreads=myrhd.reads
     end
-end
+
 
 #Calibration
 sleep(1.0)
 
-facts() do
-    @fact myrhd.cal --> 3
-end
+
+    @test myrhd.cal == 3
+
 
 #Slider 1
 sleep(1.0)
-facts() do
+
     for i=1:4
         setproperty!(handles.adj,:value,i)
         Intan.update_c1(handles.adj.handle,(handles,))
         sleep(1.0)
-        @fact handles.num16 --> i
-        @fact handles.sc.spike --> 16*i-16+handles.num
+        @test handles.num16 == i
+        @test handles.sc.spike == 16*i-16+handles.num
     end
-end
+
 
 #Slider 2
 sleep(1.0)
-facts() do
+
     for i=1:4
         setproperty!(handles.adj2,:value,i)
         Intan.update_c2(handles)
         sleep(1.0)
-        @fact handles.num --> i
-        @fact handles.sc.spike --> 16*handles.num16-16+i
+        @test handles.num == i
+        @test handles.sc.spike == 16*handles.num16-16+i
     end
-end
+
 
 #=
 Threshold Test
@@ -110,17 +116,17 @@ press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-facts() do
-    @fact handles.sc.spike --> 49
-end
+
+    @test handles.sc.spike == 49
+
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),200.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-facts() do
-    @fact handles.sc.spike --> 53
-end
+
+    @test handles.sc.spike == 53
+
 
 #32 Channel Select
 
@@ -133,17 +139,17 @@ press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-facts() do
-    @fact handles.sc.spike --> 33
-end
+
+    @test handles.sc.spike == 33
+
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.c),Int8(0),UInt32(0),150.0,1.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.c,"button-press-event",Bool,press)
 sleep(1.0)
 
-facts() do
-    @fact handles.sc.spike --> 39
-end
+
+    @test handles.sc.spike == 39
+
 
 
 #=
@@ -154,7 +160,7 @@ for i=2:5
     signal_emit(handles.rb1[i],"clicked",Bool,press)
     sleep(1.0)
     facts() do
-	@fact handles.c_right_top --> i
+	@test handles.c_right_top == i
     end
 end
 
@@ -163,7 +169,7 @@ for i=1:6
     signal_emit(handles.rb2[i],"clicked",Bool,press)
     sleep(1.0)
     facts() do
-	@fact handles.c_right_bottom --> i
+	@test handles.c_right_bottom == i
     end
 end
 
@@ -211,15 +217,15 @@ sleep(1.0)
 
 Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
-facts() do
-    @fact handles.enabled[handles.sc.spike] --> true
-end
+
+    @test handles.enabled[handles.sc.spike] == true
+
 
 Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
-facts() do
-    @fact handles.enabled[handles.sc.spike] --> false
-end
+
+    @test handles.enabled[handles.sc.spike] == false
+
 
 press=Gtk.GdkEventButton(Gtk.GdkEventType.BUTTON_PRESS, Gtk.gdk_window(handles.rb1[2]),Int8(0),UInt32(0),0.0,0.0,convert(Ptr{Float64},C_NULL),UInt32(0),UInt32(1),C_NULL,0.0,0.0)
 signal_emit(handles.rb1[2],"clicked",Bool,press)
@@ -231,15 +237,15 @@ sleep(1.0)
 
 Intan.popup_enable_cb(handles.run.handle,(handles,myrhd))
 
-facts() do
-    @fact handles.enabled[handles.sc.spike] --> true
-end
+
+    @test handles.enabled[handles.sc.spike] == true
+
 
 Intan.popup_disable_cb(handles.run.handle,(handles,myrhd))
 
-facts() do
-    @fact handles.enabled[handles.sc.spike] --> false
-end
+
+    @test handles.enabled[handles.sc.spike] == false
+
 
 
 
@@ -259,14 +265,14 @@ sleep(1.0);
 myv=parse_v(myrhd.save.v)
 
 facts() do
-    @fact size(myv,2) --> 64
+    @test size(myv,2) == 64
 end
 
 mys_m=save_ts_mat(myrhd.save.ts)
 mys_j=save_ts_jld(myrhd.save.ts)
 
 facts() do
-    @fact length(mys_m) --> length(mys_j)
+    @test length(mys_m) == length(mys_j)
 end
 
 =#

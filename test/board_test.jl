@@ -1,55 +1,61 @@
 module Board_Test
 
-using Intan, FactCheck, SpikeSorting, DistributedArrays
+using Intan, SpikeSorting, DistributedArrays
+
+if VERSION > v"0.7-"
+    using Test
+else
+    using Base.Test
+end
 
 #64 channel amp check
-facts() do
+
     myamp=RHD2164("PortA1")
-    @fact myamp --> [0,8]
+    @test myamp == [0,8]
     myamp=RHD2164("PortA2")
-    @fact myamp --> [1,9]
+    @test myamp == [1,9]
     myamp=RHD2164("PortB1")
-    @fact myamp --> [2,10]
+    @test myamp == [2,10]
     myamp=RHD2164("PortB2")
-    @fact myamp --> [3,11]
+    @test myamp == [3,11]
     myamp=RHD2164("PortC1")
-    @fact myamp --> [4,12]
+    @test myamp == [4,12]
     myamp=RHD2164("PortC2")
-    @fact myamp --> [5,13]
+    @test myamp == [5,13]
     myamp=RHD2164("PortD1")
-    @fact myamp --> [6,14]
+    @test myamp == [6,14]
     myamp=RHD2164("PortD2")
-    @fact myamp --> [7,15]
-end
+    @test myamp == [7,15]
+
 
 #32 channel amp check
-facts() do
+
     myamp=RHD2132("PortA1")
-    @fact myamp --> [0]
+    @test myamp == [0]
     myamp=RHD2132("PortA2")
-    @fact myamp --> [1]
+    @test myamp == [1]
     myamp=RHD2132("PortB1")
-    @fact myamp --> [2]
+    @test myamp == [2]
     myamp=RHD2132("PortB2")
-    @fact myamp --> [3]
+    @test myamp == [3]
     myamp=RHD2132("PortC1")
-    @fact myamp --> [4]
+    @test myamp == [4]
     myamp=RHD2132("PortC2")
-    @fact myamp --> [5]
+    @test myamp == [5]
     myamp=RHD2132("PortD1")
-    @fact myamp --> [6]
+    @test myamp == [6]
     myamp=RHD2132("PortD2")
-    @fact myamp --> [7]
-end
+    @test myamp == [7]
+
 
 myamp=RHD2164("PortA1")
 myfpga=FPGA(1,myamp)
 
-facts() do
-    @fact myfpga.numDataStreams --> 0
-    @fact myfpga.dataStreamEnabled --> zeros(Int64,1,Intan.MAX_NUM_DATA_STREAMS)
-    @fact myfpga.amps --> [0,8]
-end
+
+    @test myfpga.numDataStreams == 0
+    @test myfpga.dataStreamEnabled == zeros(Int64,1,Intan.MAX_NUM_DATA_STREAMS)
+    @test myfpga.amps == [0,8]
+
 
 #=
 Single Core Data Structure
@@ -62,25 +68,25 @@ myfpga=FPGA(1,myamp)
 
 (myrhd,ss,myfpgas)=makeRHD([myfpga],debug=d);
 
-facts() do
-    @fact myrhd.v --> zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
-    @fact length(ss) --> 64
-    @fact typeof(ss) --> Array{SpikeSorting.Sorting_1,1}
-    @fact typeof(myrhd.buf) --> Array{SpikeSorting.Spike,2}
-    @fact size(myrhd.buf,2) --> 64
-    @fact myrhd.nums --> zeros(Int64,64)
-    @fact myrhd.time --> zeros(UInt32,Intan.SAMPLES_PER_DATA_BLOCK,1)
-end
+
+    @test myrhd.v == zeros(Int16, Intan.SAMPLES_PER_DATA_BLOCK,64)
+    @test length(ss) == 64
+    @test typeof(ss) == Array{SpikeSorting.Sorting_1,1}
+    @test typeof(myrhd.buf) == Array{SpikeSorting.Spike,2}
+    @test size(myrhd.buf,2) == 64
+    @test myrhd.nums == zeros(Int64,64)
+    @test myrhd.time == zeros(UInt32,Intan.SAMPLES_PER_DATA_BLOCK,1)
+
 
 Intan.init_board!(myrhd,myfpgas)
 
-facts() do
-    @fact myfpgas[1].numDataStreams --> 2
-    @fact myfpgas[1].dataStreamEnabled --> [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-    @fact myfpgas[1].sampleRate --> 30000
-    @fact myfpgas[1].numWords --> Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2)
-    @fact myfpgas[1].numBytesPerBlock --> Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2) * 2
-end
+
+    @test myfpgas[1].numDataStreams == 2
+    @test myfpgas[1].dataStreamEnabled == [1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+    @test myfpgas[1].sampleRate == 30000
+    @test myfpgas[1].numWords == Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2)
+    @test myfpgas[1].numBytesPerBlock == Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2) * 2
+
 
 #=
 Multi Core Data Structure
@@ -92,24 +98,24 @@ myfpga1=FPGA(1,myamp)
 myfpga2=FPGA(2,myamp)
 (myrhd2,ss2,myfpgas)=makeRHD([myfpga1,myfpga2],debug=d,parallel=true);
 
-facts() do
-    @fact myrhd2.v --> zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
-    @fact length(ss2) --> 64
-    @fact typeof(ss2) --> DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
-    @fact typeof(myrhd2.buf) --> SharedArray{SpikeSorting.Spike,2}
-    @fact size(myrhd2.buf,2) --> 64
-    @fact myrhd2.nums --> zeros(Int64,64)
-end
+
+    @test myrhd2.v == zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
+    @test length(ss2) == 64
+    @test typeof(ss2) == DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
+    @test typeof(myrhd2.buf) == SharedArray{SpikeSorting.Spike,2}
+    @test size(myrhd2.buf,2) == 64
+    @test myrhd2.nums == zeros(Int64,64)
+
 
 #Intan.init_board!(myrhd2)
 
 #=
 facts() do
-    @fact myrhd.fpga[1].numDataStreams --> 1
-    @fact myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-    @fact myrhd.fpga[1].sampleRate --> 30000
-    @fact myrhd.fpga[1].numWords --> 31200
-    @fact myrhd.fpga[1].numBytesPerBlock --> 62400
+    @test myrhd.fpga[1].numDataStreams --> 1
+    @test myrhd.fpga[1].dataStreamEnabled --> [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+    @test myrhd.fpga[1].sampleRate --> 30000
+    @test myrhd.fpga[1].numWords --> 31200
+    @test myrhd.fpga[1].numBytesPerBlock --> 62400
 end
 =#
 #=
@@ -128,11 +134,11 @@ myfpga=FPGA(1,myamp)
 Intan.init_board!(myrhd,myfpgas)
 
 
-facts() do
+
 
     for i in [1000,1250,1500,2000,2500,3000,3333,4000,5000,6250,8000,10000,12500,15000,20000,25000,30000]
         Intan.setSampleRate(myfpgas[1],i,myrhd.debug.state)
-        @fact myfpgas[1].sampleRate --> i
+        @test myfpgas[1].sampleRate == i
     end
-end
+
 end
