@@ -1108,7 +1108,7 @@ function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::T
     nothing
 end
 
-function main_loop_s{T<:Sorting,I<:IC}(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga::Array{I,1})
+function main_loop_s(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga::Array{I,1}) where T<:Sorting I<:IC
     if rhd.debug.state==false
         myread=readDataBlocks(rhd,1,s,fpga)
     else
@@ -1117,7 +1117,7 @@ function main_loop_s{T<:Sorting,I<:IC}(rhd::RHD2000,han::Gui_Handles,s::Array{T,
     main_loop(rhd,han,s,task,myread,fpga)
 end
 
-function main_loop_par{T<:Sorting,I<:IC}(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task,fpga::DArray{I,1,Array{I,1}})
+function main_loop_par(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task,fpga::DArray{I,1,Array{I,1}}) where T<:Sorting I<:IC
     if rhd.debug.state==false
         if rhd.cal<3
             calibrate_parallel(fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
@@ -1285,11 +1285,11 @@ function update_c2(han::Gui_Handles)
     nothing
 end
 
-function get_cluster{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
+function get_cluster(han::Gui_Handles,s::Array{T,1}) where T<:Sorting
     han.sc.temp=deepcopy(s[han.sc.spike].c)
 end
 
-function get_cluster{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
+function get_cluster(han::Gui_Handles,s::DArray{T,1,Array{T,1}}) where T<:Sorting
     (nn,mycore)=get_thres_id(s,han.sc.spike)
 
     han.sc.temp=remotecall_fetch(((x,ss)->localpart(x)[ss].c),mycore,s,nn)
@@ -1306,7 +1306,7 @@ function backup_clus(myclus,chan,backup)
     nothing
 end
 
-function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Array{I,1}})
+function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Array{I,1}}) where I<:IC
 
     han, rhd,task,fpga = user_data
     if !rhd.initialized
@@ -1318,7 +1318,7 @@ function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,Ar
     nothing
 end
 
-function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DArray{I,1,Array{I,1}}})
+function init_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DArray{I,1,Array{I,1}}}) where I<:IC
 
     han, rhd,task,fpga = user_data
     if !rhd.initialized
@@ -1330,7 +1330,7 @@ function init_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Task,DA
     nothing
 end
 
-function record_cb{R<:RHD2000}(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R})
+function record_cb(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R}) where R<:RHD2000
 
     han, rhd = user_data
 
@@ -1539,7 +1539,7 @@ function get_multi_dims(han::Gui_Handles,n_col,n_row,num_chan,spike)
 end
 
 #(handles,r,fpga))
-function close_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Array{I,1}})
+function close_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000,Array{I,1}}) where I<:IC
 
     han, rhd, fpgas = user_data
 
