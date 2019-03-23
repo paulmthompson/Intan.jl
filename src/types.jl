@@ -5,7 +5,7 @@ abstract type RHD2000 end
 abstract type Task end
 abstract type IC end
 
-type Debug
+mutable struct Debug
     state::Bool
     m::String
     filepath::String
@@ -16,7 +16,7 @@ type Debug
     delay_t::Float64
 end
 
-type Intan_Filter
+mutable struct Intan_Filter
     chan::Int64
     output::Int64
     wn1::Int64
@@ -25,7 +25,7 @@ type Intan_Filter
     filt::MyFilter
 end
 
-type SaveOpt
+mutable struct SaveOpt
     record_mode::Bool
     save_full::Bool
     v::String
@@ -62,7 +62,7 @@ function make_save_structure(save_full::Bool)
     out
 end
 
-type register
+mutable struct register
     sampleRate::Cdouble
 
     #Register 0 variables
@@ -126,7 +126,7 @@ type register
     aPwr::Array{Int32,1}
 end
 
-type FPGA <: IC
+mutable struct FPGA <: IC
     id::Int64
     board::Ptr{Void}
     lib::Ptr{Void}
@@ -156,7 +156,7 @@ function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false)
     end
 end
 
-type RHD_Single <: RHD2000
+mutable struct RHD_Single <: RHD2000
     v::Array{Int16,2}
     buf::Array{Spike,2}
     nums::Array{UInt16,1}
@@ -177,7 +177,7 @@ function RHD_Single(fpga,num_channels,s,buf,nums,debug)
     RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),[Array{Intan_Filter}(0) for i=1:num_channels],zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
 end
 
-type RHD_Parallel <: RHD2000
+mutable struct RHD_Parallel <: RHD2000
     v::SharedArray{Int16,2}
     buf::SharedArray{Spike,2}
     nums::SharedArray{UInt16,1}
@@ -248,7 +248,7 @@ end
 
 get_wavelength(sr,timewin)=round(Int,sr*timewin/1000)
 
-type mytime
+mutable struct mytime
     h::Int8
     h_l::Gtk.GtkLabelLeaf
     m::Int8
@@ -257,7 +257,7 @@ type mytime
     s_l::Gtk.GtkLabelLeaf
 end
 
-type SoftScope
+mutable struct SoftScope
     v::Array{Float64,1}
     ind::Int64
     last::Array{Float64,1}
@@ -277,7 +277,7 @@ function SoftScope(sr,ctx)
     SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false,1,ctx)
 end
 
-type Spectrogram
+mutable struct Spectrogram
     f_max::Int64
     t_max::Int64
     win_width_t::Float64
@@ -311,7 +311,7 @@ function Spectrogram(fs; win_width_t = .01,win_overlap_t = .002, f_max = 15000)
     Spectrogram(f_max,t_max,win_width_t,win_overlap_t,win_width_s,win_overlap_s,out,f_div,t_div,fs)
 end
 
-type Band_Widgets
+mutable struct Band_Widgets
     win::Gtk.GtkWindowLeaf
     sb1::Gtk.GtkSpinButtonLeaf
     sb2::Gtk.GtkSpinButtonLeaf
@@ -345,7 +345,7 @@ type Band_Widgets
     list::Gtk.GtkListStoreLeaf
 end
 
-type Sort_Widgets
+mutable struct Sort_Widgets
     b1::Gtk.GtkButtonLeaf
     b2::Gtk.GtkButtonLeaf
     b3::Gtk.GtkButtonLeaf
@@ -354,18 +354,18 @@ type Sort_Widgets
     slider_active::Bool
 end
 
-type Spike_Widgets
+mutable struct Spike_Widgets
     refresh::Gtk.GtkButtonLeaf
     pause::Gtk.GtkToggleButtonLeaf
 end
 
-type Table_Widgets
+mutable struct Table_Widgets
     win::Gtk.GtkWindowLeaf
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf
 end
 
-type Save_Widgets
+mutable struct Save_Widgets
     win::Gtk.GtkWindowLeaf
     volt::Gtk.GtkCheckButtonLeaf
     lfp::Gtk.GtkCheckButtonLeaf
@@ -374,7 +374,7 @@ type Save_Widgets
     input::Gtk.GtkEntryLeaf
 end
 
-type Gui_Handles
+mutable struct Gui_Handles
     win::Gtk.GtkWindowLeaf
 
     run::Gtk.GtkToggleButtonLeaf
