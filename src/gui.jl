@@ -791,7 +791,7 @@ handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_sli
                     false,slider_sort,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
-                    ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c)),
+                    ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c),SAMPLES_PER_DATA_BLOCK),
                     popupmenu_scope,sort_widgets,spike_widgets,
                     sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 

@@ -273,8 +273,8 @@ mutable struct SoftScope
     ctx::Cairo.CairoContext
 end
 
-function SoftScope(sr,ctx)
-    SoftScope(zeros(Float64,5120),1,zeros(Float64,512),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false,1,ctx)
+function SoftScope(sr,ctx,sz)
+    SoftScope(zeros(Float64,sz*10),1,zeros(Float64,sz),1.0/1000,1.0,1,zeros(Int64,500),0,zeros(Int64,500),0,false,1,ctx)
 end
 
 mutable struct Spectrogram
