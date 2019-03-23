@@ -1069,7 +1069,7 @@ handles
 end
 
 #Drawing
-function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}})
+function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,Array{T,1}},Task,DArray{I,1,Array{I,1}}}) where {T<:Sorting,I<:IC}
 
     widget = convert(ToggleButton, widgetptr)
 
@@ -1088,7 +1088,7 @@ function run_cb{T<:Sorting,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RH
     nothing
 end
 
-function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array{I,1}})
+function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array{I,1}}) where {R<:RHD2000,S<:Sorting,T<:Task,I<:IC}
 
     widget = convert(ToggleButton, widgetptr)
 
@@ -1108,7 +1108,7 @@ function run_cb{R<:RHD2000,S<:Sorting,T<:Task,I<:IC}(widgetptr::Ptr,user_data::T
     nothing
 end
 
-function main_loop_s(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga::Array{I,1}) where T<:Sorting I<:IC
+function main_loop_s(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga::Array{I,1}) where {T<:Sorting, I<:IC}
     if rhd.debug.state==false
         myread=readDataBlocks(rhd,1,s,fpga)
     else
@@ -1117,7 +1117,7 @@ function main_loop_s(rhd::RHD2000,han::Gui_Handles,s::Array{T,1},task::Task,fpga
     main_loop(rhd,han,s,task,myread,fpga)
 end
 
-function main_loop_par(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task,fpga::DArray{I,1,Array{I,1}}) where T<:Sorting I<:IC
+function main_loop_par(rhd::RHD2000,han::Gui_Handles,s::DArray{T,1,Array{T,1}},task::Task,fpga::DArray{I,1,Array{I,1}}) where {T<:Sorting, I<:IC}
     if rhd.debug.state==false
         if rhd.cal<3
             calibrate_parallel(fpga,s,rhd.v,rhd.buf,rhd.nums,rhd.time,rhd.cal)
