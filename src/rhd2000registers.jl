@@ -1,7 +1,7 @@
-function CreateRHD2000Registers(sampleRate)   
+function CreateRHD2000Registers(sampleRate)
 
     r=register(zeros(Int32,40)...,zeros(Int32,1))
-    
+
     defineSampleRate(sampleRate,r)
 
     dsp_b = 300.0
@@ -30,7 +30,7 @@ function CreateRHD2000Registers(sampleRate)
     r.absMode=0
     enableDsp(true,r)
     setDspCutoffFreq(dsp_b,r)
-    
+
     #Register 5 variables
     r.zcheckDacPower=0
     r.zcheckLoad=0
@@ -53,14 +53,14 @@ function CreateRHD2000Registers(sampleRate)
     #these set RHdac and RLdac variables
     setUpperBandwidth(band_a_u,r)
     setLowerBandwidth(band_a_l,r)
-     
+
     powerUpAllAmps(r)
 
     r
 end
 
 function defineSampleRate(newSampleRate,r)
-    
+
     r.sampleRate=newSampleRate
 
     r.muxLoad=0
@@ -106,9 +106,9 @@ setDigOutHigh(r)=(r.digOut=1;r.digOutHiZ=0)
 setDigOutHiZ(r)=(r.digOut=0; r.digOutHiZ=1)
 
 function setDspCutoffFreq(newDspCutoffFreq, r)
-    
+
     logNewDspCutoffFreq = log10(newDspCutoffFreq)
-    
+
     fCutoff=zeros(Float64,16)
     logFCutoff=zeros(Float64,16)
 
@@ -124,10 +124,10 @@ function setDspCutoffFreq(newDspCutoffFreq, r)
         temp=zeros(Float64,15)
         for i=1:15
             temp[i]=abs(logNewDspCutoffFreq - logFCutoff[i+1])
-        end 
+        end
         r.dspCutoffFreq=findmin(temp)[2]
-    end   
-        
+    end
+
     nothing
 end
 
@@ -136,7 +136,7 @@ enableAux1(enabled, r)=(r.adcAux1En = (enabled ? 1 : 0))
 
 enableAux2(enabled, r)=(r.adcAux2En = (enabled ? 1 : 0))
 
-enableAux3(enabled, r)=(r.adcAux3En = (enabled ? 1: 0))
+enableAux3(enabled, r)=(r.adcAux3En = (enabled ? 1 : 0))
 
 enableDsp(enabled, r)=(r.dspEn = (enabled ? 1 : 0))
 
@@ -213,7 +213,7 @@ function setLowerBandwidth(lowerBandwidth, r)
     end
 
     actualLowerBandwidth=lowerBandwidthFromRL(rLActual)
-   
+
     nothing
 end
 
@@ -247,7 +247,7 @@ function setUpperBandwidth(upperBandwidth, r)
             rH1Actual += RH1Dac2Unit
             r.rH1Dac2+=1
         end
-        
+
     end
 
     for i=1:RH1Dac1Steps
@@ -270,7 +270,7 @@ function setUpperBandwidth(upperBandwidth, r)
             rH2Actual += RH2Dac2Unit
             r.rH2Dac2+=1
         end
-        
+
     end
 
     for i=1:RH2Dac1Steps
@@ -285,21 +285,21 @@ function setUpperBandwidth(upperBandwidth, r)
     actualUpperBandwidth2 = upperBandwidthFromRH2(rH2Actual)
 
     actualUpperBandwidth = sqrt(actualUpperBandwidth1 * actualUpperBandwidth2)
-    
-    nothing  
+
+    nothing
 end
 
 function rLFromLowerBandwidth(lowerBandwidth)
 
     log10f = log10(lowerBandwidth)
 
-    if (lowerBandwidth < 4.0) 
+    if (lowerBandwidth < 4.0)
        return 1.0061 * 10.0 ^ (4.9391 - 1.2088 * log10f + 0.5698 * log10f * log10f + 0.1442 * log10f * log10f * log10f)
-    
-    else 
+
+    else
         return 1.0061 * 10.0 ^ (4.7351 - 0.5916 * log10f + 0.08482 * log10f * log10f)
     end
-   
+
 end
 
 function rH1FromUpperBandwidth(upperBandwidth)
@@ -307,7 +307,7 @@ function rH1FromUpperBandwidth(upperBandwidth)
     log10f = log10(upperBandwidth)
 
     return 0.9730 * 10.0 ^ (8.0968 - 1.1892 * log10f + 0.04767 * log10f * log10f)
-    
+
 end
 
 function rH2FromUpperBandwidth(upperBandwidth)
@@ -319,7 +319,7 @@ function rH2FromUpperBandwidth(upperBandwidth)
 end
 
 function upperBandwidthFromRH1(rH1)
-    
+
     a = 0.04767
     b = -1.1892
     c = 8.0968 - log10(rH1/0.9730)
@@ -338,7 +338,7 @@ end
 
 function lowerBandwidthFromRL(rL)
 
-    if (rL < 5100.0) 
+    if (rL < 5100.0)
         rL = 5100.0
     end
 
@@ -346,12 +346,12 @@ function lowerBandwidthFromRL(rL)
         a = 0.08482
         b = -0.5916
         c = 4.7351 - log10(rL/1.0061)
-    else 
+    else
         a = 0.3303
         b = -1.2100
         c = 4.9873 - log10(rL/1.0061)
     end
-     
+
     10.0 ^ ((-b - sqrt(b * b - 4 * a * c))/(2 * a))
 end
 
@@ -375,7 +375,7 @@ function getRegisterValue(reg, r)
     zcheckDac=128
 
     aPwr=r.aPwr
-    
+
     if reg==0
         regout = (r.adcReferenceBw << 6) + (r.ampFastSettle << 5) + (r.ampVrefEnable << 4) +
         (r.adcComparatorBias << 2) + r.adcComparatorSelect
@@ -434,7 +434,7 @@ function getRegisterValue(reg, r)
         (aPwr[60] << 3) + (aPwr[59] << 2) + (aPwr[58] << 1) + aPwr[57]
     end
 
-    return regout      
+    return regout
 end
 
 #Create a list of 60 commands to program most RAM registers on a RHD2000 chip, read those values back to confirm programming, read ROM registers, and (if calibrate == true) run ADC calibration.
@@ -470,7 +470,7 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 16, getRegisterValue(16, r)))
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 17, getRegisterValue(17, r)))
 
-    
+
     #Read ROM registers
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead", 63))
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead", 62))
@@ -521,13 +521,13 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
     else
         push!(commandList, createRhd2000Command("Rhd2000CommandRegRead",63))
     end
-    
+
     #Program amplifier 31-63 power up/down registers in case RHD2164 is connected
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 18, getRegisterValue(18,r)))
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 19, getRegisterValue(19,r)))
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 20, getRegisterValue(20,r)))
     push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 21, getRegisterValue(21,r)))
-    
+
     #End with a dummy command
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead",63))
 

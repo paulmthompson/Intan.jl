@@ -26,7 +26,7 @@ export Task_COT
 #=
 Data structure for 4 target center out
 =#
-type Task_COT <: Task
+mutable struct Task_COT <: Task
     win_t::Gtk.GtkWindowLeaf#task Window handle
     c1::Gtk.GtkCanvasLeaf#task canvas handle
     win_c::Gtk.GtkWindowLeaf#control window handle
@@ -84,18 +84,18 @@ This will create any additional GUIs necessary for experimental control
 =#
 function init_task(myt::Task_COT,rhd::RHD2000)
 
-    
+
 
 end
 
 function do_task(myt::Task_COT,rhd::RHD2000)
-    
+
     #Task logic
 
     #Check if total time has exceeded threshold
-    
+
     if myt.state==1
-        
+
     elseif myt.state==2
         #Determine if in center
         #If time > x, then progress to state=3, make target appear
@@ -128,4 +128,3 @@ end
 #=
 GUI callbacks
 =#
-

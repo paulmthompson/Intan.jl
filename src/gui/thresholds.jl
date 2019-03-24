@@ -35,7 +35,7 @@ function update_thres(han::Gui_Handles,s::Array,backup)
     end
 end
 
-function update_thres{T}(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup)
+function update_thres(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup) where T
     if (getproperty(han.sc.thres_widgets.all,:active,Bool))|(getproperty(han.sc.gain_widgets.all,:active,Bool))
         @sync begin
             for p in procs(s)
@@ -63,7 +63,7 @@ function remote_set_thres(x,h)
     nothing
 end
 
-function get_thres_id{T}(s::DArray{T,1,Array{T,1}},ss::Int64)
+function get_thres_id(s::DArray{T,1,Array{T,1}},ss::Int64) where T
 
     mycore=1
     mynum=ss
@@ -88,7 +88,7 @@ end
 Get threshold from Sorting data structure and set threshold in GUI handles equal to it.
 =#
 
-function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
+function get_thres(han::Gui_Handles,s::DArray{T,1,Array{T,1}}) where T<:Sorting
     (nn,mycore)=get_thres_id(s,han.sc.spike)
 
     mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.sc.o)*h.sc.s*-1),mycore,s,han,nn)
@@ -98,7 +98,7 @@ function get_thres{T<:Sorting}(han::Gui_Handles,s::DArray{T,1,Array{T,1}})
     nothing
 end
 
-function get_thres{T<:Sorting}(han::Gui_Handles,s::Array{T,1})
+function get_thres(han::Gui_Handles,s::Array{T,1}) where T<:Sorting
 
     mythres=(s[han.sc.spike].thres-han.sc.o)*han.sc.s*-1
     setproperty!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
@@ -120,8 +120,8 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     mythres=getproperty(han.sc.adj_thres,:value,Int)
 
     if mygain==true
-        han.scale[:,1]=-1.*gainval/1000
-        han.scale[:,2]=-.2*gainval/1000
+        han.scale[:,1]=-1 .* gainval/1000
+        han.scale[:,2]=-.2 * gainval/1000
 
         for i=1:size(han.scale,1)
             f=open(string(rhd.save.backup,"gain/",i,".bin"),"w")
@@ -129,8 +129,8 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
             close(f)
         end
     else
-        han.scale[han.sc.spike,1]=-1*gainval/1000
-        han.scale[han.sc.spike,2]=-.2*gainval/1000
+        han.scale[han.sc.spike,1]=-1 * gainval/1000
+        han.scale[han.sc.spike,2]=-.2 * gainval/1000
 
         f=open(string(rhd.save.backup,"gain/",han.sc.spike,".bin"),"w")
         write(f,han.scale[han.sc.spike,1])

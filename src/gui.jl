@@ -784,7 +784,7 @@ false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_slider,adj2,
                     c,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums)),
-                    0,-1.*ones(Int64,6),
+                    0,-1 .*ones(Int64,6),
                     trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
                     s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,
                     false,16,

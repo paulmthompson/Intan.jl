@@ -72,7 +72,7 @@ function filter_type_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
         setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
     end
-    
+
     nothing
 end
 
@@ -80,7 +80,7 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     #Create Filter
     han,rhd = user_data
-    
+
     filt_type = han.band_widgets.f_type
 
     chan_num = han.band_widgets.chan
@@ -89,7 +89,7 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     wn2 = han.band_widgets.wn2
 
     pos = han.band_widgets.f_pos
-    
+
     output = han.band_widgets.f_out
 
     if (getproperty(han.band_widgets.sw_check,:active,Bool))
@@ -153,7 +153,7 @@ function replace_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     rhd.filts[chan_num][pos]=Intan_Filter(rhd.filts[chan_num][pos].chan,output,wn1,wn2,filt_type,myfilt)
 
     draw_filter_canvas(han,rhd,pos)
-    
+
     nothing
 end
 
@@ -163,7 +163,7 @@ function band_adj_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     visible(han.band_widgets.win,true)
 end
 
-function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
+function band_b1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}}) where I<:IC
 
     han, myic = user_data
 
@@ -172,7 +172,7 @@ function band_b1_cb{I<:IC}(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}})
     dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
 
     change_bandwidth(myic,lower,upper,dsp_lower)
-    
+
     nothing
 end
 
@@ -183,7 +183,7 @@ function change_wn1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.band_widgets.wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
-   
+
     nothing
 end
 
@@ -194,7 +194,7 @@ function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
-    
+
     nothing
 end
 
@@ -216,7 +216,7 @@ function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000}
     han.band_widgets.f_out = getproperty(han.band_widgets.output_box,:active,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
-    
+
     nothing
 end
 
@@ -234,7 +234,7 @@ function delete_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         deleteat!(rhd.filts[han.band_widgets.chan],han.band_widgets.f_pos)
 
         setproperty!(han.band_widgets.filt_num_sb,:value,1)
-        
+
         Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
 
         draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
@@ -254,7 +254,7 @@ function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     setproperty!(han.band_widgets.filt_num_sb,:value,1)
 
     draw_filter_canvas(han,rhd,1)
-    
+
     nothing
 end
 
@@ -272,7 +272,7 @@ function draw_filter_canvas(han::Gui_Handles,rhd,pos)
 
     split=false
     lr=1
-    
+
     for i=1:length(rhd.filts[num])
 
         if rhd.filts[num][i].output==1
@@ -282,7 +282,7 @@ function draw_filter_canvas(han::Gui_Handles,rhd,pos)
             lr=2
         else
             lr=1
-        end  
+        end
 
         if i != pos
             draw_software_filter(rhd.filts[num][i],ctx,i,lr,(0.0,0.0,0.0),false)
@@ -299,7 +299,7 @@ function draw_filter_canvas(han::Gui_Handles,rhd,pos)
             lr=2
         else
             lr=1
-        end 
+        end
         draw_software_filter(Intan_Filter(num,han.band_widgets.f_out,han.band_widgets.wn1,han.band_widgets.wn2,han.band_widgets.f_type,make_filter(rhd,1,10,10)),ctx,pos,lr,(1.0,0.0,0.0),true)
     end
 
@@ -314,7 +314,7 @@ function draw_hardware_filter(han,num,ctx)
     move_to(ctx,30,25)
     show_text(ctx,string("Analog Bandpass: ",300," - ",3000))
     move_to(ctx,30,35)
-    show_text(ctx,string("Hardware Highpass DSP: ",300)) 
+    show_text(ctx,string("Hardware Highpass DSP: ",300))
 
     draw_box(25,5,175,45,(0.0,0.0,0.0),1.0,ctx)
 
@@ -346,7 +346,7 @@ function draw_software_filter(myfilt,ctx,i,lr,mycolor,myselect)
         dashes=[5.0,5.0,5.0]
         set_dash(ctx,dashes,0.0)
     end
-        
+
     draw_box(x1,yinit+5,x2,yinit+45,mycolor,1.0,ctx)
 
     if myselect
@@ -356,10 +356,10 @@ function draw_software_filter(myfilt,ctx,i,lr,mycolor,myselect)
 
     wn1 = myfilt.wn1
     wn2 = myfilt.wn2
-    
+
     move_to(ctx,x1+5,yinit+15)
     if (myfilt.f_type==1)|(myfilt.f_type==2)
-        
+
         if myfilt.f_type==1
             show_text(ctx,"High Pass")
         else
@@ -368,7 +368,7 @@ function draw_software_filter(myfilt,ctx,i,lr,mycolor,myselect)
         move_to(ctx,x1+5,yinit+25)
         show_text(ctx,string("Cutoff: ", wn1))
     else
-        
+
         if myfilt.f_type==3
             show_text(ctx,"BandPass")
         else
@@ -377,6 +377,6 @@ function draw_software_filter(myfilt,ctx,i,lr,mycolor,myselect)
         move_to(ctx,x1+5,yinit+25)
         show_text(ctx,string("Band: ", wn1, " - ", wn2))
     end
-    
+
     nothing
 end

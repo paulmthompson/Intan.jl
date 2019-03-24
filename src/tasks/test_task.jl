@@ -2,7 +2,7 @@
 export Task_TestTask
 
 
-type Task_TestTask <: Task
+mutable struct Task_TestTask <: Task
 end
 
 function init_task(myt::Task_TestTask,rhd::RHD2000,han,fpga)

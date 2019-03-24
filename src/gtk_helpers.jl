@@ -1,5 +1,7 @@
 
-import ..Gtk: suffix
+#import ..Gtk: suffix
+import ..Gtk: suffix, @gtktype_custom_symname, @gtktype_custom_symname_and_lib, @Gtype,
+_gtksubtype_constructors, libgtk
 
 Gtk.@gtktype GtkCheckMenuItem
 

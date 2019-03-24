@@ -5,7 +5,6 @@ Constants
 const OPEN_EPHYS = false
 
 #Constant parameters
-
 @static if is_linux()
     base_path=string(dirname(Base.source_path()),"/../lib/")
     intan_lib = string(base_path,"libokFrontPanel_0118.so")

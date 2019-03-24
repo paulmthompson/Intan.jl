@@ -4,7 +4,7 @@ export save_ts_jld, save_ts_mat, parse_v
 methods to select which variables in workspace to save
 =#
 
-type Voltage_Header
+mutable struct Voltage_Header
     date_m::UInt8
     date_d::UInt8
     date_y::UInt16
@@ -80,7 +80,7 @@ function prepare_v_header(rhd::RHD2000)
     nothing
 end
 
-type Stamp_Header
+mutable struct Stamp_Header
     date_m::UInt8
     date_d::UInt8
     date_y::UInt16
@@ -134,7 +134,7 @@ function prepare_stamp_header(rhd::RHD2000)
     nothing
 end
 
-type ADC_Header
+mutable struct ADC_Header
     date_m::UInt8
     date_d::UInt8
     date_y::UInt16
@@ -188,7 +188,7 @@ function prepare_adc_header(rhd::RHD2000)
     nothing
 end
 
-type TTL_Header
+mutable struct TTL_Header
     date_m::UInt8
     date_d::UInt8
     date_y::UInt16
@@ -505,7 +505,7 @@ Thanks to Simon Kornblith for linking to description of PLX data structures here
 http://hardcarve.com/wikipic/PlexonDataFileStructureDocumentation.pdf
 =#
 
-type PL_FileHeader
+mutable struct PL_FileHeader
 	MagicNumber::UInt32
 	Version::Int32
     	Comment::Array{UInt8,1}
@@ -546,7 +546,7 @@ function PL_FileHeader(sr,num_chan,num_point,pre_t,t_end,tscounts,event_chan,evc
     PL_FileHeader(mn,ver,com,sr,num_chan,event_chan,0,num_point,pre_t,1,1,1,1,1,1,0,0,t_end,0x01,0x01,16,12,3000,5000,0x03e8,pad,tscounts,tscounts,evcounts)
 end
 
-type PL_ChanHeader
+mutable struct PL_ChanHeader
     	Name::Array{UInt8,1}
     	SIGName::Array{UInt8,1}
 	Channel::Int32
@@ -589,7 +589,7 @@ function PL_ChanHeader(num,units)
     PL_ChanHeader(myname,myname,num,10,num,0,16,0,0,1,units,templates,fits,0,boxes,0,com,pad)
 end
 
-type PL_EventHeader
+mutable struct PL_EventHeader
     Name::Array{UInt8,1}
     Channel::Int32
     Comment::Array{UInt8,1}
@@ -609,7 +609,7 @@ function PL_EventHeader(num)
     PL_EventHeader(myname,num,zeros(UInt8,128),zeros(Int32,33))
 end
 
-type PL_DataBlockHeader
+mutable struct PL_DataBlockHeader
     Type::Int16
     UpperByteOf5ByteTimestamp::UInt16
     TimeStamp::UInt32
@@ -734,7 +734,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     nothing
 end
 
-function save_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+function save_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}}) where {R<:RHD2000,S<:Sorting}
 
     han, rhd, s = user_data
 
@@ -794,7 +794,7 @@ function export_mat_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 end
 
 
-function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+function load_config_cb(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}}) where {R<:RHD2000,S<:Sorting}
 
     han, rhd, s = user_data
 
@@ -849,7 +849,7 @@ function load_config_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_
 end
 
 
-function load_backup_cb{R<:RHD2000,S<:Sorting}(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}})
+function load_backup_cb(widget::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1}}) where {R<:RHD2000,S<:Sorting}
 
     han, rhd, s = user_data
 

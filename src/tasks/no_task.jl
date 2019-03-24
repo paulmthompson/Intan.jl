@@ -9,7 +9,7 @@ Data structure
 should be a subtype of Task abstract type
 =#
 
-type Task_NoTask <: Task
+mutable struct Task_NoTask <: Task
 end
 
 #=
