@@ -208,7 +208,11 @@ function uploadFpgaBitfile(rhd::FPGA)
 
     #upload configuration file
     if rhd.usb3
-        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit)
+        if (OPEN_EPHYS)
+            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit_open_ephys)
+        else
+            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit)
+        end
     else
         errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
     end
@@ -1022,7 +1026,7 @@ function setLedDisplay(rhd::FPGA,ledArray)
         end
     end
 
-    SetWireInValue(rhd,WireInLedDisplay,ledOut)
+    SetWireInValue(rhd,WireInLedDisplay_openephys,ledOut)
     UpdateWireIns(rhd)
 
     nothing
@@ -1483,7 +1487,7 @@ function checkUsbHeader(usbBuffer,index)
 
     header = (x8 << 56) + (x7 << 48) + (x6 << 40) + (x5 << 32) + (x4 << 24) + (x3 << 16) + (x2 << 8) + (x1 << 0)
 
-    return (header == RHD2000_HEADER_MAGIC_NUMBER)
+    return (header == RHD2000_HEADER_MAGIC_NUMBER)|(header==RHD2000_HEADER_MAGIC_NUMBER_OPEN_EPHYS)
 end
 
 function fillFromUsbBuffer!(fpgas::Array{FPGA,1},blockIndex::Int64,v,mytime)

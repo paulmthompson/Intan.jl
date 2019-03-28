@@ -2,7 +2,12 @@
 Constants
 =#
 
-const OPEN_EPHYS = false
+global OPEN_EPHYS = false
+
+function set_open_ephys()
+    global OPEN_EPHYS = true
+    nothing
+end
 
 #Constant parameters
 @static if is_linux()
@@ -23,7 +28,7 @@ end
 
 const bit = string(base_path,"main.bit")
 #const usb3bit = string(base_path,"XEM6310_512ch.bit")
-#const usb3bit = string(base_path,"rhd2000_usb3_0518.bit")
+const usb3bit_open_ephys = string(base_path,"rhd2000_usb3_0518.bit")
 const usb3bit = string(base_path,"rhd2000_usb3.bit")
 
 const USB_BUFFER_SIZE = 2400000
@@ -39,20 +44,21 @@ const USB3_BLOCK_SIZE = 1024
 
 const DDR_BURST_LENGTH = 32
 
-if (OPEN_EPHYS)
-    const RHD2000_HEADER_MAGIC_NUMBER = 0xc691199927021942
-else
-    const RHD2000_HEADER_MAGIC_NUMBER = 0xd7a22aaa38132a53
-end
+
+const RHD2000_HEADER_MAGIC_NUMBER_OPEN_EPHYS = 0xc691199927021942
+
+const RHD2000_HEADER_MAGIC_NUMBER = 0xd7a22aaa38132a53
 
 const WireInResetRun = 0x00
-if (OPEN_EPHYS)
-    const WireInMaxTimeStepLsb = 0x01
-    const WireInMaxTimeStepMsb = 0x02
-else
-    const WireInMaxTimeStep = 0x01
-    const WireInSerialDigitalInCntl = 0x02
-end
+
+#Open Ephys
+const WireInMaxTimeStepLsb = 0x01
+const WireInMaxTimeStepMsb = 0x02
+
+#Intan USB3
+const WireInMaxTimeStep = 0x01
+const WireInSerialDigitalInCntl = 0x02
+
 const WireInDataFreqPll = 0x03
 const WireInMisoDelay = 0x04
 const WireInCmdRamAddr = 0x05
@@ -61,22 +67,23 @@ const WireInCmdRamData = 0x07
 const WireInAuxCmdBank1 = 0x08
 const WireInAuxCmdBank2 = 0x09
 const WireInAuxCmdBank3 = 0x0a
-if (OPEN_EPHYS)
-    const WireInAuxCmdLength1 = 0x0b
-    const WireInAuxCmdLength2 = 0x0c
-    const WireInAuxCmdLength3 = 0x0d
-    const WireInAuxCmdLoop1 = 0x0e
-    const WireInAuxCmdLoop2 = 0x0f
-    const WireInAuxCmdLoop3 = 0x10
-    const WireInLedDisplay = 0x11
-    const WireInDataStreamSel1234 = 0x12
-    const WireInDataStreamSel5678 = 0x13
-else
-    const WireInAuxCmdLength = 0x0b
-    const WireInAuxCmdLoop = 0x0c
-    const WireInLedDisplay = 0x0d
-    const WireInDacReref = 0x0e
-end
+
+#OPEN EPHYS
+const WireInAuxCmdLength1 = 0x0b
+const WireInAuxCmdLength2 = 0x0c
+const WireInAuxCmdLength3 = 0x0d
+const WireInAuxCmdLoop1 = 0x0e
+const WireInAuxCmdLoop2 = 0x0f
+const WireInAuxCmdLoop3 = 0x10
+const WireInDataStreamSel1234 = 0x12
+const WireInDataStreamSel5678 = 0x13
+const WireInLedDisplay_openephys = 0x11
+
+#Intan USB 3
+const WireInAuxCmdLength = 0x0b
+const WireInAuxCmdLoop = 0x0c
+const WireInDacReref = 0x0e
+const WireInLedDisplay = 0x0d
 
 
 const WireInDataStreamEn = 0x14
@@ -92,30 +99,30 @@ const WireInDacSource8 = 0x1d
 const WireInDacManual = 0x1e
 const WireInMultiUse = 0x1f
 
+const TrigInSpiStart = 0x41
+
 #Intan USB3
 const TrigInConfig = 0x40
-const TrigInSpiStart = 0x41
 const TrigInDacConfig = 0x42
 
 #OpenEphys
-#=
 const TrigInDcmProg = 0x40
-const TrigInSpiStart = 0x41
 const TrigInRamWrite = 0x42
 const TrigInDacThresh = 0x43
 const TrigInDacHpf = 0x44
 const TrigInExtFastSettle = 0x45
 const TrigInExtDigOut = 0x46
 const TrigInOpenEphys = 0x5a
-=#
 
-if (OPEN_EPHYS)
-    const WireOutNumWordsLsb = 0x20
-    const WireOutNumWordsMsb = 0x21
-else
-    const WireOutNumWords = 0x20
-    const WireOutSerialDigitalIn = 0x21
-end
+
+#Open Ephys
+const WireOutNumWordsLsb = 0x20
+const WireOutNumWordsMsb = 0x21
+
+#Intan USB3
+const WireOutNumWords = 0x20
+const WireOutSerialDigitalIn = 0x21
+
 const WireOutSpiRunning = 0x22
 const WireOutTtlIn = 0x23
 const WireOutDataClkLocked = 0x24
