@@ -219,17 +219,17 @@ end
 
 function setUpperBandwidth(upperBandwidth, r)
 
-    const RH1Base = 2200.0
-    const RH1Dac1Unit = 600.0
-    const RH1Dac2Unit = 29400.0
-    const RH1Dac1Steps = 63
-    const RH1Dac2Steps = 31
+    RH1Base = 2200.0
+    RH1Dac1Unit = 600.0
+    RH1Dac2Unit = 29400.0
+    RH1Dac1Steps = 63
+    RH1Dac2Steps = 31
 
-    const RH2Base = 8700.0
-    const RH2Dac1Unit = 763.0
-    const RH2Dac2Unit = 38400.0
-    const RH2Dac1Steps = 63
-    const RH2Dac2Steps = 31
+    RH2Base = 8700.0
+    RH2Dac1Unit = 763.0
+    RH2Dac2Unit = 38400.0
+    RH2Dac1Steps = 63
+    RH2Dac2Steps = 31
 
     if upperBandwidth > 30000.0
         upperBandwidth = 30000.0
