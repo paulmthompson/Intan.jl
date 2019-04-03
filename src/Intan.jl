@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 module Intan
 
 using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
