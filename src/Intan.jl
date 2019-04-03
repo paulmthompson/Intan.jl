@@ -6,7 +6,7 @@ using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
 import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSorting.rb_draw, SpikeSorting.identity_matrix, SpikeSorting.select_color
 
 if VERSION > v"0.7-"
-    using SharedArrays, Libdl, Distributed
+    using SharedArrays, Libdl, Distributed, Dates
     const Void = Nothing
     const is_linux() = Sys.islinux()
     const is_apple() = Sys.isapple()
