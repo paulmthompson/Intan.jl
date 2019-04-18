@@ -329,6 +329,10 @@ function initialize_board(rhd::FPGA,debug=false)
     for i=0:7; enableDac(rhd,i, false); end
     for i=0:7; selectDacDataStream(rhd,i, 0); end
     for i=0:7; selectDacDataChannel(rhd,i, 0); end
+    #for i=0:7; selectDacDataStream(rhd,i, 8); end
+    #selectDacDataChannel(rhd,0, 0)
+    #selectDacDataChannel(rhd,1, 1)
+    #for i=2:7; selectDacDataChannel(rhd,i, 0); end
 
     setDacManual(rhd,32768)    # midrange value = 0 V
 
@@ -767,24 +771,29 @@ function enableDac(rhd::FPGA,dacChannel::Int,enabled::Bool)
 
     #error checking goes here
 
-    dacEnMask = rhd.usb3 ? 0x0400 : 0x0200
+    if rhd.usb3
+        dacEnMask = 0x0800
+    else
+        dacEnMask = 0x0200
+    end
+
 
     if dacChannel == 0
-        SetWireInValue(rhd,WireInDacSource1,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource1,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 1
-        SetWireInValue(rhd,WireInDacSource2,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource2,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 2
-        SetWireInValue(rhd,WireInDacSource3,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource3,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 3
-        SetWireInValue(rhd,WireInDacSource4,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource4,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 4
-        SetWireInValue(rhd,WireInDacSource5,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource5,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 5
-        SetWireInValue(rhd,WireInDacSource6,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource6,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 6
-        SetWireInValue(rhd,WireInDacSource7,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource7,(enabled ? dacEnMask : 0x0000), 0x0800)
     elseif dacChannel == 7
-        SetWireInValue(rhd,WireInDacSource8,(enabled ? dacEnMask : 0x0000), 0x0200)
+        SetWireInValue(rhd,WireInDacSource8,(enabled ? dacEnMask : 0x0000), 0x0800)
     end
 
     UpdateWireIns(rhd)
@@ -795,7 +804,15 @@ end
 function selectDacDataStream(rhd::FPGA,dacChannel, stream)
     #error checking goes here
 
-    dacStreamMask = rhd.usb3 ? 0x03e0 : 0x01e0
+    if rhd.usb3
+        if (OPEN_EPHYS)
+            dacStreamMask = 0x03e0
+        else
+            dacStreamMask = 0x07e0
+        end        
+    else
+        dacStreamMask = 0x01e0
+    end
 
     if dacChannel == 0
          SetWireInValue(rhd,WireInDacSource1, stream << 5, dacStreamMask)

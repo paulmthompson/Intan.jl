@@ -17,7 +17,7 @@ end
 
 function set_audio_fpga(fpga::Array,ii,refs)
 
-    if fpga[1].amps[1] != 0
+    if fpga[1].amps[1] != 255
         selectDacDataStream(fpga[1],0,div(ii-1,32))
         selectDacDataChannel(fpga[1],0,rem(ii-1,32))
 
