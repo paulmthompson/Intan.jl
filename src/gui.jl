@@ -91,7 +91,11 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
 
-    button_rb=Array{RadioButton}(3)
+    if VERSION > v"0.7-"
+        button_rb=Array{RadioButton}(undef, 3)
+    else
+        button_rb=Array{RadioButton}(3)
+    end
     button_rb[1]=RadioButton(active=true)
     button_rb[2]=RadioButton(button_rb[1])
     button_rb[3]=RadioButton(button_rb[2])
@@ -257,7 +261,11 @@ vbox_rb_upper=Box(:v)
 
     push!(vbox_rb_upper,Label("Top Panel"))
 
-    rbs=Array{RadioButton}(5)
+    if VERSION > v"0.7-"
+        rbs=Array{RadioButton}(undef,5)
+    else
+        rbs=Array{RadioButton}(5)
+    end
     rbs[1]=RadioButton("16 Channel",active=true)
     rbs[2]=RadioButton(rbs[1],"32 Channel")
     rbs[3]=RadioButton(rbs[2],"64 Channel")
@@ -279,7 +287,11 @@ Gtk.GAccessor.vexpand(c_rb,true)
     push!(vbox_42,vbox_rb_lower)
     push!(vbox_rb_lower,Label("Lower Panel"))
 
-    rbs2=Array{RadioButton}(8)
+    if VERSION > v"0.7-"
+        rbs2=Array{RadioButton}(undef,8)
+    else
+        rbs2=Array{RadioButton}(8)
+    end
     rbs2[1]=RadioButton("Events",active=true)
     rbs2[2]=RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=RadioButton(rbs2[2],"32 Raster")
@@ -625,7 +637,11 @@ showall(popupmenu)
 
 #Event
 popup_event = Menu()
-event_handles=Array{CheckMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    event_handles=Array{CheckMenuItemLeaf}(undef,0)
+else
+    event_handles=Array{CheckMenuItemLeaf}(0)
+end
 for i=1:8
     push!(event_handles,CheckMenuItem(string("Analog ",i)))
     push!(popup_event,event_handles[i])
@@ -657,7 +673,11 @@ push!(popupmenu_spect,popupmenu_spect_win)
 push!(popupmenu_spect,popupmenu_spect_overlap)
 
 popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
-spect_f_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    spect_f_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    spect_f_handles=Array{RadioMenuItemLeaf}(0)
+end
 spect_f_options=[300; 1000; 3000; 7500; 15000]
 
 push!(spect_f_handles,RadioMenuItem(string(spect_f_options[1])))
@@ -671,7 +691,11 @@ end
 set_active!(spect_f_handles[5])
 
 popupmenu_spect_win_select=Menu(popupmenu_spect_win)
-spect_w_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    spect_w_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    spect_w_handles=Array{RadioMenuItemLeaf}(0)
+end
 spect_w_options=[10; 50; 100]
 
 push!(spect_w_handles,RadioMenuItem(string(spect_w_options[1])))
@@ -702,7 +726,11 @@ push!(popupmenu_scope,popupmenu_signal)
 
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
-scope_v_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    scope_v_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    scope_v_handles=Array{RadioMenuItemLeaf}(0)
+end
 voltage_scales = [1, 50, 100, 200, 500]
 push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1])))
 push!(popupmenu_voltage_select,scope_v_handles[1])
@@ -712,7 +740,11 @@ for i=2:5
 end
 
 popupmenu_time_select=Menu(popupmenu_time)
-scope_t_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    scope_t_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    scope_t_handles=Array{RadioMenuItemLeaf}(0)
+end
 #time_scales=[1, 2, 3, 4, 5]
 time_scales = [1,2,3,4,5].*50 ./ r.sr.* 1000
 for i=1:length(time_scales)
@@ -726,7 +758,11 @@ for i=2:5
 end
 
 popupmenu_thres_select=Menu(popupmenu_thres)
-scope_thres_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    scope_thres_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    scope_thres_handles=Array{RadioMenuItemLeaf}(0)
+end
 push!(scope_thres_handles,RadioMenuItem("On"))
 push!(popupmenu_thres_select,scope_thres_handles[1])
 push!(scope_thres_handles,RadioMenuItem(scope_thres_handles[1],"Off"))
@@ -735,7 +771,11 @@ push!(popupmenu_thres_select,scope_thres_handles[2])
 set_active!(scope_thres_handles[2])
 
 popupmenu_signal_select=Menu(popupmenu_signal)
-scope_signal_handles=Array{RadioMenuItemLeaf}(0)
+if VERSION > v"0.7-"
+    scope_signal_handles=Array{RadioMenuItemLeaf}(undef,0)
+else
+    scope_signal_handles=Array{RadioMenuItemLeaf}(0)
+end
 push!(scope_signal_handles,RadioMenuItem("Spike"))
 push!(popupmenu_signal_select,scope_signal_handles[1])
 push!(scope_signal_handles,RadioMenuItem(scope_signal_handles[1],"LFP"))
