@@ -155,7 +155,7 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox1_3_2[1,10]=myscroll
     vbox1_3_2[1,11]=Canvas(180,10)
 
-    vbox1_2[1,5]=frame1_4 |> showall
+    vbox1_2[1,5]=frame1_4 |> Gtk.showall
 
     #COLUMN 2 - Threshold slider
     vbox_slider=Box(:v)
@@ -415,7 +415,7 @@ table_grid[1,1]=table_scroll
 table_win=Window(table_grid)
 setproperty!(table_win, :title, "Parameter List")
 
-showall(table_win)
+Gtk.showall(table_win)
 visible(table_win,false)
 
 # Reference popup
@@ -468,7 +468,7 @@ ref_grid[3,4]=ref_button3
 ref_win=Window(ref_grid)
 setproperty!(ref_win, :title, "Reference Channel Select")
 
-showall(ref_win)
+Gtk.showall(ref_win)
 visible(ref_win,false)
 
 #Bandwidth Adjustment
@@ -586,7 +586,7 @@ band_grid[2,2]=filt_scroll
 band_win=Window(band_grid)
 setproperty!(band_win, :title, "Filtering")
 
-showall(band_win)
+Gtk.showall(band_win)
 visible(band_win,false)
 Gtk.visible(band_sw_sb2,false)
 
@@ -621,7 +621,7 @@ save_grid[1,5]=save_check_ts
 save_pref_win=Window(save_grid)
 setproperty!(save_pref_win, :title, "Saving Preferences")
 
-showall(save_pref_win)
+Gtk.showall(save_pref_win)
 visible(save_pref_win,false)
 
 
@@ -633,7 +633,7 @@ visible(save_pref_win,false)
     push!(popupmenu, popup_enable)
     popup_disable = MenuItem("Disable")
     push!(popupmenu, popup_disable)
-showall(popupmenu)
+Gtk.showall(popupmenu)
 
 #Event
 popup_event = Menu()
@@ -654,11 +654,11 @@ end
 
 popup_event_none=MenuItem("None")
 push!(popup_event,popup_event_none)
-showall(popup_event)
+Gtk.showall(popup_event)
 
     setproperty!(grid, :column_spacing, 15)
     setproperty!(grid, :row_spacing, 15)
-win = Window(grid, "Intan.jl GUI") |> showall
+win = Window(grid, "Intan.jl GUI") |> Gtk.showall
 
 #=
 Spectrogram Menus
@@ -708,7 +708,7 @@ end
 
 set_active!(spect_w_handles[1])
 
-showall(popupmenu_spect)
+Gtk.showall(popupmenu_spect)
 
 #=
 Soft Scope Menus
@@ -783,7 +783,7 @@ push!(popupmenu_signal_select,scope_signal_handles[2])
 
 set_active!(scope_signal_handles[1])
 
-showall(popupmenu_scope)
+Gtk.showall(popupmenu_scope)
 
 
 prepare_save_folder(r)
