@@ -40,7 +40,7 @@ function makegui(r::RHD2000,s,task,fpga)
     push!(frame1_2,vbox1_2_1)
 
     sb2=SpinButton(1:1000)
-    setproperty!(sb2,:value,1)
+    Gtk.GAccessor.value(sb2,1)
     vbox1_2_1[1,1]=sb2
 
     gain_checkbox=CheckButton()
@@ -49,9 +49,8 @@ function makegui(r::RHD2000,s,task,fpga)
 
     button_gain = CheckButton()
     add_button_label(button_gain,"All Channels")
-    setproperty!(button_gain,:active,false)
+    Gtk.GAccessor.active(button_gain,false)
     vbox1_2_1[1,2]=button_gain
-
 
     #THRESHOLD
     frame1_3=Frame("Threshold")
@@ -66,12 +65,12 @@ function makegui(r::RHD2000,s,task,fpga)
 
     button_thres_all = CheckButton()
     add_button_label(button_thres_all,"All Channels")
-    setproperty!(button_thres_all,:active,false)
+    Gtk.GAccessor.active(button_thres_all,false)
     push!(vbox1_3_1,button_thres_all)
 
     button_thres = CheckButton()
     add_button_label(button_thres,"Show")
-    setproperty!(button_thres,:active,false)
+    Gtk.GAccessor.active(button_thres,false)
     push!(vbox1_3_1,button_thres)
 
     #SPIKE
@@ -124,7 +123,7 @@ function makegui(r::RHD2000,s,task,fpga)
 
     slider_sort = Scale(false, 0.0, 2.0,.02)
     adj_sort = Adjustment(slider_sort)
-    setproperty!(adj_sort,:value,1.0)
+    Gtk.GAccessor.value(adj_sort,1.0)
     slider_sort_label=Label("Slider Label")
 
     sort_list=ListStore(Int32)
@@ -158,15 +157,15 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox_slider=Box(:v)
     thres_slider = Scale(true, -300,300,1)
     adj_thres = Adjustment(thres_slider)
-    setproperty!(adj_thres,:value,0)
+    Gtk.GAccessor.value(adj_thres,0)
 
     c_thres=Canvas(10,200)
-    setproperty!(c_thres,:vexpand,false)
+    Gtk.GAccessor.vexpand(c_thres,false)
 
     Gtk.GAccessor.inverted(thres_slider,true)
     Gtk.GAccessor.draw_value(thres_slider,false)
 
-    setproperty!(thres_slider,:vexpand,true)
+    Gtk.GAccessor.vexpand(thres_slider,true)
     push!(vbox_slider,thres_slider)
     push!(vbox_slider,c_thres)
     grid[3,2]=vbox_slider
@@ -186,8 +185,8 @@ function makegui(r::RHD2000,s,task,fpga)
 
     show(c2)
     c_grid[1,1]=c2
-    setproperty!(c2,:hexpand,true)
-    setproperty!(c2,:vexpand,true)
+    Gtk.GAccessor.hexpand(c2,true)
+    Gtk.GAccessor.vexpand(c2,true)
 
     #ROW 2
     c3=Canvas(-1,200)
@@ -197,14 +196,14 @@ function makegui(r::RHD2000,s,task,fpga)
     end
     show(c3)
     c_grid[1,2]=c3
-    setproperty!(c3,:hexpand,true)
+    Gtk.GAccessor.hexpand(c3,true)
 
     grid[4,2]=c_grid
 
     #ROW 3
     c2_slider=Scale(false, 1:16)
     adj2 = Adjustment(c2_slider)
-    setproperty!(adj2,:value,1)
+    Gtk.GAccessor.value(adj2,1)
     grid[4,3]=c2_slider
 
     #COLUMN 3 - 16 CHANNEL DISPLAY
@@ -239,13 +238,13 @@ c=Canvas(500)
     end
     show(c)
 grid[5,2]=c
-    setproperty!(c,:vexpand,true)
+    Gtk.GAccessor.vexpand(c,true)
 
     #ROW 3
     #Which 16 channels can be selected with a slider
     c_slider = Scale(false, 0:(div(length(r.nums)-1,16)+1))
     adj = Adjustment(c_slider)
-    setproperty!(adj,:value,1)
+    Gtk.GAccessor.value(adj,1)
     grid[5,3]=c_slider
 
     #COLUMN 4
@@ -272,7 +271,7 @@ vbox_rb_upper=Box(:v)
     push!(vbox_rb_upper,rbs[5])
 
 c_rb=Canvas(40)
-setproperty!(c_rb,:vexpand,true)
+Gtk.GAccessor.vexpand(c_rb,true)
 
     push!(vbox_42,c_rb)
 
@@ -469,17 +468,17 @@ band_grid[1,1]=band_hw_frame
 push!(band_hw_frame,band_hw_grid)
 
 band_sb1=SpinButton(0:1000)
-setproperty!(band_sb1,:value,300)
+Gtk.GAccessor.value(band_sb1,300)
 band_hw_grid[1,1]=band_sb1
 band_hw_grid[2,1]=Label("Lower Bandwidth")
 
 band_sb2=SpinButton(1000:10000)
-setproperty!(band_sb2,:value,5000)
+Gtk.GAccessor.value(band_sb2,5000)
 band_hw_grid[1,2]=band_sb2
 band_hw_grid[2,2]=Label("Higher BandWidth")
 
 band_sb3=SpinButton(0:1000)
-setproperty!(band_sb3,:value,300)
+Gtk.GAccessor.value(band_sb3,300)
 band_hw_grid[1,3]=band_sb3
 band_hw_grid[2,3]=Label("DSP High Pass")
 
@@ -492,12 +491,12 @@ band_grid[1,2]=band_sw_frame
 push!(band_sw_frame,band_sw_grid)
 
 band_sw_sb3=SpinButton(1:size(r.v,2))
-setproperty!(band_sw_sb3,:value,1)
+Gtk.GAccessor.value(band_sw_sb3,1)
 band_sw_grid[1,1]=band_sw_sb3
 band_sw_grid[2,1]=Label("Channel Number")
 
 band_sw_sb4=SpinButton(1:1)
-setproperty!(band_sw_sb4,:value,1)
+Gtk.GAccessor.value(band_sw_sb4,1)
 band_sw_grid[1,2]=band_sw_sb4
 band_sw_grid[2,2]=Label("Filter Number")
 
@@ -515,13 +514,13 @@ band_sw_grid[1,4]=filter_combo
 band_sw_grid[2,4]=Label("Filter Type")
 
 band_sw_sb1=SpinButton(0:10000)
-setproperty!(band_sw_sb1,:value,10)
+Gtk.GAccessor.value(band_sw_sb1,10)
 band_sw_grid[1,5]=band_sw_sb1
 band_sw_sb1_l=Label("High Pass Cutoff")
 band_sw_grid[2,5]=band_sw_sb1_l
 
 band_sw_sb2=SpinButton(0:10000)
-setproperty!(band_sw_sb2,:value,10)
+Gtk.GAccessor.value(band_sw_sb2,10)
 band_sw_grid[1,6]=band_sw_sb2
 band_sw_sb2_l=Label("")
 band_sw_grid[2,6]=band_sw_sb2_l
@@ -797,7 +796,7 @@ handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_sli
 
     handles.sc.s = -.125
 
-setproperty!(sb2,:value,round(Int,scales[1,1]*-1000)) #show gain
+Gtk.GAccessor.value(sb2,round(Int,scales[1,1]*-1000))
 
 
 #=
@@ -1408,7 +1407,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
                 (inmulti,channel_num)=check_multi(han,4,4,16,event.x,event.y)
 
                 if inmulti
-                    setproperty!(han.adj2,:value,channel_num)
+                    Gtk.GAccessor.value(han.adj2,channel_num)
                     update_c2(han)
                 end
 
@@ -1422,7 +1421,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
                 (inmulti,channel_num)=check_multi(han,6,6,32,event.x,event.y)
                 if inmulti
-                    setproperty!(han.adj2,:value,channel_num)
+                    Gtk.GAccessor.value(han.adj2,channel_num)
                     update_c2(han)
                 end
 
@@ -1437,7 +1436,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
                 if inmulti
-                    setproperty!(han.adj2,:value,channel_num)
+                    Gtk.GAccessor.value(han.adj2,channel_num)
                     update_c2(han)
                 end
 
@@ -1471,7 +1470,7 @@ function c_popup_select(widget::Ptr,param_tuple,user_data::Tuple{Gui_Handles})
 
                 (inmulti,channel_num)=check_multi(han,11,6,64,event.x,event.y)
                 if inmulti
-                    setproperty!(han.adj2,:value,channel_num)
+                    Gtk.GAccessor.value(han.adj2,channel_num)
                     update_c2(han)
                 end
 

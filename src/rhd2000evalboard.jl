@@ -772,28 +772,32 @@ function enableDac(rhd::FPGA,dacChannel::Int,enabled::Bool)
     #error checking goes here
 
     if rhd.usb3
-        dacEnMask = 0x0800
+        if (OPEN_EPHYS)
+            dacEnMask = 0x0400
+        else
+            dacEnMask = 0x0800
+        end
     else
         dacEnMask = 0x0200
     end
 
 
     if dacChannel == 0
-        SetWireInValue(rhd,WireInDacSource1,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource1,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 1
-        SetWireInValue(rhd,WireInDacSource2,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource2,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 2
-        SetWireInValue(rhd,WireInDacSource3,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource3,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 3
-        SetWireInValue(rhd,WireInDacSource4,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource4,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 4
-        SetWireInValue(rhd,WireInDacSource5,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource5,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 5
-        SetWireInValue(rhd,WireInDacSource6,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource6,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 6
-        SetWireInValue(rhd,WireInDacSource7,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource7,(enabled ? dacEnMask : 0x0000), dacEnMask)
     elseif dacChannel == 7
-        SetWireInValue(rhd,WireInDacSource8,(enabled ? dacEnMask : 0x0000), 0x0800)
+        SetWireInValue(rhd,WireInDacSource8,(enabled ? dacEnMask : 0x0000), dacEnMask)
     end
 
     UpdateWireIns(rhd)
@@ -809,7 +813,7 @@ function selectDacDataStream(rhd::FPGA,dacChannel, stream)
             dacStreamMask = 0x03e0
         else
             dacStreamMask = 0x07e0
-        end        
+        end
     else
         dacStreamMask = 0x01e0
     end
