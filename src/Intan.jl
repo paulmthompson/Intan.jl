@@ -13,6 +13,7 @@ if VERSION > v"0.7-"
     const is_windows() = Sys.iswindows()
     const is_unix() = Sys.isunix()
     const setproperty! = set_gtk_property!
+    const getproperty = get_gtk_property
 end
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
