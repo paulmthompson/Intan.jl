@@ -172,7 +172,11 @@ function open_board(fpga::FPGA)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number
-    serial=Array{UInt8}(11)
+    if VERSION > v"0.7-"
+        serial=Array{UInt8}(undef,11)
+    else
+        serial=Array{UInt8}(11)
+    end
     ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
     serial[end]=0
     serialnumber=unsafe_string(pointer(serial))
