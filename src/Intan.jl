@@ -14,6 +14,9 @@ if VERSION > v"0.7-"
     const is_unix() = Sys.isunix()
     const setproperty! = set_gtk_property!
     const getproperty = get_gtk_property
+    const linspace(x,y,z) = range(x,stop=y,length=z)
+    const indmin = argmin
+    Base.round(x::Number, digits) = round(x; digits=digits)
 end
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI

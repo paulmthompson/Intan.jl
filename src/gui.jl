@@ -1297,7 +1297,7 @@ end
 function backup_clus(myclus,chan,backup)
 
     f=open(string(backup,"/cluster/",chan,".bin"),"w")
-    for i in fieldnames(myclus)
+    for i in fieldnames(typeof(myclus))
         write(f,getfield(myclus,i))
     end
     close(f)

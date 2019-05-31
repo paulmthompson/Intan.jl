@@ -1408,7 +1408,7 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
         #
         if myfpga[1].amps[1] == 255
             try
-                rhd.v[:,1] = myfpga[1].adc[:,2] - 2556 #open ephys special
+                rhd.v[:,1] = myfpga[1].adc[:,2] .- 2556 #open ephys special
             catch
                 for jj=1:size(rhd.v,1)
                     if abs(myfpga[1].adc[jj,2] - 2556)>typemax(Int16)
