@@ -215,7 +215,7 @@ debug_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignProm(),FeatureTime(),R
 default_debug=Debug(false,"off","",zeros(Float64,1),0,0,false,0.0)
 
 function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug=default_debug,
-    sr=30000,wave_time=1.6,single_channel_mode=false)
+    sr=30000,wave_time=1.6,single_channel_mode=false,emg=false)
 
     c_per_fpga=[length(fpga[i].amps)*32 for i=1:length(fpga)]
 

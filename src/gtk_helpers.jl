@@ -1,12 +1,10 @@
 
-#import ..Gtk: suffix
-import ..Gtk: suffix, @gtktype_custom_symname, @gtktype_custom_symname_and_lib, @Gtype,
-_gtksubtype_constructors, libgtk
+import ..Gtk: suffix
 
 #Gtk.@gtktype GtkCheckMenuItem
 #Gtk.@gtktype_custom_symname(GtkCheckMenuItem, gtk_check_menu_item)
+Gtk.@Gtype GtkCheckMenuItem Gtk.libgtk gtk_check_menu_item
 
-@Gtype GtkCheckMenuItem Gtk.libgtk gtk_check_menu_item
 const CheckMenuItemLeaf = GtkCheckMenuItem
 const CheckMenuItem = GtkCheckMenuItem
 #Gtk.@g_type_delegate CheckMenuItem = GtkCheckMenuItem
@@ -16,7 +14,8 @@ GtkCheckMenuItem() = GtkCheckMenuItem(ccall((:gtk_check_menu_item_new, Gtk.libgt
 GtkCheckMenuItem(title::String) = GtkCheckMenuItem(ccall((:gtk_check_menu_item_new_with_label,Gtk.libgtk),Ptr{GObject},(Ptr{UInt8},),string(title)))
 
 #Gtk.@gtktype GtkRadioMenuItem
-@Gtype GtkRadioMenuItem Gtk.libgtk gtk_radio_menu_item
+
+Gtk.@Gtype GtkRadioMenuItem Gtk.libgtk gtk_radio_menu_item
 
 const RadioMenuItemLeaf = GtkRadioMenuItem
 const RadioMenuItem = GtkRadioMenuItem

@@ -4,8 +4,15 @@ Constants
 
 global OPEN_EPHYS = false
 
+global EMG = false
+
 function set_open_ephys()
     global OPEN_EPHYS = true
+    nothing
+end
+
+function set_emg()
+    global EMG = true
     nothing
 end
 

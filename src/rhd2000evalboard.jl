@@ -123,6 +123,11 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     #Set up an RHD2000 register object using this sample rate to optimize MUX-related register settings.
     fpga.r=CreateRHD2000Registers(Float64(fpga.sampleRate))
 
+    if EMG
+        setLowerBandwidth(2.0, fpga.r)
+        setUpperBandwidth(1000.0, fpga.r)
+        setDspCutoffFreq(10.0, fpga.r)
+    end
     #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),false,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 0)
@@ -1489,7 +1494,10 @@ end
 
 function calculateDataBlockSizeInWords(rhd::FPGA)
     #rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)
+
+
     rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36) + 8+2)
+
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
 end
@@ -1806,6 +1814,7 @@ function determine_delay(fpga::FPGA,port)
             end
 
             #Amplifier
+
 	    for i=1:32
 	        for j=1:fpga.numDataStreams
 		    index+=2
