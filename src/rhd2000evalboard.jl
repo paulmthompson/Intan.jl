@@ -1411,14 +1411,27 @@ function readDataBlocks(rhd::RHD2000,numBlocks::Int64,s,myfpga::Array{FPGA,1})
         #If analog here, we want to move adc number x into voltage channels
         #
         if myfpga[1].amps[1] == 255
-            try
-                rhd.v[:,1] = myfpga[1].adc[:,2] .- 2556 #open ephys special
-            catch
-                for jj=1:size(rhd.v,1)
-                    if abs(myfpga[1].adc[jj,2] - 2556)>typemax(Int16)
-                        rhd.v[jj,1] = typemax(Int16) * sign(myfpga[1].adc[jj,2] - 2556)
-                    else
-                        rhd.v[jj,1] = myfpga[1].adc[jj,2] - 2556
+            if (OPEN_EPHYS)
+                try
+                    rhd.v[:,1] = myfpga[1].adc[:,2] .- 2556 #open ephys special
+                catch
+                    for jj=1:size(rhd.v,1)
+                        if abs(myfpga[1].adc[jj,2] - 2556)>typemax(Int16)
+                        else
+                            rhd.v[jj,1] = myfpga[1].adc[jj,2] - 2556
+                        end
+                    end
+                end
+            else
+                try
+                    rhd.v[:,1] = myfpga[1].adc[:,2]
+                catch
+                    for jj=1:size(rhd.v,1)
+                        if abs(myfpga[1].adc[jj,2])>typemax(Int16)
+                            rhd.v[jj,1] = typemax(Int16) * sign(myfpga[1].adc[jj,2])
+                        else
+                            rhd.v[jj,1] = myfpga[1].adc[jj,2]
+                        end
                     end
                 end
             end
