@@ -16,6 +16,12 @@ end
 
 Voltage_Header()=Voltage_Header(0,0,0,0,0,0,0)
 
+if VERSION > v"0.7-"
+    read(f,t::Type{UInt8},num) = Base.read(f,num)
+    read(f,t::Type{UInt16},num) = reinterpret(UInt16,Base.read(f,num*2))
+    read(io::IO, T::Type) = Base.read(io::IO, T)
+end
+
 function read_v_header(fname="v.bin")
 
     f=open(fname,"r+")
