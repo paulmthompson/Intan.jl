@@ -19,6 +19,7 @@ Voltage_Header()=Voltage_Header(0,0,0,0,0,0,0)
 if VERSION > v"0.7-"
     read(f,t::Type{UInt8},num) = Base.read(f,num)
     read(f,t::Type{UInt16},num) = reinterpret(UInt16,Base.read(f,num*2))
+    read(f,t::Type{UInt32},num) = reinterpret(UInt32,Base.read(f,num*4))
     read(io::IO, T::Type) = Base.read(io::IO, T)
 end
 
