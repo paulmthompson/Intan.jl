@@ -618,6 +618,9 @@ save_grid[1,4]=save_check_ttlin
 save_check_ts=CheckButton("Spike Time Stamps")
 save_grid[1,5]=save_check_ts
 
+save_check_adc=CheckButton("ADC Input")
+save_grid[1,6]=save_check_adc
+
 save_pref_win=Window(save_grid)
 setproperty!(save_pref_win, :title, "Saving Preferences")
 
@@ -809,7 +812,7 @@ spike_widgets=Spike_Widgets(button_clear,button_pause)
 band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,falses(size(r.v,2)),filt_tv,filt_list)
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
-save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_entry)
+save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_check_adc,save_entry)
 
 sleep(5.0)
 
@@ -1020,6 +1023,7 @@ id=signal_connect(save_lfp_cb,save_check_lfp,"clicked",Void,(),false,(handles,r)
 id=signal_connect(save_ttlin_cb,save_check_ttlin,"clicked",Void,(),false,(handles,r))
 id=signal_connect(save_ts_cb,save_check_ts,"clicked",Void,(),false,(handles,r))
 id=signal_connect(save_entry_cb,save_entry,"activate",Void,(),false,(handles,r))
+signal_connect(save_adc_cb,save_check_adc,"clicked",Void,(),false,(handles,r))
 #=
 Soft Scope Callbacks
 =#

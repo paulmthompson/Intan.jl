@@ -1677,6 +1677,9 @@ function queueToFile(rhd::RHD2000,task::Task,fpga)
             close(f)
         end
         if rhd.save.adc_s
+            f=open(rhd.save.adc,"a+")
+            write(f,fpga[1].adc)
+            close(f)
         end
 
         if rhd.save.ts_s

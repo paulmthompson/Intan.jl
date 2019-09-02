@@ -187,7 +187,7 @@ function prepare_adc_header(rhd::RHD2000)
     write(f,convert(UInt16,Dates.year(t)))
     write(f,convert(UInt8,Dates.hour(t)))
     write(f,convert(UInt8,Dates.minute(t)))
-    write(f,convert(UInt16,size(rhd.v,2)))
+    write(f,convert(UInt16,8))
     write(f,convert(UInt16,size(rhd.v,1)))
 
     close(f)
@@ -990,6 +990,17 @@ function save_ts_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     if rhd.save.ts_s
         prepare_stamp_header(rhd)
+    end
+
+    nothing
+end
+
+function save_adc_cb(w::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
+    han,rhd=user_data
+    rhd.save.adc_s = getproperty(han.save_widgets.adc,:active,Bool)
+
+    if rhd.save.adc_s
+        prepare_adc_header(rhd)
     end
 
     nothing

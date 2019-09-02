@@ -381,6 +381,7 @@ mutable struct Save_Widgets
     lfp::Gtk.GtkCheckButtonLeaf
     ttlin::Gtk.GtkCheckButtonLeaf
     ts::Gtk.GtkCheckButtonLeaf
+    adc::Gtk.GtkCheckButtonLeaf
     input::Gtk.GtkEntryLeaf
 end
 
