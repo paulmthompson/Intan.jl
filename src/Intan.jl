@@ -1,4 +1,9 @@
-__precompile__()
+if VERSION > v"0.7-"
+    __precompile__(false)
+else
+    __precompile__()
+end
+
 module Intan
 
 using HDF5, DistributedArrays, SpikeSorting, Gtk.ShortNames, Cairo, MAT,JLD, DSP
