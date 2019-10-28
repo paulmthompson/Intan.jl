@@ -21,6 +21,8 @@ if VERSION > v"0.7-"
     const getproperty = get_gtk_property
     const linspace(x,y,z) = range(x,stop=y,length=z)
     const indmin = argmin
+    const find = findall
+    const indmax = argmax
     Base.round(x::Number, digits) = round(x; digits=digits)
 end
 
