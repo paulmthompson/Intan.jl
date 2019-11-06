@@ -641,17 +641,17 @@ Gtk.showall(popupmenu)
 #Event
 popup_event = Menu()
 if VERSION > v"0.7-"
-    event_handles=Array{CheckMenuItemLeaf}(undef,0)
+    event_handles=Array{MenuItemLeaf}(undef,0)
 else
-    event_handles=Array{CheckMenuItemLeaf}(0)
+    event_handles=Array{MenuItemLeaf}(0)
 end
 for i=1:8
-    push!(event_handles,CheckMenuItem(string("Analog ",i)))
+    push!(event_handles,MenuItem(string("Analog ",i)))
     push!(popup_event,event_handles[i])
 end
 
 for i=1:16
-    push!(event_handles,CheckMenuItem(string("TTL ",i)))
+    push!(event_handles,MenuItem(string("TTL ",i)))
     push!(popup_event,event_handles[8+i])
 end
 
