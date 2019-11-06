@@ -1,8 +1,4 @@
-if VERSION > v"0.7-"
-    __precompile__(false)
-else
-    __precompile__()
-end
+__precompile__()
 
 module Intan
 

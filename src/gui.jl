@@ -677,39 +677,35 @@ push!(popupmenu_spect,popupmenu_spect_overlap)
 
 popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
 if VERSION > v"0.7-"
-    spect_f_handles=Array{RadioMenuItemLeaf}(undef,0)
+    spect_f_handles=Array{MenuItemLeaf}(undef,0)
 else
-    spect_f_handles=Array{RadioMenuItemLeaf}(0)
+    spect_f_handles=Array{MenuItemLeaf}(0)
 end
 spect_f_options=[300; 1000; 3000; 7500; 15000]
 
-push!(spect_f_handles,RadioMenuItem(string(spect_f_options[1])))
+push!(spect_f_handles,MenuItem(string(spect_f_options[1])))
 push!(popupmenu_spect_freq_select,spect_f_handles[1])
 
 for i=2:5
-    push!(spect_f_handles,RadioMenuItem(spect_f_handles[i-1],string(spect_f_options[i])))
+    push!(spect_f_handles,MenuItem(spect_f_handles[i-1],string(spect_f_options[i])))
     push!(popupmenu_spect_freq_select,spect_f_handles[i])
 end
 
-set_active!(spect_f_handles[5])
-
 popupmenu_spect_win_select=Menu(popupmenu_spect_win)
 if VERSION > v"0.7-"
-    spect_w_handles=Array{RadioMenuItemLeaf}(undef,0)
+    spect_w_handles=Array{MenuItemLeaf}(undef,0)
 else
-    spect_w_handles=Array{RadioMenuItemLeaf}(0)
+    spect_w_handles=Array{MenuItemLeaf}(0)
 end
 spect_w_options=[10; 50; 100]
 
-push!(spect_w_handles,RadioMenuItem(string(spect_w_options[1])))
+push!(spect_w_handles,MenuItem(string(spect_w_options[1])))
 push!(popupmenu_spect_win_select,spect_w_handles[1])
 
 for i=2:3
-    push!(spect_w_handles,RadioMenuItem(spect_w_handles[i-1],string(spect_w_options[i])))
+    push!(spect_w_handles,MenuItem(spect_w_handles[i-1],string(spect_w_options[i])))
     push!(popupmenu_spect_win_select,spect_w_handles[i])
 end
-
-set_active!(spect_w_handles[1])
 
 Gtk.showall(popupmenu_spect)
 
@@ -730,61 +726,57 @@ push!(popupmenu_scope,popupmenu_signal)
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
 if VERSION > v"0.7-"
-    scope_v_handles=Array{RadioMenuItemLeaf}(undef,0)
+    scope_v_handles=Array{MenuItemLeaf}(undef,0)
 else
-    scope_v_handles=Array{RadioMenuItemLeaf}(0)
+    scope_v_handles=Array{MenuItemLeaf}(0)
 end
 voltage_scales = [1, 50, 100, 200, 500]
-push!(scope_v_handles,RadioMenuItem(string(voltage_scales[1])))
+push!(scope_v_handles,MenuItem(string(voltage_scales[1])))
 push!(popupmenu_voltage_select,scope_v_handles[1])
 for i=2:5
-    push!(scope_v_handles,RadioMenuItem(scope_v_handles[i-1],string(voltage_scales[i])))
+    push!(scope_v_handles,MenuItem(scope_v_handles[i-1],string(voltage_scales[i])))
     push!(popupmenu_voltage_select,scope_v_handles[i])
 end
 
 popupmenu_time_select=Menu(popupmenu_time)
 if VERSION > v"0.7-"
-    scope_t_handles=Array{RadioMenuItemLeaf}(undef,0)
+    scope_t_handles=Array{MenuItemLeaf}(undef,0)
 else
-    scope_t_handles=Array{RadioMenuItemLeaf}(0)
+    scope_t_handles=Array{MenuItemLeaf}(0)
 end
 #time_scales=[1, 2, 3, 4, 5]
 time_scales = [1,2,3,4,5].*50 ./ r.sr.* 1000
 for i=1:length(time_scales)
     time_scales[i]=round(time_scales[i],1)
 end
-push!(scope_t_handles,RadioMenuItem(string(time_scales[1])))
+push!(scope_t_handles,MenuItem(string(time_scales[1])))
 push!(popupmenu_time_select,scope_t_handles[1])
 for i=2:5
-    push!(scope_t_handles,RadioMenuItem(scope_t_handles[i-1],string(time_scales[i])))
+    push!(scope_t_handles,MenuItem(scope_t_handles[i-1],string(time_scales[i])))
     push!(popupmenu_time_select,scope_t_handles[i])
 end
 
 popupmenu_thres_select=Menu(popupmenu_thres)
 if VERSION > v"0.7-"
-    scope_thres_handles=Array{RadioMenuItemLeaf}(undef,0)
+    scope_thres_handles=Array{MenuItemLeaf}(undef,0)
 else
-    scope_thres_handles=Array{RadioMenuItemLeaf}(0)
+    scope_thres_handles=Array{MenuItemLeaf}(0)
 end
-push!(scope_thres_handles,RadioMenuItem("On"))
+push!(scope_thres_handles,MenuItem("On"))
 push!(popupmenu_thres_select,scope_thres_handles[1])
-push!(scope_thres_handles,RadioMenuItem(scope_thres_handles[1],"Off"))
+push!(scope_thres_handles,MenuItem(scope_thres_handles[1],"Off"))
 push!(popupmenu_thres_select,scope_thres_handles[2])
-
-set_active!(scope_thres_handles[2])
 
 popupmenu_signal_select=Menu(popupmenu_signal)
 if VERSION > v"0.7-"
-    scope_signal_handles=Array{RadioMenuItemLeaf}(undef,0)
+    scope_signal_handles=Array{MenuItemLeaf}(undef,0)
 else
-    scope_signal_handles=Array{RadioMenuItemLeaf}(0)
+    scope_signal_handles=Array{MenuItemLeaf}(0)
 end
-push!(scope_signal_handles,RadioMenuItem("Spike"))
+push!(scope_signal_handles,MenuItem("Spike"))
 push!(popupmenu_signal_select,scope_signal_handles[1])
-push!(scope_signal_handles,RadioMenuItem(scope_signal_handles[1],"LFP"))
+push!(scope_signal_handles,MenuItem(scope_signal_handles[1],"LFP"))
 push!(popupmenu_signal_select,scope_signal_handles[2])
-
-set_active!(scope_signal_handles[1])
 
 Gtk.showall(popupmenu_scope)
 
