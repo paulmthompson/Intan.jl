@@ -347,25 +347,7 @@ visible(sortview_handles.win,false)
 Gtk.showall(popupmenu)
 
 #Event
-popup_event = Menu()
-if VERSION > v"0.7-"
-    event_handles=Array{MenuItemLeaf}(undef,0)
-else
-    event_handles=Array{MenuItemLeaf}(0)
-end
-for i=1:8
-    push!(event_handles,MenuItem(string("Analog ",i)))
-    push!(popup_event,event_handles[i])
-end
-
-for i=1:16
-    push!(event_handles,MenuItem(string("TTL ",i)))
-    push!(popup_event,event_handles[8+i])
-end
-
-popup_event_none=MenuItem("None")
-push!(popup_event,popup_event_none)
-Gtk.showall(popup_event)
+(event_handles,popup_event,popup_event_none) = _make_event_gui()
 
     setproperty!(grid, :column_spacing, 15)
     setproperty!(grid, :row_spacing, 15)
@@ -632,19 +614,9 @@ for i=1:3
     id = signal_connect(SpikeSorting.pause_state_cb,button_rb[i],"clicked",Void,(),false,(handles.sc,i))
 end
 
-#=
-Event Viewer Callbacks
-=#
 
-for i=1:8
-    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
-end
-
-for i=9:24
-    id = signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
-end
-
-id = signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,-1))
+#Event Viewer Callbacks
+add_event_callbacks(event_handles,popup_event_none,handles)
 
 #=
 Radiobutton Callback
