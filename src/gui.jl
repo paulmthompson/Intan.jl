@@ -375,57 +375,7 @@ push!(mb,opopts)
 grid[4,1]=mb
 
 # Reference popup
-ref_grid=Grid()
 
-ref_list1=ListStore(Int32)
-for i=1:size(r.v,2)
-    push!(ref_list1,(i,))
-end
-ref_tv1=TreeView(TreeModel(ref_list1))
-ref_r1=CellRendererText()
-ref_c1=TreeViewColumn("New Reference:",ref_r1, Dict([("text",0)]))
-
-ref_tv1_s=Gtk.GAccessor.selection(ref_tv1)
-
-push!(ref_tv1,ref_c1)
-
-ref_scroll1=ScrolledWindow()
-Gtk.GAccessor.min_content_height(ref_scroll1,350)
-Gtk.GAccessor.min_content_width(ref_scroll1,175)
-push!(ref_scroll1,ref_tv1)
-
-ref_list2=ListStore(Int32)
-for i=1:size(r.v,2)
-    push!(ref_list2,(i,))
-end
-ref_tv2=TreeView(TreeModel(ref_list2))
-ref_r2=CellRendererText()
-ref_c2=TreeViewColumn("Apply Reference To:",ref_r2, Dict([("text",0)]))
-
-ref_tv2_s=Gtk.GAccessor.selection(ref_tv2)
-Gtk.GAccessor.mode(ref_tv2_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
-
-push!(ref_tv2,ref_c2)
-
-ref_scroll2=ScrolledWindow()
-Gtk.GAccessor.min_content_height(ref_scroll2,350)
-Gtk.GAccessor.min_content_width(ref_scroll2,175)
-push!(ref_scroll2,ref_tv2)
-
-ref_button2=Button("Select All/None")
-ref_button3=Button("Apply")
-
-ref_grid[1,1]=ref_scroll1
-ref_grid[2,1]=Canvas(50,350)
-ref_grid[3,1]=ref_scroll2
-ref_grid[3,2]=ref_button2
-ref_grid[2,3]=Canvas(50,50)
-ref_grid[3,4]=ref_button3
-ref_win=Window(ref_grid)
-setproperty!(ref_win, :title, "Reference Channel Select")
-
-Gtk.showall(ref_win)
-visible(ref_win,false)
 
 #SortView
 
@@ -650,6 +600,13 @@ for i=1:size(r.v,2)
     push!(table_widgets.list,(i,125,0,0,true))
 end
 
+#Reference Menu
+ref_widgets = _make_reference_gui()
+for i=1:size(r.v,2)
+    push!(ref_widgets.list1,(i,))
+    push!(ref_widgets.list2,(i,))
+end
+
 spect_widgets=Spectrogram(r.sr)
 save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_check_adc,save_entry)
 
@@ -671,10 +628,9 @@ handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_sli
                     false,16,
                     false,slider_sort,
                     1,1,zeros(Int64,500),zeros(UInt32,20),
-                    zeros(UInt32,500),zeros(Int64,50),ref_win,ref_tv1,
-                    ref_tv2,ref_list1,ref_list2,SoftScope(r.sr,Gtk.getgc(c),SAMPLES_PER_DATA_BLOCK),
+                    zeros(UInt32,500),zeros(Int64,50),SoftScope(r.sr,Gtk.getgc(c),SAMPLES_PER_DATA_BLOCK),
                     popupmenu_scope,sort_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,ref_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
     handles.sc.s = -.125
 
@@ -884,20 +840,14 @@ add_filter_callbacks(band_widgets,handles,r,fpga)
 Reference
 =#
 
-id = signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
-id = signal_connect(ref_b2_cb, ref_button2, "clicked",Void,(),false,(handles,))
-id = signal_connect(ref_b3_cb, ref_button3, "clicked",Void,(),false,(handles,r))
-
-signal_connect(ref_win, :delete_event) do widget, event
-    visible(ref_win, false)
-    true
-end
+signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
+add_reference_callbacks(ref_widgets,handles,r,fpga)
 
 #=
 Parameter Table
 =#
 
-id = signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
+signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
 add_parameter_callbacks(table_widgets,handles,r,fpga)
 
 

@@ -392,6 +392,16 @@ mutable struct Save_Widgets
     input::Gtk.GtkEntryLeaf
 end
 
+mutable struct Reference_Widgets
+    win::Gtk.GtkWindowLeaf
+    tv1::Gtk.GtkTreeViewLeaf
+    tv2::Gtk.GtkTreeViewLeaf
+    list1::Gtk.GtkListStoreLeaf
+    list2::Gtk.GtkListStoreLeaf
+    select_button::Gtk.GtkButtonLeaf
+    apply_button::Gtk.GtkButtonLeaf
+end
+
 mutable struct Gui_Handles
     win::Gtk.GtkWindowLeaf
 
@@ -453,12 +463,6 @@ mutable struct Gui_Handles
     isi::Array{UInt32,1}
     isi_hist::Array{Int64,1}
 
-    ref_win::Gtk.GtkWindowLeaf
-    ref_tv1::Gtk.GtkTreeViewLeaf
-    ref_tv2::Gtk.GtkTreeViewLeaf
-    ref_list1::Gtk.GtkListStoreLeaf
-    ref_list2::Gtk.GtkListStoreLeaf
-
     soft::SoftScope
     popup_scope::Gtk.GtkMenuLeaf
 
@@ -469,6 +473,7 @@ mutable struct Gui_Handles
     table_widgets::Table_Widgets
     spect::Spectrogram
     save_widgets::Save_Widgets
+    ref_widgets::Reference_Widgets
 
     sc::SpikeSorting.Single_Channel
 
