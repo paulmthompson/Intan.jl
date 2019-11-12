@@ -374,45 +374,11 @@ push!(mb,viewopts)
 push!(mb,opopts)
 grid[4,1]=mb
 
-# Reference popup
-
 
 #SortView
 
 sortview_handles = SpikeSorting.sort_gui(s[1].s.win+1)
 visible(sortview_handles.win,false)
-
-#=
-Save Preferences Window
-=#
-
-save_grid=Grid()
-
-save_entry=Entry()
-Gtk.GAccessor.text(save_entry,r.save.folder)
-save_grid[1,1]=Label("Save Folder: ")
-save_grid[2,1]=save_entry
-
-save_check_volt=CheckButton("Analog Voltage")
-save_grid[1,2]=save_check_volt
-
-save_check_lfp=CheckButton("LFP")
-save_grid[1,3]=save_check_lfp
-
-save_check_ttlin=CheckButton("TTL input")
-save_grid[1,4]=save_check_ttlin
-
-save_check_ts=CheckButton("Spike Time Stamps")
-save_grid[1,5]=save_check_ts
-
-save_check_adc=CheckButton("ADC Input")
-save_grid[1,6]=save_check_adc
-
-save_pref_win=Window(save_grid)
-setproperty!(save_pref_win, :title, "Saving Preferences")
-
-Gtk.showall(save_pref_win)
-visible(save_pref_win,false)
 
 
 #POPUP MENUS
@@ -509,7 +475,6 @@ push!(popupmenu_scope,popupmenu_voltage)
 push!(popupmenu_scope,popupmenu_time)
 push!(popupmenu_scope,popupmenu_thres)
 push!(popupmenu_scope,popupmenu_signal)
-
 
 popupmenu_voltage_select=Menu(popupmenu_voltage)
 if VERSION > v"0.7-"
@@ -608,7 +573,9 @@ for i=1:size(r.v,2)
 end
 
 spect_widgets=Spectrogram(r.sr)
-save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_check_adc,save_entry)
+
+save_widgets=_make_save_gui()
+Gtk.GAccessor.text(save_widgets.input,r.save.folder)
 
 sleep(5.0)
 
@@ -785,19 +752,8 @@ Save Preferences Callbacks
 =#
 
 signal_connect(saving_pref_cb,saving_pref_,"activate",Void,(),false,(handles,r))
+add_save_callbacks(save_widgets,handles,r,fpga)
 
-#This should be a longer callback where the save preference checkboxes are loaded
-#automatically
-signal_connect(save_pref_win, :delete_event) do widget, event
-    visible(save_pref_win, false)
-    true
-end
-id=signal_connect(save_volt_cb,save_check_volt,"clicked",Void,(),false,(handles,r))
-id=signal_connect(save_lfp_cb,save_check_lfp,"clicked",Void,(),false,(handles,r))
-id=signal_connect(save_ttlin_cb,save_check_ttlin,"clicked",Void,(),false,(handles,r))
-id=signal_connect(save_ts_cb,save_check_ts,"clicked",Void,(),false,(handles,r))
-id=signal_connect(save_entry_cb,save_entry,"activate",Void,(),false,(handles,r))
-signal_connect(save_adc_cb,save_check_adc,"clicked",Void,(),false,(handles,r))
 #=
 Soft Scope Callbacks
 =#
@@ -861,8 +817,6 @@ signal_connect(sortview_handles.win, :delete_event) do widget, event
     visible(sortview_handles.win, false)
     true
 end
-
-
 
 #=
 Backup
