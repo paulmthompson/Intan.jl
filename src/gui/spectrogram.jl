@@ -1,4 +1,63 @@
 
+function _make_spectogram_gui()
+
+    popupmenu_spect = Menu()
+    popupmenu_spect_freq = MenuItem("Frequency Range")
+    popupmenu_spect_win = MenuItem("Window Size")
+    popupmenu_spect_overlap = MenuItem("Window Overlap")
+    push!(popupmenu_spect,popupmenu_spect_freq)
+    push!(popupmenu_spect,popupmenu_spect_win)
+    push!(popupmenu_spect,popupmenu_spect_overlap)
+
+    popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
+    if VERSION > v"0.7-"
+        spect_f_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        spect_f_handles=Array{MenuItemLeaf}(0)
+    end
+    spect_f_options=[300; 1000; 3000; 7500; 15000]
+
+    push!(spect_f_handles,MenuItem(string(spect_f_options[1])))
+    push!(popupmenu_spect_freq_select,spect_f_handles[1])
+
+    for i=2:5
+        push!(spect_f_handles,MenuItem(spect_f_handles[i-1],string(spect_f_options[i])))
+        push!(popupmenu_spect_freq_select,spect_f_handles[i])
+    end
+
+    popupmenu_spect_win_select=Menu(popupmenu_spect_win)
+    if VERSION > v"0.7-"
+        spect_w_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        spect_w_handles=Array{MenuItemLeaf}(0)
+    end
+    spect_w_options=[10; 50; 100]
+
+    push!(spect_w_handles,MenuItem(string(spect_w_options[1])))
+    push!(popupmenu_spect_win_select,spect_w_handles[1])
+
+    for i=2:3
+        push!(spect_w_handles,MenuItem(spect_w_handles[i-1],string(spect_w_options[i])))
+        push!(popupmenu_spect_win_select,spect_w_handles[i])
+    end
+
+    Gtk.showall(popupmenu_spect)
+
+    (spect_w_handles,spect_f_handles, popupmenu_spect)
+end
+
+function add_spect_callbacks(spect_f_handles,spect_w_handles,handles)
+
+    for i=1:5
+        signal_connect(spect_popup_freq_cb,spect_f_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    for i=1:3
+        signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    nothing
+end
 
 function prepare_spectrogram(ctx,han)
 
