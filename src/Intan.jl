@@ -41,6 +41,7 @@ include("gui/parameter_table.jl")
 include("gui/filters.jl")
 include("gui/thresholds.jl")
 include("gui/save_pref.jl")
+include("gui/clock.jl")
 
 #functions needed for evaluation board from Intan
 include("ICs/Opal_Kelly_FPGA/opalkelly_gui.jl")

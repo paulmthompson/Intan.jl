@@ -53,25 +53,8 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox1_2_1[1,2]=button_gain
 
     #THRESHOLD
-    frame1_3=Frame("Threshold")
+    (thres_widgets,frame1_3,vbox_slider)=_make_thres_gui()
     vbox1_2[1,3]=frame1_3
-    vbox1_3_1=Box(:v)
-    push!(frame1_3,vbox1_3_1)
-
-    #sb=SpinButton(-300:300)
-    #setproperty!(sb,:value,0)
-    sb=Label("0")
-    push!(vbox1_3_1,sb)
-
-    button_thres_all = CheckButton()
-    add_button_label(button_thres_all,"All Channels")
-    Gtk.GAccessor.active(button_thres_all,false)
-    push!(vbox1_3_1,button_thres_all)
-
-    button_thres = CheckButton()
-    add_button_label(button_thres,"Show")
-    Gtk.GAccessor.active(button_thres,false)
-    push!(vbox1_3_1,button_thres)
 
     #SPIKE
     frame_hold=Frame("Spike")
@@ -158,20 +141,7 @@ function makegui(r::RHD2000,s,task,fpga)
     vbox1_2[1,5]=frame1_4 |> Gtk.showall
 
     #COLUMN 2 - Threshold slider
-    vbox_slider=Box(:v)
-    thres_slider = Scale(true, -300,300,1)
-    adj_thres = Adjustment(thres_slider)
-    Gtk.GAccessor.value(adj_thres,0)
 
-    c_thres=Canvas(10,200)
-    Gtk.GAccessor.vexpand(c_thres,false)
-
-    Gtk.GAccessor.inverted(thres_slider,true)
-    Gtk.GAccessor.draw_value(thres_slider,false)
-
-    Gtk.GAccessor.vexpand(thres_slider,true)
-    push!(vbox_slider,thres_slider)
-    push!(vbox_slider,c_thres)
     grid[3,2]=vbox_slider
 
 
@@ -213,23 +183,8 @@ function makegui(r::RHD2000,s,task,fpga)
     #COLUMN 3 - 16 CHANNEL DISPLAY
 
     #ROW 1 - Time
-    s_label=Label("0")
-    m_label=Label("0")
-    h_label=Label("0")
-    sm_label=Label(":")
-    mh_label=Label(":")
-
-    frame_time=Frame("Time Elapsed")
+    (mytime_widgets,frame_time) = _make_clock()
     grid[5,1]=frame_time
-    hbox_time=ButtonBox(:h)
-    push!(frame_time,hbox_time)
-
-    push!(hbox_time,h_label)
-push!(hbox_time,mh_label)
-push!(hbox_time,m_label)
-    push!(hbox_time,sm_label)
-    push!(hbox_time,s_label)
-
 
     #ROW 2
 #c=@Canvas(500,800)
@@ -550,7 +505,7 @@ for i=1:500
 end
 
 sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,check_sort1,false)
-thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
+
 gain_widgets=SpikeSorting.Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 
@@ -583,14 +538,14 @@ sc_widgets=SpikeSorting.Single_Channel(c2,c3,Gtk.getgc(c2),copy(Gtk.getgc(c2)),f
 Vec2(0.0,0.0),Vec2(0.0,0.0),[Vec2(0.0,0.0)],false,0),1,falses(500),falses(500),
 false,false,button_pause,button_rb,1,(0.0,0.0),false,width(Gtk.getgc(c2)),
     height(Gtk.getgc(c2)),s[1].s.win,1.0,0.0,sortview_handles.buf,0.0,0.0,
-    ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort,adj_thres,thres_slider,false,
+    ClusterTemplate(convert(Int64,s[1].s.win)),0,1,false,sort_list,sort_tv,adj_sort,thres_widgets.adj,thres_widgets.slider,false,
     thres_widgets,gain_widgets)
 
     #Create type with handles to everything
 handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_slider,adj2,
                     c,1,1,scales,offs,(0.0,0.0),zeros(Int64,length(r.nums)),
                     0,-1 .*ones(Int64,6),
-                    trues(length(r.nums)),mytime(0,h_label,0,m_label,0,s_label),
+                    trues(length(r.nums)),mytime_widgets,
                     s[1].s.win,1,1,popupmenu,popup_event,popupmenu_spect,rbs,rbs2,scope_mat,
                     false,16,
                     false,slider_sort,
@@ -701,9 +656,7 @@ id = signal_connect(SpikeSorting.gain_check_cb,gain_checkbox, "clicked", Void,()
 Threshold callbacks
 =#
 
-id = signal_connect(SpikeSorting.thres_cb,thres_slider,"value-changed",Void,(),false,(sc_widgets,))
-id = signal_connect(SpikeSorting.thres_show_cb,button_thres,"clicked",Void,(),false,(sc_widgets,))
-
+add_thres_cb(sc_widgets)
 
 #=
 Pause, Restore, and Clear Callbacks
@@ -786,26 +739,17 @@ for i=1:3
     signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
-#=
-Filtering
-=#
+#Filtering
 signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 add_filter_callbacks(band_widgets,handles,r,fpga)
 
-#=
-Reference
-=#
-
+#Reference
 signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
 add_reference_callbacks(ref_widgets,handles,r,fpga)
 
-#=
-Parameter Table
-=#
-
+#Parameter Table
 signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
 add_parameter_callbacks(table_widgets,handles,r,fpga)
-
 
 #=
 Sortview Callbacks
@@ -1104,34 +1048,6 @@ function record_cb(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R}) where R<:RHD
         sleep(1.0)
         rhd.save.record_mode = false
     end
-    nothing
-end
-
-function update_time(rhd::RHD2000,han::Gui_Handles)
-
-    total_seconds=convert(Int64,div(rhd.time[1,1],rhd.sr))
-
-    this_h=div(total_seconds,3600)
-
-    total_seconds=total_seconds - this_h*3600
-
-    this_m=div(total_seconds,60)
-
-    this_s=total_seconds - this_m*60
-
-    if this_s != han.time.s
-        setproperty!(han.time.s_l,:label,string(this_s))
-        han.time.s=this_s
-    end
-    if this_m != han.time.m
-        setproperty!(han.time.m_l,:label,string(this_m))
-        han.time.m=this_m
-    end
-    if this_h != han.time.h
-        setproperty!(han.time.h_l,:label,string(this_h))
-        han.time.h=this_h
-    end
-
     nothing
 end
 
