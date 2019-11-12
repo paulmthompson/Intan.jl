@@ -323,24 +323,27 @@ end
 
 mutable struct Band_Widgets
     win::Gtk.GtkWindowLeaf
-    sb1::Gtk.GtkSpinButtonLeaf
-    sb2::Gtk.GtkSpinButtonLeaf
-    sb3::Gtk.GtkSpinButtonLeaf
-    b1::Gtk.GtkButtonLeaf
-
+    sb1::Gtk.GtkSpinButtonLeaf #Hardware Low Cut
+    sb2::Gtk.GtkSpinButtonLeaf #Hardware High Cut
+    sb3::Gtk.GtkSpinButtonLeaf #Hardware DSP High Pass
+    b1::Gtk.GtkButtonLeaf #Button to update Headstage Hardware Filters
     sw_box::Gtk.GtkComboBoxTextLeaf
-    wn_sb1::Gtk.GtkSpinButtonLeaf
-    wn_sb2::Gtk.GtkSpinButtonLeaf
-    sw_chan_sb::Gtk.GtkSpinButtonLeaf
-    add_b::Gtk.GtkButtonLeaf
-    re_b::Gtk.GtkButtonLeaf
-    sw_check::Gtk.GtkCheckButtonLeaf
+    wn_sb1::Gtk.GtkSpinButtonLeaf #Software Filter Bandwidth Low
+    wn_sb2::Gtk.GtkSpinButtonLeaf #Software Filter Bandwidth High
+
+    sw_chan_sb::Gtk.GtkSpinButtonLeaf #channel number to apply software filter to
+
+    add_b::Gtk.GtkButtonLeaf #Add software filter
+    re_b::Gtk.GtkButtonLeaf #Replace software Filter
+    delete_b::Gtk.GtkButtonLeaf
+
+    sw_check::Gtk.GtkCheckButtonLeaf #Apply filter to all channels
 
     wn_sb1_l::Gtk.GtkLabelLeaf
     wn_sb2_l::Gtk.GtkLabelLeaf
 
     output_box::Gtk.GtkComboBoxTextLeaf
-    filt_num_sb::Gtk.GtkSpinButtonLeaf
+    filt_num_sb::Gtk.GtkSpinButtonLeaf #filter number
     c::Gtk.GtkCanvasLeaf
 
     wn1::Int64

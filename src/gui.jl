@@ -471,125 +471,6 @@ setproperty!(ref_win, :title, "Reference Channel Select")
 Gtk.showall(ref_win)
 visible(ref_win,false)
 
-#Bandwidth Adjustment
-
-band_hw_frame=Frame("Hardware Filters")
-band_grid=Grid()
-band_hw_grid=Grid()
-band_grid[1,1]=band_hw_frame
-push!(band_hw_frame,band_hw_grid)
-
-band_sb1=SpinButton(0:1000)
-Gtk.GAccessor.value(band_sb1,300)
-band_hw_grid[1,1]=band_sb1
-band_hw_grid[2,1]=Label("Lower Bandwidth")
-
-band_sb2=SpinButton(1000:10000)
-Gtk.GAccessor.value(band_sb2,5000)
-band_hw_grid[1,2]=band_sb2
-band_hw_grid[2,2]=Label("Higher BandWidth")
-
-band_sb3=SpinButton(0:1000)
-Gtk.GAccessor.value(band_sb3,300)
-band_hw_grid[1,3]=band_sb3
-band_hw_grid[2,3]=Label("DSP High Pass")
-
-band_b1=Button("Update")
-band_hw_grid[1,4]=band_b1
-
-band_sw_frame=Frame("Software Filters")
-band_sw_grid=Grid()
-band_grid[1,2]=band_sw_frame
-push!(band_sw_frame,band_sw_grid)
-
-band_sw_sb3=SpinButton(1:size(r.v,2))
-Gtk.GAccessor.value(band_sw_sb3,1)
-band_sw_grid[1,1]=band_sw_sb3
-band_sw_grid[2,1]=Label("Channel Number")
-
-band_sw_sb4=SpinButton(1:1)
-Gtk.GAccessor.value(band_sw_sb4,1)
-band_sw_grid[1,2]=band_sw_sb4
-band_sw_grid[2,2]=Label("Filter Number")
-
-band_sw_check=CheckButton()
-band_sw_grid[1,3]=band_sw_check
-band_sw_grid[2,3]=Label("All Channels")
-
-filter_combo = ComboBoxText()
-for choice in ["High Pass"; "Low Pass"; "BandPass"; "BandStop"]
-    push!(filter_combo,choice)
-end
-setproperty!(filter_combo,:active,0)
-
-band_sw_grid[1,4]=filter_combo
-band_sw_grid[2,4]=Label("Filter Type")
-
-band_sw_sb1=SpinButton(0:10000)
-Gtk.GAccessor.value(band_sw_sb1,10)
-band_sw_grid[1,5]=band_sw_sb1
-band_sw_sb1_l=Label("High Pass Cutoff")
-band_sw_grid[2,5]=band_sw_sb1_l
-
-band_sw_sb2=SpinButton(0:10000)
-Gtk.GAccessor.value(band_sw_sb2,10)
-band_sw_grid[1,6]=band_sw_sb2
-band_sw_sb2_l=Label("")
-band_sw_grid[2,6]=band_sw_sb2_l
-
-filter_combo_output = ComboBoxText()
-for choice in ["Spikes"; "LFP"]
-    push!(filter_combo_output,choice)
-end
-setproperty!(filter_combo_output,:active,0)
-band_sw_grid[1,7]=filter_combo_output
-band_sw_grid[2,7]=Label("Output of Filter")
-
-band_sw_b1=Button("Add New")
-band_sw_grid[1,8]=band_sw_b1
-
-band_sw_b2=Button("Replace")
-band_sw_grid[2,8]=band_sw_b2
-
-band_sw_b_delete=Button("Delete")
-band_sw_grid[1,9]=band_sw_b_delete
-
-band_sw_c=Canvas(200,300)
-band_sw_grid[2,10]=band_sw_c
-
-
-filt_list = ListStore(String,Int32,Int32)
-
-filt_tv = TreeView(TreeModel(filt_list))
-filt_rtext2=CellRendererText()
-filt_rtext3=CellRendererText()
-filt_rtext4=CellRendererText()
-
-filt_c2 = TreeViewColumn("Filter Type",filt_rtext2,Dict([("text",1)]))
-filt_c3 = TreeViewColumn("Wn1",filt_rtext3,Dict([("text",2)]))
-filt_c4 = TreeViewColumn("Wn2",filt_rtext4,Dict([("text",3)]))
-
-filt_tv_s = Gtk.GAccessor.selection(filt_tv)
-#Gtk.GAccessor.mode(filt_tv_s,Gtk.GConstants.GtkSelectionMode.MULTIPLE)
-
-push!(filt_tv,filt_c2)
-push!(filt_tv,filt_c3)
-push!(filt_tv,filt_c4)
-
-filt_scroll=ScrolledWindow()
-Gtk.GAccessor.min_content_height(filt_scroll,500)
-Gtk.GAccessor.min_content_width(filt_scroll,250)
-push!(filt_scroll,filt_tv)
-
-band_grid[2,2]=filt_scroll
-
-band_win=Window(band_grid)
-setproperty!(band_win, :title, "Filtering")
-
-Gtk.showall(band_win)
-visible(band_win,false)
-Gtk.visible(band_sw_sb2,false)
-
 #SortView
 
 sortview_handles = SpikeSorting.sort_gui(s[1].s.win+1)
@@ -801,7 +682,11 @@ sort_widgets=Sort_Widgets(button_sort1,button_sort2,button_sort3,button_sort4,ch
 thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_all,button_thres)
 gain_widgets=SpikeSorting.Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
-band_widgets=Band_Widgets(band_win,band_sb1,band_sb2,band_sb3,band_b1,filter_combo,band_sw_sb1,band_sw_sb2,band_sw_sb3,band_sw_b1,band_sw_b2,band_sw_check,band_sw_sb1_l,band_sw_sb2_l,filter_combo_output,band_sw_sb4,band_sw_c,10,10,1,1,0,1,falses(size(r.v,2)),filt_tv,filt_list)
+
+band_widgets=_make_filter_gui()
+band_widgets.lfp_en=falses(size(r.v,2))
+setproperty!(band_widgets.sw_chan_sb,:upper,size(r.v,2))
+
 table_widgets=Table_Widgets(table_win,table_tv,table_list)
 spect_widgets=Spectrogram(r.sr)
 save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_check_adc,save_entry)
@@ -978,27 +863,6 @@ for i=1:8
 end
 
 #=
-Filter Callback
-=#
-
-signal_connect(band_b1_cb,band_b1,"clicked",Void,(),false,(handles,fpga))
-
-signal_connect(band_win, :delete_event) do widget, event
-    visible(band_win, false)
-    true
-end
-id = signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
-id = signal_connect(add_filter_cb,band_sw_b1,"clicked",Void,(),false,(handles,r))
-id = signal_connect(replace_filter_cb,band_sw_b2,"clicked",Void,(),false,(handles,r))
-id = signal_connect(filter_type_cb,filter_combo, "changed",Void,(),false,(handles,r))
-id = signal_connect(change_channel_cb,band_sw_sb3,"value-changed",Void,(),false,(handles,r))
-id = signal_connect(change_wn1_cb,band_sw_sb1,"value-changed",Void,(),false,(handles,r))
-id = signal_connect(change_wn2_cb,band_sw_sb2,"value-changed",Void,(),false,(handles,r))
-id = signal_connect(change_filt_output_cb,filter_combo_output,"changed",Void,(),false,(handles,r))
-id = signal_connect(change_pos_cb,band_sw_sb4,"value-changed",Void,(),false,(r,handles))
-id = signal_connect(delete_filter_cb,band_sw_b_delete,"clicked",Void,(),false,(handles,r))
-
-#=
 Save Preferences Callbacks
 =#
 
@@ -1048,6 +912,11 @@ for i=1:3
     signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Void,(),false,(handles,i-1))
 end
 
+#=
+Filtering
+=#
+signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
+add_filter_callbacks(band_widgets,handles,r,fpga)
 #=
 Reference
 =#
