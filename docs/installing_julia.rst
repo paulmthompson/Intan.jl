@@ -6,4 +6,4 @@ Julia can be downloaded from here:
 
 julialang.org/downloads/
 
-Intan.jl is currently compatible with <b>version 0.6</b>.
+Intan.jl is currently compatible with <b>version 1.0</b>.
