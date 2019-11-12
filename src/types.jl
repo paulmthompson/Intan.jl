@@ -376,6 +376,10 @@ mutable struct Table_Widgets
     win::Gtk.GtkWindowLeaf
     tv::Gtk.GtkTreeViewLeaf
     list::Gtk.GtkListStoreLeaf
+    gain_text::Gtk.GtkCellRendererText
+    thres_text::Gtk.GtkCellRendererText
+    ref_text::Gtk.GtkCellRendererText
+    enabled_toggle::Gtk.GtkCellRendererToggle
 end
 
 mutable struct Save_Widgets

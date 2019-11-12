@@ -374,50 +374,6 @@ push!(mb,viewopts)
 push!(mb,opopts)
 grid[4,1]=mb
 
-#Table of Values Popup
-table_grid=Grid()
-
-table_list=ListStore(Int32,Int32,Int32,Int32,Bool)
-for i=1:size(r.v,2)
-    push!(table_list,(i,125,0,0,true))
-end
-
-table_tv=TreeView(TreeModel(table_list))
-table_rtext1=CellRendererText()
-table_rtext2=CellRendererText()
-setproperty!(table_rtext2, :editable, true)
-table_rtext3=CellRendererText()
-setproperty!(table_rtext3, :editable, true)
-table_rtext4=CellRendererText()
-setproperty!(table_rtext4, :editable, true)
-table_rtog=CellRendererToggle()
-setproperty!(table_rtog, :activatable, true)
-
-table_c1 = TreeViewColumn("Channel",table_rtext1,Dict([("text",0)]))
-table_c2 = TreeViewColumn("Gain", table_rtext2, Dict([("text",1)]))
-table_c3 = TreeViewColumn("Threshold", table_rtext3, Dict([("text",2)]))
-table_c4 = TreeViewColumn("Reference", table_rtext4, Dict([("text",3)]))
-table_c5 = TreeViewColumn("Enabled",table_rtog,Dict([("active",4)]))
-
-push!(table_tv,table_c1)
-push!(table_tv,table_c2)
-push!(table_tv,table_c3)
-push!(table_tv,table_c4)
-push!(table_tv,table_c5)
-
-table_scroll=ScrolledWindow()
-Gtk.GAccessor.min_content_height(table_scroll,500)
-Gtk.GAccessor.min_content_width(table_scroll,500)
-push!(table_scroll,table_tv)
-
-table_grid[1,1]=table_scroll
-
-table_win=Window(table_grid)
-setproperty!(table_win, :title, "Parameter List")
-
-Gtk.showall(table_win)
-visible(table_win,false)
-
 # Reference popup
 ref_grid=Grid()
 
@@ -683,11 +639,17 @@ thres_widgets=SpikeSorting.Thres_Widgets(sb,thres_slider,adj_thres,button_thres_
 gain_widgets=SpikeSorting.Gain_Widgets(sb2,gain_checkbox,button_gain)
 spike_widgets=Spike_Widgets(button_clear,button_pause)
 
+#Make Filter Menu
 band_widgets=_make_filter_gui()
 band_widgets.lfp_en=falses(size(r.v,2))
 setproperty!(band_widgets.sw_chan_sb,:upper,size(r.v,2))
 
-table_widgets=Table_Widgets(table_win,table_tv,table_list)
+#Make Table Menu
+table_widgets=_make_table_gui()
+for i=1:size(r.v,2)
+    push!(table_widgets.list,(i,125,0,0,true))
+end
+
 spect_widgets=Spectrogram(r.sr)
 save_widgets=Save_Widgets(save_pref_win,save_check_volt,save_check_lfp,save_check_ttlin,save_check_ts,save_check_adc,save_entry)
 
@@ -917,6 +879,7 @@ Filtering
 =#
 signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
 add_filter_callbacks(band_widgets,handles,r,fpga)
+
 #=
 Reference
 =#
@@ -935,16 +898,7 @@ Parameter Table
 =#
 
 id = signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
-
-signal_connect(table_win, :delete_event) do widget, event
-    visible(table_win,false)
-    true
-end
-
-id = signal_connect(table_col_cb, table_rtext2,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,2))
-id = signal_connect(table_col_cb, table_rtext3,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
-id = signal_connect(table_col_cb, table_rtext4,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
-id = signal_connect(table_en_cb, table_rtog, "toggled",Void,(Ptr{UInt8},),false,(handles,r))
+add_parameter_callbacks(table_widgets,handles,r,fpga)
 
 
 #=
