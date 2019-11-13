@@ -1,4 +1,95 @@
 
+function _make_scope_gui()
+
+    popupmenu_scope = Menu()
+    popupmenu_voltage=MenuItem("Voltage Gain")
+    popupmenu_time=MenuItem("ms/div")
+    popupmenu_thres=MenuItem("Threshold")
+    popupmenu_signal=MenuItem("Signal")
+    push!(popupmenu_scope,popupmenu_voltage)
+    push!(popupmenu_scope,popupmenu_time)
+    push!(popupmenu_scope,popupmenu_thres)
+    push!(popupmenu_scope,popupmenu_signal)
+
+    popupmenu_voltage_select=Menu(popupmenu_voltage)
+    if VERSION > v"0.7-"
+        scope_v_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        scope_v_handles=Array{MenuItemLeaf}(0)
+    end
+    voltage_scales = [1, 50, 100, 200, 500]
+    push!(scope_v_handles,MenuItem(string(voltage_scales[1])))
+    push!(popupmenu_voltage_select,scope_v_handles[1])
+    for i=2:5
+        push!(scope_v_handles,MenuItem(scope_v_handles[i-1],string(voltage_scales[i])))
+        push!(popupmenu_voltage_select,scope_v_handles[i])
+    end
+
+    popupmenu_time_select=Menu(popupmenu_time)
+    if VERSION > v"0.7-"
+        scope_t_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        scope_t_handles=Array{MenuItemLeaf}(0)
+    end
+    time_scales = [1,2,3,4,5] #Need to make this ms / div
+    for i=1:length(time_scales)
+        time_scales[i]=round(time_scales[i],1)
+    end
+    push!(scope_t_handles,MenuItem(string(time_scales[1])))
+    push!(popupmenu_time_select,scope_t_handles[1])
+    for i=2:5
+        push!(scope_t_handles,MenuItem(scope_t_handles[i-1],string(time_scales[i])))
+        push!(popupmenu_time_select,scope_t_handles[i])
+    end
+
+    popupmenu_thres_select=Menu(popupmenu_thres)
+    if VERSION > v"0.7-"
+        scope_thres_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        scope_thres_handles=Array{MenuItemLeaf}(0)
+    end
+    push!(scope_thres_handles,MenuItem("On"))
+    push!(popupmenu_thres_select,scope_thres_handles[1])
+    push!(scope_thres_handles,MenuItem(scope_thres_handles[1],"Off"))
+    push!(popupmenu_thres_select,scope_thres_handles[2])
+
+    popupmenu_signal_select=Menu(popupmenu_signal)
+    if VERSION > v"0.7-"
+        scope_signal_handles=Array{MenuItemLeaf}(undef,0)
+    else
+        scope_signal_handles=Array{MenuItemLeaf}(0)
+    end
+    push!(scope_signal_handles,MenuItem("Spike"))
+    push!(popupmenu_signal_select,scope_signal_handles[1])
+    push!(scope_signal_handles,MenuItem(scope_signal_handles[1],"LFP"))
+    push!(popupmenu_signal_select,scope_signal_handles[2])
+
+    Gtk.showall(popupmenu_scope)
+
+    (scope_t_handles,scope_v_handles,scope_thres_handles,scope_signal_handles,popupmenu_scope)
+end
+
+function add_scope_callbacks(v_handles,t_handles,thres_handles,signal_handles,handles)
+
+    for i=1:5
+        signal_connect(scope_popup_v_cb,v_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    for i=1:5
+        signal_connect(scope_popup_t_cb,t_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    for i=1:2
+        signal_connect(scope_popup_thres_cb,thres_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    for i=1:2
+        signal_connect(scope_popup_signal_cb,signal_handles[i],"activate",Void,(),false,(handles,i-1))
+    end
+
+    nothing
+end
+
 function scope_popup_v_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,Int64})
 
     han, event_id = user_data
