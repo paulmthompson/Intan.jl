@@ -126,6 +126,31 @@ mutable struct register
     aPwr::Array{Int32,1}
 end
 
+mutable struct DigOut
+    channel::Int32
+
+    pulseOrTrain::Int32
+
+    triggerEnabled::Bool
+    triggerOnLow::Bool
+    edgeTriggered::Bool
+    triggerSource::Int32 #0 - 15 corresponds to digital in 1 through 16
+
+    shapeInt::Int32 #3 = monophasic
+    negStimFirst::Bool
+    numPulses::Int32
+
+    postTriggerDelay::Int32 #after trigger, before pulse
+    firstPhaseDuration::Int32
+    refractoryPeriod::Int32
+    pulseTrainPeriod::Int32
+
+end
+
+function DigOut()
+    DigOut(0,0,true,false,true,0,3,false,0,0,1000,5000,5000)
+end
+
 mutable struct FPGA <: IC
     id::Int64
     board::Ptr{Void}
