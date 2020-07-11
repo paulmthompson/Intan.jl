@@ -81,11 +81,11 @@ const WireInAuxCmdLength1 = 0x0b
 const WireInAuxCmdLength2 = 0x0c
 const WireInAuxCmdLength3 = 0x0d
 const WireInAuxCmdLoop1 = 0x0e
-const WireInAuxCmdLoop2 = 0x0f
-const WireInAuxCmdLoop3 = 0x10
-const WireInDataStreamSel1234 = 0x12
-const WireInDataStreamSel5678 = 0x13
-const WireInLedDisplay_openephys = 0x11
+const WireInAuxCmdLoop2 = 0x0f #These conflict with TTL generation on Intan
+const WireInAuxCmdLoop3 = 0x10 #Conflicts with Stimulation
+const WireInLedDisplay_openephys = 0x11 #Conflicts with Stimulation
+const WireInDataStreamSel1234 = 0x12 #conflicts with stimulation
+const WireInDataStreamSel5678 = 0x13 #conflicts with stimulation
 
 #Intan USB 3
 const WireInAuxCmdLength = 0x0b
@@ -93,9 +93,15 @@ const WireInAuxCmdLoop = 0x0c
 const WireInDacReref = 0x0e
 const WireInLedDisplay = 0x0d
 
+#Intan USB 3 Stimulation
+WireInStimCmdMode = 0x0f
+const WireInStimRegAddr = 0x10
+const WireInManualTriggers = 0x11
+const WireInTtlOut = 0x12
+const TrigInRamAddrReset = 0x43
 
 const WireInDataStreamEn = 0x14
-const WireInTtlOut = 0x15
+#const WireInTtlOut = 0x15
 const WireInDacSource1 = 0x16
 const WireInDacSource2 = 0x17
 const WireInDacSource3 = 0x18
