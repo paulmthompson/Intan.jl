@@ -169,15 +169,16 @@ mutable struct FPGA <: IC
     ttloutput::UInt16
     usb3::Bool
     r::register
+    d::Array{DigOut,1}
 end
 
 function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false)
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
+        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000))
+        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
     end
 end
 

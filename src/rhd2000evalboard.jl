@@ -333,7 +333,7 @@ function initialize_board(rhd::FPGA,debug=false)
         enableDataStream(rhd,i,false)
     end
 
-    clearTtlOut(rhd)
+    #clearTtlOut(rhd)
 
     for i=0:7; enableDac(rhd,i, false); end
     for i=0:7; selectDacDataStream(rhd,i, 0); end
@@ -348,7 +348,15 @@ function initialize_board(rhd::FPGA,debug=false)
     setDacGain(rhd,0)
     setAudioNoiseSuppress(rhd,0)
 
-    setTtlMode(rhd,0)
+    setTtlMode(rhd,falses(8))
+
+    #Loop through digital output sequencers
+    for i=1:16
+        rhd.d[i].channel=i
+        rhd.d[i].triggerSource=0; rhd.d[i].triggerEnabled = false; rhd.d[i].edgeTriggered = true; rhd.d[i].triggerOnLow = false;
+        rhd.d[i].numPulses = 3; rhd.d[i].shape = 3; rhd.d[i].negStimFirst = true;
+        update_digital_output(rhd,rhd.d[i])
+    end
 
     for i=0:7; setDacThreshold(rhd,i, 32768, true); end
 
@@ -882,7 +890,21 @@ setDacGain(rhd::FPGA,gain)=(SetWireInValue(rhd,WireInResetRun,gain<<13,0xe000);U
 
 setAudioNoiseSuppress(rhd::FPGA,noiseSuppress)=(SetWireInValue(rhd,WireInResetRun,noiseSuppress<<6,0x1fc0);UpdateWireIns(rhd))
 
-setTtlMode(rhd::FPGA,mode)=(SetWireInValue(rhd,WireInResetRun,mode<<3,0x0008);UpdateWireIns(rhd))
+function setTtlMode(rhd::FPGA,mode)
+
+    value = 0;
+    value += mode[1] ? 1 : 0;
+    value += mode[2] ? 2 : 0;
+    value += mode[3] ? 4 : 0;
+    value += mode[4] ? 8 : 0;
+    value += mode[5] ? 16 : 0;
+    value += mode[6] ? 32 : 0;
+    value += mode[7] ? 64 : 0;
+    value += mode[8] ? 128 : 0;
+
+    SetWireInValue(rhd,WireInResetRun,value,0x000000ff)
+    UpdateWireIns(rhd))
+end
 
 clearTtlOut(rhd::FPGA)=(SetWireInValue(rhd,WireInTtlOut, 0x0000);UpdateWireIns(rhd))
 
