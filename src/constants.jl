@@ -94,10 +94,11 @@ const WireInDacReref = 0x0e
 const WireInLedDisplay = 0x0d
 
 #Intan USB 3 Stimulation
-WireInStimCmdMode = 0x0f
+const WireInStimCmdMode = 0x0f
 const WireInStimRegAddr = 0x10
-const WireInManualTriggers = 0x11
-const WireInTtlOut = 0x12
+const WireInStimRegWord = 0x11
+const WireInManualTriggers = 0x12
+const WireInTtlOut = 0x13
 const TrigInRamAddrReset = 0x43
 
 const WireInDataStreamEn = 0x14

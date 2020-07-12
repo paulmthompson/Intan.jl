@@ -354,7 +354,7 @@ function initialize_board(rhd::FPGA,debug=false)
     for i=1:16
         rhd.d[i].channel=i
         rhd.d[i].triggerSource=0; rhd.d[i].triggerEnabled = false; rhd.d[i].edgeTriggered = true; rhd.d[i].triggerOnLow = false;
-        rhd.d[i].numPulses = 3; rhd.d[i].shape = 3; rhd.d[i].negStimFirst = true;
+        rhd.d[i].numPulses = 3; rhd.d[i].shapeInt = 3; rhd.d[i].negStimFirst = true;
         update_digital_output(rhd,rhd.d[i])
     end
 
