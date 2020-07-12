@@ -500,6 +500,7 @@ mutable struct Gui_Handles
     spect::Spectrogram
     save_widgets::Save_Widgets
     ref_widgets::Reference_Widgets
+    b::Gtk.GtkBuilder
 
     sc::SpikeSorting.Single_Channel
 

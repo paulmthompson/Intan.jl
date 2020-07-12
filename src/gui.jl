@@ -1,6 +1,13 @@
 
+if Sys.iswindows()
+    const glade_path = string(dirname(Base.source_path()),"\\interface.glade")
+else
+    const glade_path = string(dirname(Base.source_path()),"/interface.glade")
+end
 
 function makegui(r::RHD2000,s,task,fpga)
+
+    b = Builder(filename=glade_path)
 
     #GUI ARRANGEMENT
     grid = Grid()
@@ -308,6 +315,9 @@ push!(viewmenu,define_params)
 sv_open = MenuItem("Sort Viewer")
 push!(viewmenu,sv_open)
 
+define_ttls_ = MenuItem("TTL Configuration")
+push!(viewmenu,define_ttls_)
+
 #Options
 opopts = MenuItem("_Options")
 opmenu = Menu(opopts)
@@ -425,7 +435,8 @@ handles=Gui_Handles(win,button_run,button_init,button_record,c_slider,adj,c2_sli
                     1,1,zeros(Int64,500),zeros(UInt32,20),
                     zeros(UInt32,500),zeros(Int64,50),SoftScope(r.sr,Gtk.getgc(c),SAMPLES_PER_DATA_BLOCK),
                     popupmenu_scope,sort_widgets,spike_widgets,
-                    sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,ref_widgets,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
+                    sortview_handles,band_widgets,table_widgets,spect_widgets,save_widgets,ref_widgets,
+                    b,sc_widgets,sortview_handles.buf,rand(Int8,r.sr))
 
     handles.sc.s = -.125
 
@@ -587,6 +598,8 @@ add_reference_callbacks(ref_widgets,handles,r,fpga)
 #Parameter Table
 signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
 add_parameter_callbacks(table_widgets,handles,r,fpga)
+
+signal_connect(ttl_cb,define_ttls_,"activate",Void,(),false,(handles,r))
 
 #=
 Sortview Callbacks
