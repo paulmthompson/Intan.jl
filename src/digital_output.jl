@@ -27,7 +27,7 @@ function update_digital_output(fpga::FPGA,d::DigOut)
 
     eventRepeatStim = 0;
 
-    if (d.pulseOrTrain)
+    if (d.pulseOrTrain == 1)
         eventRepeatStim = eventStartStim + pulseTrainPeriod;
     else
         eventRepeatStim = 65535;

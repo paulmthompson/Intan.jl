@@ -129,15 +129,15 @@ end
 mutable struct DigOut
     channel::Int32
 
-    pulseOrTrain::Int32
+    pulseOrTrain::Int32 #0 = single Pulse, 1 = pulse train
 
     triggerEnabled::Bool
-    triggerOnLow::Bool
-    edgeTriggered::Bool
-    triggerSource::Int32 #0 - 15 corresponds to digital in 1 through 16
+    triggerOnLow::Bool # 0 = High Trigger, 1 = Low trigger
+    edgeTriggered::Bool # 0 = edge, 1 = Level triggered
+    triggerSource::Int32 #0 - 15 corresponds to digital in 1 through 16, 16-23 is analog inputs, 24 through 31 is keypresses
 
-    shapeInt::Int32 #3 = monophasic
-    negStimFirst::Bool
+    shapeInt::Int32 # 0 = Biphasic, 1 = Biphasic with delay, 2 = Triphasic, 3 = monophasic
+    negStimFirst::Bool # 0 = negative first, 1 = positive first
     numPulses::Int32
 
     postTriggerDelay::Int32 #after trigger, before pulse
