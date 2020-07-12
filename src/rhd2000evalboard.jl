@@ -903,7 +903,7 @@ function setTtlMode(rhd::FPGA,mode)
     value += mode[8] ? 128 : 0;
 
     SetWireInValue(rhd,WireInResetRun,value,0x000000ff)
-    UpdateWireIns(rhd))
+    UpdateWireIns(rhd)
 end
 
 clearTtlOut(rhd::FPGA)=(SetWireInValue(rhd,WireInTtlOut, 0x0000);UpdateWireIns(rhd))
