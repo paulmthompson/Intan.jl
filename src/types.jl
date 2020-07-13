@@ -148,7 +148,7 @@ mutable struct DigOut
 end
 
 function DigOut()
-    DigOut(0,0,true,false,true,0,3,false,0,0,1000,5000,5000)
+    DigOut(0,0,false,false,false,0,3,false,1,0,1000,5000,5000)
 end
 
 mutable struct FPGA <: IC
