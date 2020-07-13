@@ -2,6 +2,27 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkAdjustment" id="num_pulses_adjustment">
+    <property name="lower">1</property>
+    <property name="upper">100</property>
+    <property name="value">1</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="pulse_duration_adjustment">
+    <property name="lower">100</property>
+    <property name="upper">5000</property>
+    <property name="value">1000</property>
+    <property name="step_increment">50</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="pulse_refractory_adjustment">
+    <property name="lower">100</property>
+    <property name="upper">1000000</property>
+    <property name="value">1000</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="digital_out_window">
     <property name="can_focus">False</property>
     <child>
@@ -31,7 +52,37 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkComboBoxText" id="edge_trigger_combo">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="active">0</property>
+                            <items>
+                              <item translatable="yes">Edge Triggered</item>
+                              <item translatable="yes">Level Triggered</item>
+                            </items>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="high_low_trigger_combo">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="active">0</property>
+                            <items>
+                              <item translatable="yes">Trigger on High</item>
+                              <item translatable="yes">Trigger on Low</item>
+                            </items>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkToggleButton" id="manual_trigger">
                             <property name="label" translatable="yes">Manual Trigger</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -49,41 +100,30 @@
                             <property name="label" translatable="yes">Trigger Source</property>
                           </object>
                           <packing>
-                            <property name="left_attach">1</property>
+                            <property name="left_attach">0</property>
                             <property name="top_attach">1</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkComboBoxText">
+                          <object class="GtkComboBoxText" id="trigger_combo">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="active">0</property>
                             <items>
-                              <item translatable="yes">Edge Triggered</item>
+                              <item translatable="yes">Digital Input 1</item>
+                              <item translatable="yes">Digital Input 2</item>
+                              <item translatable="yes">Digital Input 3</item>
+                              <item translatable="yes">Digtal Input 4</item>
+                              <item translatable="yes">Manual Trigger 1</item>
+                              <item translatable="yes">Manual Trigger 2</item>
+                              <item translatable="yes">Manual Trigger 3</item>
+                              <item translatable="yes">Manual Trigger 4</item>
                             </items>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
-                            <property name="top_attach">2</property>
+                            <property name="top_attach">1</property>
                           </packing>
-                        </child>
-                        <child>
-                          <object class="GtkComboBoxText">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="active">0</property>
-                            <items>
-                              <item translatable="yes">Trigger on High</item>
-                              <item translatable="yes">Trigger on Low</item>
-                            </items>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="top_attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                         <child>
                           <placeholder/>
@@ -127,9 +167,10 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkSpinButton">
+                          <object class="GtkSpinButton" id="pulse_duration_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="adjustment">pulse_duration_adjustment</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -148,9 +189,10 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton">
+                          <object class="GtkSpinButton" id="pulse_refractory_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="adjustment">pulse_refractory_adjustment</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -161,7 +203,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Pulse Delay (us)</property>
+                            <property name="label" translatable="yes">Pulse Refractory (us)</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -169,7 +211,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton">
+                          <object class="GtkSpinButton" id="pulse_period_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                           </object>
@@ -223,9 +265,10 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton">
+                          <object class="GtkSpinButton" id="num_pulses_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="adjustment">num_pulses_adjustment</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -251,13 +294,27 @@
                             <items>
                               <item translatable="yes">Single Pulse</item>
                               <item translatable="yes">Multiple Pulses</item>
-                              <item translatable="yes">Infinite Pulses</item>
                             </items>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="top_attach">4</property>
                           </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="update_ttl_button">
+                            <property name="label" translatable="yes">Update</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">6</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
                         </child>
                       </object>
                     </child>

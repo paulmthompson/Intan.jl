@@ -4,6 +4,8 @@ function _make_digital_output()
 
 
 
+
+
 end
 
 function ttl_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
@@ -12,4 +14,10 @@ function ttl_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     visible(han.b["digital_out_window"],true)
     nothing
+end
+
+function stim_update_cb(widget::Ptr,user_data::Tuple{Gui_Handles,FPGA})
+
+    han, fpga = user_data
+
 end

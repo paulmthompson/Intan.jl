@@ -902,7 +902,13 @@ function setTtlMode(rhd::FPGA,mode)
     value += mode[7] ? 64 : 0;
     value += mode[8] ? 128 : 0;
 
-    SetWireInValue(rhd,WireInResetRun,value,0x000000ff)
+    SetWireInValue(rhd,WireInTtlOut,value,0x000000ff)
+    UpdateWireIns(rhd)
+end
+
+function manual_trigger(rhd,trigger,triggerOn)
+    #Trigger 0-7
+    SetWireInValue(rhd,Intan.WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
     UpdateWireIns(rhd)
 end
 
