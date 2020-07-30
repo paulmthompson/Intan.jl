@@ -46,6 +46,11 @@ include("gui/digital_out_gui.jl")
 
 #functions needed for evaluation board from Intan
 include("ICs/Opal_Kelly_FPGA/opalkelly_gui.jl")
+include("ICs/Opal_Kelly_FPGA/c_wrapper.jl")
+include("ICs/Opal_Kelly_FPGA/dacs.jl")
+include("ICs/Opal_Kelly_FPGA/ttls.jl")
+include("ICs/Opal_Kelly_FPGA/intan_expansion_board.jl")
+include("ICs/Opal_Kelly_FPGA/cable_delay.jl")
 
 include("rhd2000evalboard.jl")
 include("rhd2000registers.jl")
