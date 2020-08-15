@@ -30,7 +30,7 @@ function update_digital_output(fpga::FPGA,d::DigOut)
     if (d.pulseOrTrain == 1)
         eventRepeatStim = eventStartStim + pulseTrainPeriod;
     else
-        eventRepeatStim = 65535;
+        eventRepeatStim = 4294967295;
     end
 
     #EventStartStim (post Trigger Delay) #These times are in units of clock ticks
