@@ -228,13 +228,13 @@ function read_ttl_header(fname="ttl.bin")
     myheader
 end
 
-function prepare_ttl_header(rhd::RHD2000)
+function prepare_ttl_header(rhd::RHD2000,savepath=rhd.save.ttl)
 
-    if isfile(rhd.save.ttl)
+    if isfile(path)
         return
     end
 
-    f=open(rhd.save.ttl,"a+")
+    f=open(path,"a+")
 
     t=now()
 

@@ -39,6 +39,7 @@ mutable struct SaveOpt
     #Intan board ttls
     ttl_s::Bool
     ttl::String
+    ttl_out::String
 
     #Local field potential could be saved if it is calculated in real time
     lfp_s::Bool
@@ -52,12 +53,12 @@ end
 function make_save_structure(save_full::Bool)
     @static if is_unix()
         t=string("./",now())
-        out=SaveOpt(false,save_full,string(t,"/v.bin"),false,string(t,"/ts.bin"),false,string(t,"/adc.bin"),false,string(t,"/ttl.bin"),false,string(t,"/lfp.bin"),t,string(t,"/.backup/"))
+        out=SaveOpt(false,save_full,string(t,"/v.bin"),false,string(t,"/ts.bin"),false,string(t,"/adc.bin"),false,string(t,"/ttl.bin"),string(t,"/ttl_out.bin"),false,string(t,"/lfp.bin"),t,string(t,"/.backup/"))
     end
 
     @static if is_windows()
         t=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-        out=SaveOpt(false,save_full,string(t,"\\v.bin"),false,string(t,"\\ts.bin"),false,string(t,"\\adc.bin"),false,string(t,"\\ttl.bin"),false,string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
+        out=SaveOpt(false,save_full,string(t,"\\v.bin"),false,string(t,"\\ts.bin"),false,string(t,"\\adc.bin"),false,string(t,"\\ttl.bin"),string(t,"\\ttl_out.bin"),false,string(t,"\\lfp.bin"),t,string(t,"\\.backup\\"))
     end
     out
 end

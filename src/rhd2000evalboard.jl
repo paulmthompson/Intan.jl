@@ -1157,8 +1157,14 @@ function queueToFile(rhd::RHD2000,task::Task,fpga)
             close(f)
         end
         if rhd.save.ttl_s
+            #TTL in
             f=open(rhd.save.ttl,"a+")
             write(f,fpga[1].ttlin)
+            close(f)
+
+            #TTL out
+            f=open(rhd.save.ttl_out,"a+")
+            write(f,fpga[1].ttlout)
             close(f)
         end
         if rhd.save.lfp_s
