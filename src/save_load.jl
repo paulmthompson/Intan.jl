@@ -4,6 +4,41 @@ export save_ts_jld, save_ts_mat, parse_v
 methods to select which variables in workspace to save
 =#
 
+function parse_all(rhd)
+
+    if rhd.save.save_full #parse voltage
+        try
+            v=parse_v(rhd.save.v)
+        catch
+            println("Couldn't parse voltage data!")
+        end
+    end
+    if rhd.save.ttl_s
+        try #TTL in
+            ttlin=parse_ttl(rhd.save.ttl) #These are timestamps, polarity matters
+        catch
+            println("Could not parse TTL inputs")
+        end
+
+        #TTL out
+        try
+            ttlout=parse_ttl(rhd.save.ttl_out) #These are timestamps, polarity matters
+        catch
+            println("Could not parse TTL outputs")
+        end
+    end
+    if rhd.save.adc_s
+        try
+            adcs=parse_adc(rhd.save.adc)
+        catch
+            println("Could not parse ADCs")
+        end
+    end
+    if rhd.save.ts_s #Time stamps for sorting 
+
+    end
+end
+
 mutable struct Voltage_Header
     date_m::UInt8
     date_d::UInt8
