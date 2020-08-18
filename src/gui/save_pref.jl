@@ -128,6 +128,7 @@ function save_entry_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     rhd.save.v=string(base_path,"/v.bin")
     rhd.save.ts=string(base_path,"/ts.bin")
     rhd.save.ttl=string(base_path,"/ttl.bin")
+    rhd.save.ttl_out=string(base_path,"/ttl_out.bin")
     rhd.save.lfp=string(base_path,"/lfp.bin")
     rhd.save.adc=string(base_path,"/adc.bin")
 
@@ -143,7 +144,8 @@ function save_entry_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         prepare_adc_header(rhd)
     end
     if rhd.save.ttl_s
-        prepare_ttl_header(rhd)
+        prepare_ttl_header(rhd) #TTL in
+        prepare_ttl_header(rhd,rhd.save.ttl_out) #TTl out
     end
     if rhd.save.lfp_s
         prepare_lfp_header(rhd)
