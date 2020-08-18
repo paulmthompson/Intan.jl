@@ -17,7 +17,7 @@ end
 
 function manual_trigger(rhd,trigger,triggerOn)
     #Trigger 0-7
-    SetWireInValue(rhd,Intan.WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
+    SetWireInValue(rhd,WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
     UpdateWireIns(rhd)
 end
 
