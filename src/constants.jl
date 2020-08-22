@@ -97,7 +97,10 @@ const WireInLedDisplay = 0x0d
 const WireInStimCmdMode = 0x0f
 const WireInStimRegAddr = 0x10
 const WireInStimRegWord = 0x11
+
+#Manual TTL triggers (0-15) and manual 16-bit dack value (31-16)
 const WireInManualTriggers = 0x12
+
 const WireInTtlOut = 0x13
 const TrigInRamAddrReset = 0x43
 

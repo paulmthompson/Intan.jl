@@ -265,11 +265,11 @@ end
 
 function prepare_ttl_header(rhd::RHD2000,savepath=rhd.save.ttl)
 
-    if isfile(path)
+    if isfile(savepath)
         return
     end
 
-    f=open(path,"a+")
+    f=open(savepath,"a+")
 
     t=now()
 

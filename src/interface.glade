@@ -16,13 +16,6 @@
     <property name="step_increment">50</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkAdjustment" id="pulse_refractory_adjustment">
-    <property name="lower">100</property>
-    <property name="upper">1000000</property>
-    <property name="value">1000</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkWindow" id="digital_out_window">
     <property name="can_focus">False</property>
     <child>
@@ -167,7 +160,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkSpinButton" id="pulse_duration_sb">
+                          <object class="GtkSpinButton" id="pulse_duration_train_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="adjustment">pulse_duration_adjustment</property>
@@ -189,10 +182,9 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="pulse_refractory_sb">
+                          <object class="GtkSpinButton" id="pulse_period_train_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">pulse_refractory_adjustment</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -203,7 +195,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Pulse Refractory (us)</property>
+                            <property name="label" translatable="yes">Pulse Period (ms)</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -211,7 +203,113 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="pulse_period_sb">
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Pulse Frequency:</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="pulse_frequency">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Frequency</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Pulse Train</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFrame">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkAlignment">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="left_padding">12</property>
+                    <child>
+                      <object class="GtkGrid">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Number of Pulses</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="num_pulses_sb">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="adjustment">num_pulses_adjustment</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="pulse_duration_burst_sb">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="text" translatable="yes">750</property>
+                            <property name="adjustment">pulse_duration_adjustment</property>
+                            <property name="value">750</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Pulse Duration (us)</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="pulse_period_burst_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                           </object>
@@ -232,17 +330,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="pulse_frequency">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Frequency</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="top_attach">3</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -254,10 +341,23 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="pulse_frequency1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Pulse Repetition</property>
+                            <property name="label" translatable="yes">Frequency</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="top_attach">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton">
+                            <property name="label" translatable="yes">Repeat Burst?</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -265,10 +365,9 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="num_pulses_sb">
+                          <object class="GtkSpinButton" id="burst_period_burst_sb">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">num_pulses_adjustment</property>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -279,38 +378,11 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Number of Pulses</property>
+                            <property name="label" translatable="yes">Burst Period (ms)</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="top_attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkComboBoxText" id="pulse_repetition_combo">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="active">0</property>
-                            <items>
-                              <item translatable="yes">Single Pulse</item>
-                              <item translatable="yes">Multiple Pulses</item>
-                            </items>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="top_attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="update_ttl_button">
-                            <property name="label" translatable="yes">Update</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="top_attach">6</property>
                           </packing>
                         </child>
                         <child>
@@ -324,12 +396,12 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Pulse</property>
+                    <property name="label" translatable="yes">Burst</property>
                   </object>
                 </child>
               </object>
               <packing>
-                <property name="left_attach">1</property>
+                <property name="left_attach">2</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -340,12 +412,64 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkGrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">TTL Channel: </property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">1</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton">
+                <property name="label" translatable="yes">Active</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+          </packing>
         </child>
         <child>
           <placeholder/>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkAdjustment" id="pulse_refractory_adjustment">
+    <property name="lower">100</property>
+    <property name="upper">1000000</property>
+    <property name="value">1000</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
 </interface>

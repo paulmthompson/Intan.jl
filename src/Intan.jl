@@ -51,6 +51,7 @@ include("ICs/Opal_Kelly_FPGA/dacs.jl")
 include("ICs/Opal_Kelly_FPGA/ttls.jl")
 include("ICs/Opal_Kelly_FPGA/intan_expansion_board.jl")
 include("ICs/Opal_Kelly_FPGA/cable_delay.jl")
+include("ICs/Opal_Kelly_FPGA/headstage_cmd.jl")
 
 include("rhd2000evalboard.jl")
 include("rhd2000registers.jl")
