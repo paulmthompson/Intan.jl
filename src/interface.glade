@@ -75,7 +75,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkToggleButton" id="manual_trigger">
+                          <object class="GtkToggleButton" id="manual_trigger_button">
                             <property name="label" translatable="yes">Manual Trigger</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -141,7 +141,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
+                <property name="top_attach">1</property>
               </packing>
             </child>
             <child>
@@ -224,12 +224,6 @@
                             <property name="top_attach">2</property>
                           </packing>
                         </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
                       </object>
                     </child>
                   </object>
@@ -244,7 +238,7 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
+                <property name="top_attach">1</property>
               </packing>
             </child>
             <child>
@@ -402,8 +396,29 @@
               </object>
               <packing>
                 <property name="left_attach">2</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="pulse_burst_combo">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="active">0</property>
+                <items>
+                  <item translatable="yes">Pulse</item>
+                  <item translatable="yes">Burst</item>
+                </items>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>
@@ -449,9 +464,6 @@
                 <property name="left_attach">2</property>
                 <property name="top_attach">0</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
             </child>
           </object>
           <packing>
