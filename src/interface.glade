@@ -446,7 +446,17 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkCheckButton">
+                <property name="label" translatable="yes">Active</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
             </child>
             <child>
               <placeholder/>
@@ -458,52 +468,25 @@
           </packing>
         </child>
         <child>
-          <object class="GtkGrid">
+          <object class="GtkComboBoxText" id="ttl_channel_select">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">TTL Channel: </property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">1</property>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCheckButton">
-                <property name="label" translatable="yes">Active</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="draw_indicator">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
+            <property name="active">0</property>
+            <items>
+              <item translatable="yes">Channel 1</item>
+              <item translatable="yes">Channel 2</item>
+              <item translatable="yes">Channel 3</item>
+              <item translatable="yes">Channel 4</item>
+              <item translatable="yes">Channel 5</item>
+              <item translatable="yes">Channel 6</item>
+              <item translatable="yes">Channel 7</item>
+              <item translatable="yes">Channel 8</item>
+            </items>
           </object>
           <packing>
             <property name="left_attach">0</property>
-            <property name="top_attach">2</property>
+            <property name="top_attach">0</property>
           </packing>
-        </child>
-        <child>
-          <placeholder/>
         </child>
       </object>
     </child>

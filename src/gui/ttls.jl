@@ -60,11 +60,13 @@ function update_ttl_burst(han,d)
 
     if get_gtk_property(han.b["repeat_burst_checkbox"],:active,Bool)
         d.refractoryPeriod = get_gtk_property(han.b["burst_period_burst_sb"],:value,Int) * 1000 #ms to us
+        d.repeatBurst=true
     else
         #this effectively sets how long until next stimulation. don't want it to be too long
         d.refractoryPeriod = 1e6 * 10
     end
 end
+
 
 #=
 mutable struct DigOut

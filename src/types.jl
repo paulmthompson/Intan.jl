@@ -146,10 +146,11 @@ mutable struct DigOut
     refractoryPeriod::Int32
     pulseTrainPeriod::Int32
 
+    repeatBurst::Bool
 end
 
 function DigOut()
-    DigOut(0,0,false,false,false,0,3,false,1,0,1000,5000,5000)
+    DigOut(0,0,false,false,false,0,3,false,1,0,1000,5000,5000,false)
 end
 
 mutable struct FPGA <: IC
