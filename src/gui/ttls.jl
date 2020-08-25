@@ -34,12 +34,11 @@ end
 
 function update_ttl_pulse(han,d)
 
+    pw = get_gtk_property(han.b["pulse_duration_train_sb"],:value,Int) #us
+    period = get_gtk_property(han.b["pulse_period_train_sb"],:value,Int) * 1000 #convert ms to us
+
     d.pulseOrTrain = 0
     d.numPulses = 1
-
-    pw = get_gtk_property(han.b["pulse_duration_train_sb"],:value,Int)
-    period = get_gtk_property(han.b["pulse_period_train_sb"],:value,Int) * 1000
-
     d.firstPhaseDuration = pw
     d.refractoryPeriod = period - pw
     d.pulseTrainPeriod = period - pw
@@ -48,6 +47,23 @@ end
 
 function update_ttl_burst(han,d)
 
+    pw = get_gtk_property(han.b["pulse_duration_burst_sb"],:value,Int) #us
+    period = get_gtk_property(han.b["pulse_period_burst_sb"]) * 1000 #convert ms to us
+    num_pulses = get_gtk_property(han.b["num_pulses_sb"],:value,Int)
+
+    d.pulseOrTrain = 1
+    d.numPulses = num_pulses
+
+    d.firstPhaseDuration = pw
+    d.pulseTrainPeriod = period
+
+
+    if get_gtk_property(han.b["repeat_burst_checkbox"],:active,Bool)
+        d.refractoryPeriod = get_gtk_property(han.b["burst_period_burst_sb"],:value,Int) * 1000 #ms to us
+    else
+        #this effectively sets how long until next stimulation. don't want it to be too long
+        d.refractoryPeriod = 1e6 * 10
+    end
 end
 
 #=
