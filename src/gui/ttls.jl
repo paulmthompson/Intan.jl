@@ -4,6 +4,20 @@ function update_ttl_from_gui(han,fpga)
     c=channel
     d=fpga[1].d[c]
 
+    update_ttl_trigger(han,d)
+
+    if get_gtk_property(han.b["pulse_burst_combo"],:value,Int)==0 #pulse
+        update_ttl_pulse(han,d)
+    else
+         update_ttl_burst(han,d)
+    end
+
+end
+
+function update_ttl_trigger(han,d)
+
+    #Trigger source
+
     if get_gtk_property(han.b["edge_trigger_combo"],:value,Int) == 0
         d.edgeTriggered = 0 #Edge Triggered
     else
@@ -16,10 +30,27 @@ function update_ttl_from_gui(han,fpga)
         d.triggerOnLow = 1 #Trigger on Low
     end
 
+end
 
+function update_ttl_pulse(han,d)
+
+    d.pulseOrTrain = 0
+    d.numPulses = 1
+
+    pw = get_gtk_property(han.b["pulse_duration_train_sb"],:value,Int)
+    period = get_gtk_property(han.b["pulse_period_train_sb"],:value,Int) * 1000
+
+    d.firstPhaseDuration = pw
+    d.refractoryPeriod = period - pw
+    d.pulseTrainPeriod = period - pw
 
 end
 
+function update_ttl_burst(han,d)
+
+end
+
+#=
 mutable struct DigOut
     channel::Int32
 
@@ -38,5 +69,5 @@ mutable struct DigOut
     firstPhaseDuration::Int32
     refractoryPeriod::Int32
     pulseTrainPeriod::Int32
-
 end
+=#
