@@ -1,6 +1,6 @@
 name = "Intan"
 uuid = "160d5eed-cb0b-5d5e-9732-2f740c539f3e"
-version = "0.1"
+version = "0.1.1"
 
 [deps]
 SpikeSorting = "acc641c0-d14d-5ed3-8a01-2b4adfca2b15"
