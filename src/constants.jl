@@ -177,6 +177,7 @@ const rhd2000Delay=9.0e-9
 const misoSettleTime=6.7e-9
 const cableVelocity=.555*speedOfLight
 
+# Adapted from https://github.com/JuliaAttic/Color.jl/issues/75#issuecomment-68073631
 const jet_r,jet_g,jet_b=zeros(UInt32,256),zeros(UInt32,256),zeros(UInt32,256)
 for i = 0:255
   n=4*i/256

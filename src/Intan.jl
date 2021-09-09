@@ -25,7 +25,9 @@ end
 
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
 
-const MyFilter = DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
+#const MyFilter = DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
+const MyFilter = DSP.DF2TFilter{SecondOrderSections{:z, Float64, Float64}, Matrix{Float64}}
+
 
 include("types.jl")
 include("constants.jl")
