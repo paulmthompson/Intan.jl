@@ -34,7 +34,7 @@ function parse_all(rhd)
             println("Could not parse ADCs")
         end
     end
-    if rhd.save.ts_s #Time stamps for sorting 
+    if rhd.save.ts_s #Time stamps for sorting
 
     end
 end
@@ -382,7 +382,7 @@ function parse_ts(fname="ts.bin")
 
     myheader=read_stamp_header(fname)
 
-    ss=[Array(Spike,0) for i=1:myheader.num_channels]
+    ss=[Array{Spike,1}() for i=1:myheader.num_channels]
 
     numcells=zeros(Int64,myheader.num_channels)
 
@@ -398,7 +398,7 @@ function parse_ts(fname="ts.bin")
             chan=read(f,UInt16,1)[1] #channel
             num=read(f,UInt16,1)[1] #Number of upcoming spikes
             for i=1:num
-                myss=read(f,Int64,2) #time stamps
+                myss=[read(f,Int64),read(f,Int64)] #time stamps
                 clus=read(f,UInt8,1)[1] #cluster
                 if clus>numcells[j]
                     numcells[j]=clus
@@ -681,7 +681,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
 
     num_channel=length(ss)
 
-    spikes=get_ts_dict(ss,numcells,tmin,sr)
+    spikes=get_ts_dict(ss,numcells,sr,tmin)
 
     tscounts=zeros(Int32,130,5)
 
@@ -690,23 +690,23 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
 	#This array only logs sorted units. 0 entry (1 in Julia) is unused
     for i=1:length(ss)
         for j=1:length(ss[i])
-	if ss[i][j].id>1
-            tscounts[i+1,ss[i][j].id]+=1
-	end
-	end
+	           if ss[i][j].id>1
+                   tscounts[i+1,ss[i][j].id]+=1
+	           end
+	     end
     end
 
     samples_per_wave=convert(Int16,length(ss[1][1].inds))
 
 	if ttl_parse
-    		myttl=parse_ttl(ttlname)
+    	myttl=parse_ttl(ttlname)
 	end
     evcounts=zeros(Int32,512)
 
 	if ttl_parse
-    for i=1:16
-        evcounts[i]=length(myttl[i])
-    end
+        for i=1:16
+            evcounts[i]=length(myttl[i])
+        end
 	end
 
     f_out=open(out_name,"a+")
@@ -714,14 +714,14 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     #First is File Header
     file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,ss[1][end].inds.stop/sr,tscounts,16,evcounts)
 
-    for i=1:length(fieldnames(file_header))
+    for i=1:length(fieldnames(typeof(file_header)))
         write(f_out,getfield(file_header,i))
     end
 
     #Then Spike Channel Headers
     for i=1:length(ss)
         chan_header=PL_ChanHeader(i,numcells[i])
-        for j=1:length(fieldnames(chan_header))
+        for j=1:length(fieldnames(typeof(chan_header)))
             write(f_out,getfield(chan_header,j))
         end
     end
@@ -729,7 +729,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     #Finally is event channel headers
     for i=1:16
         event_header=PL_EventHeader(i)
-        for j=1:length(fieldnames(event_header))
+        for j=1:length(fieldnames(typeof(event_header)))
             write(f_out,getfield(event_header,j))
         end
     end
@@ -751,7 +751,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
                     myv[count]=v[k]
                     count+=1
                 end
-                for k=1:length(fieldnames(header))
+                for k=1:length(fieldnames(typeof(header)))
                     write(f_out,getfield(header,k))
                 end
                 write(f_out,myv)
@@ -764,7 +764,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     for i=1:16
         for j=1:length(myttl[i])
             header=PL_DataBlockHeader(4,myttl[i][j],i,0,0)
-            for k=1:length(fieldnames(header))
+            for k=1:length(fieldnames(typeof(header)))
                 write(f_out,getfield(header,k))
             end
         end
