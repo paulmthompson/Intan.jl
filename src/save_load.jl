@@ -386,6 +386,8 @@ function parse_ts(fname="ts.bin")
 
     numcells=zeros(Int64,myheader.num_channels)
 
+    times = zeros(UInt32,0)
+
     f=open(fname, "r+")
 
     seek(f,12)
@@ -407,11 +409,13 @@ function parse_ts(fname="ts.bin")
             end
         end
 
+        push!(times,t)
+
     end
 
     close(f)
 
-    (ss,numcells)
+    (ss,numcells,times)
 end
 
 function get_ts_dict(ss::Array{Array{Spike,1},1},numcells::Array{Int64,1},sr=30000,tmin=0.0)
@@ -439,7 +443,7 @@ function save_ts_mat(in_name="ts.bin",out_name="ts.mat")
 
     myheader=read_stamp_header(in_name)
 
-    (ss,numcells)=parse_ts(in_name)
+    (ss,numcells,times)=parse_ts(in_name)
 
     spikes=get_ts_dict(ss,numcells,myheader.sr)
 
@@ -454,7 +458,7 @@ function save_ts_jld(in_name="ts.bin",out_name="ts.jld")
 
     myheader=read_stamp_header(in_name)
 
-    (ss,numcells)=parse_ts(in_name)
+    (ss,numcells,times)=parse_ts(in_name)
 
     spikes=get_ts_dict(ss,numcells,myheader.sr)
 
@@ -585,7 +589,7 @@ function PL_FileHeader(sr,num_chan,num_point,pre_t,t_end,tscounts,event_chan,evc
     com=zeros(UInt8,128)
     pad=zeros(UInt8,46)
 
-    PL_FileHeader(mn,ver,com,sr,num_chan,event_chan,0,num_point,pre_t,1,1,1,1,1,1,0,0,t_end,0x01,0x01,16,12,3000,5000,0x03e8,pad,tscounts,tscounts,evcounts)
+    PL_FileHeader(mn,ver,com,sr,num_chan,event_chan,num_chan,num_point,pre_t,1,1,1,1,1,1,0,0,t_end,0x01,0x01,16,16,3000,5000,0x03e8,pad,tscounts,tscounts,evcounts)
 end
 
 mutable struct PL_ChanHeader
@@ -651,6 +655,35 @@ function PL_EventHeader(num)
     PL_EventHeader(myname,num,zeros(UInt8,128),zeros(Int32,33))
 end
 
+mutable struct PL_SlowChannelHeader
+    Name::Array{UInt8,1}
+    Channel::Int32
+    ADFreq::Int32
+    Gain::Int32
+    Enabled::Int32
+    PreAmpGain::Int32
+    SpikeChannel::Int32
+    Comment::Array{UInt8,1}
+    Padding::Array{Int32,1}
+end
+
+function PL_SlowChannelHeader(num,sr)
+    myname=zeros(UInt8,32)
+
+    if num>100
+        c=string("Spike",num)
+    elseif num>10
+        c=string("Spike0",num)
+    else
+        c=string("Spike00",num)
+    end
+    for i = 1:length(c)
+        myname[i]=convert(UInt8,c[i])
+    end
+
+    PL_SlowChannelHeader(myname,num,sr,1000,1,1000,num,zeros(UInt8,128),zeros(Int32,28))
+end
+
 mutable struct PL_DataBlockHeader
     Type::Int16
     UpperByteOf5ByteTimestamp::UInt16
@@ -661,11 +694,16 @@ mutable struct PL_DataBlockHeader
     NumberOfWordsInWaveform::Int16
 end
 
+#=
+1 = spike, 4 = event, 5 = continuous
+=#
 function PL_DataBlockHeader(mytype,t,num,unit,wave_size)
     if mytype==1
         PL_DataBlockHeader(1,0,t,num,unit,1,wave_size)
     elseif mytype==4
         PL_DataBlockHeader(4,0,t,num,0,0,0)
+    elseif mytype==5
+        PL_DataBlockHeader(5,0,t,num,0,1,wave_size)
     end
 end
 
@@ -677,7 +715,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     sample_size=v_header.samples_per_block
     sr=ts_header.sr
 
-    (ss,numcells)=parse_ts(tsname)
+    (ss,numcells,times)=parse_ts(tsname)
 
     num_channel=length(ss)
 
@@ -712,7 +750,7 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     f_out=open(out_name,"a+")
 
     #First is File Header
-    file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,ss[1][end].inds.stop/sr,tscounts,16,evcounts)
+    file_header=PL_FileHeader(sr,length(ss),samples_per_wave,24,length(read_single_v(vname,1)),tscounts,16,evcounts)
 
     for i=1:length(fieldnames(typeof(file_header)))
         write(f_out,getfield(file_header,i))
@@ -734,16 +772,25 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
         end
     end
 
+
+    for i=1:num_channel
+        slow_header = PL_SlowChannelHeader(i,sr)
+        for j=1:length(fieldnames(typeof(slow_header)))
+            write(f_out,getfield(slow_header,j))
+        end
+    end
+
     #This will suck for big files
     #should read in one channel voltage at a time
 
     #Write data blocks for spike waveforms
     myv=zeros(Int16,samples_per_wave)
     for i=1:length(ss)
-	v=read_single_v(vname,i)
+	    v=read_single_v(vname,i)
+
         for j=1:length(ss[i])
-            header=PL_DataBlockHeader(1,ss[i][j].inds.start,i,ss[i][j].id-1,samples_per_wave)
-            myind=ss[i][j].inds.start
+            header=PL_DataBlockHeader(1,ss[i][j].inds.start - times[1],i,ss[i][j].id-1,samples_per_wave)
+            myind=ss[i][j].inds.start - times[1]
 
             if myind+samples_per_wave-1 < size(v,1)
                 count=1
@@ -757,7 +804,26 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
                 write(f_out,myv)
             end
         end
+
+        j = 1
+        while j < length(v)
+
+            if j + 119 > length(v)
+                ind_f = length(v)
+                d = length(v) - j + 1
+            else
+                ind_f = j + 119
+                d = 120
+            end
+            header=PL_DataBlockHeader(5,j-1,i,0,d)
+            for k=1:length(fieldnames(typeof(header)))
+                write(f_out,getfield(header,k))
+            end
+            write(f_out,v[j:ind_f])
+            j += 120
+        end
     end
+
 
     #Write Event blocks
 	if ttl_parse
