@@ -131,12 +131,12 @@ function init_board_helper(fpga::FPGA,sr,mydebug=false)
     #Upload version with no ADC calibration to AuxCmd3 RAM Bank 0.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),false,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 0)
+    selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
 
     #Upload version with ADC calibration to AuxCmd3 RAM Bank 1.
     commandList=createCommandListRegisterConfig(zeros(Int32,1),true,fpga.r)
     uploadCommandList(fpga,commandList, "AuxCmd3", 1)
-
-    selectAuxCommandLength(fpga,"AuxCmd3", 0, length(commandList) - 1)
+    selectAuxCommandLength(fpga,"AuxCmd3", 1, length(commandList) - 1)
 
     if mydebug==false
         for port in ["PortA","PortB","PortC","PortD"]
@@ -999,7 +999,7 @@ function calculateDataBlockSizeInWords(rhd::FPGA)
     #rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36)+8+2)
 
 
-    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*36) + 8+2)
+    rhd.numWords = SAMPLES_PER_DATA_BLOCK * (4+2+(rhd.numDataStreams*35) + (rhd.numDataStreams % 4) + 8+2)
 
     nothing
     #4 = magic number; 2 = time stamp; 36 = (32 amp channels + 3 aux commands + 1 filler word); 8 = ADCs; 2 = TTL in/out
@@ -1112,7 +1112,7 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 
 	index+=8
 	mytime[t,fpga.id]=convertUsbTimeStamp(fpga.usbBuffer,index)
-	index+=4
+    index+=4
 
 	#Auxiliary results
 	index += (2*3*fpga.numDataStreams)
@@ -1120,21 +1120,22 @@ function fillFromUsbBuffer!(fpga::FPGA,blockIndex::Int64,v,mytime)
 	#Amplifier
 	for i=1:32
 	    for j=1:fpga.numDataStreams
-		@inbounds v[t,32*(j-1)+i+fpga.shift]=convertUsbWord(fpga.usbBuffer,index)
-		index+=2
+		     @inbounds v[t,32*(j-1)+i+fpga.shift]=convertUsbWord(fpga.usbBuffer,index)
+		     index+=2
 	    end
 	end
 
 	#skip filler word(s)
-        if fpga.numDataStreams>0
-	       index += 2
-       end
+    if fpga.numDataStreams>0
+	      index += 2 * (fpga.numDataStreams % 4) #For USB3
+          #index += 2 * fpga.numDataStreams
+    end
 
 	#ADCs
-        for i=1:8
-            @inbounds fpga.adc[t,i]=convertUsbWord(fpga.usbBuffer,index)
-            index+=2
-        end
+    for i=1:8
+        @inbounds fpga.adc[t,i]=convertUsbWord(fpga.usbBuffer,index)
+        index+=2
+    end
 
 	#TTL in
         @inbounds fpga.ttlin[t]=convertUsbWordu(fpga.usbBuffer,index)

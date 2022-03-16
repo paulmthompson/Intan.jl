@@ -32,7 +32,7 @@ function CreateRHD2000Registers(sampleRate)
     setDspCutoffFreq(dsp_b,r)
 
     #Register 5 variables
-    r.zcheckDacPower=0
+    r.zcheckDacPower=0 #1?
     r.zcheckLoad=0
     setZcheckScale("ZcheckCs100fF", r)
     r.zcheckConnAll=0
@@ -439,7 +439,7 @@ end
 
 #Create a list of 60 commands to program most RAM registers on a RHD2000 chip, read those values back to confirm programming, read ROM registers, and (if calibrate == true) run ADC calibration.
 
-function createCommandListRegisterConfig(commandList, calibrate, r)
+function createCommandListRegisterConfig(commandList, calibrate, r,num_commands=1024,board=32)
 
     #Start with a few dummy commands in case chip is still powering up
     push!(commandList, createRhd2000Command("Rhd2000CommandRegRead", 63))
@@ -523,14 +523,18 @@ function createCommandListRegisterConfig(commandList, calibrate, r)
     end
 
     #Program amplifier 31-63 power up/down registers in case RHD2164 is connected
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 18, getRegisterValue(18,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 19, getRegisterValue(19,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 20, getRegisterValue(20,r)))
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 21, getRegisterValue(21,r)))
+    if board == 64
+        push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 18, getRegisterValue(18,r)))
+        push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 19, getRegisterValue(19,r)))
+        push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 20, getRegisterValue(20,r)))
+        push!(commandList, createRhd2000Command("Rhd2000CommandRegWrite", 21, getRegisterValue(21,r)))
+    end
 
-    #End with a dummy command
-    push!(commandList, createRhd2000Command("Rhd2000CommandRegRead",63))
+    #End with a dummy command to fill out commands to num_commands
+    for i=(length(commandList)+1):num_commands
+        push!(commandList, createRhd2000Command("Rhd2000CommandRegRead",63))
+    end
 
-return commandList
+    return commandList
 
 end

@@ -15,7 +15,7 @@ function setCableLengthMeters(rhd::FPGA,port, lengthInMeters::Float64)
     if delay < 1
         delay=1
     end
-
+    println(delay)
     setCableDelay(rhd,port, delay)
     nothing
 end
@@ -24,11 +24,11 @@ function estimateCableLengthMeters(fpga,delay)
 
     tStep=1.0 / (2800.0 * fpga.sampleRate)
     cableVelocity = 0.555 * speedOfLight
-    distance = ((delay - 1.0) * tStep - (xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime))
+    distance = cableVelocity * ((delay - 1.0) * tStep - (xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime))
     if distance <0.0
         distance = 0.0
     end
-    distance
+    distance / 2.0
 end
 
 function approxCableLengthFeet(fpga,delay)
@@ -67,7 +67,7 @@ end
 
 function check_delay_output(fpga::FPGA,port,output)
 
-    data_stream_inds=find(fpga.dataStreamEnabled.==1)
+    data_stream_inds=findall(dropdims(fpga.dataStreamEnabled,dims=1) .==1 ) #This is a 2D array, need to convert to 1D
     if port=="PortA"
         outinds=find((data_stream_inds.==1).|(data_stream_inds.==2).|(data_stream_inds.==9).|(data_stream_inds.==10))
     elseif port=="PortB"
@@ -80,10 +80,10 @@ function check_delay_output(fpga::FPGA,port,output)
 
     hits=0
     for j in outinds
-        hits+=output[33,j]==UInt16("I"[1])
-        hits+=output[34,j]==UInt16("N"[1])
-        hits+=output[35,j]==UInt16("T"[1])
-        hits+=output[36,j]==UInt16("A"[1])
+        hits += output[33,j] == UInt16("I"[1])
+        hits += output[34,j]==UInt16("N"[1])
+        hits += output[35,j]==UInt16("T"[1])
+        hits += output[36,j]==UInt16("A"[1])
         hits+=output[37,j]==UInt16("N"[1])
         hits+=output[25,j]==UInt16("R"[1])
         hits+=output[26,j]==UInt16("H"[1])
@@ -166,11 +166,11 @@ function determine_delay(fpga::FPGA,port)
 
     if all(.!output_delay)
         println("No delay setting produces optimum results")
-	setCableLengthFeet(fpga,port, 6.0)
+	    setCableLengthFeet(fpga,port, 6.0)
     else
-        setCableDelay(fpga,port,find(output_delay.==true)[1]-1)
-        println("Optimum delay on ", port, " is ", find(output_delay.==true)[1]-1)
-        println("Approx ", approxCableLengthFeet(fpga,find(output_delay.==true)[1]-1), " feet")
+        setCableDelay(fpga,port,findall(output_delay.==true)[1]-1)
+        println("Optimum delay on ", port, " is ", findall(output_delay.==true)[1]-1)
+        println("Approx ", approxCableLengthFeet(fpga,findall(output_delay.==true)[1]-1), " feet")
     end
 
     nothing
