@@ -707,7 +707,7 @@ function PL_DataBlockHeader(mytype,t,num,unit,wave_size)
     end
 end
 
-function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_parse=false,ttlname="ttl.bin",tmin=0)
+function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_parse=false,ttlname="ttl.bin",tmin=0,gain=1)
 
     v_header=read_v_header(vname)
     ts_header=read_stamp_header(tsname)
@@ -787,6 +787,16 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
     myv=zeros(Int16,samples_per_wave)
     for i=1:length(ss)
 	    v=read_single_v(vname,i)
+        for ii=1:length(v)
+            temp = gain * v[ii]
+            if temp > typemax(typeof(v[ii]))
+                v[ii] = typemax(typeof(v[ii]))
+            elseif temp < typemin(typeof(v[ii]))
+                v[ii] = typemin(typeof(v[ii]))
+            else
+                v[ii] = temp
+            end
+        end
 
         for j=1:length(ss[i])
             header=PL_DataBlockHeader(1,ss[i][j].inds.start - times[1],i,ss[i][j].id-1,samples_per_wave)
@@ -836,6 +846,45 @@ function write_plex(out_name::AbstractString,vname="v.bin",tsname="ts.bin"; ttl_
         end
     end
 	end
+
+    close(f_out)
+
+    nothing
+end
+
+function write_plex_event(out_name,myttl,t_end,sr=30000)
+
+    f_out=open(out_name,"a+")
+
+    evcounts=zeros(Int32,512)
+
+    for i=1:length(myttl)
+        evcounts[i]=length(myttl[i])
+    end
+
+    #First is File Header
+    file_header=PL_FileHeader(sr,0,48,24,t_end,zeros(Int32,130,5),length(myttl),evcounts)
+
+    for i=1:length(fieldnames(typeof(file_header)))
+        write(f_out,getfield(file_header,i))
+    end
+
+    #Finally is event channel headers
+    for i=1:length(myttl)
+        event_header=PL_EventHeader(i)
+        for j=1:length(fieldnames(typeof(event_header)))
+            write(f_out,getfield(event_header,j))
+        end
+    end
+
+    for i=1:length(myttl)
+        for j=1:length(myttl[i])
+            header=PL_DataBlockHeader(4,myttl[i][j],i,0,0)
+            for k=1:length(fieldnames(typeof(header)))
+                write(f_out,getfield(header,k))
+            end
+        end
+    end
 
     close(f_out)
 
