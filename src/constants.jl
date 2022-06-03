@@ -35,8 +35,8 @@ end
 
 const bit = string(base_path,"main.bit")
 #const usb3bit = string(base_path,"XEM6310_512ch.bit")
-const usb3bit_open_ephys = string(base_path,"rhd2000_usb3_0518.bit")
-#const usb3bit_open_ephys = string(base_path,"rhd2000_usb3_oe.bit")
+#const usb3bit_open_ephys = string(base_path,"rhd2000_usb3_0518.bit")
+const usb3bit_open_ephys = string(base_path,"rhd2000_usb3_oe.bit")
 const usb3bit = string(base_path,"rhd2000_usb3.bit")
 
 const USB_BUFFER_SIZE = 2400000
