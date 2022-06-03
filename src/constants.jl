@@ -86,6 +86,8 @@ const OPEN_EPHYS_WireInStimRegWord = 0x0f
 
 const OPEN_EPHYS_WireInTtlOut = 0x15
 
+const OPEN_EPHYS_TrigInRamAddrReset = 0x5b
+
 const WireInLedDisplay_openephys = 0x11 #Conflicts with Stimulation
 const WireInDataStreamSel1234 = 0x12 #conflicts with stimulation
 const WireInDataStreamSel5678 = 0x13 #conflicts with stimulation
