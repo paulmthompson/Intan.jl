@@ -67,24 +67,24 @@ function selectAuxCommandLength(rhd::FPGA,commandslot,loopIndex,endIndex)
 
     if commandslot=="AuxCmd1"
         if (OPEN_EPHYS)
-            SetWireInValue(rhd,WireInAuxCmdLoop1,loopIndex)
-            SetWireInValue(rhd,WireInAuxCmdLength1,endIndex)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLoop,loopIndex,0x000003ff)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLength,endIndex,0x000003ff)
         else
             SetWireInValue(rhd,WireInAuxCmdLoop, loopIndex, 0x000003ff);
             SetWireInValue(rhd,WireInAuxCmdLength, endIndex, 0x000003ff);
         end
     elseif commandslot=="AuxCmd2"
         if (OPEN_EPHYS)
-            SetWireInValue(rhd,WireInAuxCmdLoop2,loopIndex)
-            SetWireInValue(rhd,WireInAuxCmdLength2,endIndex)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLoop,loopIndex << 10, 0x000003ff << 10)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLength,endIndex << 10, 0x000003ff << 10)
         else
             SetWireInValue(rhd, WireInAuxCmdLoop, loopIndex << 10, 0x000003ff << 10);
             SetWireInValue(rhd, WireInAuxCmdLength, endIndex << 10, 0x000003ff << 10);
         end
     elseif commandslot=="AuxCmd3"
         if (OPEN_EPHYS)
-            SetWireInValue(rhd,WireInAuxCmdLoop3,loopIndex)
-            SetWireInValue(rhd,WireInAuxCmdLength3,endIndex)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLoop,loopIndex << 20, 0x000003ff << 20)
+            SetWireInValue(rhd,OPEN_EPHYS_WireInAuxCmdLength,endIndex << 20, 0x000003ff << 20)
         else
             SetWireInValue(rhd,WireInAuxCmdLoop, loopIndex << 20, 0x000003ff << 20);
             SetWireInValue(rhd,WireInAuxCmdLength, endIndex << 20, 0x000003ff << 20);

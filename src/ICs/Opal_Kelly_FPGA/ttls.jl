@@ -11,17 +11,32 @@ function setTtlMode(rhd::FPGA,mode)
     value += mode[7] ? 64 : 0;
     value += mode[8] ? 128 : 0;
 
-    SetWireInValue(rhd,WireInTtlOut,value,0x000000ff)
+    if (OPEN_EPHYS)
+        SetWireInValue(rhd,OPEN_EPHYS_WireInTtlOut,value,0x000000ff)
+    else
+        SetWireInValue(rhd,WireInTtlOut,value,0x000000ff)
+    end
     UpdateWireIns(rhd)
 end
 
 function manual_trigger(rhd,trigger,triggerOn)
     #Trigger 0-7
-    SetWireInValue(rhd,WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
+    if (OPEN_EPHYS)
+        SetWireInValue(rhd,OPEN_EPHYS_WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
+    else
+        SetWireInValue(rhd,WireInManualTriggers, (triggerOn ? 1 : 0) << trigger,1<<trigger);
+    end
     UpdateWireIns(rhd)
 end
 
-clearTtlOut(rhd::FPGA)=(SetWireInValue(rhd,WireInTtlOut, 0x0000);UpdateWireIns(rhd))
+function clearTtlOut(rhd::FPGA)
+    if (OPEN_EPHYS)
+        SetWireInValue(rhd,OPEN_EPHYS_WireInTtlOut, 0x0000)
+    else
+        SetWireInValue(rhd,WireInTtlOut, 0x0000)
+    end
+    UpdateWireIns(rhd)
+end
 
 function getTtlIn(rhd::FPGA,ttlInArray)
 
@@ -46,7 +61,11 @@ function setTtlOut(rhd::FPGA,ttlOutArray)
         end
     end
 
-    SetWireInValue(rhd,WireInTtlOut,ttlOut)
+    if (OPEN_EPHYS)
+        SetWireInValue(rhd,OPEN_EPHYS_WireInTtlOut,ttlOut)
+    else
+        SetWireInValue(rhd,WireInTtlOut,ttlOut)
+    end
     UpdateWireIns(rhd)
     nothing
 end
@@ -59,7 +78,11 @@ function sendTimePulse(fpga::FPGA,val::Bool)
         fpga.ttloutput -= (1 << (16-1))
     end
 
-    SetWireInValue(fpga,WireInTtlOut,fpga.ttloutput)
+    if (OPEN_EPHYS)
+        SetWireInValue(fpga,OPEN_EPHYS_WireInTtlOut,fpga.ttloutput)
+    else
+        SetWireInValue(fpga,WireInTtlOut,fpga.ttloutput)
+    end
     UpdateWireIns(fpga)
     nothing
 end

@@ -100,7 +100,14 @@ function selectDacDataChannel(rhd::FPGA,dacChannel::Int, dataChannel)
 end
 
 #Sets DAC to 16 bit value.
-setDacManual(rhd::FPGA,value)=(SetWireInValue(rhd,WireInManualTriggers,value<<15,0xffff0000);UpdateWireIns(rhd))
+function setDacManual(rhd::FPGA,value)
+    if (OPEN_EPHYS)
+        SetWireInValue(rhd,OPEN_EPHYS_WireInManualTriggers,value<<15,0xffff0000)
+    else
+        SetWireInValue(rhd,WireInManualTriggers,value<<15,0xffff0000)
+    end
+    UpdateWireIns(rhd)
+end
 
 setDacGain(rhd::FPGA,gain)=(SetWireInValue(rhd,WireInResetRun,gain<<13,0xe000);UpdateWireIns(rhd))
 

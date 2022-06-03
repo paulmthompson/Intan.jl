@@ -77,12 +77,15 @@ const WireInAuxCmdBank2 = 0x09
 const WireInAuxCmdBank3 = 0x0a
 
 #OPEN EPHYS
-const WireInAuxCmdLength1 = 0x0b
-const WireInAuxCmdLength2 = 0x0c
-const WireInAuxCmdLength3 = 0x0d
-const WireInAuxCmdLoop1 = 0x0e
-const WireInAuxCmdLoop2 = 0x0f #These conflict with TTL generation on Intan
-const WireInAuxCmdLoop3 = 0x10 #Conflicts with Stimulation
+const OPEN_EPHYS_WireInAuxCmdLength = 0x0b
+const OPEN_EPHYS_WireInAuxCmdLoop = 0x0c
+
+const OPEN_EPHYS_WireInStimCmdMode = 0x0d
+const OPEN_EPHYS_WireInStimRegAddr = 0x0e
+const OPEN_EPHYS_WireInStimRegWord = 0x0f
+
+const OPEN_EPHYS_WireInTtlOut = 0x15
+
 const WireInLedDisplay_openephys = 0x11 #Conflicts with Stimulation
 const WireInDataStreamSel1234 = 0x12 #conflicts with stimulation
 const WireInDataStreamSel5678 = 0x13 #conflicts with stimulation
@@ -100,6 +103,7 @@ const WireInStimRegWord = 0x11
 
 #Manual TTL triggers (0-15) and manual 16-bit dack value (31-16)
 const WireInManualTriggers = 0x12
+const OPEN_EPHYS_WireInManualTriggers = 0x1e
 
 const WireInTtlOut = 0x13
 const TrigInRamAddrReset = 0x43
@@ -114,7 +118,7 @@ const WireInDacSource5 = 0x1a
 const WireInDacSource6 = 0x1b
 const WireInDacSource7 = 0x1c
 const WireInDacSource8 = 0x1d
-const WireInDacManual = 0x1e
+const WireInDacManual = 0x1e # I don't think that this is used anymore
 const WireInMultiUse = 0x1f
 
 const TrigInSpiStart = 0x41
