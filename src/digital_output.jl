@@ -57,5 +57,9 @@ function programStimReg(fpga,stream, channel, reg, value)
         SetWireInValue(fpga,WireInStimRegWord, value)
     end
     UpdateWireIns(fpga)
-    ActivateTriggerIn(fpga,TrigInRamAddrReset, 1)
+    if (OPEN_EPHYS)
+        ActivateTriggerIn(fpga,OPEN_EPHYS_TrigInRamAddrReset, 1)
+    else
+        ActivateTriggerIn(fpga,TrigInRamAddrReset, 1)
+    end
 end
