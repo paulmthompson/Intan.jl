@@ -4,8 +4,13 @@ function CreateRHD2000Registers(sampleRate)
 
     defineSampleRate(sampleRate,r)
 
+    #The lowpass analog filer and DSP low pass filter will be in a cascade arrangement
+    #Consequently, if both are set to 300 Hz, the effective cutoff frequency will be > 300 Hz
+    # For first order filters f_c ~ 1/RC, but for cascade with same values, it would be 
+    # f_c ~ 1/sqrt((2R)(2C)). Intan documents this behavior and recommends setting analog to 1/2 to 1/10
+    #value of DSP, and that DSP should be set to desired frequency for the cutoff.
     dsp_b = 300.0
-    band_a_l = 300.0
+    band_a_l = 60.0
     band_a_u = 5000.0
 
     #Register 0 variables
@@ -65,31 +70,34 @@ function defineSampleRate(newSampleRate,r)
 
     r.muxLoad=0
 
-    if r.sampleRate<3334.0
+    #These values are really set for the ADC sampling rate
+    #But I am setting them relative for the per/channel sampling rate
+    #assuming that all 35 channels are being used.
+    if r.sampleRate<3334.0 #(120 kS/s)
         r.muxBias=40
         r.adcBufferBias=32
-    elseif r.sampleRate<4001.0
+    elseif r.sampleRate<4001.0 #(140 kS/s)
         r.muxBias=40
         r.adcBufferBias=16
-    elseif r.sampleRate<5001.0
+    elseif r.sampleRate<5001.0 #(175 kS/s)
         r.muxBias=40
         r.adcBufferBias=8
-    elseif r.sampleRate<6251.0
+    elseif r.sampleRate<6251.0 #(220 kS/s)
         r.muxBias=32
         r.adcBufferBias=8
-    elseif r.sampleRate<8001.0
+    elseif r.sampleRate<8001.0 #(280 kS/s)
         r.muxBias=26
         r.adcBufferBias=8
-    elseif r.sampleRate<10001.0
+    elseif r.sampleRate<10001.0 #(350 kS/s)
         r.muxBias=18
         r.adcBufferBias=4
-    elseif r.sampleRate<12501.0
+    elseif r.sampleRate<12501.0 #(440 kS/s)
         r.muxBias=16
         r.adcBufferBias=3
-    elseif r.sampleRate<15001.0
+    elseif r.sampleRate<15001.0 #(525 kS/s)
         r.muxBias=7
         r.adcBufferBias=3
-    else
+    else #(>700 kS/s)
         r.muxBias=4
         r.adcBufferBias=2
     end
