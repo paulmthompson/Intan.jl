@@ -466,11 +466,11 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
         M=56
         D=25
     elseif newSampleRate==50000
-        M=70
-        D=25
+        M=14
+        D=5
     elseif newSampleRate==100000
-        M=140
-        D=25
+        M=28
+        D=5
     else
     end
 

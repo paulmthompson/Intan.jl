@@ -15,7 +15,6 @@ function setCableLengthMeters(rhd::FPGA,port, lengthInMeters::Float64)
     if delay < 1
         delay=1
     end
-    println(delay)
     setCableDelay(rhd,port, delay)
     nothing
 end

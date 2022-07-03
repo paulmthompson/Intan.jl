@@ -174,13 +174,13 @@ mutable struct FPGA <: IC
     d::Array{DigOut,1}
 end
 
-function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false)
+function FPGA(board_id::Int64,amps::Array{Int64,1};usb3=false,sr=30000)
     board = Ptr{Void}(1)
     mylib = Ptr{Void}(1)
     if board_id==1
-        FPGA(1,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
+        FPGA(1,board,mylib,0,sr,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
     elseif board_id==2
-        FPGA(2,board,mylib,0,30000,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
+        FPGA(2,board,mylib,0,sr,0,zeros(Int64,1,MAX_NUM_DATA_STREAMS),zeros(UInt8,USB_BUFFER_SIZE),0,0,amps,zeros(Int16,SAMPLES_PER_DATA_BLOCK,8),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),zeros(UInt16,SAMPLES_PER_DATA_BLOCK),0,usb3,CreateRHD2000Registers(30000),[DigOut() for i=1:16])
     end
 end
 
@@ -201,13 +201,13 @@ mutable struct RHD_Single <: RHD2000
     initialized::Bool
 end
 
-function RHD_Single(fpga,num_channels,s,buf,nums,debug)
+function RHD_Single(fpga,num_channels,s,buf,nums,debug; sr=30000)
     if VERSION > v"0.7-"
         the_filters = [Array{Intan_Filter}(undef, 0) for i=1:num_channels]
     else
         the_filters = [Array{Intan_Filter}(0) for i=1:num_channels]
     end
-    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),the_filters,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
+    RHD_Single(zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),buf,nums,debug,0,0,make_save_structure(false),sr,zeros(Int64,num_channels),false,zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga)),the_filters,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
 end
 
 mutable struct RHD_Parallel <: RHD2000
@@ -227,13 +227,13 @@ mutable struct RHD_Parallel <: RHD2000
     initialized::Bool
 end
 
-function RHD_Parallel(fpga,num_channels,s,buf,nums,debug)
+function RHD_Parallel(fpga,num_channels,s,buf,nums,debug;sr=30000)
     if VERSION > v"0.7-"
         the_filters = [Array{Intan_Filter}(undef, 0) for i=1:num_channels]
     else
         the_filters = [Array{Intan_Filter}(0) for i=1:num_channels]
     end
-    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,make_save_structure(false),30000,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),the_filters,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
+    RHD_Parallel(convert(SharedArray{Int16,2},zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels)),buf,nums,debug,0,0,make_save_structure(false),sr,zeros(Int64,num_channels),false,convert(SharedArray{UInt32,2},zeros(UInt32,SAMPLES_PER_DATA_BLOCK,length(fpga))),the_filters,zeros(Int16,SAMPLES_PER_DATA_BLOCK,num_channels),false)
 end
 
 default_sort=Algorithm[DetectNeg(),ClusterTemplate(49),AlignMin(),FeatureTime(),ReductionNone(),ThresholdMeanN()]
@@ -271,15 +271,13 @@ function makeRHD(fpga::Array{FPGA,1}; params=default_sort, parallel=false, debug
         s=create_multi(params...,numchannels,wave_points)
         (buf,nums)=output_buffer(numchannels)
         fpgas=fpga
-        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,debug)
+        rhd=RHD_Single(fpgas,numchannels,s,buf,nums,debug,sr=sr)
     else
         s=create_multi(params...,numchannels,workers()[1]:workers()[end],wave_points)
         (buf,nums)=output_buffer(numchannels,true)
         fpgas=distribute(fpga)
-        rhd=RHD_Parallel(fpgas,numchannels,s,buf,nums,debug)
+        rhd=RHD_Parallel(fpgas,numchannels,s,buf,nums,debug,sr=sr)
     end
-
-    rhd.sr=sr
 
     (rhd,s,fpgas)
 end
