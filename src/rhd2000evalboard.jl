@@ -408,6 +408,9 @@ end
 
 function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
 
+    #The ADC on the headstage can handle 1.05Mhz sampling, which is equal to 
+    #35 channels (32 + 3 aux) at 30 kHz. However, the ADCs on Open Ephys and 
+    #Intan board should be able to go up to 100 Khz.
     if newSampleRate==1000
         M=7
         D=125
@@ -458,6 +461,15 @@ function setSampleRate(rhd::FPGA,newSampleRate::Int64,debug=false)
         D=25
     elseif newSampleRate==30000
         M=42
+        D=25
+    elseif newSampleRate==40000
+        M=56
+        D=25
+    elseif newSampleRate==50000
+        M=70
+        D=25
+    elseif newSampleRate==100000
+        M=140
         D=25
     else
     end
