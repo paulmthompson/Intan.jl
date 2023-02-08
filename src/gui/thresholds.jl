@@ -43,8 +43,8 @@ end
 
 function add_thres_cb(sc_widgets)
 
-    signal_connect(SpikeSorting.thres_cb,sc_widgets.thres_slider,"value-changed",Void,(),false,(sc_widgets,))
-    signal_connect(SpikeSorting.thres_show_cb,sc_widgets.thres_widgets.show,"clicked",Void,(),false,(sc_widgets,))
+    signal_connect(SpikeSorting.thres_cb,sc_widgets.thres_slider,"value-changed",Nothing,(),false,(sc_widgets,))
+    signal_connect(SpikeSorting.thres_show_cb,sc_widgets.thres_widgets.show,"clicked",Nothing,(),false,(sc_widgets,))
 
     nothing
 end

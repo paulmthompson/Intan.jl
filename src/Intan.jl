@@ -9,7 +9,6 @@ using SharedArrays, Libdl, Distributed, Dates
 import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSorting.rb_draw, SpikeSorting.identity_matrix, SpikeSorting.select_color
 
 if VERSION > v"0.7-"
-    const Void = Nothing
     const is_linux() = Sys.islinux()
     const is_apple() = Sys.isapple()
     const is_windows() = Sys.iswindows()

@@ -40,12 +40,12 @@ function add_save_callbacks(w,handles,r,fpga)
         visible(w.win, false)
         true
     end
-    signal_connect(save_volt_cb,w.volt,"clicked",Void,(),false,(handles,r))
-    signal_connect(save_lfp_cb,w.lfp,"clicked",Void,(),false,(handles,r))
-    signal_connect(save_ttlin_cb,w.ttlin,"clicked",Void,(),false,(handles,r))
-    signal_connect(save_ts_cb,w.ts,"clicked",Void,(),false,(handles,r))
-    signal_connect(save_entry_cb,w.input,"activate",Void,(),false,(handles,r))
-    signal_connect(save_adc_cb,w.adc,"clicked",Void,(),false,(handles,r))
+    signal_connect(save_volt_cb,w.volt,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(save_lfp_cb,w.lfp,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(save_ttlin_cb,w.ttlin,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(save_ts_cb,w.ts,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(save_entry_cb,w.input,"activate",Nothing,(),false,(handles,r))
+    signal_connect(save_adc_cb,w.adc,"clicked",Nothing,(),false,(handles,r))
 
     nothing
 end

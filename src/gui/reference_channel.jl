@@ -57,8 +57,8 @@ end
 
 function add_reference_callbacks(w,handles,r,fpga)
 
-    signal_connect(ref_b2_cb, w.select_button, "clicked",Void,(),false,(handles,))
-    signal_connect(ref_b3_cb, w.apply_button, "clicked",Void,(),false,(handles,r))
+    signal_connect(ref_b2_cb, w.select_button, "clicked",Nothing,(),false,(handles,))
+    signal_connect(ref_b3_cb, w.apply_button, "clicked",Nothing,(),false,(handles,r))
 
     signal_connect(w.win, :delete_event) do widget, event
         visible(w.win, false)

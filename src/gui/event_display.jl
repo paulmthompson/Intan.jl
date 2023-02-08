@@ -27,14 +27,14 @@ end
 function add_event_callbacks(event_handles,popup_event_none,handles)
 
     for i=1:8
-        signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(popup_event_cb,event_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     for i=9:24
-        signal_connect(popup_event_cb,event_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(popup_event_cb,event_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
-    signal_connect(popup_event_cb,popup_event_none,"activate",Void,(),false,(handles,-1))
+    signal_connect(popup_event_cb,popup_event_none,"activate",Nothing,(),false,(handles,-1))
 
     nothing
 end

@@ -55,10 +55,10 @@ function add_parameter_callbacks(w,handles,r,fpga)
         true
     end
 
-    signal_connect(table_col_cb, w.gain_text,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,2))
-    signal_connect(table_col_cb, w.thres_text,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
-    signal_connect(table_col_cb, w.ref_text,"edited",Void,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
-    signal_connect(table_en_cb, w.enabled_toggle, "toggled",Void,(Ptr{UInt8},),false,(handles,r))
+    signal_connect(table_col_cb, w.gain_text,"edited",Nothing,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,2))
+    signal_connect(table_col_cb, w.thres_text,"edited",Nothing,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,3))
+    signal_connect(table_col_cb, w.ref_text,"edited",Nothing,(Ptr{UInt8},Ptr{UInt8}),false,(handles,r,4))
+    signal_connect(table_en_cb, w.enabled_toggle, "toggled",Nothing,(Ptr{UInt8},),false,(handles,r))
 
     nothing
 end

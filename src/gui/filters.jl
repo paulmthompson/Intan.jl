@@ -131,27 +131,27 @@ end
 function add_filter_callbacks(w,handles,r,fpga)
 
     #Hardware Filters
-    signal_connect(band_b1_cb,w.b1,"clicked",Void,(),false,(handles,fpga))
+    signal_connect(band_b1_cb,w.b1,"clicked",Nothing,(),false,(handles,fpga))
 
     signal_connect(w.win, :delete_event) do widget, event
         visible(w.win, false)
         true
     end
 
-    signal_connect(filter_type_cb,w.sw_box, "changed",Void,(),false,(handles,r))
-    signal_connect(change_channel_cb,w.sw_chan_sb,"value-changed",Void,(),false,(handles,r))
+    signal_connect(filter_type_cb,w.sw_box, "changed",Nothing,(),false,(handles,r))
+    signal_connect(change_channel_cb,w.sw_chan_sb,"value-changed",Nothing,(),false,(handles,r))
 
     #Software Filter bandwidth
-    signal_connect(change_wn1_cb,w.wn_sb1,"value-changed",Void,(),false,(handles,r))
-    signal_connect(change_wn2_cb,w.wn_sb2,"value-changed",Void,(),false,(handles,r))
+    signal_connect(change_wn1_cb,w.wn_sb1,"value-changed",Nothing,(),false,(handles,r))
+    signal_connect(change_wn2_cb,w.wn_sb2,"value-changed",Nothing,(),false,(handles,r))
 
     #Add Remove software Filter
-    signal_connect(add_filter_cb,w.add_b,"clicked",Void,(),false,(handles,r))
-    signal_connect(replace_filter_cb,w.re_b,"clicked",Void,(),false,(handles,r))
-    signal_connect(delete_filter_cb,w.delete_b,"clicked",Void,(),false,(handles,r))
+    signal_connect(add_filter_cb,w.add_b,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(replace_filter_cb,w.re_b,"clicked",Nothing,(),false,(handles,r))
+    signal_connect(delete_filter_cb,w.delete_b,"clicked",Nothing,(),false,(handles,r))
 
-    signal_connect(change_filt_output_cb,w.output_box,"changed",Void,(),false,(handles,r))
-    signal_connect(change_pos_cb,w.filt_num_sb,"value-changed",Void,(),false,(r,handles))
+    signal_connect(change_filt_output_cb,w.output_box,"changed",Nothing,(),false,(handles,r))
+    signal_connect(change_pos_cb,w.filt_num_sb,"value-changed",Nothing,(),false,(r,handles))
 
 end
 

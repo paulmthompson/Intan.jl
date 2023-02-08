@@ -47,7 +47,7 @@ getlibrary(fpgas::Array{FPGA,1})=map(getlibrary,fpgas)
 
 function getlibrary(fpga::FPGA)
     fpga.lib=Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
-    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Void}, ())
+    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Nothing}, ())
     nothing
 end
 
@@ -170,10 +170,10 @@ end
 function open_board(fpga::FPGA)
 
     fpga.lib=Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
-    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Void}, ())
+    fpga.board=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_Construct), Ptr{Nothing}, ())
 
     println("Scanning USB for Opal Kelly devices...")
-    nDevices=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceCount), Int, (Ptr{Void},), fpga.board)
+    nDevices=ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceCount), Int, (Ptr{Nothing},), fpga.board)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number
@@ -182,19 +182,19 @@ function open_board(fpga::FPGA)
     else
         serial=Array{UInt8}(11)
     end
-    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Void}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
+    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Nothing}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
     serial[end]=0
     serialnumber=unsafe_string(pointer(serial))
     println("Serial number of device 0 is ", serialnumber)
 
     #Open by serial
-    if (ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_OpenBySerial), Cint, (Ptr{Void},Ptr{UInt8}),fpga.board,serialnumber)!=0)
+    if (ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_OpenBySerial), Cint, (Ptr{Nothing},Ptr{UInt8}),fpga.board,serialnumber)!=0)
         println("Device could not be opened. Is one connected?")
         return -2
     end
 
     #configure on-board PLL
-    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_LoadDefaultPLLConfiguration), Cint, (Ptr{Void},),fpga.board)
+    ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_LoadDefaultPLLConfiguration), Cint, (Ptr{Nothing},),fpga.board)
 
     nothing
 end
@@ -218,12 +218,12 @@ function uploadFpgaBitfile(rhd::FPGA)
     #upload configuration file
     if rhd.usb3
         if (OPEN_EPHYS)
-            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit_open_ephys)
+            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Nothing},Ptr{UInt8}),rhd.board,usb3bit_open_ephys)
         else
-            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,usb3bit)
+            errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Nothing},Ptr{UInt8}),rhd.board,usb3bit)
         end
     else
-        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Void},Ptr{UInt8}),rhd.board,bit)
+        errorcode=ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_ConfigureFPGA),Cint,(Ptr{Nothing},Ptr{UInt8}),rhd.board,bit)
     end
     if errorcode==0
         println("FPGA configuration loaded.")
@@ -233,7 +233,7 @@ function uploadFpgaBitfile(rhd::FPGA)
 
 
     #Check if FrontPanel Support is enabled
-    myenable = ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_IsFrontPanelEnabled),Bool,(Ptr{Void},),rhd.board)
+    myenable = ccall(Libdl.dlsym(rhd.lib,:okFrontPanel_IsFrontPanelEnabled),Bool,(Ptr{Nothing},),rhd.board)
 
     UpdateWireOuts(rhd)
     boardId = GetWireOutValue(rhd,WireOutBoardId)

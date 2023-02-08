@@ -72,19 +72,19 @@ end
 function add_scope_callbacks(v_handles,t_handles,thres_handles,signal_handles,handles)
 
     for i=1:5
-        signal_connect(scope_popup_v_cb,v_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(scope_popup_v_cb,v_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     for i=1:5
-        signal_connect(scope_popup_t_cb,t_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(scope_popup_t_cb,t_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     for i=1:2
-        signal_connect(scope_popup_thres_cb,thres_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(scope_popup_thres_cb,thres_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     for i=1:2
-        signal_connect(scope_popup_signal_cb,signal_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(scope_popup_signal_cb,signal_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     nothing

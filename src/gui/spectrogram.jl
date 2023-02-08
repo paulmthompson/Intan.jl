@@ -49,11 +49,11 @@ end
 function add_spect_callbacks(spect_f_handles,spect_w_handles,handles)
 
     for i=1:5
-        signal_connect(spect_popup_freq_cb,spect_f_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(spect_popup_freq_cb,spect_f_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     for i=1:3
-        signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Void,(),false,(handles,i-1))
+        signal_connect(spect_popup_win_cb,spect_w_handles[i],"activate",Nothing,(),false,(handles,i-1))
     end
 
     nothing
@@ -104,7 +104,7 @@ function draw_spectrogram(rhd::RHD2000,han::Gui_Handles)
     ctx=Gtk.getgc(han.c)
 
     x=Gtk.cairo_surface(han.c)
-    data = ccall((:cairo_image_surface_get_data,Cairo._jl_libcairo),Ptr{UInt32},(Ptr{Void},),x.ptr)
+    data = ccall((:cairo_image_surface_get_data,Cairo._jl_libcairo),Ptr{UInt32},(Ptr{Nothing},),x.ptr)
 
     c_h=round(Int64,height(ctx))
     c_w=round(Int64,width(ctx))-50

@@ -447,93 +447,93 @@ Gtk.GAccessor.value(sb2,round(Int,scales[1,1]*-1000))
 Template Sorting Callbacks
 =#
 
-    id = signal_connect(SpikeSorting.canvas_release_template,c2,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sortview_handles.buf,sc_widgets))
+    id = signal_connect(SpikeSorting.canvas_release_template,c2,"button-release-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(sortview_handles.buf,sc_widgets))
 
-    id = signal_connect(SpikeSorting.b1_cb_template,button_sort1,"clicked",Void,(),false,(sc_widgets,))
+    id = signal_connect(SpikeSorting.b1_cb_template,button_sort1,"clicked",Nothing,(),false,(sc_widgets,))
     add_button_label(button_sort1,"Delete Unit")
 
-    id = signal_connect(SpikeSorting.b2_cb_template,button_sort2,"clicked",Void,(),false,(sc_widgets,))
+    id = signal_connect(SpikeSorting.b2_cb_template,button_sort2,"clicked",Nothing,(),false,(sc_widgets,))
     add_button_label(button_sort2,"Add Unit")
 
-    id = signal_connect(SpikeSorting.b3_cb_template,button_sort3,"clicked",Void,(),false,(sc_widgets,sortview_handles))
+    id = signal_connect(SpikeSorting.b3_cb_template,button_sort3,"clicked",Nothing,(),false,(sc_widgets,sortview_handles))
     add_button_label(button_sort3,"Collect Templates")
 
-    id = signal_connect(SpikeSorting.b4_cb_template,button_sort4,"clicked",Void,(),false,(sc_widgets,))
+    id = signal_connect(SpikeSorting.b4_cb_template,button_sort4,"clicked",Nothing,(),false,(sc_widgets,))
     add_button_label(button_sort4,"Show Template Bounds")
 
     setproperty!(check_sort1,:label,"Show Template")
-    id = signal_connect(SpikeSorting.check_cb_template,check_sort1,"clicked",Void,(),false,(sc_widgets,))
+    id = signal_connect(SpikeSorting.check_cb_template,check_sort1,"clicked",Nothing,(),false,(sc_widgets,))
 
     setproperty!(slider_sort_label,:label,"Tolerance")
 
-id = signal_connect(SpikeSorting.unit_select_cb,sort_tv, "row-activated", Void, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles.sc,))
-id = signal_connect(SpikeSorting.canvas_press_win,c2,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles.sc,))
+id = signal_connect(SpikeSorting.unit_select_cb,sort_tv, "row-activated", Nothing, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles.sc,))
+id = signal_connect(SpikeSorting.canvas_press_win,c2,"button-press-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(handles.sc,))
 
 
 #=
 Window Callbacks
 =#
 
-id = signal_connect(SpikeSorting.win_resize_cb, win, "size-allocate",Void,(Ptr{Gtk.GdkRectangle},),false,(sc_widgets,))
-id = signal_connect(close_cb,win, "destroy",Void,(),false,(handles,r,fpga))
+id = signal_connect(SpikeSorting.win_resize_cb, win, "size-allocate",Nothing,(Ptr{Gtk.GdkRectangle},),false,(sc_widgets,))
+id = signal_connect(close_cb,win, "destroy",Nothing,(),false,(handles,r,fpga))
 
 #=
 ISI canvas callbacks
 =#
-id = signal_connect(SpikeSorting.c3_press_win,c3,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(sc_widgets,))
+id = signal_connect(SpikeSorting.c3_press_win,c3,"button-press-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(sc_widgets,))
 
 
 #=
 Start Button Callbacks
 =#
 
-    id = signal_connect(run_cb, button_run, "clicked",Void,(),false,(handles,r,s,task,fpga))
-    id = signal_connect(init_cb, button_init, "clicked", Void, (), false, (handles,r,task,fpga))
-    id = signal_connect(record_cb,button_record,"clicked",Void,(),false,(handles,r))
+    id = signal_connect(run_cb, button_run, "clicked",Nothing,(),false,(handles,r,s,task,fpga))
+    id = signal_connect(init_cb, button_init, "clicked", Nothing, (), false, (handles,r,task,fpga))
+    id = signal_connect(record_cb,button_record,"clicked",Nothing,(),false,(handles,r))
 
 #=
 Slider callbacks
 =#
 
-    id = signal_connect(update_c1, c_slider, "value-changed", Void, (), false, (handles,))
-id = signal_connect(update_c2_cb, c2_slider, "value-changed", Void, (), false, (handles,))
+    id = signal_connect(update_c1, c_slider, "value-changed", Nothing, (), false, (handles,))
+id = signal_connect(update_c2_cb, c2_slider, "value-changed", Nothing, (), false, (handles,))
 
 
 #=
 Enable/Disable callbacks
 =#
 
-id = signal_connect(c_popup_select,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-id = signal_connect(popup_enable_cb,popup_enable,"activate",Void,(),false,(handles,r))
-id = signal_connect(popup_disable_cb,popup_disable,"activate",Void,(),false,(handles,r))
+id = signal_connect(c_popup_select,c,"button-press-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+id = signal_connect(popup_enable_cb,popup_enable,"activate",Nothing,(),false,(handles,r))
+id = signal_connect(popup_disable_cb,popup_disable,"activate",Nothing,(),false,(handles,r))
 
 
 #=
 Save Load Callbacks
 =#
 
-id = signal_connect(export_plex_cb, export_plex_, "activate",Void,(),false,(handles,r))
-id = signal_connect(export_jld_cb, export_jld_, "activate",Void,(),false,(handles,r))
-id = signal_connect(export_mat_cb, export_mat_, "activate",Void,(),false,(handles,r))
-id = signal_connect(save_config_cb, save_sort_, "activate",Void,(),false,(handles,r,s))
-id = signal_connect(load_config_cb, load_sort_, "activate",Void,(),false,(handles,r,s))
-id = signal_connect(load_backup_cb, load_backup_, "activate",Void,(),false,(handles,r,s))
+id = signal_connect(export_plex_cb, export_plex_, "activate",Nothing,(),false,(handles,r))
+id = signal_connect(export_jld_cb, export_jld_, "activate",Nothing,(),false,(handles,r))
+id = signal_connect(export_mat_cb, export_mat_, "activate",Nothing,(),false,(handles,r))
+id = signal_connect(save_config_cb, save_sort_, "activate",Nothing,(),false,(handles,r,s))
+id = signal_connect(load_config_cb, load_sort_, "activate",Nothing,(),false,(handles,r,s))
+id = signal_connect(load_backup_cb, load_backup_, "activate",Nothing,(),false,(handles,r,s))
 
 
 #=
 Sort Slider Callbacks
 =#
 
-id = signal_connect(template_slider, slider_sort, "value-changed", Void, (), false, (handles,))
-id = signal_connect(slider_release_template,slider_sort,"button-release-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+id = signal_connect(template_slider, slider_sort, "value-changed", Nothing, (), false, (handles,))
+id = signal_connect(slider_release_template,slider_sort,"button-release-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 
 
 #=
 Gain Callbacks
 =#
 
-id = signal_connect(sb2_cb,sb2, "value-changed",Void,(),false,(handles,r))
-id = signal_connect(SpikeSorting.gain_check_cb,gain_checkbox, "clicked", Void,(),false,(sc_widgets,))
+id = signal_connect(sb2_cb,sb2, "value-changed",Nothing,(),false,(handles,r))
+id = signal_connect(SpikeSorting.gain_check_cb,gain_checkbox, "clicked", Nothing,(),false,(sc_widgets,))
 
 
 #=
@@ -546,16 +546,16 @@ add_thres_cb(sc_widgets)
 Pause, Restore, and Clear Callbacks
 =#
 
-id = signal_connect(SpikeSorting.pause_cb,button_pause,"toggled",Void,(),false,(handles.sc,))
-id = signal_connect(SpikeSorting.clear_button_cb,button_clear,"clicked",Void,(),false,(handles.sc,))
-id = signal_connect(SpikeSorting.restore_button_cb,button_restore,"clicked",Void,(),false,(handles.sc,))
+id = signal_connect(SpikeSorting.pause_cb,button_pause,"toggled",Nothing,(),false,(handles.sc,))
+id = signal_connect(SpikeSorting.clear_button_cb,button_clear,"clicked",Nothing,(),false,(handles.sc,))
+id = signal_connect(SpikeSorting.restore_button_cb,button_restore,"clicked",Nothing,(),false,(handles.sc,))
 
 #=
 Rubberband, Draw, Stretch
 =#
 
 for i=1:3
-    id = signal_connect(SpikeSorting.pause_state_cb,button_rb[i],"clicked",Void,(),false,(handles.sc,i))
+    id = signal_connect(SpikeSorting.pause_state_cb,button_rb[i],"clicked",Nothing,(),false,(handles.sc,i))
 end
 
 
@@ -567,18 +567,18 @@ Radiobutton Callback
 =#
 
 for i=1:5
-    id = signal_connect(rb1_cb,rbs[i],"clicked",Void,(),false,(handles,i))
+    id = signal_connect(rb1_cb,rbs[i],"clicked",Nothing,(),false,(handles,i))
 end
 
 for i=1:8
-    id = signal_connect(rb2_cb,rbs2[i],"clicked",Void,(),false,(handles,i))
+    id = signal_connect(rb2_cb,rbs2[i],"clicked",Nothing,(),false,(handles,i))
 end
 
 #=
 Save Preferences Callbacks
 =#
 
-signal_connect(saving_pref_cb,saving_pref_,"activate",Void,(),false,(handles,r))
+signal_connect(saving_pref_cb,saving_pref_,"activate",Nothing,(),false,(handles,r))
 add_save_callbacks(save_widgets,handles,r,fpga)
 
 #Soft Scope Callbacks
@@ -588,24 +588,24 @@ add_scope_callbacks(scope_v_handles,scope_t_handles,scope_thres_handles,scope_si
 add_spect_callbacks(spect_f_handles,spect_w_handles,handles)
 
 #Filtering
-signal_connect(band_adj_cb, op_band, "activate",Void,(),false,(handles,r))
+signal_connect(band_adj_cb, op_band, "activate",Nothing,(),false,(handles,r))
 add_filter_callbacks(band_widgets,handles,r,fpga)
 
 #Reference
-signal_connect(ref_cb, define_ref_, "activate",Void,(),false,(handles,r))
+signal_connect(ref_cb, define_ref_, "activate",Nothing,(),false,(handles,r))
 add_reference_callbacks(ref_widgets,handles,r,fpga)
 
 #Parameter Table
-signal_connect(table_cb, define_params, "activate",Void,(),false,(handles,r))
+signal_connect(table_cb, define_params, "activate",Nothing,(),false,(handles,r))
 add_parameter_callbacks(table_widgets,handles,r,fpga)
 
-signal_connect(ttl_cb,define_ttls_,"activate",Void,(),false,(handles,r))
+signal_connect(ttl_cb,define_ttls_,"activate",Nothing,(),false,(handles,r))
 
 #=
 Sortview Callbacks
 =#
 
-id = signal_connect(sv_open_cb, sv_open, "activate",Void,(),false,(handles,))
+id = signal_connect(sv_open_cb, sv_open, "activate",Nothing,(),false,(handles,))
 
 signal_connect(sortview_handles.win, :delete_event) do widget, event
     visible(sortview_handles.win, false)
