@@ -18,7 +18,7 @@ function Debug(filepath::AbstractString, filetype::AbstractString; delay=0.0)
     if filetype=="qq"
 
         a=matread(filepath)
-        md=squeeze(a["data"]',2).*-1000
+        md=dropdims(a["data"]',dims=2).*-1000
         d=Debug(true,"qq",filepath,md,1,floor(length(md)/SAMPLES_PER_DATA_BLOCK)*SAMPLES_PER_DATA_BLOCK,delay_b,delay_t)
     elseif filetype=="Intan"
 
