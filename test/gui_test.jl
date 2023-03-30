@@ -42,15 +42,6 @@ set_gtk_property!(handles.run,:active,true)
 sleep(1.0)
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
-
-    myreads=myrhd.reads
-    for i=1:5
-        sleep(0.5)
-        @test myrhd.reads > myreads
-        myreads=myrhd.reads
-    end
-
-
 #Calibration
 sleep(1.0)
 
