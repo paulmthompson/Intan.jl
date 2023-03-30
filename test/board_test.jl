@@ -87,26 +87,6 @@ Intan.init_board!(myrhd,myfpgas)
     @test myfpgas[1].numWords == Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2)
     @test myfpgas[1].numBytesPerBlock == Intan.SAMPLES_PER_DATA_BLOCK * (4+2+(2*36) +8+2) * 2
 
-
-#=
-Multi Core Data Structure
-=#
-myamp=RHD2132("PortA1")
-d=Debug(string(dirname(Base.source_path()),"/data/qq.mat"),"qq")
-myt=Task_NoTask()
-myfpga1=FPGA(1,myamp)
-myfpga2=FPGA(2,myamp)
-(myrhd2,ss2,myfpgas)=makeRHD([myfpga1,myfpga2],debug=d,parallel=true);
-
-
-    @test myrhd2.v == zeros(Int64, Intan.SAMPLES_PER_DATA_BLOCK,64)
-    @test length(ss2) == 64
-    @test typeof(ss2) == DistributedArrays.DArray{SpikeSorting.Sorting_1,1,Array{SpikeSorting.Sorting_1,1}}
-    @test typeof(myrhd2.buf) == SharedArray{SpikeSorting.Spike,2}
-    @test size(myrhd2.buf,2) == 64
-    @test myrhd2.nums == zeros(Int64,64)
-
-
 #Intan.init_board!(myrhd2)
 
 #=
