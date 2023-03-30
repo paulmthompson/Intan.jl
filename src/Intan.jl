@@ -8,21 +8,10 @@ using SharedArrays, Libdl, Distributed, Dates
 
 import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSorting.rb_draw, SpikeSorting.identity_matrix, SpikeSorting.select_color
 
-if VERSION > v"0.7-"
-
-    const getproperty = get_gtk_property
-    const linspace(x,y,z) = range(x,stop=y,length=z)
-    const indmin = argmin
-    const find = findall
-    const indmax = argmax
-    Base.round(x::Number, digits) = round(x; digits=digits)
-end
-
 export makeRHD, RHD2164, RHD2132,  makegui, Debug, Intan_GUI
 
 #const MyFilter = DSP.Filters.DF2TFilter{DSP.Filters.SecondOrderSections{Float64,Float64},Array{Float64,2}}
 const MyFilter = DSP.DF2TFilter{SecondOrderSections{:z, Float64, Float64}, Matrix{Float64}}
-
 
 include("types.jl")
 include("constants.jl")

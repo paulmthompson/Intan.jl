@@ -200,7 +200,7 @@ function filter_type_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    filter_type = getproperty(han.band_widgets.sw_box,:active,Int64)+1
+    filter_type = get_gtk_property(han.band_widgets.sw_box,:active,Int64)+1
     han.band_widgets.f_type = filter_type
 
     if filter_type == 1
@@ -244,7 +244,7 @@ function add_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     output = han.band_widgets.f_out
 
-    if (getproperty(han.band_widgets.sw_check,:active,Bool))
+    if (get_gtk_property(han.band_widgets.sw_check,:active,Bool))
         for i=1:size(rhd.v,2)
             myfilt=make_filter(rhd,filt_type,wn1,wn2)
             if pos > length(rhd.filts[i])
@@ -319,9 +319,9 @@ function band_b1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,Array{I,1}}) where 
 
     han, myic = user_data
 
-    lower=getproperty(han.band_widgets.sb1,:value,Int64)
-    upper=getproperty(han.band_widgets.sb2,:value,Int64)
-    dsp_lower=getproperty(han.band_widgets.sb3,:value,Int64)
+    lower=get_gtk_property(han.band_widgets.sb1,:value,Int64)
+    upper=get_gtk_property(han.band_widgets.sb2,:value,Int64)
+    dsp_lower=get_gtk_property(han.band_widgets.sb3,:value,Int64)
 
     change_bandwidth(myic,lower,upper,dsp_lower)
 
@@ -332,7 +332,7 @@ function change_wn1_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    han.band_widgets.wn1 = getproperty(han.band_widgets.wn_sb1,:value,Int64)
+    han.band_widgets.wn1 = get_gtk_property(han.band_widgets.wn_sb1,:value,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
 
@@ -343,7 +343,7 @@ function change_wn2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    han.band_widgets.wn2 = getproperty(han.band_widgets.wn_sb2,:value,Int64)
+    han.band_widgets.wn2 = get_gtk_property(han.band_widgets.wn_sb2,:value,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
 
@@ -354,7 +354,7 @@ function change_pos_cb(widget::Ptr,user_data::Tuple{RHD2000,Gui_Handles})
 
     rhd, han = user_data
 
-    han.band_widgets.f_pos=getproperty(han.band_widgets.filt_num_sb,:value,Int64)
+    han.band_widgets.f_pos=get_gtk_property(han.band_widgets.filt_num_sb,:value,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
 
@@ -365,7 +365,7 @@ function change_filt_output_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000}
 
     han,rhd = user_data
 
-    han.band_widgets.f_out = getproperty(han.band_widgets.output_box,:active,Int64)
+    han.band_widgets.f_out = get_gtk_property(han.band_widgets.output_box,:active,Int64)
 
     draw_filter_canvas(han,rhd,han.band_widgets.f_pos)
 
@@ -399,7 +399,7 @@ function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    han.band_widgets.chan=getproperty(han.band_widgets.sw_chan_sb,:value,Int64)
+    han.band_widgets.chan=get_gtk_property(han.band_widgets.sw_chan_sb,:value,Int64)
 
     Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
 

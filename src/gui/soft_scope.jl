@@ -33,7 +33,7 @@ function _make_scope_gui()
     end
     time_scales = [1,2,3,4,5] #Need to make this ms / div
     for i=1:length(time_scales)
-        time_scales[i]=round(time_scales[i],1)
+        time_scales[i]=round(time_scales[i],digits=1)
     end
     push!(scope_t_handles,MenuItem(string(time_scales[1])))
     push!(popupmenu_time_select,scope_t_handles[1])

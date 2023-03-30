@@ -112,7 +112,7 @@ function draw_isi(rhd::RHD2000,han::Gui_Handles)
             end
         end
 
-        isi_f=round(myviolation/mycount*100,2)
+        isi_f=round(myviolation/mycount*100,digits=2)
         if isi_f>5.0
             set_source_rgb(ctx,1.0,0.0,0.0)
         else
@@ -182,7 +182,7 @@ function clear_c(han::Gui_Handles)
     nothing
 end
 
-get_bounds(mydim,divs)=linspace(0.0,mydim,divs)
+get_bounds(mydim,divs)=range(0.0,stop=mydim,length=divs)
 
 function prepare_raster16(ctx)
 end

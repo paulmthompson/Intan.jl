@@ -187,7 +187,7 @@ const cableVelocity=.555*speedOfLight
 const jet_r,jet_g,jet_b=zeros(UInt32,256),zeros(UInt32,256),zeros(UInt32,256)
 for i = 0:255
   n=4*i/256
-  jet_r[i+1]=round(UInt32,255*min(max(min(n-1.5,-n+4.5),0),1));
-  jet_g[i+1]=round(UInt32,255*min(max(min(n-0.5,-n+3.5),0),1));
-  jet_b[i+1]=round(UInt32,255*min(max(min(n+0.5,-n+2.5),0),1));
+  jet_r[i+1]=round(UInt32,255*min(max(min(n-1.5,-n+4.5),0),digits=1));
+  jet_g[i+1]=round(UInt32,255*min(max(min(n-0.5,-n+3.5),0),digits=1));
+  jet_b[i+1]=round(UInt32,255*min(max(min(n+0.5,-n+2.5),0),digits=1));
 end

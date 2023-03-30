@@ -629,7 +629,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,A
 
     widget = convert(ToggleButton, widgetptr)
 
-    @async if getproperty(widget,:active,Bool)==true
+    @async if get_gtk_property(widget,:active,Bool)==true
 
         #unpack tuple
         han, rhd, s,task,fpga = user_data
@@ -637,7 +637,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000,DArray{T,1,A
 	if rhd.debug.state==false
             map(runBoard,fpga)
         end
-        while getproperty(widget,:active,Bool)==true
+        while get_gtk_property(widget,:active,Bool)==true
            main_loop_par(rhd,han,s,task,fpga)
         end
     end
@@ -648,7 +648,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array
 
     widget = convert(ToggleButton, widgetptr)
 
-    @async if getproperty(widget,:active,Bool)==true
+    @async if get_gtk_property(widget,:active,Bool)==true
 
         #unpack tuple
         han, rhd, s,task,fpga = user_data
@@ -656,7 +656,7 @@ function run_cb(widgetptr::Ptr,user_data::Tuple{Gui_Handles,R,Array{S,1},T,Array
 	if rhd.debug.state==false
             map(runBoard,fpga)
         end
-        while getproperty(widget,:active,Bool)==true
+        while get_gtk_property(widget,:active,Bool)==true
            main_loop_s(rhd,han,s,task,fpga)
         end
     end
@@ -815,7 +815,7 @@ end
 function update_c1(widget::Ptr,user_data::Tuple{Gui_Handles})
 
     han, = user_data
-    han.num16=getproperty(han.adj,:value,Int64) # 16 channels
+    han.num16=get_gtk_property(han.adj,:value,Int64) # 16 channels
 
     if han.num16>0
         clear_c(han)
@@ -828,7 +828,7 @@ update_c2_cb(w::Ptr,d::Tuple{Gui_Handles})=update_c2(d[1])
 
 function update_c2(han::Gui_Handles)
 
-    han.num=getproperty(han.adj2, :value, Int64) # primary display
+    han.num=get_gtk_property(han.adj2, :value, Int64) # primary display
 
     if han.num16>0
 
@@ -892,7 +892,7 @@ function record_cb(widgetptr::Ptr, user_data::Tuple{Gui_Handles,R}) where R<:RHD
 
     widget = convert(ToggleButton, widgetptr)
 
-    if getproperty(widget,:active,Bool)
+    if get_gtk_property(widget,:active,Bool)
         rhd.save.record_mode = true
     else
         sleep(1.0)
@@ -1050,8 +1050,8 @@ function get_multi_bounds(han::Gui_Handles,n_col,n_row,num_chan)
         myheight=height(ctx)
     end
 
-    xbounds=linspace(0.0,mywidth,n_col+1)
-    ybounds=linspace(0.0,myheight,n_row+1)
+    xbounds=range(0.0,stop=mywidth,length=n_col+1)
+    ybounds=range(0.0,stop=myheight,length=n_row+1)
 
     (xbounds,ybounds)
 end

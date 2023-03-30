@@ -68,13 +68,13 @@ function check_delay_output(fpga::FPGA,port,output)
 
     data_stream_inds=findall(dropdims(fpga.dataStreamEnabled,dims=1) .==1 ) #This is a 2D array, need to convert to 1D
     if port=="PortA"
-        outinds=find((data_stream_inds.==1).|(data_stream_inds.==2).|(data_stream_inds.==9).|(data_stream_inds.==10))
+        outinds=findall((data_stream_inds.==1).|(data_stream_inds.==2).|(data_stream_inds.==9).|(data_stream_inds.==10))
     elseif port=="PortB"
-        outinds=find((data_stream_inds.==3).|(data_stream_inds.==4).|(data_stream_inds.==11).|(data_stream_inds.==12))
+        outinds=findall((data_stream_inds.==3).|(data_stream_inds.==4).|(data_stream_inds.==11).|(data_stream_inds.==12))
     elseif port=="PortC"
-        outinds=find((data_stream_inds.==5).|(data_stream_inds.==6).|(data_stream_inds.==13).|(data_stream_inds.==14))
+        outinds=findall((data_stream_inds.==5).|(data_stream_inds.==6).|(data_stream_inds.==13).|(data_stream_inds.==14))
     elseif port=="PortD"
-        outinds=find((data_stream_inds.==7).|(data_stream_inds.==8).|(data_stream_inds.==15).|(data_stream_inds.==16))
+        outinds=findall((data_stream_inds.==7).|(data_stream_inds.==8).|(data_stream_inds.==15).|(data_stream_inds.==16))
     end
 
     hits=0

@@ -19,7 +19,7 @@ function template_slider(widget::Ptr,user_data::Tuple{Gui_Handles})
         han.sort_widgets.slider_active = true
     end
 
-    myval=getproperty(han.sc.adj_sort, :value, Float64) # primary display
+    myval=get_gtk_property(han.sc.adj_sort, :value, Float64) # primary display
 
     clus=han.buf.selected_clus
 

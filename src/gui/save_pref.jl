@@ -62,7 +62,7 @@ end
 function save_volt_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd = user_data
 
-    rhd.save.save_full=getproperty(han.save_widgets.volt,:active,Bool)
+    rhd.save.save_full=get_gtk_property(han.save_widgets.volt,:active,Bool)
 
     if rhd.save.save_full
         prepare_v_header(rhd)
@@ -75,7 +75,7 @@ function save_lfp_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    rhd.save.lfp_s=getproperty(han.save_widgets.lfp,:active,Bool)
+    rhd.save.lfp_s=get_gtk_property(han.save_widgets.lfp,:active,Bool)
 
     if rhd.save.lfp_s
         prepare_lfp_header(rhd)
@@ -86,7 +86,7 @@ end
 
 function save_ttlin_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd = user_data
-    rhd.save.ttl_s=getproperty(han.save_widgets.ttlin,:active,Bool)
+    rhd.save.ttl_s=get_gtk_property(han.save_widgets.ttlin,:active,Bool)
 
     if rhd.save.ttl_s
         prepare_ttl_header(rhd)
@@ -97,7 +97,7 @@ end
 
 function save_ts_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd = user_data
-    rhd.save.ts_s = getproperty(han.save_widgets.ts,:active,Bool)
+    rhd.save.ts_s = get_gtk_property(han.save_widgets.ts,:active,Bool)
 
     if rhd.save.ts_s
         prepare_stamp_header(rhd)
@@ -108,7 +108,7 @@ end
 
 function save_adc_cb(w::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     han,rhd=user_data
-    rhd.save.adc_s = getproperty(han.save_widgets.adc,:active,Bool)
+    rhd.save.adc_s = get_gtk_property(han.save_widgets.adc,:active,Bool)
 
     if rhd.save.adc_s
         prepare_adc_header(rhd)
@@ -121,7 +121,7 @@ function save_entry_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han,rhd = user_data
 
-    base_path = getproperty(han.save_widgets.input,:text,String)
+    base_path = get_gtk_property(han.save_widgets.input,:text,String)
     backup_path = string(base_path,"/.backup/")
     rhd.save.folder=base_path
     rhd.save.backup=backup_path

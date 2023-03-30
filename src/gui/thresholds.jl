@@ -54,7 +54,7 @@ Set Threshold for sorting equal to GUI threshold
 =#
 function thres_changed(han::Gui_Handles,s,fpga,backup)
 
-    mythres=getproperty(han.sc.adj_thres,:value,Int)
+    mythres=get_gtk_property(han.sc.adj_thres,:value,Int)
     han.sc.thres=mythres
 
     update_thres(han,s,backup)
@@ -70,7 +70,7 @@ end
 Functions used to update Sorting data structure with threshold from slider
 =#
 function update_thres(han::Gui_Handles,s::Array,backup)
-    if (getproperty(han.sc.thres_widgets.all,:active,Bool))|(getproperty(han.sc.gain_widgets.all,:active,Bool))
+    if (get_gtk_property(han.sc.thres_widgets.all,:active,Bool))|(get_gtk_property(han.sc.gain_widgets.all,:active,Bool))
         @inbounds for i=1:length(s)
             s[i].thres=-1*han.sc.thres/han.scale[i,1]+han.offset[i]
             f=open(string(backup,"thres/",i,".bin"),"w")
@@ -86,7 +86,7 @@ function update_thres(han::Gui_Handles,s::Array,backup)
 end
 
 function update_thres(han::Gui_Handles,s::DArray{T,1,Array{T,1}},backup) where T
-    if (getproperty(han.sc.thres_widgets.all,:active,Bool))|(getproperty(han.sc.gain_widgets.all,:active,Bool))
+    if (get_gtk_property(han.sc.thres_widgets.all,:active,Bool))|(get_gtk_property(han.sc.gain_widgets.all,:active,Bool))
         @sync begin
             for p in procs(s)
                 @async remotecall_wait((ss)->set_multiple_thres(localpart(ss),han,localindexes(ss)),p,s)
@@ -164,10 +164,10 @@ function sb2_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     han, rhd = user_data
 
-    mygain=getproperty(han.sc.gain_widgets.all,:active,Bool)
+    mygain=get_gtk_property(han.sc.gain_widgets.all,:active,Bool)
 
-    gainval=getproperty(han.sc.gain_widgets.gainbox,:value,Int)
-    mythres=getproperty(han.sc.adj_thres,:value,Int)
+    gainval=get_gtk_property(han.sc.gain_widgets.gainbox,:value,Int)
+    mythres=get_gtk_property(han.sc.adj_thres,:value,Int)
 
     if mygain==true
         han.scale[:,1] .= -1 .* gainval/1000
