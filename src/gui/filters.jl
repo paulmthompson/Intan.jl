@@ -55,7 +55,7 @@ function _make_filter_gui()
     for choice in ["High Pass"; "Low Pass"; "BandPass"; "BandStop"]
         push!(filter_combo,choice)
     end
-    setproperty!(filter_combo,:active,0)
+    set_gtk_property!(filter_combo,:active,0)
 
     band_sw_grid[1,4]=filter_combo
     band_sw_grid[2,4]=Label("Filter Type")
@@ -76,7 +76,7 @@ function _make_filter_gui()
     for choice in ["Spikes"; "LFP"]
         push!(filter_combo_output,choice)
     end
-    setproperty!(filter_combo_output,:active,0)
+    set_gtk_property!(filter_combo_output,:active,0)
     band_sw_grid[1,7]=filter_combo_output
     band_sw_grid[2,7]=Label("Output of Filter")
 
@@ -119,7 +119,7 @@ function _make_filter_gui()
     band_grid[2,2]=filt_scroll
 
     band_win=Window(band_grid)
-    setproperty!(band_win, :title, "Filtering")
+    set_gtk_property!(band_win, :title, "Filtering")
 
     Gtk.showall(band_win)
     visible(band_win,false)
@@ -206,23 +206,23 @@ function filter_type_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     if filter_type == 1
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,false)
-        setproperty!(han.band_widgets.wn_sb1_l,:label,"High Pass Cutoff")
-        setproperty!(han.band_widgets.wn_sb2_l,:label,"")
+        set_gtk_property!(han.band_widgets.wn_sb1_l,:label,"High Pass Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb2_l,:label,"")
     elseif filter_type == 2
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,false)
-        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Pass Cutoff")
-        setproperty!(han.band_widgets.wn_sb2_l,:label,"")
+        set_gtk_property!(han.band_widgets.wn_sb1_l,:label,"Low Pass Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb2_l,:label,"")
     elseif filter_type == 3
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,true)
-        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
-        setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
     elseif filter_type == 4
         Gtk.visible(han.band_widgets.wn_sb1,true)
         Gtk.visible(han.band_widgets.wn_sb2,true)
-        setproperty!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
-        setproperty!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb1_l,:label,"Low Cutoff")
+        set_gtk_property!(han.band_widgets.wn_sb2_l,:label,"High Cutoff")
     end
 
     nothing
@@ -385,7 +385,7 @@ function delete_filter_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
         deleteat!(rhd.filts[han.band_widgets.chan],han.band_widgets.f_pos)
 
-        setproperty!(han.band_widgets.filt_num_sb,:value,1)
+        set_gtk_property!(han.band_widgets.filt_num_sb,:value,1)
 
         Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
 
@@ -403,7 +403,7 @@ function change_channel_cb(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
 
     Gtk.GAccessor.range(han.band_widgets.filt_num_sb,1,length(rhd.filts[han.band_widgets.chan])+1)
 
-    setproperty!(han.band_widgets.filt_num_sb,:value,1)
+    set_gtk_property!(han.band_widgets.filt_num_sb,:value,1)
 
     draw_filter_canvas(han,rhd,1)
 

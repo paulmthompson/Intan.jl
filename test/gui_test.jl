@@ -38,7 +38,7 @@ Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myfpgas))
 
 
 #Run
-setproperty!(handles.run,:active,true)
+set_gtk_property!(handles.run,:active,true)
 sleep(1.0)
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
@@ -62,7 +62,7 @@ sleep(1.0)
 sleep(1.0)
 
     for i=1:4
-        setproperty!(handles.adj,:value,i)
+        set_gtk_property!(handles.adj,:value,i)
         Intan.update_c1(handles.adj.handle,(handles,))
         sleep(1.0)
         @test handles.num16 == i
@@ -74,7 +74,7 @@ sleep(1.0)
 sleep(1.0)
 
     for i=1:4
-        setproperty!(handles.adj2,:value,i)
+        set_gtk_property!(handles.adj2,:value,i)
         Intan.update_c2(handles)
         sleep(1.0)
         @test handles.num == i
@@ -255,7 +255,7 @@ SAVE LOAD Test
 
 sleep(1.0);
 
-setproperty!(handles.run,:active,false)
+set_gtk_property!(handles.run,:active,false)
 sleep(1.0);
 #=
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))

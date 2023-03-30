@@ -359,8 +359,8 @@ Gtk.showall(popupmenu)
 #Event
 (event_handles,popup_event,popup_event_none) = _make_event_gui()
 
-    setproperty!(grid, :column_spacing, 15)
-    setproperty!(grid, :row_spacing, 15)
+    set_gtk_property!(grid, :column_spacing, 15)
+    set_gtk_property!(grid, :row_spacing, 15)
 win = Window(grid, "Intan.jl GUI") |> Gtk.showall
 
 
@@ -395,7 +395,7 @@ spike_widgets=Spike_Widgets(button_clear,button_pause)
 #Make Filter Menu
 band_widgets=_make_filter_gui()
 band_widgets.lfp_en=falses(size(r.v,2))
-setproperty!(band_widgets.sw_chan_sb,:upper,size(r.v,2))
+set_gtk_property!(band_widgets.sw_chan_sb,:upper,size(r.v,2))
 
 #Make Table Menu
 table_widgets=_make_table_gui()
@@ -461,10 +461,10 @@ Template Sorting Callbacks
     id = signal_connect(SpikeSorting.b4_cb_template,button_sort4,"clicked",Nothing,(),false,(sc_widgets,))
     add_button_label(button_sort4,"Show Template Bounds")
 
-    setproperty!(check_sort1,:label,"Show Template")
+    set_gtk_property!(check_sort1,:label,"Show Template")
     id = signal_connect(SpikeSorting.check_cb_template,check_sort1,"clicked",Nothing,(),false,(sc_widgets,))
 
-    setproperty!(slider_sort_label,:label,"Tolerance")
+    set_gtk_property!(slider_sort_label,:label,"Tolerance")
 
 id = signal_connect(SpikeSorting.unit_select_cb,sort_tv, "row-activated", Nothing, (Ptr{Gtk.GtkTreePath},Ptr{Gtk.GtkTreeViewColumn}), false, (handles.sc,))
 id = signal_connect(SpikeSorting.canvas_press_win,c2,"button-press-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(handles.sc,))
@@ -746,7 +746,7 @@ function main_loop(rhd::RHD2000,han::Gui_Handles,s,task::Task,myread::Bool,fpga)
 
                     #Apply cluster characteristics to handles cluster
                     SpikeSorting.change_cluster(han.sc.temp,mymean,mystd,clus)
-                    setproperty!(han.sc.adj_sort, :value, 1.0)
+                    set_gtk_property!(han.sc.adj_sort, :value, 1.0)
 
                     if (han.buf.count>0)&(han.sc.pause)
                         SpikeSorting.template_cluster(han.sc,clus,mymean,mystd[:,2],mystd[:,1],1.0)

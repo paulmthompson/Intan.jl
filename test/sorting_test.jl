@@ -22,7 +22,7 @@ sleep(1.0)
 Intan.init_cb(handles.init.handle,(handles,myrhd,myt,myfpgas))
 
 #Run
-setproperty!(handles.run,:active,true)
+set_gtk_property!(handles.run,:active,true)
 sleep(1.0)
 Intan.run_cb(handles.run.handle,(handles,myrhd,ss,myt,myfpgas))
 
@@ -115,7 +115,7 @@ SpikeSorting.b4_cb_template(handles.run.handle,(handles.sc,))
 sleep(1.0)
 
 #Set draw template checkbox
-setproperty!(handles.sort_widgets.check,:active,true)
+set_gtk_property!(handles.sort_widgets.check,:active,true)
 
 sleep(1.0)
 

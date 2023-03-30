@@ -7,7 +7,7 @@ function _make_thres_gui()
     push!(frame1_3,vbox1_3_1)
 
     #sb=SpinButton(-300:300)
-    #setproperty!(sb,:value,0)
+    #set_gtk_property!(sb,:value,0)
     sb=Label("0")
     push!(vbox1_3_1,sb)
 
@@ -143,7 +143,7 @@ function get_thres(han::Gui_Handles,s::DArray{T,1,Array{T,1}}) where T<:Sorting
 
     mythres=remotecall_fetch(((x,h,num)->(localpart(x)[num].thres-h.sc.o)*h.sc.s*-1),mycore,s,han,nn)
 
-    setproperty!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
+    set_gtk_property!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
 end
@@ -151,7 +151,7 @@ end
 function get_thres(han::Gui_Handles,s::Array{T,1}) where T<:Sorting
 
     mythres=(s[han.sc.spike].thres-han.sc.o)*han.sc.s*-1
-    setproperty!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
+    set_gtk_property!(han.sc.adj_thres,:value,round(Int64,mythres)) #show threshold
 
     nothing
 end

@@ -17,18 +17,18 @@ function set_emg()
 end
 
 #Constant parameters
-@static if is_linux()
+@static if Sys.islinux()
     base_path=string(dirname(Base.source_path()),"/../lib/")
     intan_lib = string(base_path,"libokFrontPanel_0118.so")
     #const lib = Libdl.dlopen(intan_lib,Libdl.RTLD_NOW)
 end
 
-@static if is_apple()
+@static if Sys.isapple()
     base_path=string(dirname(Base.source_path()),"/../lib/")
     intan_lib = string(base_path,"libokFrontPanel.dylib")
 end
 
-@static if is_windows()
+@static if Sys.iswindows()
     base_path=string(dirname(Base.source_path()),"\\..\\lib\\")
     intan_lib = string(base_path,"okFrontPanel.dll")
 end

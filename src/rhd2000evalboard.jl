@@ -51,20 +51,6 @@ function getlibrary(fpga::FPGA)
     nothing
 end
 
-function init_board!(rhd::RHD2000,fpga::DArray{FPGA,1,Array{FPGA,1}})
-    if rhd.debug.state==false
-        map(open_board,fpga)
-        map(uploadFpgaBitfile,fpga)
-    else
-        map(getlibrary,fpga)
-    end
-
-    @sync for p in procs(fpga)
-        @async remotecall_fetch((d,sr,db)->init_board_helper(localpart(d),sr,db),p,fpga,rhd.sr,rhd.debug.state)
-    end
-    nothing
-end
-
 function init_board!(rhd::RHD2000,fpga::Array{FPGA,1})
     if rhd.debug.state==false
         map(open_board,fpga)
@@ -177,11 +163,8 @@ function open_board(fpga::FPGA)
     println("Found ", nDevices, " Opal Kelly device(s)")
 
     #Get Serial Number
-    if VERSION > v"0.7-"
-        serial=Array{UInt8}(undef,11)
-    else
-        serial=Array{UInt8}(11)
-    end
+    serial=Array{UInt8}(undef,11)
+
     ccall(Libdl.dlsym(fpga.lib,:okFrontPanel_GetDeviceListSerial), Int32, (Ptr{Nothing}, Int, Ptr{UInt8}), fpga.board, fpga.id,serial)
     serial[end]=0
     serialnumber=unsafe_string(pointer(serial))
@@ -783,26 +766,6 @@ function compareNumWords(fpgas::Array{FPGA,1})
 end
 
 compareNumWords(fpga::FPGA)=numWordsInFifo(fpga) < fpga.numWords
-
-function calibrate_parallel(fpga,s,v,buf,nums,mytime,calnum)
-
-    @sync begin
-        for p in procs(fpga)
-            @async remotecall_wait((ff,ss)->readDataBlocks_cal(localpart(ff),localpart(ss),v,buf,nums,mytime),p,fpga,s)
-        end
-    end
-    nothing
-end
-
-function onlinesort_parallel(fpga,s,v,buf,nums,mytime)
-
-    @sync begin
-        for p in procs(fpga)
-            @async remotecall_wait((ff,ss)->readDataBlocks_on(localpart(ff),localpart(ss),v,buf,nums,mytime),p,fpga,s)
-        end
-    end
-    nothing
-end
 
 function readDataBlocks_cal(fpgas::Array{FPGA,1},s,v,buf,nums,mytime,calnum)
 

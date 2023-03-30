@@ -9,11 +9,7 @@ using SharedArrays, Libdl, Distributed, Dates
 import SpikeSorting.Vec2, SpikeSorting.RubberBand, SpikeSorting.rb_set, SpikeSorting.rb_draw, SpikeSorting.identity_matrix, SpikeSorting.select_color
 
 if VERSION > v"0.7-"
-    const is_linux() = Sys.islinux()
-    const is_apple() = Sys.isapple()
-    const is_windows() = Sys.iswindows()
-    const is_unix() = Sys.isunix()
-    const setproperty! = set_gtk_property!
+
     const getproperty = get_gtk_property
     const linspace(x,y,z) = range(x,stop=y,length=z)
     const indmin = argmin

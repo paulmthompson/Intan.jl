@@ -24,7 +24,7 @@ function _make_save_gui()
     save_grid[1,6]=save_check_adc
 
     save_pref_win=Window(save_grid)
-    setproperty!(save_pref_win, :title, "Saving Preferences")
+    set_gtk_property!(save_pref_win, :title, "Saving Preferences")
 
     Gtk.showall(save_pref_win)
     visible(save_pref_win,false)

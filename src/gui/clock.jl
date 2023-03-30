@@ -38,15 +38,15 @@ function update_time(rhd::RHD2000,han::Gui_Handles)
     this_s=total_seconds - this_m*60
 
     if this_s != han.time.s
-        setproperty!(han.time.s_l,:label,string(this_s))
+        set_gtk_property!(han.time.s_l,:label,string(this_s))
         han.time.s=this_s
     end
     if this_m != han.time.m
-        setproperty!(han.time.m_l,:label,string(this_m))
+        set_gtk_property!(han.time.m_l,:label,string(this_m))
         han.time.m=this_m
     end
     if this_h != han.time.h
-        setproperty!(han.time.h_l,:label,string(this_h))
+        set_gtk_property!(han.time.h_l,:label,string(this_h))
         han.time.h=this_h
     end
 

@@ -47,7 +47,7 @@ function _make_reference_gui()
     ref_grid[2,3]=Canvas(50,50)
     ref_grid[3,4]=ref_button3
     ref_win=Window(ref_grid)
-    setproperty!(ref_win, :title, "Reference Channel Select")
+    set_gtk_property!(ref_win, :title, "Reference Channel Select")
 
     Gtk.showall(ref_win)
     visible(ref_win,false)

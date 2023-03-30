@@ -52,8 +52,8 @@ function b1_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         han.clus = 0
         han.var2[han.spike,1] = 0
         han.var2[han.spike,2] = 0
-        setproperty!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
-        setproperty!(han.tb2,:label,"Window: 0")
+        set_gtk_property!(han.tb1,:label,string("Cluster: ",han.var1[han.spike,2]))
+        set_gtk_property!(han.tb2,:label,"Window: 0")
     end
     nothing
 end
@@ -68,7 +68,7 @@ function b2_cb_win(widgetptr::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         deleteat!(rhd.s[han.spike].c.win[han.clus],han.var2[han.spike,2])
         han.var2[han.spike,1]-= 1
         han.var2[han.spike,2] = 0
-        setproperty!(han.tb2,:label,"Window: 0")
+        set_gtk_property!(han.tb2,:label,"Window: 0")
     end
     
     nothing
@@ -127,8 +127,8 @@ function b4_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
     #reset currently selected window to zero
     han.var2[han.spike,2]=0
 
-    setproperty!(han.tb1,:label,string("Cluster: ",han.clus))
-    setproperty!(han.tb2,:label,"Window: 0")
+    set_gtk_property!(han.tb1,:label,string("Cluster: ",han.clus))
+    set_gtk_property!(han.tb2,:label,"Window: 0")
         
     nothing
 end
@@ -150,7 +150,7 @@ function b5_cb_win(widget::Ptr,user_data::Tuple{Gui_Handles,RHD2000})
         han.var2[han.spike,2]=win
     end
         
-    setproperty!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
+    set_gtk_property!(han.tb2,:label,string("Window: ",han.var2[han.spike,2]))
 
     nothing
 end
