@@ -72,29 +72,21 @@ function draw_spike_n(rhd::RHD2000,han::Gui_Handles,n_col,n_row,num_chan)
                             o=han.offset[chan]
 
                             #x and y position for channel location
-			    startx=div(rem(chan-1,num_plot),n_row)*han.wave_points/2+1
-			    starty=yheight/n_row*(rem(rem(chan-1,num_plot),n_row))+yheight/n_row/2
+			                startx=div(rem(chan-1,num_plot),n_row)*han.wave_points/2+1
+			                starty=yheight/n_row*(rem(rem(chan-1,num_plot),n_row))+yheight/n_row/2
 
                             #Max and min extents for line to stay within bounding box
                             ymax=starty+yheight/n_row/2
-			    ymin=starty-yheight/n_row/2
+			                ymin=starty-yheight/n_row/2
 
                             y=(rhd.v[rhd.buf[g,chan].inds.start,chan]-o)*s+starty
 			    
-			    if (y<ymin)
-                               y=ymin
-                            elseif (y>ymax)
-                               y=ymax
-                            end
+                            y = clamp(y,ymin,ymax)
                             
                             move_to(ctx,startx,y)
                             for kk=rhd.buf[g,chan].inds.start+2:2:rhd.buf[g,chan].inds.stop
                                 y=(rhd.v[kk,chan]-o)*s+starty
-                                if (y<ymin)
-                                   y=ymin
-                                elseif (y>ymax)
-                                   y=ymax
-                                end
+                                y = clamp(y,ymin,ymax)
                                 line_to(ctx,startx,y)
                                 startx+=1
                             end
