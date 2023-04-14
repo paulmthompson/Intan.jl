@@ -2,11 +2,9 @@
 function _make_event_gui()
 
     popup_event = Menu()
-    if VERSION > v"0.7-"
-        event_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        event_handles=Array{MenuItemLeaf}(0)
-    end
+
+    event_handles=Array{MenuItemLeaf}(undef,0)
+
     for i=1:8
         push!(event_handles,MenuItem(string("Analog ",i)))
         push!(popup_event,event_handles[i])

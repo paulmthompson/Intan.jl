@@ -12,11 +12,9 @@ function _make_scope_gui()
     push!(popupmenu_scope,popupmenu_signal)
 
     popupmenu_voltage_select=Menu(popupmenu_voltage)
-    if VERSION > v"0.7-"
-        scope_v_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        scope_v_handles=Array{MenuItemLeaf}(0)
-    end
+
+    scope_v_handles=Array{MenuItemLeaf}(undef,0)
+
     voltage_scales = [1, 50, 100, 200, 500]
     push!(scope_v_handles,MenuItem(string(voltage_scales[1])))
     push!(popupmenu_voltage_select,scope_v_handles[1])
@@ -26,11 +24,9 @@ function _make_scope_gui()
     end
 
     popupmenu_time_select=Menu(popupmenu_time)
-    if VERSION > v"0.7-"
-        scope_t_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        scope_t_handles=Array{MenuItemLeaf}(0)
-    end
+
+    scope_t_handles=Array{MenuItemLeaf}(undef,0)
+
     time_scales = [1,2,3,4,5] #Need to make this ms / div
     for i=1:length(time_scales)
         time_scales[i]=round(time_scales[i],digits=1)
@@ -43,22 +39,18 @@ function _make_scope_gui()
     end
 
     popupmenu_thres_select=Menu(popupmenu_thres)
-    if VERSION > v"0.7-"
-        scope_thres_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        scope_thres_handles=Array{MenuItemLeaf}(0)
-    end
+
+    scope_thres_handles=Array{MenuItemLeaf}(undef,0)
+
     push!(scope_thres_handles,MenuItem("On"))
     push!(popupmenu_thres_select,scope_thres_handles[1])
     push!(scope_thres_handles,MenuItem(scope_thres_handles[1],"Off"))
     push!(popupmenu_thres_select,scope_thres_handles[2])
 
     popupmenu_signal_select=Menu(popupmenu_signal)
-    if VERSION > v"0.7-"
-        scope_signal_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        scope_signal_handles=Array{MenuItemLeaf}(0)
-    end
+
+    scope_signal_handles=Array{MenuItemLeaf}(undef,0)
+
     push!(scope_signal_handles,MenuItem("Spike"))
     push!(popupmenu_signal_select,scope_signal_handles[1])
     push!(scope_signal_handles,MenuItem(scope_signal_handles[1],"LFP"))

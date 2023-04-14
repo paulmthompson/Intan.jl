@@ -10,11 +10,9 @@ function _make_spectogram_gui()
     push!(popupmenu_spect,popupmenu_spect_overlap)
 
     popupmenu_spect_freq_select=Menu(popupmenu_spect_freq)
-    if VERSION > v"0.7-"
-        spect_f_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        spect_f_handles=Array{MenuItemLeaf}(0)
-    end
+
+    spect_f_handles=Array{MenuItemLeaf}(undef,0)
+
     spect_f_options=[300; 1000; 3000; 7500; 15000]
 
     push!(spect_f_handles,MenuItem(string(spect_f_options[1])))
@@ -26,11 +24,9 @@ function _make_spectogram_gui()
     end
 
     popupmenu_spect_win_select=Menu(popupmenu_spect_win)
-    if VERSION > v"0.7-"
-        spect_w_handles=Array{MenuItemLeaf}(undef,0)
-    else
-        spect_w_handles=Array{MenuItemLeaf}(0)
-    end
+
+    spect_w_handles=Array{MenuItemLeaf}(undef,0)
+
     spect_w_options=[10; 50; 100]
 
     push!(spect_w_handles,MenuItem(string(spect_w_options[1])))
