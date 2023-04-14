@@ -81,11 +81,9 @@ function makegui(r::RHD2000,s,task,fpga)
     add_button_label(button_restore,"Restore")
     vbox_hold[3,2]=button_restore
 
-    if VERSION > v"0.7-"
-        button_rb=Array{RadioButton}(undef, 3)
-    else
-        button_rb=Array{RadioButton}(3)
-    end
+
+    button_rb=Array{RadioButton}(undef, 3)
+
     button_rb[1]=RadioButton(active=true)
     button_rb[2]=RadioButton(button_rb[1])
     button_rb[3]=RadioButton(button_rb[2])
@@ -223,11 +221,8 @@ vbox_rb_upper=Box(:v)
 
     push!(vbox_rb_upper,Label("Top Panel"))
 
-    if VERSION > v"0.7-"
-        rbs=Array{RadioButton}(undef,5)
-    else
-        rbs=Array{RadioButton}(5)
-    end
+    rbs=Array{RadioButton}(undef,5)
+
     rbs[1]=RadioButton("16 Channel",active=true)
     rbs[2]=RadioButton(rbs[1],"32 Channel")
     rbs[3]=RadioButton(rbs[2],"64 Channel")
@@ -249,11 +244,8 @@ Gtk.GAccessor.vexpand(c_rb,true)
     push!(vbox_42,vbox_rb_lower)
     push!(vbox_rb_lower,Label("Lower Panel"))
 
-    if VERSION > v"0.7-"
-        rbs2=Array{RadioButton}(undef,8)
-    else
-        rbs2=Array{RadioButton}(8)
-    end
+    rbs2=Array{RadioButton}(undef,8)
+
     rbs2[1]=RadioButton("Events",active=true)
     rbs2[2]=RadioButton(rbs2[1],"16 Raster")
     rbs2[3]=RadioButton(rbs2[2],"32 Raster")
